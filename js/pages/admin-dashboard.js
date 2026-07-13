@@ -2548,6 +2548,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (calFilter) calFilter.addEventListener('change', () => { renderCalendar(); });
     if (calSyncBtn) calSyncBtn.addEventListener('click', () => { syncAllIcalFeeds(true); });
 
+    // Auto-sync every 5 minutes silently (no notification toast)
+    const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+    let autoSyncTimer = null;
+
+    function startAutoSync() {
+      if (autoSyncTimer) clearInterval(autoSyncTimer);
+      autoSyncTimer = setInterval(async () => {
+        // Only auto-sync if the Bookings & Manifest section is visible
+        const calView = document.getElementById('booking-calendar-view');
+        if (calView && !calView.classList.contains('hidden')) {
+          await syncAllIcalFeeds(false); // silent — no toast or alert
+          renderCalendar();
+          // Update last-synced badge
+          const badge = document.getElementById('cal-last-synced-badge');
+          if (badge) {
+            const now = new Date();
+            badge.textContent = `🔄 Last synced: ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+          }
+        }
+      }, AUTO_SYNC_INTERVAL_MS);
+    }
+
+    startAutoSync();
+
+    // Show the auto-sync badge immediately
+    const initBadge = document.getElementById('cal-last-synced-badge');
+    if (initBadge) initBadge.classList.remove('hidden');
+
     loadBookings();
   }
 
