@@ -11,6 +11,7 @@
   <script>tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-secondary-fixed-variant": "#2c476f", "secondary-fixed": "#d5e3ff", "on-tertiary-container": "#4c7b9a", "secondary-fixed-dim": "#adc8f6", "surface-container": "#eeeeee", "surface-container-low": "#f3f3f4", "outline-variant": "#c4c7c8", secondary: "#455f88", "on-surface": "#1a1c1c", "on-primary": "#ffffff", "surface-dim": "#dadada", "on-primary-fixed-variant": "#454747", "surface-container-lowest": "#ffffff", "secondary-container": "#b5d0ff", "on-error-container": "#93000a", "on-secondary-container": "#3e5981", "primary-container": "#ffffff", tertiary: "#336381", "inverse-on-surface": "#f0f1f1", error: "#ba1a1a", "on-tertiary-fixed-variant": "#164b68", "on-tertiary-fixed": "#001e2e", "on-secondary-fixed": "#001b3c", "error-container": "#ffdad6", "surface-container-highest": "#e2e2e2", "surface-bright": "#f9f9f9", "on-tertiary": "#ffffff", "on-primary-fixed": "#1a1c1c", primary: "#5d5f5f", "primary-fixed-dim": "#c6c6c7", background: "#f9f9f9", "on-secondary": "#ffffff", "surface-container-high": "#e8e8e8", surface: "#f9f9f9", "on-surface-variant": "#444748", "inverse-surface": "#2f3131", "surface-variant": "#e2e2e2", "tertiary-container": "#ffffff", "on-error": "#ffffff", "tertiary-fixed": "#c8e6ff", "primary-fixed": "#e2e2e2", "inverse-primary": "#c6c6c7", "surface-tint": "#5d5f5f", "on-primary-container": "#747676", outline: "#747878", "on-background": "#1a1c1c", "tertiary-fixed-dim": "#9eccef"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {md: "24px", lg: "48px", xl: "80px", sm: "12px", "container-max": "1280px", gutter: "24px", base: "8px", xs: "4px"}, fontFamily: {"display-lg": ["Montserrat"], "label-md": ["Montserrat"], "body-md": ["Montserrat"], "headline-md": ["Montserrat"], caption: ["Montserrat"], "headline-lg": ["Montserrat"], "body-lg": ["Montserrat"], headline: ["Montserrat"], display: ["Montserrat"], body: ["Montserrat"], label: ["Montserrat"]}, fontSize: {"display-lg": ["48px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700"}], "label-md": ["14px", {lineHeight: "1.2", letterSpacing: "0.05em", fontWeight: "600"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], caption: ["12px", {lineHeight: "1.4", fontWeight: "500"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}]}}}};</script>
   <link rel="stylesheet" href="/css/shared.css"/>
   <link rel="stylesheet" href="/css/admin.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script>
     window.addEventListener('error', function(e) {
       const msg = document.createElement('div');
@@ -121,6 +122,60 @@
             </button>
           </div>
         </li>
+        <li draggable="true" data-nav-id="revenue">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="revenue">
+              <span class="material-symbols-outlined">bar_chart</span>
+              <span class="font-label text-label-md">Revenue &amp; Analytics</span>
+            </button>
+          </div>
+        </li>
+        <li draggable="true" data-nav-id="crm">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="crm">
+              <span class="material-symbols-outlined">people</span>
+              <span class="font-label text-label-md">Customer CRM</span>
+            </button>
+          </div>
+        </li>
+        <li draggable="true" data-nav-id="crew">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="crew">
+              <span class="material-symbols-outlined">anchor</span>
+              <span class="font-label text-label-md">Crew Management</span>
+            </button>
+          </div>
+        </li>
+        <li draggable="true" data-nav-id="maintenance">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="maintenance">
+              <span class="material-symbols-outlined">build</span>
+              <span class="font-label text-label-md">Maintenance Log</span>
+            </button>
+          </div>
+        </li>
+        <li draggable="true" data-nav-id="promos">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="promos">
+              <span class="material-symbols-outlined">local_offer</span>
+              <span class="font-label text-label-md">Promos &amp; Discounts</span>
+            </button>
+          </div>
+        </li>
+        <li draggable="true" data-nav-id="reviews">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="reviews">
+              <span class="material-symbols-outlined">star</span>
+              <span class="font-label text-label-md">Reviews Manager</span>
+            </button>
+          </div>
+        </li>
       </ul>
     </nav>
 
@@ -148,6 +203,32 @@
         <span class="material-symbols-outlined">menu</span>
       </button>
       <span class="font-headline text-headline-md font-bold text-secondary">YRSF</span>
+    </div>
+
+    <!-- Top Notification & Status Bar -->
+    <div class="sticky top-0 z-30 bg-surface-container-lowest/90 backdrop-blur border-b border-outline-variant px-4 lg:px-8 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+        <span class="text-xs font-bold text-on-surface-variant">System Live</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <!-- Notification Bell -->
+        <div class="relative">
+          <button id="notification-bell-btn" class="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors relative flex items-center justify-center" title="Notifications">
+            <span class="material-symbols-outlined text-on-surface">notifications</span>
+            <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+          </button>
+          <div id="notif-dropdown" class="absolute right-0 mt-2 w-80 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl p-4 hidden z-50">
+            <div class="flex items-center justify-between border-b border-outline-variant pb-2 mb-2">
+              <h4 class="font-bold text-xs text-on-surface">Notifications &amp; Alerts</h4>
+              <button id="clear-notifs-btn" class="text-[10px] font-bold text-secondary hover:underline">Clear all</button>
+            </div>
+            <div id="notif-list" class="space-y-2 max-h-64 overflow-y-auto">
+              <p class="text-xs text-on-surface-variant text-center py-4">No unread alerts</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="p-md lg:p-lg">
@@ -867,6 +948,188 @@
             </table>
           </div>
         </div>
+      </section>
+
+      <!-- Revenue & Analytics Section -->
+      <section id="section-revenue" class="admin-section hidden flex flex-col gap-lg">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Revenue &amp; Analytics</h1>
+            <p class="font-body text-body-md text-on-surface-variant">Financial performance and booking trends</p>
+          </div>
+          <div class="flex gap-2">
+            <select id="revenue-year-filter" class="border border-outline-variant rounded-lg px-3 py-2 text-sm bg-surface-container-lowest">
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+        </div>
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="revenue-kpi-cards">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+            <p class="text-xs text-on-surface-variant font-bold mb-1">Total Revenue YTD</p>
+            <p id="kpi-revenue-ytd" class="text-2xl font-bold text-green-700">$0</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+            <p class="text-xs text-on-surface-variant font-bold mb-1">Avg Booking Value</p>
+            <p id="kpi-avg-booking" class="text-2xl font-bold text-secondary">$0</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+            <p class="text-xs text-on-surface-variant font-bold mb-1">Total Bookings</p>
+            <p id="kpi-total-bookings" class="text-2xl font-bold text-blue-700">0</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+            <p class="text-xs text-on-surface-variant font-bold mb-1">Outstanding Balance</p>
+            <p id="kpi-outstanding" class="text-2xl font-bold text-amber-700">$0</p>
+          </div>
+        </div>
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+            <h3 class="font-headline font-bold text-sm mb-4">Monthly Revenue (Last 12 Months)</h3>
+            <canvas id="chart-monthly-revenue" height="200"></canvas>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+            <h3 class="font-headline font-bold text-sm mb-4">Top Performing Boats</h3>
+            <canvas id="chart-top-boats" height="200"></canvas>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+            <h3 class="font-headline font-bold text-sm mb-4">Bookings by Day of Week</h3>
+            <canvas id="chart-day-of-week" height="200"></canvas>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+            <h3 class="font-headline font-bold text-sm mb-4">Income vs. Deposits Collected</h3>
+            <canvas id="chart-income-vs-deposits" height="200"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Customer CRM Section -->
+      <section id="section-crm" class="admin-section hidden flex flex-col gap-lg">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Customer CRM</h1>
+            <p class="font-body text-body-md text-on-surface-variant">Manage customer relationships and charter history</p>
+          </div>
+          <input type="text" id="crm-search" placeholder="Search customers..." class="border border-outline-variant rounded-lg px-4 py-2 text-sm w-64 bg-surface-container-lowest"/>
+        </div>
+        <div class="flex gap-2 flex-wrap mb-4" id="crm-sort-btns">
+          <button data-crm-sort="spent" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold">Most Spent</button>
+          <button data-crm-sort="bookings" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Most Bookings</button>
+          <button data-crm-sort="recent" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Most Recent</button>
+        </div>
+        <div id="crm-table-container" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
+          <table class="w-full">
+            <thead class="bg-surface-container border-b border-outline-variant">
+              <tr>
+                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Customer</th>
+                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Phone</th>
+                <th class="text-right px-4 py-3 font-label text-xs text-on-surface-variant">Bookings</th>
+                <th class="text-right px-4 py-3 font-label text-xs text-on-surface-variant">Total Spent</th>
+                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Last Charter</th>
+                <th class="text-center px-4 py-3 font-label text-xs text-on-surface-variant">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="crm-table-body"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">Loading CRM...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Crew Management Section -->
+      <section id="section-crew" class="admin-section hidden flex flex-col gap-lg">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Crew Management</h1>
+            <p class="font-body text-body-md text-on-surface-variant">Manage captains, mates, and crew roster</p>
+          </div>
+          <button id="add-crew-btn" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">add</span> Add Crew Member
+          </button>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
+          <table class="w-full">
+            <thead class="bg-surface-container border-b border-outline-variant">
+              <tr>
+                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Name</th>
+                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Role</th>
+                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Phone</th>
+                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">License #</th>
+                <th class="text-center px-4 py-3 font-label text-xs text-on-surface-variant">Status</th>
+                <th class="text-center px-4 py-3 font-label text-xs text-on-surface-variant">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="crew-table-body"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">Loading Crew...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Maintenance Log Section -->
+      <section id="section-maintenance" class="admin-section hidden flex flex-col gap-lg">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Maintenance Log</h1>
+            <p class="font-body text-body-md text-on-surface-variant">Track yacht maintenance, repairs, and inspections</p>
+          </div>
+          <button id="add-maintenance-btn" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">add</span> Log Maintenance
+          </button>
+        </div>
+        <div class="flex gap-2 flex-wrap items-center mb-4">
+          <select id="maintenance-boat-filter" class="border border-outline-variant rounded-lg px-3 py-2 text-sm bg-surface-container-lowest"><option value="all">All Boats</option></select>
+          <select id="maintenance-status-filter" class="border border-outline-variant rounded-lg px-3 py-2 text-sm bg-surface-container-lowest">
+            <option value="all">All Status</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="completed">Completed</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
+        <div id="maintenance-list" class="flex flex-col gap-3"></div>
+      </section>
+
+      <!-- Promos & Discounts Section -->
+      <section id="section-promos" class="admin-section hidden flex flex-col gap-lg">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Promos &amp; Discounts</h1>
+            <p class="font-body text-body-md text-on-surface-variant">Create and manage promotional discount codes</p>
+          </div>
+          <button id="add-promo-btn" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">add</span> Create Promo Code
+          </button>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
+          <table class="w-full">
+            <thead class="bg-surface-container border-b border-outline-variant">
+              <tr>
+                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Code</th>
+                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Discount</th>
+                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Expires</th>
+                <th class="text-right px-4 py-3 font-label text-xs text-on-surface-variant">Used / Max</th>
+                <th class="text-center px-4 py-3 font-label text-xs text-on-surface-variant">Status</th>
+                <th class="text-center px-4 py-3 font-label text-xs text-on-surface-variant">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="promos-table-body"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No promo codes yet.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Reviews Manager Section -->
+      <section id="section-reviews" class="admin-section hidden flex flex-col gap-lg">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Reviews Manager</h1>
+            <p class="font-body text-body-md text-on-surface-variant">Approve or reject customer reviews before they go live</p>
+          </div>
+          <div class="flex gap-2">
+            <button id="reviews-filter-pending" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold">Pending</button>
+            <button id="reviews-filter-approved" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Approved</button>
+            <button id="reviews-filter-all" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">All</button>
+          </div>
+        </div>
+        <div id="reviews-list" class="flex flex-col gap-3"><p class="text-center text-on-surface-variant py-8 text-sm">Loading reviews...</p></div>
       </section>
 
     </div>

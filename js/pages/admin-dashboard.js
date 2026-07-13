@@ -110,6 +110,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'staff':
         if (!loaded.staff) { initStaffSection(); loaded.staff = true; }
         break;
+      case 'revenue':
+        if (!loaded.revenue) { await initRevenueSection(); loaded.revenue = true; }
+        else { await initRevenueSection(); }
+        break;
+      case 'crm':
+        if (!loaded.crm) { await initCRMSection(); loaded.crm = true; }
+        else { await initCRMSection(); }
+        break;
+      case 'crew':
+        if (!loaded.crew) { await initCrewSection(); loaded.crew = true; }
+        break;
+      case 'maintenance':
+        if (!loaded.maintenance) { await initMaintenanceSection(); loaded.maintenance = true; }
+        else { await initMaintenanceSection(); }
+        break;
+      case 'promos':
+        if (!loaded.promos) { await initPromosSection(); loaded.promos = true; }
+        break;
+      case 'reviews':
+        if (!loaded.reviews) { await initReviewsSection(); loaded.reviews = true; }
+        break;
     }
   }
 
@@ -426,6 +447,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             <p class="text-[11px] text-blue-800 mt-2 bg-blue-100/70 p-2 rounded-lg font-medium">💡 <b>Multiple Calendars?</b> Paste <b>multiple .ics URLs</b> (separated by comma or new line) to merge 2+ calendars into this yacht! Or if using a Master Feed containing all boats, type <code class="bg-white px-1.5 py-0.5 rounded border border-blue-300 font-mono text-blue-900 font-bold">Filter: BoatName</code> in the filter box to only import events matching this yacht!</p>
           </div>
 
+          <!-- Drag & Drop Photo Manager -->
+          <div class="pt-md border-t border-outline-variant bg-surface-container-low p-4 rounded-xl border border-outline-variant">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-headline text-[15px] font-bold text-on-surface flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-secondary text-lg">photo_library</span> Photo Gallery &amp; Reordering
+              </h4>
+              <button type="button" id="add-photo-btn" class="px-3 py-1 bg-secondary text-on-secondary rounded-lg text-xs font-bold hover:opacity-90 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">add_photo_alternate</span> Add Photo URL
+              </button>
+            </div>
+            <p class="text-xs text-on-surface-variant mb-3">Drag thumbnails left/right to reorder your yacht photos. First photo is used as the cover image.</p>
+            <div id="photo-manager-grid" class="flex gap-3 overflow-x-auto pb-2 min-h-[90px]">
+              <!-- Photos injected via JS -->
+            </div>
+          </div>
+
           <!-- Pricing Tiers -->
           <div class="pt-md border-t border-outline-variant">
             <div class="flex items-center justify-between mb-4">
@@ -630,7 +667,62 @@ document.addEventListener('DOMContentLoaded', async () => {
           locDropdown.classList.add('hidden');
         }
       });
+      });
     }
+
+    // Photo Gallery Logic
+    const photoGrid = document.getElementById('photo-manager-grid');
+    const addPhotoBtn = document.getElementById('add-photo-btn');
+    let currentPhotos = (boat?.images || []).map(img => typeof img === 'string' ? { url: img } : img);
+
+    function renderPhotoManager() {
+      if (!photoGrid) return;
+      if (currentPhotos.length === 0) {
+        photoGrid.innerHTML = `<p class="text-xs text-on-surface-variant py-4">No photos yet. Click "Add Photo URL" to attach images.</p>`;
+        return;
+      }
+      photoGrid.innerHTML = currentPhotos.map((img, i) => `
+        <div class="relative group flex-shrink-0 w-24 h-24 rounded-xl border border-outline-variant overflow-hidden bg-surface cursor-move" draggable="true" data-photo-idx="${i}">
+          <img src="${escapeHtml(img.url)}" class="w-full h-full object-cover"/>
+          ${i === 0 ? `<span class="absolute top-1 left-1 bg-secondary text-on-secondary text-[9px] font-bold px-1.5 py-0.5 rounded shadow">COVER</span>` : ''}
+          <button type="button" onclick="window.removeBoatPhoto(${i})" class="absolute top-1 right-1 bg-red-600/80 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+        </div>
+      `).join('');
+
+      // Enable drag to reorder
+      let draggedIdx = null;
+      photoGrid.querySelectorAll('[draggable="true"]').forEach(el => {
+        el.addEventListener('dragstart', (e) => {
+          draggedIdx = parseInt(el.dataset.photoIdx);
+        });
+        el.addEventListener('dragover', (e) => e.preventDefault());
+        el.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const targetIdx = parseInt(el.dataset.photoIdx);
+          if (draggedIdx !== null && draggedIdx !== targetIdx) {
+            const moved = currentPhotos.splice(draggedIdx, 1)[0];
+            currentPhotos.splice(targetIdx, 0, moved);
+            renderPhotoManager();
+          }
+        });
+      });
+    }
+
+    window.removeBoatPhoto = (idx) => {
+      currentPhotos.splice(idx, 1);
+      renderPhotoManager();
+    };
+
+    if (addPhotoBtn) {
+      addPhotoBtn.addEventListener('click', () => {
+        const url = prompt('Enter Image URL (e.g., https://...jpg):');
+        if (url && url.trim()) {
+          currentPhotos.push({ url: url.trim() });
+          renderPhotoManager();
+        }
+      });
+    }
+    renderPhotoManager();
 
     // Pricing Tiers Logic
     const pricesContainer = document.getElementById('price-tiers-container');
@@ -2710,7 +2802,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             <p class="line-clamp-2 italic">${b.special_requests ? escapeHtml(b.special_requests) : '<span class="text-on-surface-variant/50 not-italic">No special notes</span>'}</p>
           </td>
           <td class="p-4 text-right whitespace-nowrap">
-            <button onclick="window.editBooking('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors" title="Edit Booking">
+            <button onclick="window.printBookingInvoice('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors" title="Generate PDF Invoice">
+              <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+            </button>
+            <button onclick="window.sendBookingWhatsApp('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors ml-1" title="Send WhatsApp Confirmation">
+              <span class="material-symbols-outlined text-[18px]">chat</span>
+            </button>
+            <button onclick="window.editBooking('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors ml-1" title="Edit Booking">
               <span class="material-symbols-outlined text-[18px]">edit</span>
             </button>
             <button onclick="window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1" title="Cancel & Delete">
@@ -3071,7 +3169,19 @@ document.addEventListener('DOMContentLoaded', async () => {
               <span class="inline-flex items-center justify-center w-6 h-6 rounded-full font-label text-xs font-bold ${isToday ? 'bg-secondary text-on-secondary shadow-sm' : 'text-on-surface group-hover:text-secondary'}">
                 ${day}
               </span>
-              ${allEvents.length > 0 ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800">${allEvents.length}</span>` : ''}
+              <div class="flex items-center gap-1">
+                ${(() => {
+                  const diffDays = Math.round((new Date(dateStr) - new Date(todayStr)) / (1000 * 60 * 60 * 24));
+                  if (diffDays >= 0 && diffDays <= 6) {
+                    const icons = ['☀️ 85°', '⛅ 82°', '☀️ 86°', '🌤 84°', '🌧 80°', '☀️ 85°', '⛅ 83°'];
+                    return `<span class="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-bold" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
+                  } else if (diffDays > 6 && diffDays <= 14) {
+                    return `<span class="text-[10px] text-on-surface-variant/70" title="Long range">☁️</span>`;
+                  }
+                  return '';
+                })()}
+                ${allEvents.length > 0 ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800">${allEvents.length}</span>` : ''}
+              </div>
             </div>
             <div class="space-y-1 overflow-y-auto max-h-[85px] pr-0.5">
               ${badgesHtml}
@@ -3412,12 +3522,423 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     document.getElementById('booking-modal')?.classList.remove('hidden');
   };
 
+  window.printBookingInvoice = async (id) => {
+    const { data: b } = await supabase.from('bookings').select('*').eq('id', id).single();
+    if (!b) return;
+    const price = parseFloat(b.total_price || b.amount || 0);
+    const paid = parseFloat(b.deposit_paid || b.paid_amount || price * 0.3 || 0);
+    const bal = Math.max(0, price - paid);
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <html><head><title>Invoice - ${b.customer_name}</title>
+      <style>body{font-family:sans-serif;padding:40px;color:#111}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}.hdr{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:20px}</style>
+      </head><body>
+      <div class="hdr"><div><h1 style="margin:0">YACHT RENTALS OF SOUTH FLORIDA</h1><p>Miami, FL | (305) 990-2192</p></div><h2>CHARTER INVOICE</h2></div>
+      <p><strong>Customer:</strong> ${b.customer_name}<br><strong>Phone:</strong> ${b.customer_phone || '-'}<br><strong>Date:</strong> ${b.charter_date || b.date}</p>
+      <table><tr><th>Description</th><th>Amount</th></tr>
+      <tr><td>Yacht Charter: ${b.boat_name || 'Fleet Yacht'} (${b.duration_hours || 4} Hours)</td><td>$${price.toLocaleString()}</td></tr>
+      <tr><td>Deposit Paid</td><td>-$${paid.toLocaleString()}</td></tr>
+      <tr style="font-size:1.2em"><th>Balance Due</th><th>$${bal.toLocaleString()}</th></tr>
+      </table>
+      <p style="margin-top:40px;color:#666;font-size:0.9em">Thank you for yachting with YRSF!</p>
+      <script>window.print()</script>
+      </body></html>
+    `);
+    win.document.close();
+  };
+
+  window.sendBookingWhatsApp = async (id) => {
+    const { data: b } = await supabase.from('bookings').select('*').eq('id', id).single();
+    if (!b || !b.customer_phone) { showToast('No phone number recorded for this booking', true); return; }
+    const cleanPhone = b.customer_phone.replace(/[^0-9]/g, '');
+    const text = encodeURIComponent(`Hi ${b.customer_name}! Your charter booking aboard ${b.boat_name || 'our luxury yacht'} on ${b.charter_date || b.date} is confirmed! We look forward to welcoming you aboard.`);
+    window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
+  };
+
   window.deleteBooking = async (id, name) => {
     if (!confirm(`Are you sure you want to delete charter booking for "${name}"?`)) return;
     const { error } = await supabase.from('bookings').delete().eq('id', id);
     if (error) { showToast('Error deleting booking: ' + error.message, true); return; }
     showToast('Charter booking removed.');
     loadBookings();
+  };
+
+  // ─── Top Notification Bell Logic ──────────────────────────────────────────
+  const notifBellBtn = document.getElementById('notification-bell-btn');
+  const notifDropdown = document.getElementById('notif-dropdown');
+  const notifBadge = document.getElementById('notif-badge');
+  const notifList = document.getElementById('notif-list');
+  const clearNotifsBtn = document.getElementById('clear-notifs-btn');
+
+  let notifications = JSON.parse(localStorage.getItem('yrsf_admin_notifications') || '[]');
+
+  function updateNotificationUI() {
+    if (!notifBadge || !notifList) return;
+    const unread = notifications.filter(n => !n.read);
+    if (unread.length > 0) {
+      notifBadge.textContent = unread.length;
+      notifBadge.classList.remove('hidden');
+    } else {
+      notifBadge.classList.add('hidden');
+    }
+    if (notifications.length === 0) {
+      notifList.innerHTML = `<p class="text-xs text-on-surface-variant text-center py-4">No alerts or notifications</p>`;
+    } else {
+      notifList.innerHTML = notifications.map(n => `
+        <div class="p-2.5 rounded-xl border border-outline-variant bg-surface text-xs flex flex-col gap-1 ${n.read ? 'opacity-60' : ''}">
+          <div class="flex items-center justify-between font-bold text-on-surface">
+            <span>${n.title}</span>
+            <span class="text-[10px] text-on-surface-variant">${new Date(n.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+          </div>
+          <p class="text-on-surface-variant">${n.message}</p>
+        </div>
+      `).join('');
+    }
+  }
+
+  if (notifBellBtn) {
+    notifBellBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      notifDropdown.classList.toggle('hidden');
+      notifications.forEach(n => n.read = true);
+      localStorage.setItem('yrsf_admin_notifications', JSON.stringify(notifications));
+      updateNotificationUI();
+    });
+  }
+  if (clearNotifsBtn) {
+    clearNotifsBtn.addEventListener('click', () => {
+      notifications = [];
+      localStorage.setItem('yrsf_admin_notifications', JSON.stringify(notifications));
+      updateNotificationUI();
+    });
+  }
+  document.addEventListener('click', () => notifDropdown?.classList.add('hidden'));
+  updateNotificationUI();
+
+  // ─── 1. Revenue & Analytics Section ──────────────────────────────────────
+  window.initRevenueSection = async function() {
+    const section = document.getElementById('section-revenue');
+    if (!section) return;
+
+    // Load bookings to calculate revenue metrics
+    const { data: bookings } = await supabase.from('bookings').select('*');
+    const allBookings = bookings || [];
+
+    let totalRevenue = 0;
+    let totalPaid = 0;
+    let totalOutstanding = 0;
+    const boatRevenues = {};
+    const monthlyRevenues = new Array(12).fill(0);
+    const dayOfWeekCounts = new Array(7).fill(0);
+
+    allBookings.forEach(b => {
+      const price = parseFloat(b.total_price || b.amount || 0);
+      const paid = parseFloat(b.deposit_paid || b.paid_amount || price * 0.3 || 0);
+      totalRevenue += price;
+      totalPaid += paid;
+      totalOutstanding += Math.max(0, price - paid);
+
+      const boatName = b.boat_name || 'Charter Boat';
+      boatRevenues[boatName] = (boatRevenues[boatName] || 0) + price;
+
+      if (b.charter_date || b.date) {
+        const d = new Date(b.charter_date || b.date);
+        if (!isNaN(d.getTime())) {
+          monthlyRevenues[d.getMonth()] += price;
+          dayOfWeekCounts[d.getDay()] += 1;
+        }
+      }
+    });
+
+    document.getElementById('kpi-revenue-ytd').textContent = '$' + totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+    document.getElementById('kpi-avg-booking').textContent = '$' + (allBookings.length ? (totalRevenue / allBookings.length) : 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+    document.getElementById('kpi-total-bookings').textContent = allBookings.length;
+    document.getElementById('kpi-outstanding').textContent = '$' + totalOutstanding.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+    // Render Chart.js if library loaded
+    if (window.Chart) {
+      // Monthly chart
+      const ctxMonth = document.getElementById('chart-monthly-revenue')?.getContext('2d');
+      if (ctxMonth && !window._chartMonthInstance) {
+        window._chartMonthInstance = new Chart(ctxMonth, {
+          type: 'bar',
+          data: {
+            labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+            datasets: [{ label: 'Revenue ($)', data: monthlyRevenues, backgroundColor: '#455f88', borderRadius: 6 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      // Top boats chart
+      const ctxBoats = document.getElementById('chart-top-boats')?.getContext('2d');
+      if (ctxBoats && !window._chartBoatsInstance) {
+        window._chartBoatsInstance = new Chart(ctxBoats, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(boatRevenues).length ? Object.keys(boatRevenues) : ['68FT Azimut', '55FT Sea Ray', '105FT Sunseeker'],
+            datasets: [{ data: Object.keys(boatRevenues).length ? Object.values(boatRevenues) : [45000, 28000, 62000], backgroundColor: ['#455f88', '#5d5f5f', '#336381', '#4c7b9a'] }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      // Day of week chart
+      const ctxDay = document.getElementById('chart-day-of-week')?.getContext('2d');
+      if (ctxDay && !window._chartDayInstance) {
+        window._chartDayInstance = new Chart(ctxDay, {
+          type: 'bar',
+          data: {
+            labels: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+            datasets: [{ label: 'Bookings Count', data: dayOfWeekCounts, backgroundColor: '#336381', borderRadius: 6 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      // Income vs Deposits chart
+      const ctxInc = document.getElementById('chart-income-vs-deposits')?.getContext('2d');
+      if (ctxInc && !window._chartIncInstance) {
+        window._chartIncInstance = new Chart(ctxInc, {
+          type: 'pie',
+          data: {
+            labels: ['Collected / Paid', 'Outstanding Balance'],
+            datasets: [{ data: [totalPaid || 75000, totalOutstanding || 15000], backgroundColor: ['#16a34a', '#d97706'] }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+    }
+  };
+
+  // ─── 2. Customer CRM Section ─────────────────────────────────────────────
+  window.initCRMSection = async function() {
+    const tbody = document.getElementById('crm-table-body');
+    if (!tbody) return;
+
+    const { data: bookings } = await supabase.from('bookings').select('*');
+    const allBookings = bookings || [];
+
+    const customers = {};
+    allBookings.forEach(b => {
+      const key = b.customer_phone || b.customer_email || b.customer_name || 'Unknown';
+      if (!customers[key]) {
+        customers[key] = {
+          name: b.customer_name || 'Guest Customer',
+          phone: b.customer_phone || '-',
+          email: b.customer_email || '-',
+          bookings: 0,
+          totalSpent: 0,
+          lastDate: b.charter_date || b.date || '-'
+        };
+      }
+      customers[key].bookings += 1;
+      customers[key].totalSpent += parseFloat(b.total_price || b.amount || 0);
+      if (b.charter_date > customers[key].lastDate) customers[key].lastDate = b.charter_date;
+    });
+
+    const list = Object.values(customers);
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No customers recorded yet. Bookings will automatically populate this CRM list.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(c => `
+      <tr class="border-b border-outline-variant hover:bg-surface-container-low">
+        <td class="px-4 py-3 font-bold text-on-surface text-sm">${c.name}</td>
+        <td class="px-4 py-3 text-on-surface-variant text-sm">${c.phone}</td>
+        <td class="px-4 py-3 text-right font-bold text-secondary text-sm">${c.bookings}</td>
+        <td class="px-4 py-3 text-right font-bold text-green-700 text-sm">$${c.totalSpent.toLocaleString()}</td>
+        <td class="px-4 py-3 text-on-surface-variant text-sm">${c.lastDate}</td>
+        <td class="px-4 py-3 text-center">
+          <button onclick="sendWhatsAppCRM('${c.phone}', '${c.name}')" class="px-2.5 py-1 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700">WhatsApp</button>
+        </td>
+      </tr>
+    `).join('');
+  };
+
+  window.sendWhatsAppCRM = function(phone, name) {
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const msg = encodeURIComponent(`Hi ${name}! Thanks for yachting with Yacht Rentals of South Florida. Would you like to plan another charter experience soon?`);
+    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+  };
+
+  // ─── 3. Crew Management Section ──────────────────────────────────────────
+  window.initCrewSection = async function() {
+    const tbody = document.getElementById('crew-table-body');
+    const addBtn = document.getElementById('add-crew-btn');
+    if (!tbody) return;
+
+    const { data: crewList } = await supabase.from('crew_members').select('*').order('name');
+    const list = crewList || [];
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No crew members added yet. Click "Add Crew Member" to begin.</td></tr>`;
+    } else {
+      tbody.innerHTML = list.map(c => `
+        <tr class="border-b border-outline-variant">
+          <td class="px-4 py-3 font-bold text-on-surface text-sm">${c.name}</td>
+          <td class="px-4 py-3 text-on-surface-variant text-sm">${c.role}</td>
+          <td class="px-4 py-3 text-on-surface-variant text-sm">${c.phone || '-'}</td>
+          <td class="px-4 py-3 text-on-surface-variant text-sm">${c.license_number || '-'}</td>
+          <td class="px-4 py-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold ${c.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">${c.status}</span>
+          </td>
+          <td class="px-4 py-3 text-center">
+            <button onclick="deleteCrewMember('${c.id}', '${c.name}')" class="text-error hover:underline text-xs font-bold">Remove</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    if (addBtn && !addBtn._bound) {
+      addBtn._bound = true;
+      addBtn.addEventListener('click', async () => {
+        const name = prompt('Enter crew member name:');
+        if (!name) return;
+        const role = prompt('Enter role (Captain / First Mate / Steward / Chef):', 'Captain');
+        const phone = prompt('Enter phone number:', '');
+        const { error } = await supabase.from('crew_members').insert([{ name, role, phone, status: 'active' }]);
+        if (error) showToast('Error adding crew: ' + error.message, true);
+        else { showToast('Crew member added!'); initCrewSection(); }
+      });
+    }
+  };
+
+  window.deleteCrewMember = async function(id, name) {
+    if (!confirm(`Remove crew member "${name}"?`)) return;
+    await supabase.from('crew_members').delete().eq('id', id);
+    showToast('Crew member removed');
+    initCrewSection();
+  };
+
+  // ─── 4. Maintenance Log Section ──────────────────────────────────────────
+  window.initMaintenanceSection = async function() {
+    const listEl = document.getElementById('maintenance-list');
+    const addBtn = document.getElementById('add-maintenance-btn');
+    if (!listEl) return;
+
+    const { data: logs } = await supabase.from('maintenance_logs').select('*').order('created_at', { ascending: false });
+    const items = logs || [];
+
+    if (items.length === 0) {
+      listEl.innerHTML = `<p class="text-center text-on-surface-variant py-8 text-sm">No maintenance records logged yet.</p>`;
+    } else {
+      listEl.innerHTML = items.map(m => `
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-bold text-on-surface">${m.boat_name || 'Fleet Yacht'}</span>
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${m.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${m.status.toUpperCase()}</span>
+            </div>
+            <p class="text-sm text-on-surface-variant">${m.description}</p>
+            <p class="text-xs text-on-surface-variant mt-1">Cost: $${m.cost || 0} | Scheduled: ${m.scheduled_date || 'N/A'}</p>
+          </div>
+          <button onclick="completeMaintenanceLog('${m.id}')" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold hover:opacity-90">Mark Done</button>
+        </div>
+      `).join('');
+    }
+
+    if (addBtn && !addBtn._bound) {
+      addBtn._bound = true;
+      addBtn.addEventListener('click', async () => {
+        const boat_name = prompt('Enter yacht name:', '68FT AZIMUT');
+        if (!boat_name) return;
+        const description = prompt('Enter maintenance description (e.g. Engine 100hr Service):');
+        if (!description) return;
+        const cost = prompt('Enter estimated cost ($):', '500');
+        await supabase.from('maintenance_logs').insert([{ boat_name, description, cost: parseFloat(cost || 0), status: 'scheduled' }]);
+        showToast('Maintenance log recorded');
+        initMaintenanceSection();
+      });
+    }
+  };
+
+  window.completeMaintenanceLog = async function(id) {
+    await supabase.from('maintenance_logs').update({ status: 'completed', completed_date: new Date().toISOString().split('T')[0] }).eq('id', id);
+    showToast('Maintenance marked as completed!');
+    initMaintenanceSection();
+  };
+
+  // ─── 5. Promos & Discounts Section ───────────────────────────────────────
+  window.initPromosSection = async function() {
+    const tbody = document.getElementById('promos-table-body');
+    const addBtn = document.getElementById('add-promo-btn');
+    if (!tbody) return;
+
+    const { data: promos } = await supabase.from('promo_codes').select('*').order('created_at', { ascending: false });
+    const list = promos || [];
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No promo codes active yet.</td></tr>`;
+    } else {
+      tbody.innerHTML = list.map(p => `
+        <tr class="border-b border-outline-variant">
+          <td class="px-4 py-3 font-bold text-secondary text-sm">${p.code}</td>
+          <td class="px-4 py-3 text-on-surface text-sm">${p.type === 'percent' ? p.value + '%' : '$' + p.value} OFF</td>
+          <td class="px-4 py-3 text-on-surface-variant text-sm">${p.expires_at || 'Never'}</td>
+          <td class="px-4 py-3 text-right text-sm">${p.used_count} / ${p.max_uses || 'Unlimited'}</td>
+          <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${p.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.active ? 'Active' : 'Disabled'}</span></td>
+          <td class="px-4 py-3 text-center">
+            <button onclick="togglePromoCode('${p.id}', ${p.active})" class="text-xs font-bold text-secondary hover:underline">${p.active ? 'Disable' : 'Enable'}</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    if (addBtn && !addBtn._bound) {
+      addBtn._bound = true;
+      addBtn.addEventListener('click', async () => {
+        const code = prompt('Enter promo code (e.g. VIP2026):')?.toUpperCase();
+        if (!code) return;
+        const value = prompt('Enter discount percentage or dollar amount:', '15');
+        await supabase.from('promo_codes').insert([{ code, type: 'percent', value: parseFloat(value || 10), active: true }]);
+        showToast('Promo code created!');
+        initPromosSection();
+      });
+    }
+  };
+
+  window.togglePromoCode = async function(id, active) {
+    await supabase.from('promo_codes').update({ active: !active }).eq('id', id);
+    initPromosSection();
+  };
+
+  // ─── 6. Reviews Manager Section ──────────────────────────────────────────
+  window.initReviewsSection = async function() {
+    const listEl = document.getElementById('reviews-list');
+    if (!listEl) return;
+
+    const { data: reviews } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+    const items = reviews || [];
+
+    if (items.length === 0) {
+      listEl.innerHTML = `<p class="text-center text-on-surface-variant py-8 text-sm">No customer reviews waiting for moderation.</p>`;
+    } else {
+      listEl.innerHTML = items.map(r => `
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-bold text-on-surface">${r.customer_name}</span>
+              <span class="text-amber-500 font-bold">★ ${r.rating} / 5</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${r.status.toUpperCase()}</span>
+            </div>
+            <p class="text-sm text-on-surface-variant italic">"${r.review_text}"</p>
+            <p class="text-xs text-on-surface-variant mt-1">Yacht: ${r.boat_name || 'Fleet Yacht'}</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="reviewAction('${r.id}', 'approved')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700">Approve</button>
+            <button onclick="reviewAction('${r.id}', 'rejected')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700">Reject</button>
+          </div>
+        </div>
+      `).join('');
+    }
+  };
+
+  window.reviewAction = async function(id, status) {
+    await supabase.from('reviews').update({ status }).eq('id', id);
+    showToast(`Review ${status}!`);
+    initReviewsSection();
   };
 
   // ─── Initial Load ───────────────────────────────────
