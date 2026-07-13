@@ -667,7 +667,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           locDropdown.classList.add('hidden');
         }
       });
-      });
     }
 
     // Photo Gallery Logic
