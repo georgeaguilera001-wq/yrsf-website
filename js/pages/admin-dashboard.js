@@ -2887,6 +2887,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
               for (const dateFormatted of datesToPush) {
                 if (dateFormatted < cutoffDateStr) continue;
+                const custName = summaryText || (boat.ical_feed_label || 'External Block');
+                
+                // Prevent duplicate sync events for the same boat on the same date + time + customer name
+                const isDup = window.externalIcsEvents.some(ex =>
+                  ex.boat_id === boat.id &&
+                  ex.booking_date === dateFormatted &&
+                  ex.start_time === displayTime &&
+                  ex.customer_name === custName
+                );
+                if (isDup) continue;
+
                 window.externalIcsEvents.push({
                   id: 'ics_' + Math.random().toString(36).substr(2, 9),
                   boat_id: boat.id,
@@ -2894,7 +2905,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   booking_date: dateFormatted,
                   start_time: displayTime,
                   status: 'external',
-                  customer_name: summaryText || (boat.ical_feed_label || 'External Block'),
+                  customer_name: custName,
                   source_label: filterKeyword ? 'TimeTree Sync' : (boat.ical_feed_label || 'External iCal')
                 });
                 addedCount++;
