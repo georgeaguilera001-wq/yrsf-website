@@ -393,7 +393,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             <p class="text-xs text-on-surface-variant mb-3">Paste the secret iCal (.ics) feed URL from Google Calendar, TimeTree, Teamup, or Boatsetter to sync dates automatically into your Master Calendar.</p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div class="md:col-span-2">
-                <label class="block font-label text-xs font-bold text-on-surface mb-1">iCal (.ics) Feed URL(s) <span class="text-[10px] font-normal text-on-surface-variant">(Multiple URLs allowed: 1 per line or comma-separated)</span></label>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block font-label text-xs font-bold text-on-surface">iCal (.ics) Feed URL(s)</label>
+                  <select id="ical-provider-template-select" class="px-2 py-1 bg-blue-100/80 border border-blue-300 rounded text-[11px] font-bold text-blue-900 cursor-pointer hover:bg-blue-200 transition-colors">
+                    <option value="">⚡ Quick-Select Provider Format...</option>
+                    <option value="timetree">🌳 TimeTree (Sync via Bridge)</option>
+                    <option value="google">📅 Google Calendar (.ics Link)</option>
+                    <option value="icloud">🍏 Apple iCloud Calendar</option>
+                    <option value="boatsetter">⚓ Boatsetter Charter Feed</option>
+                  </select>
+                </div>
                 <textarea id="edit-boat-ical-url" rows="2" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics&#10;https://timetree.com/export/..." class="admin-field w-full px-3 py-2 bg-white border border-outline-variant rounded-lg font-mono text-xs">${escapeHtml(boat?.ical_feed_url || '')}</textarea>
               </div>
               <div>
@@ -440,6 +449,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Cancel
     document.getElementById('cancel-boat-edit')?.addEventListener('click', closeModal);
+
+    // iCal Provider Template Auto-Fill
+    const icalSelect = document.getElementById('ical-provider-template-select');
+    const icalUrlArea = document.getElementById('edit-boat-ical-url');
+    const icalLabelInput = document.getElementById('edit-boat-ical-label');
+    if (icalSelect && icalUrlArea) {
+      icalSelect.addEventListener('change', () => {
+        const val = icalSelect.value;
+        if (!val) return;
+        if (val === 'timetree') {
+          const prefix = 'https://yrsf-website.onrender.com/timetree.ics?c=';
+          icalUrlArea.value = prefix;
+          if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'TimeTree';
+          icalUrlArea.focus();
+          icalUrlArea.setSelectionRange(prefix.length, prefix.length);
+        } else if (val === 'google') {
+          icalUrlArea.value = 'https://calendar.google.com/calendar/ical/YOUR_CALENDAR_ID/private-XXXXXXXX/basic.ics';
+          if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'Google Cal';
+          icalUrlArea.focus();
+        } else if (val === 'icloud') {
+          icalUrlArea.value = 'webcal://pXX-caldav.icloud.com/published/2/XXXXXXXX';
+          if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'Apple Cal';
+          icalUrlArea.focus();
+        } else if (val === 'boatsetter') {
+          icalUrlArea.value = 'https://www.boatsetter.com/api/v2/boats/XXXXXXXX/calendar.ics';
+          if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'Boatsetter';
+          icalUrlArea.focus();
+        }
+      });
+    }
 
     // Address Verification & Interactive Preview Map
     const locInput = document.getElementById('edit-boat-location');
