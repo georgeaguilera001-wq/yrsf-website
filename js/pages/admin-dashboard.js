@@ -202,10 +202,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusVal = fleetStatusFilter?.value || 'all';
     const sortVal = fleetSortFilter?.value || 'length_asc';
 
+    // Broad search: split query into words, match ANY word across ALL boat fields
+    const searchWords = searchVal.trim().split(/\s+/).filter(Boolean);
     let filtered = allAdminBoatsCache.filter(b => {
-      const matchSearch = b.name.toLowerCase().includes(searchVal) || 
-                          (b.manufacturer || '').toLowerCase().includes(searchVal) ||
-                          (b.vessel_id || '').toLowerCase().includes(searchVal);
+      const haystack = [
+        b.name, b.manufacturer, b.vessel_id, b.model,
+        b.location, b.slug, b.status,
+        b.length_ft ? `${b.length_ft}ft` : '',
+        b.capacity ? `${b.capacity} guests` : '',
+        b.year ? `${b.year}` : ''
+      ].join(' ').toLowerCase();
+      const matchSearch = searchWords.length === 0 || searchWords.every(word => haystack.includes(word));
       const matchStatus = statusVal === 'all' || b.status === statusVal;
       return matchSearch && matchStatus;
     });
