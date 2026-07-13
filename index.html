@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>YRSF | Miami's Trusted Choice for Boat &amp; Yacht Rentals</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-secondary-fixed-variant": "#2c476f", "secondary-fixed": "#d5e3ff", "on-tertiary-container": "#4c7b9a", "secondary-fixed-dim": "#adc8f6", "surface-container": "#eeeeee", "surface-container-low": "#f3f3f4", "outline-variant": "#c4c7c8", secondary: "#455f88", "on-surface": "#1a1c1c", "on-primary": "#ffffff", "surface-dim": "#dadada", "on-primary-fixed-variant": "#454747", "surface-container-lowest": "#ffffff", "secondary-container": "#b5d0ff", "on-error-container": "#93000a", "on-secondary-container": "#3e5981", "primary-container": "#ffffff", tertiary: "#336381", "inverse-on-surface": "#f0f1f1", error: "#ba1a1a", "on-tertiary-fixed-variant": "#164b68", "on-tertiary-fixed": "#001e2e", "on-secondary-fixed": "#001b3c", "error-container": "#ffdad6", "surface-container-highest": "#e2e2e2", "surface-bright": "#f9f9f9", "on-tertiary": "#ffffff", "on-primary-fixed": "#1a1c1c", primary: "#5d5f5f", "primary-fixed-dim": "#c6c6c7", background: "#f9f9f9", "on-secondary": "#ffffff", "surface-container-high": "#e8e8e8", surface: "#f9f9f9", "on-surface-variant": "#444748", "inverse-surface": "#2f3131", "surface-variant": "#e2e2e2", "tertiary-container": "#ffffff", "on-error": "#ffffff", "tertiary-fixed": "#c8e6ff", "primary-fixed": "#e2e2e2", "inverse-primary": "#c6c6c7", "surface-tint": "#5d5f5f", "on-primary-container": "#747676", outline: "#747878", "on-background": "#1a1c1c", "tertiary-fixed-dim": "#9eccef"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {md: "24px", lg: "48px", xl: "80px", sm: "12px", "container-max": "1280px", gutter: "24px", base: "8px", xs: "4px"}, fontFamily: {"display-lg": ["Montserrat"], "label-md": ["Montserrat"], "body-md": ["Montserrat"], "headline-md": ["Montserrat"], caption: ["Montserrat"], "headline-lg": ["Montserrat"], "headline-lg-mobile": ["Montserrat"], "body-lg": ["Montserrat"], headline: ["Montserrat"], display: ["Montserrat"], body: ["Montserrat"], label: ["Montserrat"]}, fontSize: {"display-lg": ["48px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700"}], "label-md": ["14px", {lineHeight: "1.2", letterSpacing: "0.05em", fontWeight: "600"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], caption: ["12px", {lineHeight: "1.4", fontWeight: "500"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "headline-lg-mobile": ["28px", {lineHeight: "1.2", fontWeight: "700"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}]}}}};</script>
+<link rel="stylesheet" href="/css/shared.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  try {
+    const s = JSON.parse(localStorage.getItem('yrsf_settings'));
+    if (s && s.hero_bg_image && s.hero_bg_image.value) {
+      document.write('<style>#hero-bg-img { content: url(' + s.hero_bg_image.value + '); }</style>');
+    }
+  } catch(e){}
+</script>
+</head>
+<body class="bg-background text-on-surface">
+<div id="navbar-container"></div>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="relative h-[800px] flex items-center overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img id="hero-bg-img" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqIjoMHtZEKlMGDicvmd77AkvUpTVFck9K9RKzshd08dW25kM-A-ave9FLIGovaRQc7ou8NqlwpBk1XIF1PXB0pgioKBQjyHvVFjj47Ut6115UWWvcSAQ4fkws1TfIj1E0PRzDQqdRJaQwiw9HPu6YAoi2xFI_la8bF2_2Hj7mG4Zd9w78R_Ydn9IoTuK1WmwFlYIOvEJrnFzXwg_WRglYz_Y9OsVKK-fO6UFjlBb8EPvax5zy3AOmnVnOpzEOr07EezkOirgItJs" alt="A wide panoramic shot of the stunning Miami skyline from the turquoise ocean waters at sunset."/>
+<div class="absolute inset-0 hero-gradient"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto px-lg w-full">
+<div class="max-w-2xl">
+<span id="hero-tagline" class="bg-secondary text-on-secondary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block">Miami's Trusted Choice</span>
+<h1 id="hero-title" class="font-display-lg text-display-lg text-on-surface mb-md">Miami Boat &amp; Yacht Rentals</h1>
+<p id="hero-description" class="font-body-lg text-body-lg text-on-surface-variant mb-lg leading-relaxed">From affordable boats to luxury yachts, we'll help you find the perfect boat for your day on the water. Our experts personally know every vessel in our fleet.</p>
+<div class="flex flex-wrap gap-md">
+<button class="bg-secondary text-on-secondary px-8 py-4 rounded-lg font-label-md text-lg hover:shadow-lg transition-all flex items-center gap-2" onclick="window.location.href='/boats.html'">
+                            Browse Our Fleet <span class="material-symbols-outlined">anchor</span>
+</button>
+<button class="bg-[#25D366] text-white px-8 py-4 rounded-lg font-label-md text-lg hover:bg-[#128C7E] transition-all flex items-center gap-3 shadow-lg" onclick="window.location.href='https://wa.me/13059902192?text=Hi%20YRSF%20Team!%20I%20need%20help%20choosing%20the%20right%20boat%20for%20my%20event.'">
+    <svg fill="currentColor" height="24" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.438 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884 0 2.225.584 3.899 1.582 5.456l-.999 3.647 3.906-.997zm11.367-7.387c-.165-.271-.61-.437-1.287-.774-.677-.337-4.004-1.977-4.622-2.201-.618-.225-1.069-.337-1.52.337-.45.675-1.747 2.201-2.141 2.651-.394.45-.788.506-1.465.169-.677-.337-2.859-1.055-5.448-3.363-2.015-1.797-3.375-4.017-3.77-4.692-.394-.675-.042-1.041.297-1.376.305-.302.677-.788 1.015-1.181.339-.394.451-.675.677-1.125.225-.45.112-.844-.056-1.181-.169-.337-1.52-3.659-2.084-5.01-.55-1.316-1.11-1.139-1.52-1.159-.393-.021-.845-.025-1.296-.025-.45 0-1.181.169-1.799.844-.618.675-2.361 2.308-2.361 5.628 0 3.32 2.418 6.529 2.756 6.979.338.45 4.757 7.265 11.525 10.179 1.61.693 2.865 1.107 3.844 1.417 1.615.513 3.084.441 4.244.267 1.295-.194 4.004-1.631 4.568-3.208.564-1.576.564-2.927.394-3.208z"></path>
+    </svg>
+    WhatsApp Us
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Why Choose Us Section -->
+<section class="py-xl bg-white border-y border-outline-variant">
+<div class="max-w-container-max mx-auto px-lg">
+<div class="text-center mb-lg">
+<h2 class="font-display-lg text-headline-lg text-secondary">Why Miami Chooses YRSF</h2>
+<p class="text-on-surface-variant font-body-md mt-2">Professionalism, reliability, and the local touch in every charter.</p>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-md">
+<div class="flex flex-col items-center text-center p-md">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">directions_boat</span>
+</div>
+<h4 class="font-label-md text-xs font-bold uppercase">Largest Selection</h4>
+</div>
+<div class="flex flex-col items-center text-center p-md">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<h4 class="font-label-md text-xs font-bold uppercase">Affordable to Luxury</h4>
+</div>
+<div class="flex flex-col items-center text-center p-md">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">person_pin</span>
+</div>
+<h4 class="font-label-md text-xs font-bold uppercase">Local Experts</h4>
+</div>
+<div class="flex flex-col items-center text-center p-md">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">chat_bubble</span>
+</div>
+<h4 class="font-label-md text-xs font-bold uppercase">Fast Support</h4>
+</div>
+<div class="flex flex-col items-center text-center p-md">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">verified_user</span>
+</div>
+<h4 class="font-label-md text-xs font-bold uppercase">Licensed Captains</h4>
+</div>
+<div class="flex flex-col items-center text-center p-md">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">sentiment_satisfied</span>
+</div>
+<h4 class="font-label-md text-xs font-bold uppercase">Happy Customers</h4>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Catalog Integration -->
+<section class="py-xl">
+<div class="max-w-container-max mx-auto px-lg">
+<div class="flex justify-between items-end mb-lg">
+<div>
+<h2 class="font-display-lg text-headline-lg text-secondary">Our Professional Fleet</h2>
+<p class="text-on-surface-variant font-body-md">42 hand-picked vessels, maintained to the highest standards.</p>
+</div>
+<div class="flex gap-md">
+<select class="bg-white border border-outline-variant rounded-lg px-4 py-2 font-label-md focus:ring-secondary">
+<option>Sort by: Featured</option>
+<option>Price: Low to High</option>
+<option>Size: Large to Small</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-lg">
+<!-- Filters Sidebar -->
+<aside class="hidden lg:block space-y-lg">
+<div class="p-md bg-white rounded-xl border border-outline-variant space-y-6">
+<div>
+<p class="font-label-md mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-sm">payments</span> Price Range</p>
+<input class="w-full accent-secondary" type="range"/>
+<div class="flex justify-between text-xs font-body-md mt-1">
+<span>$500</span>
+<span>$10,000+</span>
+</div>
+</div>
+<div class="space-y-2">
+<p class="font-label-md flex items-center gap-2"><span class="material-symbols-outlined text-sm">straighten</span> Fleet Size</p>
+<label class="flex items-center gap-2 font-body-md text-sm"><input class="rounded text-secondary focus:ring-secondary" type="checkbox"/> Under 40 ft</label>
+<label class="flex items-center gap-2 font-body-md text-sm"><input class="rounded text-secondary focus:ring-secondary" type="checkbox"/> 40 - 60 ft</label>
+<label class="flex items-center gap-2 font-body-md text-sm"><input checked="" class="rounded text-secondary focus:ring-secondary" type="checkbox"/> 60 - 80 ft</label>
+<label class="flex items-center gap-2 font-body-md text-sm"><input class="rounded text-secondary focus:ring-secondary" type="checkbox"/> 100+ ft</label>
+</div>
+<div class="space-y-2">
+<p class="font-label-md flex items-center gap-2"><span class="material-symbols-outlined text-sm">pool</span> Add-Ons</p>
+<label class="flex items-center gap-2 font-body-md text-sm"><input class="rounded text-secondary focus:ring-secondary" type="checkbox"/> Jet Ski</label>
+<label class="flex items-center gap-2 font-body-md text-sm"><input class="rounded text-secondary focus:ring-secondary" type="checkbox"/> Private Chef</label>
+<label class="flex items-center gap-2 font-body-md text-sm"><input class="rounded text-secondary focus:ring-secondary" type="checkbox"/> Professional DJ</label>
+<label class="flex items-center gap-2 font-body-md text-sm"><input class="rounded text-secondary focus:ring-secondary" type="checkbox"/> Event Decorations</label>
+</div>
+</div>
+</aside>
+<!-- Yacht Grid (Dynamic) -->
+<div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-md" id="featured-boats">
+<!-- Loading skeletons injected by JS -->
+</div>
+</div>
+<div class="mt-lg flex justify-center">
+<button class="bg-transparent border-2 border-secondary text-secondary px-8 py-3 rounded-lg font-label-md hover:bg-secondary hover:text-white transition-all" onclick="window.location.href='/boats.html'">View Our Full Fleet</button>
+</div>
+</div>
+</section>
+
+<!-- Instagram Showcase Section -->
+<section class="py-xl bg-surface-container-lowest overflow-hidden border-y border-outline-variant">
+<div class="max-w-container-max mx-auto px-lg" id="instagram-showcase-container">
+    <div class="flex flex-col md:flex-row items-center justify-between mb-lg gap-6">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#f09433] via-[#e6683c] via-[#dc2743] via-[#cc2366] to-[#bc1888] p-[3px]">
+                <div class="w-full h-full bg-white rounded-full p-[2px]">
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqIjoMHtZEKlMGDicvmd77AkvUpTVFck9K9RKzshd08dW25kM-A-ave9FLIGovaRQc7ou8NqlwpBk1XIF1PXB0pgioKBQjyHvVFjj47Ut6115UWWvcSAQ4fkws1TfIj1E0PRzDQqdRJaQwiw9HPu6YAoi2xFI_la8bF2_2Hj7mG4Zd9w78R_Ydn9IoTuK1WmwFlYIOvEJrnFzXwg_WRglYz_Y9OsVKK-fO6UFjlBb8EPvax5zy3AOmnVnOpzEOr07EezkOirgItJs" class="w-full h-full rounded-full object-cover" alt="YRSF Profile">
+                </div>
+            </div>
+            <div>
+                <h2 id="insta-handle" class="font-display-lg text-headline-md text-on-surface">@yachtrentalssouthflorida</h2>
+                <p class="font-body-md text-on-surface-variant">Follow us for daily Miami boating inspiration 🌴🛥️</p>
+            </div>
+        </div>
+        <a href="#" id="insta-link" class="bg-surface-container-high hover:bg-surface-container text-on-surface px-6 py-3 rounded-lg font-label-md transition-colors flex items-center gap-2 border border-outline-variant">
+            <svg class="w-5 h-5 text-[#E1306C]" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            Follow on Instagram
+        </a>
+    </div>
+
+    <!-- Instagram Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="insta-grid">
+        <!-- Post 1 -->
+        <a href="#" class="insta-post-link group relative aspect-square rounded-xl overflow-hidden block">
+            <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 lazy-image" data-src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE7juqqElTogV9NL7KyNj3xwWYT6x_1ExsHI5ITSCE9Jkwcxqt5HFr5P2Bt9qcuhJwFEEgzb9HQzFpcwCV751p-2acP-iAY27sqYP3VvV08hbV6pxzJ-T3O5pl1PdU2kV_5Edu6WwsXuPyLtCDEo1EiKIGBcZ8AoesdssD6kYKls3kDYYSdUU_gAwZD9gMeTBKITL9IG1lyJkf-q0mKW4L0OKxfZUcQaRgnG8vt1wbqQLIxYOyKk8r9FB6OCA7FliYUYtjtt8PiQk" alt="Instagram post">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </div>
+        </a>
+        <!-- Post 2 -->
+        <a href="#" class="insta-post-link group relative aspect-square rounded-xl overflow-hidden block">
+            <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 lazy-image" data-src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnJprUQbll63AJ3VCdV-wtfmloArO-PmVXYzdOOv-vxHaxtSUfCjQ1TWrG8G7yZTydojSwxgtIMHJkeIdIGjaAhZ1y36efKHajg33aXPPOiWBBepx-7hJPrTm5rg89qYhIZ8AbyfwKhZpHgMffWgT404KvgR0aNkSShuIpHdATBIy_bGN0fr3fbzQ2zMGNKUqlmwT9RSOxvwsbsK4K573rvPMndmYlv3KiyuplIJQBGGv439BE6iL9P09RpceflkNXxRJke3ZEkTM" alt="Instagram post">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </div>
+        </a>
+        <!-- Post 3 -->
+        <a href="#" class="insta-post-link group relative aspect-square rounded-xl overflow-hidden block">
+            <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 lazy-image" data-src="https://lh3.googleusercontent.com/aida-public/AB6AXuARjI8El5_hR4IiRS8Zz5c-Zyo7sUxNLT251VxKSfL71c3gZSiKFcSp6NjZsMYQx3zGs6UbKfnvEwvgW3g50zF_TDn-7FJx6Rp1nFB_PwJQ4-bysYkA9fQXGSOa-MBK1uuP8sjl32_IEGBdDSPwewmV995fVxXo824dueh2lmHkWALSV3XIN_RKrjuYiMWymc5F1SYA5hyN2ntUMyHz9kG8ejyIh1xDt04mVa7dM8HHN-rhkOwC83g4HiBBkzLfXcKEWArFT83z5A0" alt="Instagram post">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </div>
+        </a>
+        <!-- Post 4 -->
+        <a href="#" class="insta-post-link group relative aspect-square rounded-xl overflow-hidden block">
+            <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 lazy-image" data-src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEBkAuTt-169garPOX1lvmsvIm2lrAQ1Mw3ULgsM2kVtAdl5xr5K9-TkKHLVZYanAosN111P2DuZ19hAewHrMm8aFGrqJdfF-r6S-hUscO_xSAluZhTolkcNoVk2CVvyMmZW_5vAl9YPWpLNbI3jQ7N_nllaOoCbK15izqxsKcE52Tfb16pmtPimQjclH1HKQ2lUrkcieyUx5IoyfqJOTBg_lc0Q3dJi1SHqvuYeKWHqF5l5DUyU-7HKMcnyZHYzi1XiMzLzCO-bk" alt="Instagram post">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </div>
+        </a>
+        <!-- Post 5 -->
+        <a href="#" class="insta-post-link group relative aspect-square rounded-xl overflow-hidden block">
+            <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 lazy-image" data-src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0KpHs0Tk1JEVcn6PytTR7XqHoe2qib3WBGCFsrxvHZgEqhtXGahztY_ecaYnBYdsItZIYAEmOKEddstBJ_Qho3w9-n9PFtjiQMkyXfZyUDXazlLIxq6zUMg4DfHJn3ctvQ5CfO13JOz8u2BfXoovls-h-76YfWIyd0_f1uyk_Hj0aPSNHTKYGEfuq3_xSKXhJLxk8WZGyCmIlEapsjPw3h5GqaNnAQT_8JW0H8tF_SMaoQDRi1uRUVYEVwWH6vzfanXZC-vRlp10" alt="Instagram post">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </div>
+        </a>
+    </div>
+</div>
+</section>
+<!-- Browse by Experience -->
+<section class="py-xl bg-surface-container-low">
+<div class="max-w-container-max mx-auto px-lg">
+<div class="mb-lg">
+<h2 class="font-display-lg text-headline-lg text-secondary">Browse by Experience</h2>
+<p class="text-on-surface-variant font-body-md">Curated outings tailored to your special occasion.</p>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-sm">
+<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+<span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">cake</span>
+<p class="font-label-md text-xs">Birthday</p>
+</div>
+<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+<span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">celebration</span>
+<p class="font-label-md text-xs">Bachelor/ette</p>
+</div>
+<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+<span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">family_restroom</span>
+<p class="font-label-md text-xs">Family Day</p>
+</div>
+<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+<span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">diamond</span>
+<p class="font-label-md text-xs">Luxury Yachts</p>
+</div>
+<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+<span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">business_center</span>
+<p class="font-label-md text-xs">Corporate</p>
+</div>
+<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+<span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">wb_twilight</span>
+<p class="font-label-md text-xs">Sunset Cruise</p>
+</div>
+<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+<span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">favorite</span>
+<p class="font-label-md text-xs">Proposals</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Departure Locations Map -->
+<section class="py-xl bg-white">
+<div class="max-w-container-max mx-auto px-lg">
+<div class="mb-lg text-center">
+<h2 class="font-display-lg text-headline-lg text-secondary mb-2">Our Departure Marinas</h2>
+<p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto mb-6">Wherever you are in Miami, we have a convenient dock nearby. Explore our primary departure zones.</p>
+
+<div class="max-w-4xl mx-auto bg-surface-container-low p-5 rounded-2xl border border-outline-variant shadow-md text-left mb-6">
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-outline-variant">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">my_location</span>
+      </div>
+      <div>
+        <h4 class="font-bold text-on-surface text-base" style="margin:0;">Find Marinas &amp; Yachts Near You</h4>
+        <p class="text-xs text-on-surface-variant" style="margin:0;">Calculate exact distances in miles from your hotel, rental, or current location.</p>
+      </div>
+    </div>
+    <button id="locate-me-btn" class="bg-secondary text-on-secondary px-5 py-2.5 rounded-lg font-label-md text-sm font-bold shadow hover:opacity-90 transition-all flex items-center gap-2 shrink-0 w-full md:w-auto justify-center">
+      <span class="material-symbols-outlined text-base">near_me</span> Use My Current Location
+    </button>
+  </div>
+
+  <div class="pt-4 flex flex-col sm:flex-row items-center gap-3 relative">
+    <div class="flex items-center gap-2 text-xs font-bold text-secondary shrink-0">
+      <span class="material-symbols-outlined text-base">hotel</span>
+      <span>Not in Miami yet?</span>
+    </div>
+    <div class="relative flex-1 w-full">
+      <input type="text" id="custom-stay-input" autocomplete="off" placeholder="Type where you will be staying (e.g., Fontainebleau, South Beach, Brickell)..." class="w-full px-4 py-2.5 bg-white border border-outline-variant rounded-lg font-body text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary pr-10 shadow-inner"/>
+      <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-lg pointer-events-none">search</span>
+      <div id="custom-stay-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 hidden text-left"></div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<div class="lg:col-span-2 rounded-2xl overflow-hidden shadow-lg border border-outline-variant h-[500px] relative z-10">
+<div id="marina-map" class="w-full h-full"></div>
+</div>
+<div class="space-y-sm" id="marinas-list-sidebar">
+<div class="p-md bg-white border border-outline-variant hover:border-secondary rounded-xl transition-all cursor-pointer group" data-location="Miami River">
+<h4 class="font-bold text-secondary flex items-center justify-between"><span>Miami River <span class="distance-badge"></span></span><span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span></h4>
+<p class="text-xs text-on-surface-variant mt-1">Perfect for downtown skyline views &amp; dining cruises.</p>
+</div>
+<div class="p-md bg-white border border-outline-variant hover:border-secondary rounded-xl transition-all cursor-pointer group" data-location="Miami Beach">
+<h4 class="font-bold text-secondary flex items-center justify-between"><span>Miami Beach <span class="distance-badge"></span></span><span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span></h4>
+<p class="text-xs text-on-surface-variant mt-1">Best for ocean access and Star Island celebrity tours.</p>
+</div>
+<div class="p-md bg-white border border-outline-variant hover:border-secondary rounded-xl transition-all cursor-pointer group" data-location="Coconut Grove">
+<h4 class="font-bold text-secondary flex items-center justify-between"><span>Coconut Grove <span class="distance-badge"></span></span><span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span></h4>
+<p class="text-xs text-on-surface-variant mt-1">Ideal for quiet sailing and exploring Key Biscayne.</p>
+</div>
+<div class="p-md bg-white border border-outline-variant hover:border-secondary rounded-xl transition-all cursor-pointer group" data-location="Haulover / North Miami">
+<h4 class="font-bold text-secondary flex items-center justify-between"><span>Haulover / North Miami <span class="distance-badge"></span></span><span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span></h4>
+<p class="text-xs text-on-surface-variant mt-1">Access the world-famous sandbar in minutes.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Expert Section -->
+<section class="py-xl bg-surface-container">
+<div class="max-w-container-max mx-auto px-lg">
+<div class="bg-white rounded-3xl p-lg md:p-xl flex flex-col md:flex-row items-center gap-xl shadow-xl overflow-hidden relative">
+<div class="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full -mr-16 -mt-16"></div>
+<div class="w-full md:w-1/2 space-y-md">
+<span id="expert-tagline" class="text-secondary font-label-md uppercase tracking-widest text-xs font-bold">Personalized Service</span>
+<h2 id="expert-title" class="font-display-lg text-display-lg text-secondary">Need Help Deciding?</h2>
+<p id="expert-description" class="font-body-lg text-on-surface-variant">Our charter specialists personally know every boat in our fleet. We don't just book rentals; we curate experiences tailored to your group, budget, and vision.</p>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">verified</span>
+<span id="expert-bullet-1" class="font-label-md">1-on-1 Planning Consultation</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">schedule</span>
+<span id="expert-bullet-2" class="font-label-md">Response time under 5 minutes</span>
+</div>
+</div>
+<button class="bg-secondary text-on-secondary px-8 py-4 rounded-lg font-label-md text-lg hover:shadow-lg transition-all flex items-center gap-2 w-fit" onclick="window.location.href='https://wa.me/13059902192?text=I%20need%20expert%20advice%20for%20a%20Miami%20boat%20charter.'">
+                            Talk to an Expert <span class="material-symbols-outlined">support_agent</span>
+</button>
+</div>
+<div class="w-full md:w-1/2 grid grid-cols-2 gap-md">
+<img id="expert-image-1" alt="Charter Expert 1" class="rounded-2xl h-64 w-full object-cover lazy-image" data-src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUohh5xaZkhKRDoIf0beCESSIhnk0PiGDVGe5VOQHwBdc_fcGxjQn_OEx4apHKhKmuyGqTyzbWsU3ovBP66MglbH4vEQrTjX6tP1EIiDoiTnskDZpagf0ugENxlyqjpe1sAZhHQDWB97S3gHSX4PVMh1Sb2vWQfiXjFp7t0O7DMjTnS0SjBhSPzNj9BqEI6piDn10Ox2GUHDyE-Wy2hOryjMk1tXOU7wWJ156nqmZwOg615F3JYVKEAwZqm9Z5LcElWbv_spxm2nY"/>
+<img id="expert-image-2" alt="Charter Expert 2" class="rounded-2xl h-64 w-full object-cover mt-8 lazy-image" data-src="https://lh3.googleusercontent.com/aida-public/AB6AXuDixp_cTMsS-cTefl-FsKzngrMgNHPisOAF_8nB0lmnRgDVKD4pJ93Pt1t0baLNjXKuGYFipBarJbaAE7DeEebrbub5qTgm1JHKoQVx-AL7eJ8nCnfb7Zz2WXI2PGjDKaVTlV5C8cfbdh0sPt_4lI6xVwwOE9NlW-V5VPMtvOehX2pzHdlenF9Q3Ozvx8PeC8eyZI1JojsChemV2NkIvxMjazKHrTAqDH1nFwOWFgo1z_4i9fksfrl70lVm14z8FscypGRhJEWlusc"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Testimonials -->
+<section class="py-xl bg-secondary text-on-secondary">
+<div class="max-w-container-max mx-auto px-lg">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-xl">
+<div class="lg:col-span-1">
+<h2 class="font-display-lg text-headline-lg mb-md">Trusted by Hundreds of Guests</h2>
+<p class="font-body-lg opacity-80 mb-lg">We pride ourselves on providing the best yacht charter experience in South Florida. Our reviews speak for themselves.</p>
+<div class="flex gap-2">
+<button class="p-4 rounded-full border border-white/20 hover:bg-white/10"><span class="material-symbols-outlined">arrow_back</span></button>
+<button class="p-4 rounded-full border border-white/20 hover:bg-white/10"><span class="material-symbols-outlined">arrow_forward</span></button>
+</div>
+</div>
+<div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-md" id="home-testimonials">
+<div class="bg-white/10 backdrop-blur-md p-lg rounded-2xl border border-white/10">
+<div class="flex text-yellow-400 mb-4">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-md italic mb-lg">"Absolutely incredible experience. The captain was professional, the boat was immaculate, and the sunset was unforgettable. YRSF is the only company I trust in Miami."</p>
+<p class="font-label-md text-sm">Sarah Jenkins — <span class="opacity-60 font-normal">June 2024</span></p>
+</div>
+<div class="bg-white/10 backdrop-blur-md p-lg rounded-2xl border border-white/10">
+<div class="flex text-yellow-400 mb-4">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-md italic mb-lg">"Booked for my company's corporate event. The team handled everything perfectly, from the catering to the DJ. High-end professional service throughout."</p>
+<p class="font-label-md text-sm">Michael Chen — <span class="opacity-60 font-normal">May 2024</span></p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="py-xl max-w-container-max mx-auto px-lg">
+<h2 class="font-display-lg text-headline-lg text-center text-secondary mb-xl">Frequently Asked Questions</h2>
+<div class="max-w-3xl mx-auto space-y-md" id="home-faqs">
+<details class="group bg-surface-container rounded-xl p-md cursor-pointer border border-transparent open:border-outline-variant transition-all">
+<summary class="flex justify-between items-center font-headline-md text-secondary list-none">
+                        What is included in the charter price?
+                        <span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<p class="mt-md font-body-md text-on-surface-variant">All our charters include the yacht rental, a licensed USCG captain, fuel at cruising speed, and basic refreshments like ice and water. Service fees and gratuity are typically handled at the end of your trip.</p>
+</details>
+<details class="group bg-surface-container rounded-xl p-md cursor-pointer border border-transparent open:border-outline-variant transition-all">
+<summary class="flex justify-between items-center font-headline-md text-secondary list-none">
+                        Do I need a captain for my rental?
+                        <span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<p class="mt-md font-body-md text-on-surface-variant">Yes, for your safety and to ensure a premium experience, all YRSF vessels are operated by licensed, professional captains who know Miami's waters perfectly.</p>
+</details>
+<details class="group bg-surface-container rounded-xl p-md cursor-pointer border border-transparent open:border-outline-variant transition-all">
+<summary class="flex justify-between items-center font-headline-md text-secondary list-none">
+                        How do I book?
+                        <span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<p class="mt-md font-body-md text-on-surface-variant">To ensure the best personal service and availability, all bookings are coordinated through our WhatsApp concierge. Simply click any "Book" button to start a conversation with our team.</p>
+</details>
+</div>
+</section>
+</main>
+<div id="footer-container"></div>
+<!-- WhatsApp Floating Button -->
+<a class="fixed bottom-8 right-8 bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-[100] flex items-center justify-center" href="https://wa.me/13059902192?text=Hello%20YRSF%2C%20I%20would%20like%20to%20learn%20more%20about%20your%20charter%20options.">
+<svg fill="currentColor" height="32" viewbox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg">
+<path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.438 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884 0 2.225.584 3.899 1.582 5.456l-.999 3.647 3.906-.997zm11.367-7.387c-.165-.271-.61-.437-1.287-.774-.677-.337-4.004-1.977-4.622-2.201-.618-.225-1.069-.337-1.52.337-.45.675-1.747 2.201-2.141 2.651-.394.45-.788.506-1.465.169-.677-.337-2.859-1.055-5.448-3.363-2.015-1.797-3.375-4.017-3.77-4.692-.394-.675-.042-1.041.297-1.376.305-.302.677-.788 1.015-1.181.339-.394.451-.675.677-1.125.225-.45.112-.844-.056-1.181-.169-.337-1.52-3.659-2.084-5.01-.55-1.316-1.11-1.139-1.52-1.159-.393-.021-.845-.025-1.296-.025-.45 0-1.181.169-1.799.844-.618.675-2.361 2.308-2.361 5.628 0 3.32 2.418 6.529 2.756 6.979.338.45 4.757 7.265 11.525 10.179 1.61.693 2.865 1.107 3.844 1.417 1.615.513 3.084.441 4.244.267 1.295-.194 4.004-1.631 4.568-3.208.564-1.576.564-2.927.394-3.208z"></path>
+</svg>
+</a>
+<script type="module" src="/js/pages/home.js"></script>
+<script>
+    // Interactive states for experience cards
+    document.querySelectorAll('.group').forEach(el => {
+        el.addEventListener('click', (e) => {
+            if(el.tagName.toLowerCase() === 'details') return;
+            const type = el.querySelector('p').textContent;
+            window.location.href = `https://wa.me/13059902192?text=I'm interested in a ${type} experience with YRSF!`;
+        });
+    });
+</script>
+</body>
+</html>

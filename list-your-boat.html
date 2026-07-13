@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Partner With YRSF — List Your Yacht Fleet</title>
+  <meta name="description" content="List your yacht or boat with South Florida's premier luxury charter marketplace. Reach high-net-worth clients searching for Miami boat charters."/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-secondary-fixed-variant": "#2c476f", "secondary-fixed": "#d5e3ff", "on-tertiary-container": "#4c7b9a", "secondary-fixed-dim": "#adc8f6", "surface-container": "#eeeeee", "surface-container-low": "#f3f3f4", "outline-variant": "#c4c7c8", secondary: "#455f88", "on-surface": "#1a1c1c", "on-primary": "#ffffff", "surface-dim": "#dadada", "on-primary-fixed-variant": "#454747", "surface-container-lowest": "#ffffff", "secondary-container": "#b5d0ff", "on-error-container": "#93000a", "on-secondary-container": "#3e5981", "primary-container": "#ffffff", tertiary: "#336381", "inverse-on-surface": "#f0f1f1", error: "#ba1a1a", "on-tertiary-fixed-variant": "#164b68", "on-tertiary-fixed": "#001e2e", "on-secondary-fixed": "#001b3c", "error-container": "#ffdad6", "surface-container-highest": "#e2e2e2", "surface-bright": "#f9f9f9", "on-tertiary": "#ffffff", "on-primary-fixed": "#1a1c1c", primary: "#5d5f5f", "primary-fixed-dim": "#c6c6c7", background: "#f9f9f9", "on-secondary": "#ffffff", "surface-container-high": "#e8e8e8", surface: "#f9f9f9", "on-surface-variant": "#444748", "inverse-surface": "#2f3131", "surface-variant": "#e2e2e2", "tertiary-container": "#ffffff", "on-error": "#ffffff", "tertiary-fixed": "#c8e6ff", "primary-fixed": "#e2e2e2", "inverse-primary": "#c6c6c7", "surface-tint": "#5d5f5f", "on-primary-container": "#747676", outline: "#747878", "on-background": "#1a1c1c", "tertiary-fixed-dim": "#9eccef"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {md: "24px", lg: "48px", xl: "80px", sm: "12px", "container-max": "1280px", gutter: "24px", base: "8px", xs: "4px"}, fontFamily: {"display-lg": ["Montserrat"], "label-md": ["Montserrat"], "body-md": ["Montserrat"], "headline-md": ["Montserrat"], caption: ["Montserrat"], "headline-lg": ["Montserrat"], "headline-lg-mobile": ["Montserrat"], "body-lg": ["Montserrat"], headline: ["Montserrat"], display: ["Montserrat"], body: ["Montserrat"], label: ["Montserrat"]}, fontSize: {"display-lg": ["48px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700"}], "label-md": ["14px", {lineHeight: "1.2", letterSpacing: "0.05em", fontWeight: "600"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], caption: ["12px", {lineHeight: "1.4", fontWeight: "500"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "headline-lg-mobile": ["28px", {lineHeight: "1.2", fontWeight: "700"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}]}}}};</script>
+  <link rel="stylesheet" href="/css/shared.css"/>
+</head>
+<body class="bg-surface text-on-surface">
+  <div id="navbar-container"></div>
+
+  <!-- Hero Header -->
+  <header class="relative pb-xl pt-[120px] px-md overflow-hidden bg-gradient-to-b from-secondary-container/30 to-surface">
+    <div class="max-w-4xl mx-auto text-center relative z-10">
+      <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/10 text-secondary font-label-md text-xs uppercase tracking-widest mb-4">
+        <span class="material-symbols-outlined text-sm">handshake</span> Partner Fleet Network
+      </span>
+      <h1 class="font-display-lg text-display-lg text-secondary mb-4">List Your Yacht With YRSF</h1>
+      <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Join South Florida's fastest-growing luxury charter marketplace. Submit your vessel details below to immediately showcase your boat to thousands of charter clients.</p>
+    </div>
+  </header>
+
+  <!-- Main Submission Form Section -->
+  <main class="max-w-4xl mx-auto px-md pb-xl -mt-6 relative z-20">
+    <div class="bg-white rounded-3xl shadow-xl border border-outline-variant p-6 md:p-10">
+      <form id="partner-boat-form" class="space-y-10">
+        
+        <!-- Section 1: Partner / Company Info -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3 border-b border-outline-variant pb-3">
+            <div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-sm">1</div>
+            <h3 class="font-headline-md text-xl text-secondary font-bold">Partner &amp; Company Details</h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Company / Owner Name *</label>
+              <input type="text" id="partner-name" required placeholder="e.g. Miami Blue Charters LLC" class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Contact Phone / WhatsApp *</label>
+              <input type="tel" id="partner-phone" required placeholder="e.g. 305-555-0199" class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Vessel Registration / Ref ID (Optional)</label>
+              <input type="text" id="partner-vessel-id" placeholder="e.g. FL-9921-MB or Ref #104" class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Yacht Specifications -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3 border-b border-outline-variant pb-3">
+            <div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-sm">2</div>
+            <h3 class="font-headline-md text-xl text-secondary font-bold">Vessel Specifications</h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Yacht Display Name *</label>
+              <input type="text" id="boat-name" required placeholder="e.g. 62FT AZIMUT FLYBRIDGE" class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"/>
+              <p class="text-[11px] text-on-surface-variant mt-1">Include length and brand for best SEO (e.g. 55ft Sea Ray Sundancer).</p>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Manufacturer &amp; Model *</label>
+              <input type="text" id="boat-model" required placeholder="e.g. Azimut 62 Fly" class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"/>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Length (FT) *</label>
+              <input type="number" id="boat-length" required min="15" max="250" placeholder="62" class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Max Guests *</label>
+              <input type="number" id="boat-capacity" required min="1" max="150" placeholder="13" class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Cabins / Staterooms *</label>
+              <input type="number" id="boat-cabins" required min="0" max="15" placeholder="3" class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Year Built *</label>
+              <input type="number" id="boat-year" required min="1990" max="2027" placeholder="2023" class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Exact Dock Location & Address Verification -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3 border-b border-outline-variant pb-3">
+            <div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-sm">3</div>
+            <h3 class="font-headline-md text-xl text-secondary font-bold">Exact Dock &amp; Marina Location</h3>
+          </div>
+          <p class="text-xs text-on-surface-variant">We verify dock coordinates in real-time so your yacht gets an exact pin on our interactive map.</p>
+          <div class="relative">
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Street Address or Marina Name *</label>
+            <div class="relative">
+              <input type="text" id="boat-location" required autocomplete="off" placeholder="Type marina or street address (e.g. 201 NW South River Dr or Miami Beach Marina)..." class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary pr-10"/>
+              <span id="loc-verify-icon" class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant">search</span>
+            </div>
+            <div id="loc-verify-status" class="text-xs mt-1 text-on-surface-variant">Type at least 3 characters to search verified address...</div>
+            <div id="loc-suggestions-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-lg shadow-xl max-h-56 overflow-y-auto z-50 hidden"></div>
+          </div>
+          
+          <!-- Interactive Map Preview -->
+          <div id="partner-map-preview-wrapper" class="hidden mt-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-secondary flex items-center gap-1"><span class="material-symbols-outlined text-sm">verified_location</span> Verified Dock Coordinates:</span>
+              <span id="gps-coords-display" class="text-xs font-mono text-on-surface-variant"></span>
+            </div>
+            <div id="partner-preview-map" class="w-full h-48 rounded-lg overflow-hidden border border-outline-variant"></div>
+          </div>
+        </div>
+
+        <!-- Section 4: Descriptions & Amenities -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3 border-b border-outline-variant pb-3">
+            <div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-sm">4</div>
+            <h3 class="font-headline-md text-xl text-secondary font-bold">Description &amp; Amenities</h3>
+          </div>
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Short Card Summary *</label>
+            <input type="text" id="boat-short-desc" required placeholder="e.g. Experience modern luxury aboard this sleek 62ft Azimut flybridge with sun pads and jet ski." class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"/>
+            <p class="text-[11px] text-on-surface-variant mt-1">Displayed on the fleet catalog cards (recommended 1-2 sentences).</p>
+          </div>
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Full Detailed Description *</label>
+            <textarea id="boat-full-desc" required rows="4" placeholder="Describe the layout, sound system, water toys, crew experience, and any special features included with this charter..." class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-sm focus:ring-2 focus:ring-secondary"></textarea>
+          </div>
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-2">Select Available Amenities &amp; Features:</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" id="amenities-checkboxes">
+              <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container text-xs font-medium">
+                <input type="checkbox" name="amenity" value="Swim Platform|pool" checked class="rounded text-secondary focus:ring-secondary"/> 🏊 Swim Platform
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container text-xs font-medium">
+                <input type="checkbox" name="amenity" value="Premium Sound|speaker" checked class="rounded text-secondary focus:ring-secondary"/> 🔊 Bluetooth Audio
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container text-xs font-medium">
+                <input type="checkbox" name="amenity" value="Sun Deck|wb_sunny" checked class="rounded text-secondary focus:ring-secondary"/> ☀️ Sun Pads &amp; Deck
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container text-xs font-medium">
+                <input type="checkbox" name="amenity" value="Air Conditioning|ac_unit" checked class="rounded text-secondary focus:ring-secondary"/> ❄️ Air Conditioning
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container text-xs font-medium">
+                <input type="checkbox" name="amenity" value="Full Galley|kitchen" class="rounded text-secondary focus:ring-secondary"/> 🍽️ Galley / Kitchen
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container text-xs font-medium">
+                <input type="checkbox" name="amenity" value="Jet Ski Dock|water_sports" class="rounded text-secondary focus:ring-secondary"/> 🌊 Jet Ski Available
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container text-xs font-medium">
+                <input type="checkbox" name="amenity" value="Master Stateroom|bed" class="rounded text-secondary focus:ring-secondary"/> 🛌 Master Stateroom
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container text-xs font-medium">
+                <input type="checkbox" name="amenity" value="Floating Mat|waves" class="rounded text-secondary focus:ring-secondary"/> 🏖️ Floating Water Mat
+              </label>
+            </div>
+
+            <!-- Custom Other Amenity Add Box -->
+            <div class="mt-4 pt-4 border-t border-outline-variant/60">
+              <label class="block font-label text-xs font-bold text-on-surface mb-2">Have additional unique amenities? Click "Other" to add custom options:</label>
+              <div class="flex items-center gap-2 max-w-md">
+                <input type="text" id="custom-amenity-input" placeholder="e.g. Jacuzzi Hot Tub, Seabobs, Fishing Gear, Satellite TV..." class="flex-1 px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-body text-xs focus:ring-2 focus:ring-secondary"/>
+                <button type="button" id="add-custom-amenity-btn" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1 shrink-0 shadow-sm">
+                  <span class="material-symbols-outlined text-sm">add_circle</span> Other / Add
+                </button>
+              </div>
+              <div id="custom-amenities-list" class="flex flex-wrap gap-2 mt-3"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5: Charter Rates -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3 border-b border-outline-variant pb-3">
+            <div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-sm">5</div>
+            <h3 class="font-headline-md text-xl text-secondary font-bold">Charter Pricing (USD)</h3>
+          </div>
+          <p class="text-xs text-on-surface-variant">Enter your total charter rates (inclusive of captain &amp; crew or standard pricing).</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+            <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+              <div class="flex items-center justify-between mb-2">
+                <label class="font-bold text-sm text-on-surface">4 Hour Charter *</label>
+                <input type="radio" name="popular_tier" value="4 Hours" checked class="text-secondary focus:ring-secondary"/>
+                <span class="text-[10px] uppercase font-bold text-secondary">Set Popular</span>
+              </div>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold">$</span>
+                <input type="number" id="price-4hr" required min="300" max="50000" placeholder="1850" class="w-full pl-8 pr-4 py-2 bg-white border border-outline-variant rounded-lg font-bold text-sm focus:ring-2 focus:ring-secondary"/>
+              </div>
+            </div>
+            <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+              <div class="flex items-center justify-between mb-2">
+                <label class="font-bold text-sm text-on-surface">6 Hour Charter *</label>
+                <input type="radio" name="popular_tier" value="6 Hours" class="text-secondary focus:ring-secondary"/>
+                <span class="text-[10px] uppercase font-bold text-secondary">Set Popular</span>
+              </div>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold">$</span>
+                <input type="number" id="price-6hr" required min="400" max="75000" placeholder="2450" class="w-full pl-8 pr-4 py-2 bg-white border border-outline-variant rounded-lg font-bold text-sm focus:ring-2 focus:ring-secondary"/>
+              </div>
+            </div>
+            <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+              <div class="flex items-center justify-between mb-2">
+                <label class="font-bold text-sm text-on-surface">8 Hour Charter *</label>
+                <input type="radio" name="popular_tier" value="8 Hours" class="text-secondary focus:ring-secondary"/>
+                <span class="text-[10px] uppercase font-bold text-secondary">Set Popular</span>
+              </div>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold">$</span>
+                <input type="number" id="price-8hr" required min="500" max="100000" placeholder="3100" class="w-full pl-8 pr-4 py-2 bg-white border border-outline-variant rounded-lg font-bold text-sm focus:ring-2 focus:ring-secondary"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 6: Photos & Media -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3 border-b border-outline-variant pb-3">
+            <div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-sm">6</div>
+            <h3 class="font-headline-md text-xl text-secondary font-bold">Vessel Photographs</h3>
+          </div>
+          <p class="text-xs text-on-surface-variant">Provide high-resolution image URLs (e.g. from your site, Google Drive direct link, or cloud storage). High quality photos significantly increase charter conversion rates!</p>
+          <div class="space-y-4 pt-2">
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Primary Cover Image URL *</label>
+              <input type="url" id="boat-primary-img" required placeholder="https://..." class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-mono text-xs focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-label text-xs font-bold text-on-surface mb-1">Gallery Image URL #2 (Optional)</label>
+                <input type="url" id="boat-img-2" placeholder="https://..." class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-mono text-xs focus:ring-2 focus:ring-secondary"/>
+              </div>
+              <div>
+                <label class="block font-label text-xs font-bold text-on-surface mb-1">Gallery Image URL #3 (Optional)</label>
+                <input type="url" id="boat-img-3" placeholder="https://..." class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-mono text-xs focus:ring-2 focus:ring-secondary"/>
+              </div>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">External Album Link (Google Drive, Dropbox, etc.) — Optional</label>
+              <input type="url" id="boat-album-link" placeholder="https://drive.google.com/..." class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-mono text-xs focus:ring-2 focus:ring-secondary"/>
+              <p class="text-[11px] text-on-surface-variant mt-1">If you have a full folder of photos or videos you want our admin team to review and add.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 7: Availability & Calendar URL -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3 border-b border-outline-variant pb-3">
+            <div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-sm">7</div>
+            <h3 class="font-headline-md text-xl text-secondary font-bold">Real-Time Availability &amp; Calendar (Optional)</h3>
+          </div>
+          <p class="text-xs text-on-surface-variant">If you use an online calendar system (Google Calendar, iCal, FareHarbor, Boatsetter, Checkfront, etc.) to track when your yacht is booked or available, paste the shareable URL or sync link below. This allows our booking team to check real-time availability before confirming charter guests!</p>
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Calendar / iCal / Reservation System URL (Optional)</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-base">calendar_month</span>
+              <input type="url" id="boat-calendar-url" placeholder="https://calendar.google.com/calendar/ical/... or reservation link" class="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-mono text-xs focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <p class="text-[11px] text-on-surface-variant mt-1">We keep this calendar link strictly confidential for our internal concierge team.</p>
+          </div>
+        </div>
+
+        <!-- Submit Button Area -->
+        <div class="pt-6 border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p class="text-xs text-on-surface-variant flex items-center gap-1">
+            <span class="material-symbols-outlined text-green-600 text-base">verified</span>
+            By submitting, your yacht will be published instantly to YRSF's active charter fleet.
+          </p>
+          <button type="submit" id="submit-boat-btn" class="w-full sm:w-auto bg-secondary text-on-secondary px-8 py-4 rounded-xl font-label-md text-base font-bold shadow-lg hover:shadow-xl hover:opacity-95 transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">rocket_launch</span> Publish Yacht Listing Now
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <!-- Celebration Modal (Hidden by default) -->
+  <div id="success-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl border border-outline-variant relative">
+      <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <span class="material-symbols-outlined text-3xl">celebration</span>
+      </div>
+      <h3 class="font-headline-md text-2xl font-bold text-secondary mb-2">🎉 Yacht Published Live!</h3>
+      <p class="font-body text-sm text-on-surface-variant mb-6">Your vessel has been successfully added to our database and is now live on the YRSF marketplace, searchable by guests, and visible on our interactive GPS map!</p>
+      
+      <div class="space-y-3">
+        <a id="view-live-boat-link" href="/boats.html" class="block w-full py-3 px-4 bg-secondary text-on-secondary rounded-xl font-bold text-sm shadow hover:opacity-90 transition-all">
+          View Your Boat Live
+        </a>
+        <button onclick="window.location.reload()" class="block w-full py-3 px-4 bg-surface-container text-on-surface rounded-xl font-bold text-sm hover:bg-surface-variant transition-all">
+          Submit Another Vessel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-container"></div>
+  <script type="module" src="/js/pages/list-your-boat.js"></script>
+</body>
+</html>

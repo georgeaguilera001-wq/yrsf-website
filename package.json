@@ -1,0 +1,10 @@
+{
+  "name": "yrsf",
+  "version": "1.0.0",
+  "description": "Yacht Rentals of South Florida - Premium Yacht Charter Website",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  }
+}

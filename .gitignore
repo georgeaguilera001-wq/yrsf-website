@@ -1,0 +1,12 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Temporary files
+scratch/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db

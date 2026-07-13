@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Yacht Details | YRSF</title>
+  <meta name="description" content="View details, pricing, and photos for this luxury yacht charter in Miami."/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-secondary-fixed-variant": "#2c476f", "secondary-fixed": "#d5e3ff", "on-tertiary-container": "#4c7b9a", "secondary-fixed-dim": "#adc8f6", "surface-container": "#eeeeee", "surface-container-low": "#f3f3f4", "outline-variant": "#c4c7c8", secondary: "#455f88", "on-surface": "#1a1c1c", "on-primary": "#ffffff", "surface-dim": "#dadada", "on-primary-fixed-variant": "#454747", "surface-container-lowest": "#ffffff", "secondary-container": "#b5d0ff", "on-error-container": "#93000a", "on-secondary-container": "#3e5981", "primary-container": "#ffffff", tertiary: "#336381", "inverse-on-surface": "#f0f1f1", error: "#ba1a1a", "on-tertiary-fixed-variant": "#164b68", "on-tertiary-fixed": "#001e2e", "on-secondary-fixed": "#001b3c", "error-container": "#ffdad6", "surface-container-highest": "#e2e2e2", "surface-bright": "#f9f9f9", "on-tertiary": "#ffffff", "on-primary-fixed": "#1a1c1c", primary: "#5d5f5f", "primary-fixed-dim": "#c6c6c7", background: "#f9f9f9", "on-secondary": "#ffffff", "surface-container-high": "#e8e8e8", surface: "#f9f9f9", "on-surface-variant": "#444748", "inverse-surface": "#2f3131", "surface-variant": "#e2e2e2", "tertiary-container": "#ffffff", "on-error": "#ffffff", "tertiary-fixed": "#c8e6ff", "primary-fixed": "#e2e2e2", "inverse-primary": "#c6c6c7", "surface-tint": "#5d5f5f", "on-primary-container": "#747676", outline: "#747878", "on-background": "#1a1c1c", "tertiary-fixed-dim": "#9eccef"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {md: "24px", lg: "48px", xl: "80px", sm: "12px", "container-max": "1280px", gutter: "24px", base: "8px", xs: "4px"}, fontFamily: {"display-lg": ["Montserrat"], "label-md": ["Montserrat"], "body-md": ["Montserrat"], "headline-md": ["Montserrat"], caption: ["Montserrat"], "headline-lg": ["Montserrat"], "headline-lg-mobile": ["Montserrat"], "body-lg": ["Montserrat"], headline: ["Montserrat"], display: ["Montserrat"], body: ["Montserrat"], label: ["Montserrat"]}, fontSize: {"display-lg": ["48px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700"}], "label-md": ["14px", {lineHeight: "1.2", letterSpacing: "0.05em", fontWeight: "600"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], caption: ["12px", {lineHeight: "1.4", fontWeight: "500"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "headline-lg-mobile": ["28px", {lineHeight: "1.2", fontWeight: "700"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}]}}}};</script>
+  <link rel="stylesheet" href="/css/shared.css"/>
+</head>
+<body class="bg-surface text-on-surface">
+  <div id="navbar-container"></div>
+
+  <main class="max-w-container-max mx-auto px-md md:px-lg py-md pt-[120px]">
+    <!-- Breadcrumbs -->
+    <nav class="flex items-center gap-2 mb-md text-on-surface-variant font-label-md text-label-md">
+      <a class="hover:text-secondary" href="/">Home</a>
+      <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+      <a class="hover:text-secondary" href="/boats.html">Browse Boats</a>
+      <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+      <span class="text-secondary font-bold" id="breadcrumb-name">Loading...</span>
+    </nav>
+
+    <!-- Image Gallery -->
+    <section class="mb-lg" id="gallery-section">
+      <div id="image-gallery">
+        <div class="h-64 md:h-96 skeleton rounded-xl"></div>
+      </div>
+      <button class="mt-4 flex items-center gap-2 text-secondary font-label-md hover:opacity-80 transition-colors" id="view-photos-btn">
+        <span class="material-symbols-outlined">photo_library</span> View All Photos
+      </button>
+    </section>
+
+    <!-- Boat Info Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg mb-lg">
+      <!-- Left Column: Details -->
+      <div class="lg:col-span-2">
+        <div class="flex items-start justify-between mb-md">
+          <div>
+            <h1 class="font-display-lg text-display-lg text-on-surface mb-2" id="boat-name">Loading...</h1>
+            <p class="font-body-lg text-body-lg text-on-surface-variant" id="boat-location"></p>
+          </div>
+          <div class="flex gap-2">
+            <button class="favorite-btn p-3 border border-outline-variant rounded-lg hover:bg-surface-container transition-colors" id="detail-favorite-btn" aria-label="Toggle favorite">
+              <span class="material-symbols-outlined">favorite</span>
+            </button>
+            <button class="p-3 border border-outline-variant rounded-lg hover:bg-surface-container transition-colors" id="share-btn" aria-label="Share">
+              <span class="material-symbols-outlined">share</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Specs -->
+        <div class="flex flex-wrap gap-md mb-lg p-md bg-surface-container-low rounded-xl border border-outline-variant" id="quick-specs">
+          <div class="h-10 w-24 skeleton"></div>
+          <div class="h-10 w-24 skeleton"></div>
+          <div class="h-10 w-24 skeleton"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="border-b border-outline-variant mb-md">
+          <div class="flex gap-md" id="detail-tabs">
+            <button class="py-3 font-label-md text-label-md text-secondary border-b-2 border-secondary" data-tab="overview">Overview</button>
+            <button class="py-3 font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors" data-tab="specs">Specifications</button>
+            <button class="py-3 font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors" data-tab="amenities">Amenities</button>
+          </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab-content">
+          <div id="tab-overview" class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+            <div class="space-y-3">
+              <div class="h-4 w-full skeleton"></div>
+              <div class="h-4 w-5/6 skeleton"></div>
+              <div class="h-4 w-3/4 skeleton"></div>
+            </div>
+          </div>
+          <div id="tab-specs" class="hidden"></div>
+          <div id="tab-amenities" class="hidden"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Pricing Card -->
+      <div class="lg:col-span-1">
+        <div class="sticky top-24 bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm">
+          <h3 class="font-headline-md text-headline-md text-on-surface mb-3">Charter Rates</h3>
+          <div id="detail-day-selector" class="flex items-center justify-between gap-1 bg-surface-container-low p-1 rounded-lg border border-outline-variant mb-4 hidden"></div>
+          <div class="flex flex-col gap-3" id="pricing-tiers">
+            <div class="h-16 skeleton rounded-lg"></div>
+            <div class="h-16 skeleton rounded-lg"></div>
+          </div>
+          <div class="mt-md pt-md border-t border-outline-variant">
+            <a href="#" class="w-full bg-secondary text-on-secondary py-3 rounded-lg font-label-md text-label-md hover:opacity-90 transition-all flex items-center justify-center gap-2" id="whatsapp-book-btn">
+              <span class="material-symbols-outlined">chat</span> Book on WhatsApp
+            </a>
+            <p class="text-caption text-on-surface-variant text-center mt-3">Instant response • No booking fees</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="mt-xl pt-lg border-t border-outline-variant hidden" id="similar-boats-section">
+      <div class="flex items-center justify-between mb-md">
+        <h2 class="font-headline-md text-headline-md text-on-surface">Similar Yachts You Might Like</h2>
+      </div>
+      <div class="relative group">
+        <div class="flex overflow-x-auto snap-x snap-mandatory md:snap-none gap-sm pb-4 hide-scrollbar" id="similar-boats-grid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+  <script type="module" src="/js/pages/boat-detail.js"></script>
+</body>
+</html>

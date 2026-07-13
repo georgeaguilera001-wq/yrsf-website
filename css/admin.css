@@ -1,0 +1,141 @@
+/* ============================================
+   YRSF — Admin Portal Styles
+   ============================================ */
+
+/* --- Active Sidebar Press Effect --- */
+.active-tab {
+  transform: scale(0.98);
+}
+
+/* --- Admin Sidebar Responsive --- */
+.admin-sidebar {
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 1023px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+    position: fixed;
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-main {
+    margin-left: 0 !important;
+  }
+}
+
+/* --- Sidebar Overlay (Mobile) --- */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 45;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* --- Admin Table Row Actions --- */
+.admin-table-row .row-actions {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.admin-table-row:hover .row-actions {
+  opacity: 1;
+}
+
+/* --- Form Field Focus Glow --- */
+.admin-field:focus {
+  box-shadow: 0 0 0 3px rgba(69, 95, 136, 0.1);
+}
+
+/* --- Status Badge Pulse --- */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+}
+
+.status-active {
+  animation: pulse-green 2s infinite;
+}
+
+/* --- Drag Handle --- */
+.drag-handle {
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* --- Admin Loading Spinner --- */
+.admin-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e2e2e2;
+  border-top-color: #455f88;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Image Preview in Editor --- */
+.image-preview {
+  position: relative;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.image-preview .remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(186, 26, 26, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.image-preview:hover .remove-btn {
+  opacity: 1;
+}
+
+/* --- Empty State --- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+/* --- Admin Card Hover --- */
+.admin-card {
+  transition: border-color 0.2s ease;
+}
+
+.admin-card:hover {
+  border-color: #455f88;
+}

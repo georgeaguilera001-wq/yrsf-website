@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard | YRSF</title>
+  <meta name="robots" content="noindex, nofollow"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script>tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-secondary-fixed-variant": "#2c476f", "secondary-fixed": "#d5e3ff", "on-tertiary-container": "#4c7b9a", "secondary-fixed-dim": "#adc8f6", "surface-container": "#eeeeee", "surface-container-low": "#f3f3f4", "outline-variant": "#c4c7c8", secondary: "#455f88", "on-surface": "#1a1c1c", "on-primary": "#ffffff", "surface-dim": "#dadada", "on-primary-fixed-variant": "#454747", "surface-container-lowest": "#ffffff", "secondary-container": "#b5d0ff", "on-error-container": "#93000a", "on-secondary-container": "#3e5981", "primary-container": "#ffffff", tertiary: "#336381", "inverse-on-surface": "#f0f1f1", error: "#ba1a1a", "on-tertiary-fixed-variant": "#164b68", "on-tertiary-fixed": "#001e2e", "on-secondary-fixed": "#001b3c", "error-container": "#ffdad6", "surface-container-highest": "#e2e2e2", "surface-bright": "#f9f9f9", "on-tertiary": "#ffffff", "on-primary-fixed": "#1a1c1c", primary: "#5d5f5f", "primary-fixed-dim": "#c6c6c7", background: "#f9f9f9", "on-secondary": "#ffffff", "surface-container-high": "#e8e8e8", surface: "#f9f9f9", "on-surface-variant": "#444748", "inverse-surface": "#2f3131", "surface-variant": "#e2e2e2", "tertiary-container": "#ffffff", "on-error": "#ffffff", "tertiary-fixed": "#c8e6ff", "primary-fixed": "#e2e2e2", "inverse-primary": "#c6c6c7", "surface-tint": "#5d5f5f", "on-primary-container": "#747676", outline: "#747878", "on-background": "#1a1c1c", "tertiary-fixed-dim": "#9eccef"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {md: "24px", lg: "48px", xl: "80px", sm: "12px", "container-max": "1280px", gutter: "24px", base: "8px", xs: "4px"}, fontFamily: {"display-lg": ["Montserrat"], "label-md": ["Montserrat"], "body-md": ["Montserrat"], "headline-md": ["Montserrat"], caption: ["Montserrat"], "headline-lg": ["Montserrat"], "body-lg": ["Montserrat"], headline: ["Montserrat"], display: ["Montserrat"], body: ["Montserrat"], label: ["Montserrat"]}, fontSize: {"display-lg": ["48px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700"}], "label-md": ["14px", {lineHeight: "1.2", letterSpacing: "0.05em", fontWeight: "600"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], caption: ["12px", {lineHeight: "1.4", fontWeight: "500"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}]}}}};</script>
+  <link rel="stylesheet" href="/css/shared.css"/>
+  <link rel="stylesheet" href="/css/admin.css"/>
+  <script>
+    window.addEventListener('error', function(e) {
+      const msg = document.createElement('div');
+      msg.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;z-index:9999;padding:20px;font-family:monospace;';
+      msg.textContent = 'JS Error: ' + e.message + ' in ' + e.filename + ' at line ' + e.lineno;
+      document.body.prepend(msg);
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+      const msg = document.createElement('div');
+      msg.style.cssText = 'position:fixed;top:40px;left:0;right:0;background:orange;color:white;z-index:9999;padding:20px;font-family:monospace;';
+      msg.textContent = 'Promise Error: ' + (e.reason?.message || e.reason);
+      document.body.prepend(msg);
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body class="bg-surface text-on-surface">
+  <!-- Sidebar Overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar fixed left-0 top-0 h-full bg-surface-container-lowest border-r border-outline-variant flex flex-col z-50" style="width: 264px;" id="admin-sidebar">
+    <div class="p-md border-b border-outline-variant">
+      <a href="/" class="font-display text-headline-md text-secondary font-bold">YRSF</a>
+      <p class="font-caption text-caption text-on-surface-variant">Admin Portal</p>
+    </div>
+
+    <nav class="flex-1 p-sm overflow-y-auto">
+      <ul class="flex flex-col gap-1">
+        <li>
+          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors bg-secondary-container text-on-secondary-container" data-section="dashboard">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="font-label text-label-md">Dashboard</span>
+          </button>
+        </li>
+        <li>
+          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="bookings">
+            <span class="material-symbols-outlined">calendar_month</span>
+            <span class="font-label text-label-md">Bookings &amp; Manifest</span>
+          </button>
+        </li>
+        <li>
+          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="staff">
+            <span class="material-symbols-outlined">badge</span>
+            <span class="font-label text-label-md">Staff &amp; Timeclock</span>
+          </button>
+        </li>
+        <li>
+          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="content">
+            <span class="material-symbols-outlined">article</span>
+            <span class="font-label text-label-md">Content</span>
+          </button>
+        </li>
+        <li>
+          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="fleet">
+            <span class="material-symbols-outlined">directions_boat</span>
+            <span class="font-label text-label-md">Fleet</span>
+          </button>
+        </li>
+        <li>
+          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="addons">
+            <span class="material-symbols-outlined">add_circle</span>
+            <span class="font-label text-label-md">Add-ons</span>
+          </button>
+        </li>
+        <li>
+          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="seo">
+            <span class="material-symbols-outlined">search</span>
+            <span class="font-label text-label-md">SEO Settings</span>
+          </button>
+        </li>
+        <li>
+          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="settings">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="font-label text-label-md">Settings</span>
+          </button>
+        </li>
+        <li>
+          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="partners">
+            <span class="material-symbols-outlined">handshake</span>
+            <span class="font-label text-label-md">Partner Submissions</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="p-md border-t border-outline-variant">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-secondary">person</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-label text-label-md text-on-surface truncate" id="admin-user-email">admin@yrsf.com</p>
+          <p class="font-caption text-caption text-on-surface-variant">Administrator</p>
+        </div>
+      </div>
+      <button class="w-full flex items-center gap-2 px-4 py-2 text-on-surface-variant hover:text-error hover:bg-error-container rounded-lg transition-colors font-label text-label-md" id="logout-btn">
+        <span class="material-symbols-outlined text-[18px]">logout</span> Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main transition-all" style="margin-left: 264px;">
+    <!-- Mobile Header -->
+    <div class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest border-b border-outline-variant p-4 flex items-center gap-3">
+      <button class="p-2 rounded-lg hover:bg-surface-container transition-colors" id="sidebar-toggle">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <span class="font-headline text-headline-md font-bold text-secondary">YRSF</span>
+    </div>
+
+    <div class="p-md lg:p-lg">
+      <!-- Dashboard Section -->
+      <section class="admin-section" id="section-dashboard">
+        <h1 class="font-headline text-headline-lg text-on-surface mb-md">Dashboard</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md mb-lg">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="material-symbols-outlined text-secondary">directions_boat</span>
+              <span class="font-label text-label-md text-on-surface-variant">Active Yachts</span>
+            </div>
+            <p class="font-headline text-headline-lg text-on-surface" id="stat-boats">-</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="material-symbols-outlined text-secondary">add_circle</span>
+              <span class="font-label text-label-md text-on-surface-variant">Active Add-ons</span>
+            </div>
+            <p class="font-headline text-headline-lg text-on-surface" id="stat-addons">-</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="material-symbols-outlined text-secondary">star</span>
+              <span class="font-label text-label-md text-on-surface-variant">Testimonials</span>
+            </div>
+            <p class="font-headline text-headline-lg text-on-surface" id="stat-testimonials">-</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="material-symbols-outlined text-secondary">quiz</span>
+              <span class="font-label text-label-md text-on-surface-variant">FAQs</span>
+            </div>
+            <p class="font-headline text-headline-lg text-on-surface" id="stat-faqs">-</p>
+          </div>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+          <h3 class="font-headline text-headline-md text-on-surface mb-md">Quick Actions</h3>
+          <div class="flex flex-wrap gap-3">
+            <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" onclick="document.querySelector('[data-section=fleet]').click()">
+              <span class="material-symbols-outlined text-[18px]">add</span> New Yacht
+            </button>
+            <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" onclick="document.querySelector('[data-section=addons]').click()">
+              <span class="material-symbols-outlined text-[18px]">add</span> New Add-on
+            </button>
+            <a href="/" target="_blank" class="border border-outline-variant px-4 py-2 rounded-lg font-label text-label-md text-on-surface-variant hover:bg-surface-container transition-all flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">open_in_new</span> View Website
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Fleet Section -->
+      <section class="admin-section hidden" id="section-fleet">
+        <div class="flex items-center justify-between mb-md">
+          <h1 class="font-headline text-headline-lg text-on-surface">Fleet Management</h1>
+          <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" id="add-boat-btn">
+            <span class="material-symbols-outlined text-[18px]">add</span> Add Yacht
+          </button>
+        </div>
+
+        <!-- Data Migration Tool -->
+        <div class="bg-secondary-container text-on-secondary-container border border-secondary-fixed rounded-xl p-md mb-md">
+          <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 class="font-headline text-headline-md font-bold mb-1">Migrate Legacy Data</h3>
+              <p class="font-body text-body-md opacity-90">Upload your old <code>yachts_rows.csv</code> to automatically import your entire fleet, including base64 images and pricing tiers.</p>
+            </div>
+            <div class="flex flex-col gap-2 min-w-[250px]">
+              <input type="file" id="migration-csv" accept=".csv" class="hidden">
+              <label for="migration-csv" class="cursor-pointer bg-white text-secondary px-4 py-2 rounded-lg font-label text-label-md text-center hover:bg-surface-container transition-colors shadow-sm border border-outline-variant">
+                Select CSV File
+              </label>
+              <button id="start-migration-btn" disabled class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-all shadow-sm">
+                Start Migration
+              </button>
+            </div>
+          </div>
+          <!-- Progress UI -->
+          <div id="migration-progress" class="hidden mt-4 pt-4 border-t border-secondary-fixed-dim">
+            <div class="flex justify-between font-label text-label-md mb-2">
+              <span id="migration-status">Processing...</span>
+              <span id="migration-count">0 / 0</span>
+            </div>
+            <div class="w-full bg-white/50 rounded-full h-2 mb-2">
+              <div id="migration-bar" class="bg-secondary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <div id="migration-log" class="bg-gray-900 text-green-400 p-3 rounded-lg h-32 overflow-y-auto font-mono text-xs whitespace-pre-wrap"></div>
+          </div>
+        </div>
+
+        <!-- Filter / Sort Bar -->
+        <div class="flex flex-col md:flex-row gap-4 mb-md">
+          <div class="relative flex-1">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
+            <input type="text" id="admin-fleet-search" class="admin-field w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary transition-all" placeholder="Search by name, manufacturer, or ID..."/>
+          </div>
+          <select id="admin-fleet-filter-status" class="admin-field border border-outline-variant rounded-lg px-4 py-2 font-body text-body-md focus:ring-secondary focus:border-secondary transition-all cursor-pointer">
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="hidden">Hidden</option>
+            <option value="maintenance">Maintenance</option>
+          </select>
+          <select id="admin-fleet-sort" class="admin-field border border-outline-variant rounded-lg px-4 py-2 font-body text-body-md focus:ring-secondary focus:border-secondary transition-all cursor-pointer">
+            <option value="name_asc">Name (A-Z)</option>
+            <option value="capacity_desc">Capacity (High to Low)</option>
+            <option value="length_desc">Size (Large to Small)</option>
+            <option value="length_asc">Size (Small to Large)</option>
+          </select>
+        </div>
+
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-surface-container">
+                <tr>
+                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">Yacht</th>
+                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">Vessel ID</th>
+                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">Capacity</th>
+                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">Status</th>
+                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">Featured</th>
+                  <th class="text-right px-md py-3 font-label text-label-md text-on-surface-variant">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="fleet-table-body">
+                <tr><td colspan="6" class="text-center py-xl"><span class="admin-spinner"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bookings & Manifest Section -->
+      <section class="admin-section hidden" id="section-bookings">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface">Charter Bookings &amp; Daily Manifest</h1>
+            <p class="font-body text-body-md text-on-surface-variant mt-1">Schedule charters, manage fleet departures, and view daily passenger/vessel manifests.</p>
+          </div>
+          <button id="add-booking-btn" class="bg-secondary text-on-secondary px-6 py-3 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-md">
+            <span class="material-symbols-outlined text-lg">add_circle</span> Create New Booking
+          </button>
+        </div>
+
+        <!-- Sub-navigation Tabs -->
+        <div class="flex border-b border-outline-variant mb-6 gap-6">
+          <button id="tab-btn-calendar" class="pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2">
+            <span class="material-symbols-outlined text-base">calendar_month</span> Monthly Calendar Grid
+          </button>
+          <button id="tab-btn-manifest" class="pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors">
+            <span class="material-symbols-outlined text-base">format_list_bulleted</span> Daily &amp; Future Manifest
+          </button>
+        </div>
+
+        <!-- TAB 1: Manifest View -->
+        <div id="view-manifest" class="hidden">
+          <!-- Filter Bar -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mb-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="filter-book-all" class="px-3.5 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold transition-all">All Upcoming</button>
+              <button id="filter-book-today" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all">Today's Departures</button>
+              <button id="filter-book-tomorrow" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all">Tomorrow</button>
+              <button id="filter-book-week" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all">Next 7 Days</button>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="flex items-center bg-surface-container rounded-lg p-0.5 border border-outline-variant">
+                <button id="view-mode-table" class="px-2.5 py-1 rounded-md bg-white text-on-surface shadow-sm text-xs font-bold flex items-center gap-1 transition-all">
+                  <span class="material-symbols-outlined text-sm">table_rows</span> Table
+                </button>
+                <button id="view-mode-cards" class="px-2.5 py-1 rounded-md text-on-surface-variant hover:text-on-surface text-xs font-bold flex items-center gap-1 transition-all">
+                  <span class="material-symbols-outlined text-sm">grid_view</span> Cards
+                </button>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs font-bold text-on-surface-variant">
+                <span class="material-symbols-outlined text-sm">event</span> Filter Date:
+                <input type="date" id="manifest-date-picker" class="px-2.5 py-1.5 bg-surface-container-low border border-outline-variant rounded-lg text-xs font-mono text-on-surface focus:ring-2 focus:ring-secondary"/>
+              </div>
+              <input type="text" id="manifest-search" placeholder="Search customer, boat, phone..." class="px-3 py-1.5 bg-surface-container-low border border-outline-variant rounded-lg text-xs w-48 focus:ring-2 focus:ring-secondary"/>
+            </div>
+          </div>
+
+          <!-- Manifest Table -->
+          <div id="manifest-table-wrapper" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-surface-container text-left text-xs font-label uppercase text-on-surface-variant tracking-wider">
+                  <tr>
+                    <th class="p-4">Departure &amp; Date</th>
+                    <th class="p-4">Vessel Booked</th>
+                    <th class="p-4">Customer Info</th>
+                    <th class="p-4">Guests &amp; Duration</th>
+                    <th class="p-4">Financials &amp; Balance</th>
+                    <th class="p-4">Special Requests / Notes</th>
+                    <th class="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="manifest-table-body" class="divide-y divide-outline-variant text-sm font-body">
+                  <tr><td colspan="7" class="text-center py-8"><span class="admin-spinner"></span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Manifest Cards Grid -->
+          <div id="manifest-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
+        </div>
+
+        <!-- TAB 2: Calendar View -->
+        <div id="view-calendar">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+            <!-- Calendar Source Tabs -->
+            <div class="flex items-center gap-2 bg-surface-container p-1 rounded-xl border border-outline-variant w-fit mb-4">
+              <button id="cal-source-all-btn" class="px-3.5 py-1.5 rounded-lg bg-white text-on-surface text-xs font-bold shadow-sm transition-all flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-secondary">layers</span> All Events (Internal &amp; Synced)
+              </button>
+              <button id="cal-source-internal-btn" class="px-3.5 py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface text-xs font-bold transition-all flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-secondary">sailing</span> Internal Charter Bookings Only
+              </button>
+            </div>
+
+            <!-- Calendar Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-outline-variant">
+              <div class="flex items-center gap-4">
+                <h2 id="cal-month-title" class="font-headline text-2xl font-bold text-on-surface">July 2026</h2>
+                <button id="cal-today-btn" class="px-3 py-1 bg-surface-container text-on-surface-variant hover:text-on-surface rounded-lg text-xs font-bold transition-colors">Today</button>
+              </div>
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="relative min-w-[250px]" id="cal-boat-search-container">
+                  <div class="relative flex items-center">
+                    <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary text-[18px]">directions_boat</span>
+                    <input type="text" id="cal-boat-search-input" value="⚓ Entire Fleet Calendar" placeholder="⚓ Entire Fleet Calendar" autocomplete="off" class="w-full pl-8 pr-8 py-1.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary transition-colors cursor-pointer"/>
+                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer text-sm" id="cal-boat-dropdown-toggle">expand_more</span>
+                  </div>
+                  <select id="cal-boat-filter" class="sr-only" tabindex="-1">
+                    <option value="all">⚓ Entire Fleet Calendar</option>
+                  </select>
+                  <div id="cal-boat-options-list" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto hidden divide-y divide-surface-container"></div>
+                </div>
+                <button id="cal-sync-now-btn" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm" title="Refresh external iCal feeds">
+                  <span class="material-symbols-outlined text-[16px]">sync</span> Sync iCal Feeds
+                </button>
+                <div class="flex items-center gap-2">
+                  <button id="cal-prev-btn" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                  </button>
+                  <button id="cal-next-btn" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Days of Week Header -->
+            <div class="grid grid-cols-7 gap-2 mb-2 text-center font-label text-xs font-bold uppercase text-on-surface-variant tracking-wider">
+              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div id="cal-grid" class="grid grid-cols-7 gap-px bg-outline-variant rounded-2xl overflow-hidden border border-outline-variant">
+              <!-- Calendar cells injected by JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Partner Submissions Section -->
+      <section class="admin-section hidden" id="section-partners">
+        <div class="flex items-center justify-between mb-md">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface">Partner &amp; Affiliate Fleet Portal</h1>
+            <p class="font-body text-body-md text-on-surface-variant mt-1">Send secret unlisted onboarding links to external boat operators or submit their vessels directly from your dashboard.</p>
+          </div>
+        </div>
+
+        <!-- Secret Invite Link Card -->
+        <div class="bg-gradient-to-r from-secondary-container/50 to-surface-container-low border border-secondary-fixed rounded-2xl p-6 mb-8 shadow-sm">
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div class="space-y-2 max-w-2xl">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-on-secondary font-label text-xs uppercase tracking-wider font-bold">
+                <span class="material-symbols-outlined text-sm">lock</span> Private Unlisted Portal
+              </span>
+              <h3 class="font-headline text-xl font-bold text-on-surface">Secret Partner Submission Link</h3>
+              <p class="font-body text-sm text-on-surface-variant">This page is completely hidden from the public website menu and Google search. Share this link exclusively with affiliate boat operators. Once they complete the form, their yacht automatically appears live on your website and inside your Fleet Management tab!</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+              <button id="copy-partner-link-btn" class="bg-secondary text-on-secondary px-5 py-3 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow">
+                <span class="material-symbols-outlined text-lg">content_copy</span> Copy Secret Link
+              </button>
+              <a href="/list-your-boat.html" target="_blank" class="bg-white text-secondary border border-outline-variant px-5 py-3 rounded-xl font-label text-sm font-bold hover:bg-surface-container transition-all flex items-center justify-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-lg">open_in_new</span> Test Portal
+              </a>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-secondary-fixed/40 flex items-center gap-2">
+            <span class="text-xs font-bold text-on-surface-variant">URL:</span>
+            <code id="partner-portal-url-display" class="text-xs font-mono bg-white px-3 py-1 rounded border border-outline-variant text-secondary select-all font-bold">/list-your-boat.html</code>
+          </div>
+        </div>
+
+        <!-- Admin Direct Submission Box -->
+        <div class="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4 border-b border-outline-variant pb-4">
+            <div>
+              <h3 class="font-headline text-lg font-bold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">add_box</span> Direct Partner Yacht Entry
+              </h3>
+              <p class="text-xs text-on-surface-variant">Fill out the affiliate listing form directly without leaving your admin session.</p>
+            </div>
+            <button id="toggle-partner-iframe-btn" class="px-4 py-2 bg-surface-container text-on-surface font-label text-xs font-bold rounded-lg hover:bg-surface-variant transition-all">
+              Show / Hide Direct Form
+            </button>
+          </div>
+          <div id="partner-iframe-wrapper" class="w-full rounded-xl overflow-hidden border border-outline-variant" style="height: 800px;">
+            <iframe src="/list-your-boat.html?admin_embed=true" class="w-full h-full border-0"></iframe>
+          </div>
+        </div>
+      </section>
+
+      <!-- Add-ons Section -->
+      <section class="admin-section hidden" id="section-addons">
+        <div class="flex items-center justify-between mb-md">
+          <h1 class="font-headline text-headline-lg text-on-surface">Add-ons Management</h1>
+          <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" id="add-addon-btn">
+            <span class="material-symbols-outlined text-[18px]">add</span> Add Service
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md" id="admin-addons-grid">
+          <div class="text-center py-xl col-span-full"><span class="admin-spinner"></span></div>
+        </div>
+      </section>
+
+      <!-- Content Section (FAQ + Testimonials) -->
+      <section class="admin-section hidden" id="section-content">
+        <h1 class="font-headline text-headline-lg text-on-surface mb-md">Content Management</h1>
+        <!-- FAQs -->
+        <div class="mb-lg">
+          <div class="flex items-center justify-between mb-md">
+            <h2 class="font-headline text-headline-md text-on-surface">FAQs</h2>
+            <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" id="add-faq-btn">
+              <span class="material-symbols-outlined text-[18px]">add</span> Add FAQ
+            </button>
+          </div>
+          <div class="flex flex-col gap-3" id="faqs-list">
+            <div class="text-center py-md"><span class="admin-spinner"></span></div>
+          </div>
+        </div>
+        <!-- Blog Posts -->
+        <div class="mb-lg">
+          <div class="flex items-center justify-between mb-md">
+            <div>
+              <h2 class="font-headline text-headline-md text-on-surface">Blog Posts (SEO)</h2>
+              <p class="font-body text-caption text-on-surface-variant">Paste directly from ChatGPT using Markdown.</p>
+            </div>
+            <div class="flex gap-2">
+              <input type="file" id="blog-mig-file" accept=".csv" class="hidden" />
+              <button class="px-4 py-2 border border-outline-variant rounded-lg font-label text-label-md hover:bg-surface-container transition-colors flex items-center gap-2" id="blog-mig-btn">
+                <span class="material-symbols-outlined text-[18px]">upload_file</span> Import CSV
+              </button>
+              <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" id="add-blog-btn">
+                <span class="material-symbols-outlined text-[18px]">add</span> Add Post
+              </button>
+            </div>
+          </div>
+          <div class="flex flex-col gap-3" id="blogs-list">
+            <div class="text-center py-md"><span class="admin-spinner"></span></div>
+          </div>
+        </div>
+        <!-- Testimonials -->
+        <div>
+          <div class="flex items-center justify-between mb-md">
+            <h2 class="font-headline text-headline-md text-on-surface">Testimonials</h2>
+            <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" id="add-testimonial-btn">
+              <span class="material-symbols-outlined text-[18px]">add</span> Add Testimonial
+            </button>
+          </div>
+          <div class="flex flex-col gap-3" id="testimonials-list">
+            <div class="text-center py-md"><span class="admin-spinner"></span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEO Section -->
+      <section class="admin-section hidden" id="section-seo">
+        <h1 class="font-headline text-headline-lg text-on-surface mb-md">SEO Settings</h1>
+        <form id="seo-form" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+          <div class="flex flex-col gap-md">
+            <div>
+              <label class="block font-label text-label-md text-on-surface-variant mb-2">Default Page Title</label>
+              <input type="text" id="seo-title" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-label-md text-on-surface-variant mb-2">Default Meta Description</label>
+              <textarea id="seo-description" rows="3" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"></textarea>
+            </div>
+            <button type="submit" class="self-start bg-secondary text-on-secondary px-6 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">save</span> Save SEO Settings
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Settings Section (WhatsApp, Business Info) -->
+      <section class="admin-section hidden" id="section-settings">
+        <h1 class="font-headline text-headline-lg text-on-surface mb-md">General Settings</h1>
+        <form id="settings-form" class="flex flex-col gap-md">
+          <!-- Branding -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <h3 class="font-headline text-headline-md text-on-surface mb-md">Branding (Logos)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Desktop Logo URL (e.g., https://...)</label>
+                <div class="flex gap-2">
+                  <input type="text" id="setting-logo-desktop" class="admin-field flex-1 px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="Leave blank for default YRSF text"/>
+                  <input type="file" id="upload-logo-desktop" accept="image/*" class="hidden" />
+                  <button type="button" onclick="document.getElementById('upload-logo-desktop').click()" class="bg-surface-container-high text-on-surface-variant px-4 rounded-lg font-label text-label-md hover:bg-surface-container transition-colors border border-outline-variant whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[18px] align-middle mr-1">upload</span> Upload
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Mobile Logo URL</label>
+                <div class="flex gap-2">
+                  <input type="text" id="setting-logo-mobile" class="admin-field flex-1 px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="Leave blank to use desktop logo"/>
+                  <input type="file" id="upload-logo-mobile" accept="image/*" class="hidden" />
+                  <button type="button" onclick="document.getElementById('upload-logo-mobile').click()" class="bg-surface-container-high text-on-surface-variant px-4 rounded-lg font-label text-label-md hover:bg-surface-container transition-colors border border-outline-variant whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[18px] align-middle mr-1">upload</span> Upload
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Business Info -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <h3 class="font-headline text-headline-md text-on-surface mb-md">Business Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Business Name</label>
+                <input type="text" id="setting-business-name" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Phone Number</label>
+                <input type="tel" id="setting-business-phone" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
+              </div>
+            </div>
+          </div>
+          <!-- WhatsApp Config -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <h3 class="font-headline text-headline-md text-on-surface mb-md">WhatsApp Integration</h3>
+            <div class="flex flex-col gap-md">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">WhatsApp Number (include country code)</label>
+                <input type="tel" id="setting-whatsapp-number" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="13059902192"/>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Auto-Response Message</label>
+                <textarea id="setting-whatsapp-message" rows="3" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"></textarea>
+              </div>
+            </div>
+          </div>
+          <!-- Hero Content -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <h3 class="font-headline text-headline-md text-on-surface mb-md">Homepage Hero</h3>
+            <div class="flex flex-col gap-md">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Background Image URL (or upload)</label>
+                <div class="flex gap-2">
+                  <input type="text" id="setting-hero-bg-image" class="admin-field flex-1 px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="Default beautiful ocean view"/>
+                  <input type="file" id="upload-hero-bg-image" accept="image/*" class="hidden" />
+                  <button type="button" onclick="document.getElementById('upload-hero-bg-image').click()" class="bg-surface-container-high text-on-surface-variant px-4 rounded-lg font-label text-label-md hover:bg-surface-container transition-colors border border-outline-variant whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[18px] align-middle mr-1">upload</span> Upload
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Tagline</label>
+                <input type="text" id="setting-hero-tagline" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Title</label>
+                <input type="text" id="setting-hero-title" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Description</label>
+                <textarea id="setting-hero-description" rows="3" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"></textarea>
+              </div>
+            </div>
+          </div>
+          <!-- Expert Section Content -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <h3 class="font-headline text-headline-md text-on-surface mb-md">Expert Section</h3>
+            <div class="flex flex-col gap-md">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Tagline</label>
+                <input type="text" id="setting-expert-tagline" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="Personalized Service"/>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Title</label>
+                <input type="text" id="setting-expert-title" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="Need Help Deciding?"/>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Description</label>
+                <textarea id="setting-expert-description" rows="3" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"></textarea>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+                <div>
+                  <label class="block font-label text-label-md text-on-surface-variant mb-2">Bullet Point 1</label>
+                  <input type="text" id="setting-expert-bullet-1" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
+                </div>
+                <div>
+                  <label class="block font-label text-label-md text-on-surface-variant mb-2">Bullet Point 2</label>
+                  <input type="text" id="setting-expert-bullet-2" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+                <div>
+                  <label class="block font-label text-label-md text-on-surface-variant mb-2">Expert Image 1 (Left)</label>
+                  <div class="flex gap-2">
+                    <input type="text" id="setting-expert-image-1" class="admin-field flex-1 px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="Image URL"/>
+                    <input type="file" id="upload-expert-image-1" accept="image/*" class="hidden" />
+                    <button type="button" onclick="document.getElementById('upload-expert-image-1').click()" class="bg-surface-container-high text-on-surface-variant px-4 rounded-lg font-label text-label-md hover:bg-surface-container transition-colors border border-outline-variant whitespace-nowrap">
+                      <span class="material-symbols-outlined text-[18px] align-middle mr-1">upload</span> Upload
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block font-label text-label-md text-on-surface-variant mb-2">Expert Image 2 (Right)</label>
+                  <div class="flex gap-2">
+                    <input type="text" id="setting-expert-image-2" class="admin-field flex-1 px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="Image URL"/>
+                    <input type="file" id="upload-expert-image-2" accept="image/*" class="hidden" />
+                    <button type="button" onclick="document.getElementById('upload-expert-image-2').click()" class="bg-surface-container-high text-on-surface-variant px-4 rounded-lg font-label text-label-md hover:bg-surface-container transition-colors border border-outline-variant whitespace-nowrap">
+                      <span class="material-symbols-outlined text-[18px] align-middle mr-1">upload</span> Upload
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Instagram Content -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <h3 class="font-headline text-headline-md text-on-surface mb-md">Instagram Live Feed</h3>
+            <div class="flex flex-col gap-md">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Instagram Embed Code (3rd-party widget)</label>
+                <p class="text-xs text-on-surface-variant mb-2">Use a free service like <a href="https://elfsight.com/instagram-feed-instashow/" target="_blank" class="text-secondary underline">Elfsight</a> or <a href="https://lightwidget.com/" target="_blank" class="text-secondary underline">LightWidget</a> to generate a live feed widget, then paste the HTML/Script code here.</p>
+                <textarea id="setting-instagram-embed" rows="4" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary font-mono text-sm" placeholder="<!-- Paste embed script here -->"></textarea>
+              </div>
+            </div>
+          </div>
+          <!-- Monetization Content -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <h3 class="font-headline text-headline-md text-on-surface mb-md">Monetization & Ads</h3>
+            <div class="flex flex-col gap-md">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="setting-adsense-enabled" class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary">
+                <span class="font-label text-label-md text-on-surface">Enable Google AdSense (Auto Ads) on Blog Posts</span>
+              </label>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Google AdSense Publisher ID</label>
+                <p class="text-xs text-on-surface-variant mb-2">Found in your AdSense account (e.g. <span class="font-mono bg-surface-container px-1 rounded">ca-pub-1234567890123456</span>).</p>
+                <input type="text" id="setting-adsense-pub-id" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary font-mono" placeholder="ca-pub-..."/>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="self-start bg-secondary text-on-secondary px-6 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">save</span> Save Settings
+          </button>
+        </form>
+      </section>
+
+      <!-- Staff Management & Timeclock Section -->
+      <section class="admin-section hidden" id="section-staff">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface">Staff &amp; Timeclock Management</h1>
+            <p class="font-body text-body-md text-on-surface-variant mt-1">Manage team access permissions, hourly rates, and track shift timestamps.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <button id="open-commission-btn" class="bg-amber-600 text-white px-5 py-3 rounded-xl font-label text-sm font-bold hover:bg-amber-700 transition-all flex items-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-lg">paid</span> Log Charter Sale / Commission
+            </button>
+            <button id="open-timeclock-btn" class="bg-green-700 text-white px-5 py-3 rounded-xl font-label text-sm font-bold hover:bg-green-800 transition-all flex items-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-lg">schedule</span> Employee Clock In/Out
+            </button>
+            <button id="add-staff-btn" class="bg-secondary text-on-secondary px-5 py-3 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-lg">person_add</span> Add New Staff
+            </button>
+          </div>
+        </div>
+
+        <!-- Timeclock & Sales Stats Overview -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-green-100 text-green-700 flex items-center justify-center">
+              <span class="material-symbols-outlined text-2xl">timer</span>
+            </div>
+            <div>
+              <p class="font-label text-xs text-on-surface-variant uppercase tracking-wider font-bold">On Clock</p>
+              <h3 class="font-headline text-2xl font-bold text-on-surface" id="stat-staff-working">0 Staff</h3>
+            </div>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center">
+              <span class="material-symbols-outlined text-2xl">history</span>
+            </div>
+            <div>
+              <p class="font-label text-xs text-on-surface-variant uppercase tracking-wider font-bold">Total Shifts</p>
+              <h3 class="font-headline text-2xl font-bold text-on-surface" id="stat-staff-shifts">0 Shifts</h3>
+            </div>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center">
+              <span class="material-symbols-outlined text-2xl">payments</span>
+            </div>
+            <div>
+              <p class="font-label text-xs text-on-surface-variant uppercase tracking-wider font-bold">Hours Logged</p>
+              <h3 class="font-headline text-2xl font-bold text-on-surface" id="stat-staff-hours">0.00 hrs</h3>
+            </div>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+              <span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
+            </div>
+            <div>
+              <p class="font-label text-xs text-on-surface-variant uppercase tracking-wider font-bold">Commissions</p>
+              <h3 class="font-headline text-2xl font-bold text-on-surface" id="stat-staff-commissions">$0.00</h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-navigation Tabs -->
+        <div class="flex flex-wrap border-b border-outline-variant mb-6 gap-6">
+          <button id="tab-btn-directory" class="pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2">
+            <span class="material-symbols-outlined text-base">badge</span> Team &amp; Permissions
+          </button>
+          <button id="tab-btn-timecards" class="pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors">
+            <span class="material-symbols-outlined text-base">history_toggle_off</span> Timecards &amp; Hours Worked
+          </button>
+          <button id="tab-btn-commissions" class="pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors">
+            <span class="material-symbols-outlined text-base">paid</span> Commission Sales Log
+          </button>
+        </div>
+
+        <!-- TAB 1: Staff Directory & Permissions Table -->
+        <div id="tab-view-directory" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-surface-container text-left text-xs font-label uppercase text-on-surface-variant tracking-wider">
+                <tr>
+                  <th class="p-4">Employee</th>
+                  <th class="p-4">Role &amp; Wage</th>
+                  <th class="p-4">Shift Status</th>
+                  <th class="p-4">Section Permissions</th>
+                  <th class="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="staff-table-body" class="divide-y divide-outline-variant text-sm font-body">
+                <tr><td colspan="5" class="text-center py-8"><span class="admin-spinner"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 2: Timecards & Hours Log Table (Hidden by default) -->
+        <div id="tab-view-timecards" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm hidden">
+          <div class="p-4 bg-surface-container-low border-b border-outline-variant flex items-center justify-between">
+            <span class="text-xs font-bold text-on-surface-variant">Showing chronological shift records and automated wage calculations</span>
+            <button id="refresh-timecards-btn" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">refresh</span> Refresh Log
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-surface-container text-left text-xs font-label uppercase text-on-surface-variant tracking-wider">
+                <tr>
+                  <th class="p-4">Employee</th>
+                  <th class="p-4">Clock In Time</th>
+                  <th class="p-4">Clock Out Time</th>
+                  <th class="p-4">Duration</th>
+                  <th class="p-4">Est. Earnings</th>
+                  <th class="p-4">Notes / Task</th>
+                  <th class="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="timecards-table-body" class="divide-y divide-outline-variant text-sm font-body">
+                <tr><td colspan="7" class="text-center py-8"><span class="admin-spinner"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 3: Commission Sales Log Table (Hidden by default) -->
+        <div id="tab-view-commissions" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm hidden">
+          <div class="p-4 bg-surface-container-low border-b border-outline-variant flex items-center justify-between">
+            <span class="text-xs font-bold text-on-surface-variant">Showing charter bookings and sales commission payouts</span>
+            <button id="refresh-commissions-btn" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">refresh</span> Refresh Log
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-surface-container text-left text-xs font-label uppercase text-on-surface-variant tracking-wider">
+                <tr>
+                  <th class="p-4">Sales Agent</th>
+                  <th class="p-4">Yacht Booked</th>
+                  <th class="p-4">Charter Date</th>
+                  <th class="p-4">Total Charter ($)</th>
+                  <th class="p-4">Comm. Rate (%)</th>
+                  <th class="p-4">Earned Comm. ($)</th>
+                  <th class="p-4">Client / Notes</th>
+                  <th class="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="commissions-table-body" class="divide-y divide-outline-variant text-sm font-body">
+                <tr><td colspan="8" class="text-center py-8"><span class="admin-spinner"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Add/Edit Staff Modal -->
+  <div id="staff-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-outline-variant">
+      <div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-4">
+        <h3 class="font-headline text-lg font-bold text-on-surface" id="staff-modal-title">Add New Employee</h3>
+        <button type="button" class="close-staff-modal text-on-surface-variant hover:text-on-surface font-bold text-xl">&times;</button>
+      </div>
+      <form id="staff-form" class="space-y-4">
+        <input type="hidden" id="staff-id" value="" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Full Name *</label>
+            <input type="text" id="staff-name" required placeholder="e.g. Carlos Mendez" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm focus:ring-2 focus:ring-secondary"/>
+          </div>
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Email Address *</label>
+            <input type="email" id="staff-email" required placeholder="carlos@yrsf.com" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm focus:ring-2 focus:ring-secondary"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Job Role / Title</label>
+            <input type="text" id="staff-role" placeholder="e.g. Charter Concierge, Deckhand" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm focus:ring-2 focus:ring-secondary"/>
+          </div>
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Pay Type / Comp. Model</label>
+            <select id="staff-pay-type" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm font-bold text-secondary focus:ring-2 focus:ring-secondary">
+              <option value="hourly">Hourly Wage Only</option>
+              <option value="commission">Commission Only (Charter Bookings)</option>
+              <option value="both">Hourly Base + Commission</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Hourly Wage ($/hr)</label>
+            <input type="number" step="0.50" min="0" id="staff-wage" placeholder="25.00" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm focus:ring-2 focus:ring-secondary"/>
+          </div>
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Commission Rate (%)</label>
+            <input type="number" step="0.5" min="0" max="100" id="staff-comm-rate" placeholder="10.0" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm focus:ring-2 focus:ring-secondary"/>
+          </div>
+        </div>
+        <div>
+          <label class="block font-label text-xs font-bold text-on-surface mb-1">4-Digit Clock-In PIN (Optional)</label>
+          <input type="text" id="staff-pin" maxlength="4" placeholder="1234" class="w-32 px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm font-mono text-center tracking-widest focus:ring-2 focus:ring-secondary"/>
+          <span class="text-[11px] text-on-surface-variant ml-2">Used for fast timeclock login.</span>
+        </div>
+        
+        <div class="pt-2 border-t border-outline-variant">
+          <label class="block font-label text-xs font-bold text-on-surface mb-2">Access Permissions (What sections can they view &amp; edit?)</label>
+          <div class="grid grid-cols-2 gap-2 bg-surface-container-low p-3 rounded-xl border border-outline-variant text-xs">
+            <label class="flex items-center gap-2 cursor-pointer font-medium">
+              <input type="checkbox" id="perm-fleet" checked class="rounded text-secondary focus:ring-secondary"/> ⛵ Fleet Management
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer font-medium">
+              <input type="checkbox" id="perm-partners" checked class="rounded text-secondary focus:ring-secondary"/> 🤝 Partner Submissions
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer font-medium">
+              <input type="checkbox" id="perm-addons" checked class="rounded text-secondary focus:ring-secondary"/> ➕ Add-ons &amp; Services
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer font-medium">
+              <input type="checkbox" id="perm-content" class="rounded text-secondary focus:ring-secondary"/> 📝 FAQs &amp; Blog Posts
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer font-medium">
+              <input type="checkbox" id="perm-seo" class="rounded text-secondary focus:ring-secondary"/> 🔍 SEO Settings
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer font-medium">
+              <input type="checkbox" id="perm-settings" class="rounded text-secondary focus:ring-secondary"/> ⚙️ General Settings
+            </label>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-outline-variant">
+          <button type="button" class="close-staff-modal px-4 py-2 border border-outline-variant rounded-lg text-xs font-bold hover:bg-surface-container transition-colors">Cancel</button>
+          <button type="submit" class="bg-secondary text-on-secondary px-6 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow">Save Employee</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Time Clock Portal Modal -->
+  <div id="timeclock-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-outline-variant text-center">
+      <div class="flex justify-end mb-2">
+        <button type="button" id="close-timeclock-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-2xl leading-none">&times;</button>
+      </div>
+      <div class="w-16 h-16 rounded-full bg-green-100 text-green-700 flex items-center justify-center mx-auto mb-3 shadow-inner">
+        <span class="material-symbols-outlined text-3xl">schedule</span>
+      </div>
+      <h3 class="font-headline text-xl font-bold text-on-surface">Employee Time Clock</h3>
+      <p class="text-xs text-on-surface-variant mb-6">Select your name to clock in for your shift or clock out when finished.</p>
+      
+      <div class="space-y-4 text-left">
+        <div>
+          <label class="block font-label text-xs font-bold text-on-surface mb-1">Select Employee Account</label>
+          <select id="timeclock-staff-select" class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl text-sm font-bold text-secondary focus:ring-2 focus:ring-secondary">
+            <option value="">-- Choose Your Name --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-label text-xs font-bold text-on-surface mb-1">Shift Notes / Assigned Yacht (Optional)</label>
+          <input type="text" id="timeclock-notes" placeholder="e.g. Preparing 68ft Azimut charter, detailing galley..." class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
+        </div>
+        
+        <!-- Status indicator of selected employee -->
+        <div id="timeclock-status-box" class="p-3 rounded-xl bg-surface-container text-center text-xs font-bold text-on-surface-variant hidden"></div>
+
+        <div class="flex gap-3 pt-2">
+          <button type="button" id="btn-clock-in" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-label text-sm font-bold shadow hover:bg-green-700 transition-all flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-lg">login</span> CLOCK IN
+          </button>
+          <button type="button" id="btn-clock-out" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-label text-sm font-bold shadow hover:bg-red-700 transition-all flex items-center justify-center gap-1 hidden">
+            <span class="material-symbols-outlined text-lg">logout</span> CLOCK OUT
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Charter Booking & Calculate Commission Modal -->
+  <div id="commission-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-outline-variant text-left">
+      <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-2xl">paid</span>
+          </div>
+          <div>
+            <h3 class="font-headline text-lg font-bold text-on-surface">Log Charter Commission</h3>
+            <p class="text-[11px] text-on-surface-variant">Calculate &amp; track booking sale commissions</p>
+          </div>
+        </div>
+        <button type="button" id="close-commission-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-2xl leading-none">&times;</button>
+      </div>
+      
+      <form id="commission-form" class="space-y-4">
+        <div>
+          <label class="block font-label text-xs font-bold text-on-surface mb-1">Sales Agent / Broker *</label>
+          <select id="comm-staff-select" required class="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl text-sm font-bold text-secondary focus:ring-2 focus:ring-secondary">
+            <option value="">-- Select Sales Concierge --</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Yacht Booked *</label>
+            <select id="comm-boat-select" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary">
+              <option value="">-- Select Boat --</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Charter Date *</label>
+            <input type="date" id="comm-date" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 p-3 rounded-xl bg-surface-container-low border border-outline-variant">
+          <div>
+            <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Total Price ($) *</label>
+            <input type="number" step="0.01" min="0" id="comm-price" required placeholder="2800.00" class="w-full px-2 py-1.5 bg-white border border-outline-variant rounded-lg text-sm font-bold text-on-surface focus:ring-2 focus:ring-secondary"/>
+          </div>
+          <div>
+            <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Comm. Rate (%) *</label>
+            <input type="number" step="0.5" min="0" max="100" id="comm-rate" required placeholder="10.0" class="w-full px-2 py-1.5 bg-white border border-outline-variant rounded-lg text-sm font-bold text-amber-700 focus:ring-2 focus:ring-secondary"/>
+          </div>
+          <div>
+            <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Payout ($)</label>
+            <input type="number" step="0.01" min="0" id="comm-amount" required readonly class="w-full px-2 py-1.5 bg-amber-50 border border-amber-300 rounded-lg text-sm font-extrabold text-amber-800"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-label text-xs font-bold text-on-surface mb-1">Client Name / Reference Notes (Optional)</label>
+          <input type="text" id="comm-notes" placeholder="e.g. Birthday Charter - Client: Smith Family" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button type="button" id="cancel-comm-btn" class="flex-1 bg-surface-container text-on-surface py-2.5 rounded-xl font-label text-xs font-bold hover:bg-surface-container-high transition-all">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 bg-amber-600 text-white py-2.5 rounded-xl font-label text-xs font-bold shadow hover:bg-amber-700 transition-all flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-sm">check_circle</span> Log Commission
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create / Edit Charter Booking Modal -->
+  <div id="booking-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-outline-variant text-left max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4 sticky top-0 bg-white z-10">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-2xl">event_available</span>
+          </div>
+          <div>
+            <h3 class="font-headline text-lg font-bold text-on-surface" id="booking-modal-title">Schedule Charter Booking</h3>
+            <p class="text-[11px] text-on-surface-variant">Add new departure to daily manifest &amp; calendar</p>
+          </div>
+        </div>
+        <button type="button" id="close-booking-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-2xl leading-none">&times;</button>
+      </div>
+
+      <form id="booking-form" class="space-y-4">
+        <input type="hidden" id="booking-id" value=""/>
+
+        <div class="relative" id="book-boat-search-container">
+          <label class="block font-label text-xs font-bold text-on-surface mb-1">Select Yacht / Vessel *</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">directions_boat</span>
+            <input type="text" id="book-boat-search-input" placeholder="Type to search yacht name..." autocomplete="off" class="w-full pl-9 pr-10 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl text-sm font-bold text-secondary focus:ring-2 focus:ring-secondary"/>
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer" id="book-boat-dropdown-toggle">expand_more</span>
+          </div>
+          <!-- Hidden real select for form validation and compatibility -->
+          <select id="book-boat-select" required class="sr-only" tabindex="-1">
+            <option value="">-- Select Boat --</option>
+          </select>
+          <!-- Dropdown Options List -->
+          <div id="book-boat-options-list" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto hidden divide-y divide-surface-container"></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Departure Date *</label>
+            <input type="date" id="book-date" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
+          </div>
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Start Time *</label>
+            <select id="book-time" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+              <option value="08:00 AM">08:00 AM</option>
+              <option value="09:00 AM">09:00 AM</option>
+              <option value="10:00 AM" selected>10:00 AM</option>
+              <option value="11:00 AM">11:00 AM</option>
+              <option value="12:00 PM">12:00 PM (Noon)</option>
+              <option value="01:00 PM">01:00 PM</option>
+              <option value="02:00 PM">02:00 PM</option>
+              <option value="03:00 PM">03:00 PM</option>
+              <option value="04:00 PM">04:00 PM</option>
+              <option value="05:00 PM">05:00 PM (Sunset)</option>
+              <option value="06:00 PM">06:00 PM</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Duration *</label>
+            <select id="book-duration" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+              <option value="4">4 Hours (Half Day)</option>
+              <option value="6">6 Hours</option>
+              <option value="8">8 Hours (Full Day)</option>
+              <option value="12">12 Hours</option>
+              <option value="24">Multi-Day / Overnight</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant space-y-3">
+          <p class="font-label text-xs font-bold text-secondary uppercase tracking-wider">Customer / Passenger Info</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-label text-xs text-on-surface mb-1">Full Name *</label>
+              <input type="text" id="book-cust-name" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs text-on-surface mb-1">Phone Number *</label>
+              <input type="tel" id="book-cust-phone" required placeholder="(305) 555-0199" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary"/>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-label text-xs text-on-surface mb-1">Email Address (Optional)</label>
+              <input type="email" id="book-cust-email" placeholder="john@example.com" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs text-on-surface mb-1">Total Guests *</label>
+              <input type="number" min="1" max="100" id="book-guests" required value="8" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs font-bold focus:ring-2 focus:ring-secondary"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 space-y-3">
+          <p class="font-label text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">payments</span> Financial Details &amp; Balance
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Total Price ($) *</label>
+              <input type="number" step="0.01" min="0" id="book-price" required placeholder="2500.00" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold text-on-surface focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Deposit Paid ($)</label>
+              <input type="number" step="0.01" min="0" id="book-deposit" placeholder="500.00" value="0" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold text-blue-700 focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Remaining Balance ($)</label>
+              <input type="text" id="book-balance-display" readonly value="$0.00" class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-sm font-bold text-red-600 cursor-not-allowed"/>
+              <input type="hidden" id="book-balance" value="0"/>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Payment Notes / Method</label>
+              <input type="text" id="book-pay-method" placeholder="e.g. Zelle deposit, cash balance at dock" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Booking Status</label>
+              <select id="book-status" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+                <option value="confirmed">🟢 Confirmed (Deposit Paid)</option>
+                <option value="completed">✓ Completed &amp; Fully Paid</option>
+                <option value="cancelled">🔴 Cancelled / Refunded</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-label text-xs font-bold text-on-surface mb-1">Special Requests / Catering / Add-ons / Notes</label>
+          <textarea id="book-notes" rows="2" placeholder="e.g. Jet Ski addon, Champagne requested, Birthday decoration package..." class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"></textarea>
+        </div>
+
+        <div class="flex gap-3 pt-3 border-t border-outline-variant">
+          <button type="button" id="cancel-booking-btn" class="flex-1 bg-surface-container text-on-surface py-2.5 rounded-xl font-label text-xs font-bold hover:bg-surface-container-high transition-all">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 bg-secondary text-on-secondary py-2.5 rounded-xl font-label text-xs font-bold shadow hover:opacity-90 transition-all flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-sm">check_circle</span> Save Booking
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Day Events Modal -->
+  <div id="day-events-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-surface border border-outline-variant rounded-3xl p-6 max-w-xl w-full shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-4 shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary text-2xl">event_note</span>
+          <div>
+            <h3 id="day-events-modal-title" class="font-headline text-lg font-bold text-on-surface">Scheduled Events</h3>
+            <p id="day-events-modal-subtitle" class="font-body text-xs text-on-surface-variant">All charters and external sync items for this date</p>
+          </div>
+        </div>
+        <button id="close-day-events-modal" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-sm">close</span>
+        </button>
+      </div>
+      <div id="day-events-modal-content" class="overflow-y-auto space-y-3 pr-1 flex-1">
+        <!-- Event items injected dynamically -->
+      </div>
+      <div class="flex items-center justify-between gap-3 pt-4 border-t border-outline-variant mt-4 shrink-0">
+        <button id="day-events-add-booking-btn" class="bg-secondary text-on-secondary px-4 py-2.5 rounded-xl font-label text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm">
+          <span class="material-symbols-outlined text-sm">add_circle</span> Add Booking for This Day
+        </button>
+        <button id="day-events-close-btn" class="bg-surface-container hover:bg-surface-container-high text-on-surface px-5 py-2.5 rounded-xl font-label text-xs font-bold transition-colors">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script type="module" src="/js/pages/admin-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YRSF - Image Migration Tool</title>
+  <link href="/css/index.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <style>
+    body { background-color: #0f172a; color: white; padding: 2rem; font-family: 'Inter', sans-serif; }
+    .container { max-width: 800px; margin: 0 auto; background: #1e293b; padding: 2rem; border-radius: 12px; }
+    h1 { margin-top: 0; color: #38bdf8; }
+    .log-container { background: #020617; padding: 1rem; border-radius: 8px; height: 400px; overflow-y: auto; font-family: monospace; font-size: 14px; margin-top: 1rem; border: 1px solid #334155; }
+    .log-entry { margin-bottom: 4px; }
+    .log-info { color: #94a3b8; }
+    .log-success { color: #4ade80; }
+    .log-error { color: #f87171; }
+    .log-warning { color: #fbbf24; }
+    button { background: #38bdf8; color: #0f172a; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 1rem; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>YRSF Automated Image Migration</h1>
+    <p>This tool connects to Google Drive and Dropbox to download photos for all boats, and uploads them securely to Supabase.</p>
+    
+    <button id="start-btn">Start Migration</button>
+
+    <div class="log-container" id="log-output">
+      <div class="log-entry log-info">Ready to begin. Click "Start Migration".</div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/migration.js"></script>
+</body>
+</html>
