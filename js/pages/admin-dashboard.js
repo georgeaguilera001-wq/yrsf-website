@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const searchVal = (fleetSearchInput?.value || '').toLowerCase();
     const statusVal = fleetStatusFilter?.value || 'all';
-    const sortVal = fleetSortFilter?.value || 'name_asc';
+    const sortVal = fleetSortFilter?.value || 'length_asc';
 
     let filtered = allAdminBoatsCache.filter(b => {
       const matchSearch = b.name.toLowerCase().includes(searchVal) || 
