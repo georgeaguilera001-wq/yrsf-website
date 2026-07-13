@@ -40,59 +40,86 @@
 
     <nav class="flex-1 p-sm overflow-y-auto">
       <ul class="flex flex-col gap-1">
-        <li>
-          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors bg-secondary-container text-on-secondary-container" data-section="dashboard">
-            <span class="material-symbols-outlined">dashboard</span>
-            <span class="font-label text-label-md">Dashboard</span>
-          </button>
+        <li draggable="true" data-nav-id="dashboard">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors bg-secondary-container text-on-secondary-container" data-section="dashboard">
+              <span class="material-symbols-outlined">dashboard</span>
+              <span class="font-label text-label-md">Dashboard</span>
+            </button>
+          </div>
         </li>
-        <li>
-          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="bookings">
-            <span class="material-symbols-outlined">calendar_month</span>
-            <span class="font-label text-label-md">Bookings &amp; Manifest</span>
-          </button>
+        <li draggable="true" data-nav-id="bookings">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="bookings">
+              <span class="material-symbols-outlined">calendar_month</span>
+              <span class="font-label text-label-md">Bookings &amp; Manifest</span>
+            </button>
+          </div>
         </li>
-        <li>
-          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="staff">
-            <span class="material-symbols-outlined">badge</span>
-            <span class="font-label text-label-md">Staff &amp; Timeclock</span>
-          </button>
+        <li draggable="true" data-nav-id="staff">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="staff">
+              <span class="material-symbols-outlined">badge</span>
+              <span class="font-label text-label-md">Staff &amp; Timeclock</span>
+            </button>
+          </div>
         </li>
-        <li>
-          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="content">
-            <span class="material-symbols-outlined">article</span>
-            <span class="font-label text-label-md">Content</span>
-          </button>
+        <li draggable="true" data-nav-id="content">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="content">
+              <span class="material-symbols-outlined">article</span>
+              <span class="font-label text-label-md">Content</span>
+            </button>
+          </div>
         </li>
-        <li>
-          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="fleet">
-            <span class="material-symbols-outlined">directions_boat</span>
-            <span class="font-label text-label-md">Fleet</span>
-          </button>
+        <li draggable="true" data-nav-id="fleet">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="fleet">
+              <span class="material-symbols-outlined">directions_boat</span>
+              <span class="font-label text-label-md">Fleet</span>
+            </button>
+          </div>
         </li>
-        <li>
-          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="addons">
-            <span class="material-symbols-outlined">add_circle</span>
-            <span class="font-label text-label-md">Add-ons</span>
-          </button>
+        <li draggable="true" data-nav-id="addons">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="addons">
+              <span class="material-symbols-outlined">add_circle</span>
+              <span class="font-label text-label-md">Add-ons</span>
+            </button>
+          </div>
         </li>
-        <li>
-          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="seo">
-            <span class="material-symbols-outlined">search</span>
-            <span class="font-label text-label-md">SEO Settings</span>
-          </button>
+        <li draggable="true" data-nav-id="seo">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="seo">
+              <span class="material-symbols-outlined">search</span>
+              <span class="font-label text-label-md">SEO Settings</span>
+            </button>
+          </div>
         </li>
-        <li>
-          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="settings">
-            <span class="material-symbols-outlined">settings</span>
-            <span class="font-label text-label-md">Settings</span>
-          </button>
+        <li draggable="true" data-nav-id="settings">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="settings">
+              <span class="material-symbols-outlined">settings</span>
+              <span class="font-label text-label-md">Settings</span>
+            </button>
+          </div>
         </li>
-        <li>
-          <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="partners">
-            <span class="material-symbols-outlined">handshake</span>
-            <span class="font-label text-label-md">Partner Submissions</span>
-          </button>
+        <li draggable="true" data-nav-id="partners">
+          <div class="flex items-center gap-1 group">
+            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
+            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="partners">
+              <span class="material-symbols-outlined">handshake</span>
+              <span class="font-label text-label-md">Partner Submissions</span>
+            </button>
+          </div>
         </li>
       </ul>
     </nav>
@@ -1208,5 +1235,87 @@
 
   <div id="toast-container" class="toast-container"></div>
   <script type="module" src="/js/pages/admin-dashboard.js"></script>
+  <script>
+    // ── Sidebar Drag-and-Drop Reordering ─────────────────────────────────────
+    (function() {
+      const NAV_ORDER_KEY = 'yrsf_admin_nav_order';
+      const navList = document.querySelector('#admin-sidebar nav ul');
+      if (!navList) return;
+
+      // Restore saved order from localStorage
+      function restoreNavOrder() {
+        const saved = localStorage.getItem(NAV_ORDER_KEY);
+        if (!saved) return;
+        try {
+          const order = JSON.parse(saved);
+          order.forEach(id => {
+            const li = navList.querySelector(`li[data-nav-id="${id}"]`);
+            if (li) navList.appendChild(li);
+          });
+        } catch(e) {}
+      }
+
+      // Save current order to localStorage
+      function saveNavOrder() {
+        const order = Array.from(navList.querySelectorAll('li[data-nav-id]')).map(li => li.dataset.navId);
+        localStorage.setItem(NAV_ORDER_KEY, JSON.stringify(order));
+      }
+
+      restoreNavOrder();
+
+      let dragSrc = null;
+
+      navList.querySelectorAll('li[data-nav-id]').forEach(li => {
+        li.addEventListener('dragstart', (e) => {
+          dragSrc = li;
+          li.style.opacity = '0.4';
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        li.addEventListener('dragend', () => {
+          li.style.opacity = '1';
+          navList.querySelectorAll('li[data-nav-id]').forEach(el => el.classList.remove('drag-over'));
+          saveNavOrder();
+        });
+
+        li.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (li !== dragSrc) {
+            navList.querySelectorAll('li[data-nav-id]').forEach(el => el.classList.remove('drag-over'));
+            li.classList.add('drag-over');
+          }
+          return false;
+        });
+
+        li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
+
+        li.addEventListener('drop', (e) => {
+          e.stopPropagation();
+          if (dragSrc !== li) {
+            // Swap positions
+            const srcIdx = Array.from(navList.children).indexOf(dragSrc);
+            const tgtIdx = Array.from(navList.children).indexOf(li);
+            if (srcIdx < tgtIdx) {
+              navList.insertBefore(dragSrc, li.nextSibling);
+            } else {
+              navList.insertBefore(dragSrc, li);
+            }
+            saveNavOrder();
+          }
+          li.classList.remove('drag-over');
+          return false;
+        });
+      });
+    })();
+  </script>
+  <style>
+    li[data-nav-id].drag-over > div {
+      outline: 2px dashed var(--md-sys-color-secondary, #6750A4);
+      border-radius: 8px;
+      background: var(--md-sys-color-secondary-container, #EADDFF);
+    }
+    li[data-nav-id] { transition: opacity 0.15s; }
+  </style>
 </body>
 </html>
