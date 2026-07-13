@@ -3656,9 +3656,14 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
     // Render Chart.js if library loaded
     if (window.Chart) {
+      if (window._chartMonthInstance) window._chartMonthInstance.destroy();
+      if (window._chartBoatsInstance) window._chartBoatsInstance.destroy();
+      if (window._chartDayInstance) window._chartDayInstance.destroy();
+      if (window._chartIncInstance) window._chartIncInstance.destroy();
+
       // Monthly chart
       const ctxMonth = document.getElementById('chart-monthly-revenue')?.getContext('2d');
-      if (ctxMonth && !window._chartMonthInstance) {
+      if (ctxMonth) {
         window._chartMonthInstance = new Chart(ctxMonth, {
           type: 'bar',
           data: {
@@ -3671,7 +3676,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
       // Top boats chart
       const ctxBoats = document.getElementById('chart-top-boats')?.getContext('2d');
-      if (ctxBoats && !window._chartBoatsInstance) {
+      if (ctxBoats) {
         window._chartBoatsInstance = new Chart(ctxBoats, {
           type: 'doughnut',
           data: {
@@ -3684,7 +3689,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
       // Day of week chart
       const ctxDay = document.getElementById('chart-day-of-week')?.getContext('2d');
-      if (ctxDay && !window._chartDayInstance) {
+      if (ctxDay) {
         window._chartDayInstance = new Chart(ctxDay, {
           type: 'bar',
           data: {
@@ -3697,7 +3702,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
       // Income vs Deposits chart
       const ctxInc = document.getElementById('chart-income-vs-deposits')?.getContext('2d');
-      if (ctxInc && !window._chartIncInstance) {
+      if (ctxInc) {
         window._chartIncInstance = new Chart(ctxInc, {
           type: 'pie',
           data: {
