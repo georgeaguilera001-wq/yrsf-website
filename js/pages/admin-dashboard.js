@@ -3077,7 +3077,130 @@ document.addEventListener('DOMContentLoaded', async () => {
     grid.innerHTML = cellsHtml;
   }
 
-  window.showDayEventsModal = (dateStr) => {
+  // ─── Availability Engine ────────────────────────────────────────────────────
+  const CHARTER_START_MINS = 10 * 60;       // 10:00 AM in minutes
+  const CHARTER_END_MINS   = (24 + 2) * 60; // 2:00 AM next day in minutes (26:00)
+
+  function timeStrToMins(str) {
+    if (!str || str === 'All Day') return null;
+    const clean = str.replace(/\s*(AM|PM)\s*/gi, m => m.trim()).trim();
+    const m = clean.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!m) return null;
+    let h = parseInt(m[1]); const min = parseInt(m[2]); const ap = m[3].toUpperCase();
+    if (ap === 'PM' && h !== 12) h += 12;
+    if (ap === 'AM' && h === 12) h = 0;
+    let total = h * 60 + min;
+    // Times between 12:00AM and 2:00AM are "next day" — add 24hrs
+    if (total < 3 * 60) total += 24 * 60;
+    return total;
+  }
+
+  function minsToTimeStr(mins) {
+    const normalMins = mins % (24 * 60);
+    const h24 = Math.floor(normalMins / 60);
+    const m = normalMins % 60;
+    const suffix = h24 >= 12 ? 'PM' : 'AM';
+    const h12 = h24 % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${suffix}`;
+  }
+
+  function calcBoatAvailability(dateStr, boatId) {
+    // Collect all blocked intervals for this boat on this date
+    const bookings = (bookingsCache || []).filter(b => b.booking_date === dateStr && (!boatId || boatId === 'all' || b.boat_id === boatId));
+    const external = (window.externalIcsEvents || []).filter(e => e.booking_date === dateStr && (!boatId || boatId === 'all' || e.boat_id === boatId));
+
+    const blocked = [];
+    [...bookings, ...external].forEach(ev => {
+      const startMins = timeStrToMins(ev.start_time?.split(' - ')[0]);
+      if (startMins === null) return;
+      const durHrs = ev.duration_hours || 4;
+      // For external events try to parse end from "X:XX AM - Y:YY PM"
+      let endMins;
+      if (ev.start_time && ev.start_time.includes(' - ')) {
+        endMins = timeStrToMins(ev.start_time.split(' - ')[1]);
+      }
+      if (!endMins) endMins = startMins + durHrs * 60;
+      blocked.push({ startMins, endMins, label: ev.customer_name || ev.boat_name, boat: ev.boat_name });
+    });
+
+    // Sort & merge overlapping blocks
+    blocked.sort((a, b) => a.startMins - b.startMins);
+    const merged = [];
+    for (const blk of blocked) {
+      if (merged.length && blk.startMins <= merged[merged.length - 1].endMins) {
+        merged[merged.length - 1].endMins = Math.max(merged[merged.length - 1].endMins, blk.endMins);
+      } else {
+        merged.push({ ...blk });
+      }
+    }
+
+    // Calculate free windows within 10AM–2AM
+    const freeWindows = [];
+    let cursor = CHARTER_START_MINS;
+    for (const blk of merged) {
+      const s = Math.max(blk.startMins, CHARTER_START_MINS);
+      const e = Math.min(blk.endMins, CHARTER_END_MINS);
+      if (s > cursor) {
+        freeWindows.push({ startMins: cursor, endMins: s });
+      }
+      cursor = Math.max(cursor, e);
+    }
+    if (cursor < CHARTER_END_MINS) {
+      freeWindows.push({ startMins: cursor, endMins: CHARTER_END_MINS });
+    }
+
+    const totalBlockedMins = merged.reduce((acc, b) => {
+      const s = Math.max(b.startMins, CHARTER_START_MINS);
+      const e = Math.min(b.endMins, CHARTER_END_MINS);
+      return acc + Math.max(0, e - s);
+    }, 0);
+
+    return {
+      freeWindows,
+      blockedBlocks: merged,
+      totalFreeHrs: Math.round(freeWindows.reduce((a, w) => a + (w.endMins - w.startMins), 0) / 60 * 10) / 10,
+      totalBlockedHrs: Math.round(totalBlockedMins / 60 * 10) / 10,
+    };
+  }
+
+  async function getGeminiAvailabilitySummary(dateStr, boatName, availability) {
+    try {
+      const { data: setting } = await supabase.from('site_settings').select('value').eq('key', 'gemini_api_key').single();
+      const apiKey = setting?.value?.key || setting?.value;
+      if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') return null;
+
+      const windows = availability.freeWindows.map(w =>
+        `${minsToTimeStr(w.startMins)} – ${minsToTimeStr(w.endMins)} (${Math.round((w.endMins - w.startMins) / 60 * 10) / 10} hrs)`
+      ).join(', ');
+
+      const prompt = `You are a yacht charter scheduling assistant for a luxury yacht charter company in South Florida called YRSF (Yacht Rentals of South Florida). 
+
+Given the following schedule data, write a SHORT 1-2 sentence natural language availability summary that sounds professional and sales-focused. Highlight the best available window for a booking. 
+
+Date: ${dateStr}
+Boat: ${boatName || 'Fleet'}
+Operating Hours: 10:00 AM – 2:00 AM
+Total Free Hours Today: ${availability.totalFreeHrs} hrs
+Available Windows: ${windows || 'Fully booked'}
+Blocked Hours: ${availability.totalBlockedHrs} hrs
+
+Write ONLY the summary sentence(s), no extra explanation.`;
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ─── Day Events Modal ────────────────────────────────────────────────────────
+  window.showDayEventsModal = async (dateStr) => {
     const modal = document.getElementById('day-events-modal');
     const contentEl = document.getElementById('day-events-modal-content');
     const titleEl = document.getElementById('day-events-modal-title');
@@ -3094,6 +3217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const boatFilterEl = document.getElementById('cal-boat-filter');
     const selectedBoatId = boatFilterEl ? boatFilterEl.value : 'all';
+    const selectedBoat = fleetCache?.find(b => b.id === selectedBoatId);
 
     let dayBookings = (bookingsCache || []).filter(b => b.booking_date === dateStr);
     let dayExternal = calendarSourceFilter === 'internal' ? [] : (window.externalIcsEvents || []).filter(e => e.booking_date === dateStr);
@@ -3107,6 +3231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return timeStringToMinutes(a.start_time) - timeStringToMinutes(b.start_time);
     });
 
+    // ── Render events list ──
     if (allEvents.length === 0) {
       contentEl.innerHTML = `
         <div class="text-center py-8 bg-surface-container-lowest rounded-2xl border border-outline-variant">
@@ -3155,9 +3280,74 @@ document.addEventListener('DOMContentLoaded', async () => {
       }).join('');
     }
 
+    // ── Availability Panel ──
+    const avail = calcBoatAvailability(dateStr, selectedBoatId === 'all' ? null : selectedBoatId);
+    const boatLabel = selectedBoat?.name || (selectedBoatId === 'all' ? 'All Boats' : 'Selected Boat');
+
+    const windowsHtml = avail.freeWindows.length === 0
+      ? `<div class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">🔴 Fully Booked — No windows available today.</div>`
+      : avail.freeWindows.map(w => {
+          const hrs = Math.round((w.endMins - w.startMins) / 60 * 10) / 10;
+          const color = hrs >= 6 ? 'bg-green-50 border-green-300 text-green-800' : hrs >= 3 ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-orange-50 border-orange-300 text-orange-800';
+          return `<div class="flex items-center justify-between ${color} border rounded-xl px-3 py-2 text-xs font-bold">
+            <span>✅ ${minsToTimeStr(w.startMins)} – ${minsToTimeStr(w.endMins)}</span>
+            <span class="opacity-80 font-mono">${hrs} hrs free</span>
+          </div>`;
+        }).join('');
+
+    const availPanel = document.createElement('div');
+    availPanel.id = 'avail-panel';
+    availPanel.className = 'mt-4 border border-outline-variant rounded-2xl overflow-hidden';
+    availPanel.innerHTML = `
+      <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 px-4 py-3 border-b border-outline-variant flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary text-lg">auto_awesome</span>
+        <div>
+          <h4 class="font-headline font-bold text-sm text-on-surface">Availability Analysis — ${escapeHtml(boatLabel)}</h4>
+          <p class="text-[11px] text-on-surface-variant">Operating hours: 10:00 AM – 2:00 AM • ${avail.totalFreeHrs} hrs free today</p>
+        </div>
+        <span class="ml-auto text-[11px] font-bold px-2 py-1 rounded-full ${avail.totalFreeHrs > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}">${avail.totalFreeHrs > 0 ? `${avail.totalFreeHrs} hrs open` : 'Fully Booked'}</span>
+      </div>
+      <div class="p-4 space-y-2">
+        ${windowsHtml}
+      </div>
+      <div id="ai-summary-panel" class="px-4 pb-4">
+        <div class="bg-gradient-to-r from-violet-50 to-purple-50 border border-purple-200 rounded-xl p-3 flex items-start gap-2">
+          <span class="material-symbols-outlined text-purple-600 text-lg mt-0.5">psychology</span>
+          <div class="flex-1">
+            <p class="text-[11px] font-bold text-purple-800 mb-1">AI Availability Summary</p>
+            <p id="ai-summary-text" class="text-xs text-purple-900 italic">
+              <span class="animate-pulse">✨ Generating smart summary...</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    contentEl.after(availPanel);
+    modal.classList.remove('hidden');
+
+    // ── Fetch Gemini summary asynchronously ──
+    const summaryEl = document.getElementById('ai-summary-text');
+    if (summaryEl) {
+      const aiText = await getGeminiAvailabilitySummary(dateStr, boatLabel, avail);
+      if (aiText) {
+        summaryEl.textContent = `"${aiText}"`;
+      } else {
+        // Fallback smart-logic summary
+        if (avail.freeWindows.length === 0) {
+          summaryEl.textContent = `${boatLabel} is fully booked on this date with no available charter windows.`;
+        } else {
+          const best = avail.freeWindows.reduce((a, b) => (b.endMins - b.startMins) > (a.endMins - a.startMins) ? b : a);
+          const bestHrs = Math.round((best.endMins - best.startMins) / 60 * 10) / 10;
+          summaryEl.textContent = `Best available window: ${minsToTimeStr(best.startMins)} – ${minsToTimeStr(best.endMins)} (${bestHrs} hrs). ${avail.totalFreeHrs} total hours available today.`;
+        }
+      }
+    }
+
     if (addBtn) {
       addBtn.onclick = () => {
         modal.classList.add('hidden');
+        document.getElementById('avail-panel')?.remove();
         const createBtn = document.getElementById('add-booking-btn');
         if (createBtn) {
           createBtn.click();
@@ -3170,14 +3360,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     [closeBtn, closeBtn2].forEach(btn => {
-      if (btn) btn.onclick = () => modal.classList.add('hidden');
+      if (btn) btn.onclick = () => { modal.classList.add('hidden'); document.getElementById('avail-panel')?.remove(); };
     });
 
     modal.onclick = (e) => {
-      if (e.target === modal) modal.classList.add('hidden');
+      if (e.target === modal) { modal.classList.add('hidden'); document.getElementById('avail-panel')?.remove(); }
     };
-
-    modal.classList.remove('hidden');
   };
 
   window.filterManifestByDate = (dateStr) => {
