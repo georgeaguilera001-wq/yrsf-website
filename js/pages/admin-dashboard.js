@@ -403,6 +403,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <option value="boatsetter">⚓ Boatsetter Charter Feed</option>
                   </select>
                 </div>
+                <div id="timetree-input-group" class="hidden flex items-center border border-blue-300 rounded-lg overflow-hidden bg-white mb-2 shadow-sm">
+                  <span class="px-2.5 py-2 bg-blue-100 text-blue-900 font-mono text-[11px] font-bold select-none border-r border-blue-200">
+                    https://yrsf-website.onrender.com/timetree.ics?c=
+                  </span>
+                  <input type="text" id="timetree-code-input" placeholder="Paste Calendar Code (e.g. P4XL7kVS7UF8)" class="flex-1 px-3 py-2 font-mono text-xs font-bold text-on-surface outline-none"/>
+                </div>
                 <textarea id="edit-boat-ical-url" rows="2" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics&#10;https://timetree.com/export/..." class="admin-field w-full px-3 py-2 bg-white border border-outline-variant rounded-lg font-mono text-xs">${escapeHtml(boat?.ical_feed_url || '')}</textarea>
               </div>
               <div>
@@ -450,33 +456,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Cancel
     document.getElementById('cancel-boat-edit')?.addEventListener('click', closeModal);
 
-    // iCal Provider Template Auto-Fill
+    // iCal Provider Template Auto-Fill & Locked Prefix TimeTree Input
     const icalSelect = document.getElementById('ical-provider-template-select');
     const icalUrlArea = document.getElementById('edit-boat-ical-url');
     const icalLabelInput = document.getElementById('edit-boat-ical-label');
+    const timetreeGroup = document.getElementById('timetree-input-group');
+    const timetreeCodeInput = document.getElementById('timetree-code-input');
     if (icalSelect && icalUrlArea) {
+      const prefix = 'https://yrsf-website.onrender.com/timetree.ics?c=';
+      
+      // Check if existing boat already uses TimeTree bridge
+      if (icalUrlArea.value && icalUrlArea.value.includes(prefix)) {
+        icalSelect.value = 'timetree';
+        timetreeGroup?.classList.remove('hidden');
+        icalUrlArea.classList.add('hidden');
+        if (timetreeCodeInput) {
+          timetreeCodeInput.value = icalUrlArea.value.replace(prefix, '').trim();
+        }
+      }
+
       icalSelect.addEventListener('change', () => {
         const val = icalSelect.value;
         if (!val) return;
         if (val === 'timetree') {
-          const prefix = 'https://yrsf-website.onrender.com/timetree.ics?c=';
-          icalUrlArea.value = prefix;
+          timetreeGroup?.classList.remove('hidden');
+          icalUrlArea.classList.add('hidden');
           if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'TimeTree';
-          icalUrlArea.focus();
-          icalUrlArea.setSelectionRange(prefix.length, prefix.length);
-        } else if (val === 'google') {
-          icalUrlArea.value = 'https://calendar.google.com/calendar/ical/YOUR_CALENDAR_ID/private-XXXXXXXX/basic.ics';
-          if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'Google Cal';
-          icalUrlArea.focus();
-        } else if (val === 'icloud') {
-          icalUrlArea.value = 'webcal://pXX-caldav.icloud.com/published/2/XXXXXXXX';
-          if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'Apple Cal';
-          icalUrlArea.focus();
-        } else if (val === 'boatsetter') {
-          icalUrlArea.value = 'https://www.boatsetter.com/api/v2/boats/XXXXXXXX/calendar.ics';
-          if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'Boatsetter';
-          icalUrlArea.focus();
+          timetreeCodeInput?.focus();
+          icalUrlArea.value = prefix + (timetreeCodeInput?.value.trim() || '');
+        } else {
+          timetreeGroup?.classList.add('hidden');
+          icalUrlArea.classList.remove('hidden');
+          if (val === 'google') {
+            icalUrlArea.value = 'https://calendar.google.com/calendar/ical/YOUR_CALENDAR_ID/private-XXXXXXXX/basic.ics';
+            if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'Google Cal';
+            icalUrlArea.focus();
+          } else if (val === 'icloud') {
+            icalUrlArea.value = 'webcal://pXX-caldav.icloud.com/published/2/XXXXXXXX';
+            if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'Apple Cal';
+            icalUrlArea.focus();
+          } else if (val === 'boatsetter') {
+            icalUrlArea.value = 'https://www.boatsetter.com/api/v2/boats/XXXXXXXX/calendar.ics';
+            if (icalLabelInput && !icalLabelInput.value) icalLabelInput.value = 'Boatsetter';
+            icalUrlArea.focus();
+          }
         }
+      });
+
+      timetreeCodeInput?.addEventListener('input', () => {
+        icalUrlArea.value = prefix + timetreeCodeInput.value.trim();
       });
     }
 
