@@ -2568,7 +2568,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const { data: cachedSetting } = await supabase.from('site_settings').select('value').eq('key', 'cached_ical_events').single();
         if (cachedSetting && cachedSetting.value && Array.isArray(cachedSetting.value) && cachedSetting.value.length > 0) {
-          window.externalIcsEvents = cachedSetting.value;
+          window.externalIcsEvents = deduplicateIcsEvents(cachedSetting.value);
           localStorage.setItem('yrsf_external_ics_events', JSON.stringify(window.externalIcsEvents));
         }
       } catch (e) {}
@@ -2751,6 +2751,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Deduplicates an array of iCal events by boat_id + date + time + name key
+  function deduplicateIcsEvents(events) {
+    const seen = new Set();
+    return (events || []).filter(ev => {
+      const key = `${ev.boat_id}|${ev.booking_date}|${ev.start_time}|${ev.customer_name}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
   async function syncAllIcalFeeds(showNotification = true) {
     await loadFleet(true); // Always force a fresh reload from Supabase DB!
     const boatsWithIcal = fleetCache.filter(b => b.ical_feed_url && b.status === 'active');
@@ -2761,6 +2772,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (showNotification) showToast(`Syncing calendar feeds for ${boatsWithIcal.length} yacht(s)...`, 'info');
     
     if (!window.externalIcsEvents) window.externalIcsEvents = [];
+    // Always deduplicate existing events before adding new ones
+    window.externalIcsEvents = deduplicateIcsEvents(window.externalIcsEvents);
     let addedCount = 0;
     
     // Only import events that happened up to 1 month in the past or in the future
@@ -2922,6 +2935,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (boatFilterEl) boatFilterEl.value = 'all';
       
     try {
+      window.externalIcsEvents = deduplicateIcsEvents(window.externalIcsEvents);
       localStorage.setItem('yrsf_external_ics_events', JSON.stringify(window.externalIcsEvents));
       await supabase.from('site_settings').upsert({
         key: 'cached_ical_events',
