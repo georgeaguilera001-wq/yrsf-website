@@ -31,8 +31,8 @@ def get_timetree_ics():
     # 1. Attempt using timetree-exporter CLI with credentials
     if TIMETREE_EMAIL and TIMETREE_PASSWORD:
         try:
-            cmd = ["timetree-exporter", "-e", TIMETREE_EMAIL, "-p", TIMETREE_PASSWORD, "-c", cal_id, "-o", output_path]
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=25)
+            cmd = ["timetree-exporter", "-e", TIMETREE_EMAIL, "-c", cal_id, "-o", output_path]
+            res = subprocess.run(cmd, input=f"{TIMETREE_PASSWORD}\n", capture_output=True, text=True, timeout=25, env=os.environ.copy())
             cli_debug["returncode"] = res.returncode
             cli_debug["stdout"] = res.stdout[:500] if res.stdout else ""
             cli_debug["stderr"] = res.stderr[:500] if res.stderr else ""
