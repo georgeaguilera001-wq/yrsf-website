@@ -26,11 +26,14 @@ def get_cal_lock(cal_id):
 def inspect_code():
     try:
         import glob
-        files = glob.glob("/opt/render/project/src/.venv/lib/python*/site-packages/timetree_exporter/*.py")
         res = {}
-        for fn in files:
-            with open(fn, "r", encoding="utf-8") as f:
-                res[os.path.basename(fn)] = f.read()
+        for root, dirs, files in os.walk("/opt/render/project/src/.venv/lib"):
+            if "timetree_exporter" in root:
+                for fn in files:
+                    if fn.endswith(".py"):
+                        path = os.path.join(root, fn)
+                        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                            res[path] = f.read()
         return jsonify(res)
     except Exception as e:
         return jsonify({"error": str(e)})
