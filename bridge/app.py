@@ -22,6 +22,19 @@ def get_cal_lock(cal_id):
             cal_locks[cal_id] = threading.Lock()
         return cal_locks[cal_id]
 
+@app.route("/inspect")
+def inspect_code():
+    try:
+        import glob
+        files = glob.glob("/opt/render/project/src/.venv/lib/python*/site-packages/timetree_exporter/*.py")
+        res = {}
+        for fn in files:
+            with open(fn, "r", encoding="utf-8") as f:
+                res[os.path.basename(fn)] = f.read()
+        return jsonify(res)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 @app.route("/")
 def home():
     return jsonify({
