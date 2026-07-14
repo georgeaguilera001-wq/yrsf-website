@@ -3250,10 +3250,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         await Promise.all(rawUrls.map(async (url) => {
           const expandCandidateUrls = (u) => {
-            u = u.trim();
+            u = u.trim().replace(/^(webcal|ical):\/\//i, 'https://');
+            // If user saved old bridge URL in database, automatically upgrade it to our active bridge
+            if (u.includes('yrsf-timetree-bridge.onrender.com')) {
+              u = u.replace('yrsf-timetree-bridge.onrender.com', 'yrsf-website.onrender.com');
+            }
             const list = [];
             const cleanCode = u.replace(/^https?:\/\//i, '').replace(/\/$/, '');
-            // If user entered short alphanumeric ID like 93TAtkhS37u2 (or if form prepended https://)
+            // If user entered short alphanumeric ID like 93TAtkhS37u2
             if (/^[a-zA-Z0-9_-]{6,35}$/.test(cleanCode)) {
               // 1. Primary YRSF Render Proxy Endpoint
               list.push(`https://yrsf-website.onrender.com/timetree.ics?c=${cleanCode}`);
@@ -3267,14 +3271,13 @@ document.addEventListener('DOMContentLoaded', async () => {
               list.push(`https://api.timetreeapp.com/v1/calendars/${cleanCode}/events.ics`);
               list.push(`https://timetreeapp.com/public_calendars/${cleanCode}/events.ics`);
             }
-            u = u.replace(/^(webcal|ical):\/\//i, 'https://');
             if (!u.startsWith('http://') && !u.startsWith('https://') && !/^[a-zA-Z0-9_-]{6,35}$/.test(u)) {
               u = 'https://' + u;
             }
             if (u.startsWith('http://') || u.startsWith('https://')) {
               list.push(u);
             }
-            if ((u.includes('timetreeapp.com') || u.includes('render')) && !u.endsWith('.ics')) {
+            if ((u.includes('timetreeapp.com') || u.includes('render')) && !u.endsWith('.ics') && !u.includes('?')) {
               const clean = u.replace(/\/$/, '');
               list.push(clean + '.ics');
               list.push(clean + '/events.ics');

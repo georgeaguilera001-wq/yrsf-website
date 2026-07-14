@@ -22,16 +22,16 @@ def home():
 @app.route("/timetree.ics")
 def get_timetree_ics():
     cal_id = request.args.get("c", "").strip()
-    if not cal_id:
-        return jsonify({"error": "Missing calendar code parameter '?c='"}), 400
+    filename = cal_id if cal_id else "default"
+    output_path = f"/tmp/{filename}.ics"
 
-    output_path = f"/tmp/{cal_id}.ics"
-
-    cli_debug = {"email_set": bool(TIMETREE_EMAIL), "password_set": bool(TIMETREE_PASSWORD)}
+    cli_debug = {"email_set": bool(TIMETREE_EMAIL), "password_set": bool(TIMETREE_PASSWORD), "cal_id": cal_id or "default"}
     # 1. Attempt using timetree-exporter CLI with credentials
     if TIMETREE_EMAIL and TIMETREE_PASSWORD:
         try:
-            cmd = ["timetree-exporter", "-e", TIMETREE_EMAIL, "-c", cal_id, "-o", output_path]
+            cmd = ["timetree-exporter", "-e", TIMETREE_EMAIL, "-o", output_path]
+            if cal_id:
+                cmd.extend(["-c", cal_id])
             res = subprocess.run(cmd, input=f"{TIMETREE_PASSWORD}\n", capture_output=True, text=True, timeout=25, env=os.environ.copy())
             cli_debug["returncode"] = res.returncode
             cli_debug["stdout"] = res.stdout[:500] if res.stdout else ""
