@@ -3187,58 +3187,68 @@ document.addEventListener('DOMContentLoaded', async () => {
     cutoffDateObj.setHours(0, 0, 0, 0);
     const cutoffDateStr = cutoffDateObj.toISOString().split('T')[0];
 
-    // Helper: Fast fetcher with 25s timeout to support Render.com / OnRender cold starts & proxies
+    // Helper: Request deduplication + fast fetcher with 25s timeout to prevent rate-limiting when multiple boats share a feed
+    const inFlightFetches = new Map();
     const fetchIcsFast = async (url) => {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 12000);
-
-      const isValidContent = (txt) => {
-        if (!txt) return false;
-        const trimmed = txt.trim();
-        return trimmed.toUpperCase().includes('BEGIN:VEVENT') || trimmed.startsWith('[') || trimmed.startsWith('{');
-      };
-
-      const fetchDirect = async () => {
-        const res = await fetch(url, { signal: controller.signal });
-        if (res.ok) {
-          const text = await res.text();
-          if (isValidContent(text)) return text;
-        }
-        throw new Error('Direct failed');
-      };
-
-      const fetchSupabaseRpc = async () => {
-        const { data: rpcText, error: rpcErr } = await supabase.rpc('fetch_external_url', { target_url: url });
-        if (!rpcErr && isValidContent(rpcText)) return rpcText;
-        throw new Error('Supabase RPC failed');
-      };
-
-      const fetchAllOrigins = async () => {
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: controller.signal });
-        if (res.ok) {
-          const json = await res.json();
-          if (json && isValidContent(json.contents)) return json.contents;
-        }
-        throw new Error('AllOrigins failed');
-      };
-
-      const fetchCodetabs = async () => {
-        const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, { signal: controller.signal });
-        if (res.ok) {
-          const text = await res.text();
-          if (isValidContent(text)) return text;
-        }
-        throw new Error('Codetabs failed');
-      };
-
-      try {
-        const result = await Promise.any([fetchDirect(), fetchSupabaseRpc(), fetchAllOrigins(), fetchCodetabs()]);
-        clearTimeout(timeout);
-        return result;
-      } catch (err) {
-        clearTimeout(timeout);
-        return null;
+      if (inFlightFetches.has(url)) {
+        return await inFlightFetches.get(url);
       }
+
+      const fetchPromise = (async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+
+        const isValidContent = (txt) => {
+          if (!txt) return false;
+          const trimmed = txt.trim();
+          return trimmed.toUpperCase().includes('BEGIN:VEVENT') || trimmed.startsWith('[') || trimmed.startsWith('{');
+        };
+
+        const fetchDirect = async () => {
+          const res = await fetch(url, { signal: controller.signal });
+          if (res.ok) {
+            const text = await res.text();
+            if (isValidContent(text)) return text;
+          }
+          throw new Error('Direct failed');
+        };
+
+        const fetchSupabaseRpc = async () => {
+          const { data: rpcText, error: rpcErr } = await supabase.rpc('fetch_external_url', { target_url: url });
+          if (!rpcErr && isValidContent(rpcText)) return rpcText;
+          throw new Error('Supabase RPC failed');
+        };
+
+        const fetchAllOrigins = async () => {
+          const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: controller.signal });
+          if (res.ok) {
+            const json = await res.json();
+            if (json && isValidContent(json.contents)) return json.contents;
+          }
+          throw new Error('AllOrigins failed');
+        };
+
+        const fetchCodetabs = async () => {
+          const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, { signal: controller.signal });
+          if (res.ok) {
+            const text = await res.text();
+            if (isValidContent(text)) return text;
+          }
+          throw new Error('Codetabs failed');
+        };
+
+        try {
+          const result = await Promise.any([fetchDirect(), fetchSupabaseRpc(), fetchAllOrigins(), fetchCodetabs()]);
+          clearTimeout(timeout);
+          return result;
+        } catch (err) {
+          clearTimeout(timeout);
+          return null;
+        }
+      })();
+
+      inFlightFetches.set(url, fetchPromise);
+      return await fetchPromise;
     };
 
     // Run all boats and URLs concurrently in parallel for blazing fast speed
