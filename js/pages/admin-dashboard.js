@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadSectionData(section) {
     switch (section) {
       case 'dashboard':
-        if (!loaded.dashboard) { await loadDashboard(); loaded.dashboard = true; }
+        await loadDashboard();
         break;
       case 'fleet':
         await loadFleet();
@@ -117,14 +117,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'crm':
         if (!loaded.crm) { await initCRMSection(); loaded.crm = true; }
         else { await initCRMSection(); }
-        break;
-      case 'crew':
-        if (!loaded.crew) { await initCrewSection(); loaded.crew = true; }
-        break;
-      case 'maintenance':
-        if (!loaded.maintenance) { await initMaintenanceSection(); loaded.maintenance = true; }
-        else { await initMaintenanceSection(); }
-        break;
       case 'promos':
         if (!loaded.promos) { await initPromosSection(); loaded.promos = true; }
         break;
@@ -163,9 +155,250 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // ─── Real-Time Customer Inquiries Monitor ───────────
+  let knownInquiryIds = new Set();
+  let inquiryMonitorInitialized = false;
+
+  function playInquiryChime() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc1.type = 'sine';
+      osc2.type = 'triangle';
+      osc1.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc1.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+      osc2.frequency.setValueAtTime(880, ctx.currentTime);
+
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc1.start();
+      osc2.start();
+      osc1.stop(ctx.currentTime + 0.65);
+      osc2.stop(ctx.currentTime + 0.65);
+    } catch (e) {}
+  }
+
+  function triggerDesktopNotification(inquiry) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(`🚨 New Charter Inquiry: ${inquiry.boat_name}`, {
+        body: `${inquiry.customer_name} (${inquiry.customer_phone}) requested ${inquiry.boat_name} on ${inquiry.booking_date}.`,
+        icon: '/favicon.ico'
+      });
+    }
+  }
+
+  async function initInquiriesMonitor() {
+    const listEl = document.getElementById('admin-inquiries-list');
+    const badgeEl = document.getElementById('inquiries-badge-count');
+    const notifBadge = document.getElementById('notif-badge');
+    const notifList = document.getElementById('notif-list');
+    const notifBtn = document.getElementById('enable-browser-notifs-btn');
+    const refreshBtn = document.getElementById('refresh-inquiries-btn');
+
+    if (notifBtn && 'Notification' in window) {
+      notifBtn.onclick = async () => {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          showToast('Desktop alerts enabled for new inquiries!', 'success');
+          notifBtn.classList.replace('border-outline-variant', 'border-green-600');
+          notifBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] text-green-600">check_circle</span> Alerts Active`;
+        }
+      };
+    }
+
+    async function fetchAndRenderInquiries(isPolling = false) {
+      if (!listEl) return;
+      try {
+        let list = [];
+        try {
+          const { data: inquiries, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('status', 'inquiry')
+            .order('created_at', { ascending: false });
+
+          if (!error && inquiries) list = inquiries;
+        } catch (dbErr) {}
+
+        // Combine with localStorage queue (guarantees inquiries show even if DB schema/RLS constraint hindered save)
+        let localInquiries = [];
+        try {
+          localInquiries = JSON.parse(localStorage.getItem('yrsf_all_inquiries') || '[]');
+        } catch (e) {}
+
+        const seenIds = new Set();
+        const combined = [];
+        [...localInquiries, ...list].forEach(item => {
+          const key = item.id || (item.boat_name + '_' + item.customer_name + '_' + item.booking_date);
+          if (!seenIds.has(key)) {
+            seenIds.add(key);
+            combined.push(item);
+          }
+        });
+
+        list = combined;
+
+        // Check if any new inquiry arrived since last poll
+        if (isPolling && list.length > 0) {
+          list.forEach(item => {
+            const itemId = item.id || (item.boat_name + '_' + item.customer_name);
+            if (!knownInquiryIds.has(itemId)) {
+              playInquiryChime();
+              triggerDesktopNotification(item);
+              showToast(`New inquiry received for ${item.boat_name}!`, 'success');
+            }
+          });
+        }
+        knownInquiryIds = new Set(list.map(i => i.id || (i.boat_name + '_' + i.customer_name)));
+
+        // Update counts
+        if (badgeEl) badgeEl.textContent = list.length;
+        if (notifBadge) {
+          notifBadge.textContent = list.length;
+          notifBadge.classList.toggle('hidden', list.length === 0);
+        }
+
+        // Update top bell dropdown
+        if (notifList) {
+          if (list.length === 0) {
+            notifList.innerHTML = '<p class="text-xs text-on-surface-variant text-center py-4">No pending inquiries</p>';
+          } else {
+            notifList.innerHTML = list.slice(0, 5).map(i => `
+              <div class="p-2.5 rounded-xl bg-surface-container-low border border-outline-variant">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-secondary">${escapeHtml(i.boat_name)}</span>
+                  <span class="text-[10px] text-on-surface-variant">${i.booking_date || ''}</span>
+                </div>
+                <p class="text-xs font-medium text-on-surface mt-1">${escapeHtml(i.customer_name)} • ${escapeHtml(i.customer_phone)}</p>
+              </div>
+            `).join('');
+          }
+        }
+
+        // Render main dashboard list
+        if (list.length === 0) {
+          listEl.innerHTML = `
+            <div class="text-center py-8">
+              <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2 block">task_alt</span>
+              <p class="text-sm font-bold text-on-surface">No Pending Customer Inquiries</p>
+              <p class="text-xs text-on-surface-variant mt-0.5">All incoming inquiries and leads have been processed.</p>
+            </div>
+          `;
+          return;
+        }
+
+        listEl.innerHTML = list.map(inquiry => {
+          const callNote = inquiry.special_requests || 'Anytime';
+          return `
+            <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="px-2.5 py-0.5 rounded-md bg-secondary/10 text-secondary font-bold text-xs">${escapeHtml(inquiry.boat_name)}</span>
+                  <span class="text-xs text-on-surface-variant">Desired Date: <strong class="text-on-surface">${escapeHtml(inquiry.booking_date || 'TBD')}</strong></span>
+                  <span class="text-xs text-on-surface-variant">(${inquiry.duration_hours || 4} hrs, ${inquiry.guest_count || 1} guests)</span>
+                </div>
+                <h4 class="font-bold text-base text-on-surface">${escapeHtml(inquiry.customer_name || 'Customer')}</h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">Note: <strong class="text-on-surface">${escapeHtml(callNote)}</strong></p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <a href="tel:${escapeHtml(inquiry.customer_phone || '')}" class="px-3 py-1.5 rounded-lg bg-green-50 text-green-700 border border-green-200 text-xs font-bold flex items-center gap-1 hover:bg-green-100 transition-colors">
+                  <span class="material-symbols-outlined text-[16px]">call</span> ${escapeHtml(inquiry.customer_phone || 'Call')}
+                </a>
+                <a href="https://wa.me/${(inquiry.customer_phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${inquiry.customer_name}! Following up from YRSF regarding your yacht inquiry for the ${inquiry.boat_name} on ${inquiry.booking_date}.`)}" target="_blank" class="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold flex items-center gap-1 hover:bg-green-700 transition-colors">
+                  <span class="material-symbols-outlined text-[16px]">chat</span> WhatsApp
+                </a>
+                <button type="button" class="mark-inquiry-contacted-btn px-3 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold hover:opacity-90 transition-colors" data-inquiry-id="${inquiry.id}">
+                  Mark Contacted
+                </button>
+                <button type="button" class="dismiss-inquiry-btn p-1.5 rounded-lg border border-outline-variant text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-colors" data-inquiry-id="${inquiry.id}" title="Dismiss Inquiry">
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        function removeLocalInquiry(id) {
+          try {
+            const localList = JSON.parse(localStorage.getItem('yrsf_all_inquiries') || '[]');
+            const updated = localList.filter(item => item.id !== id);
+            localStorage.setItem('yrsf_all_inquiries', JSON.stringify(updated));
+          } catch (e) {}
+        }
+
+        // Attach action buttons
+        listEl.querySelectorAll('.mark-inquiry-contacted-btn').forEach(b => {
+          b.onclick = async () => {
+            const id = b.dataset.inquiryId;
+            removeLocalInquiry(id);
+            if (id && !id.startsWith('inq_')) {
+              await supabase.from('bookings').update({ status: 'confirmed' }).eq('id', id);
+            }
+            showToast('Inquiry marked as contacted / confirmed!', 'success');
+            fetchAndRenderInquiries(false);
+          };
+        });
+
+        listEl.querySelectorAll('.dismiss-inquiry-btn').forEach(b => {
+          b.onclick = async () => {
+            const id = b.dataset.inquiryId;
+            removeLocalInquiry(id);
+            if (id && !id.startsWith('inq_')) {
+              await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id);
+            }
+            showToast('Inquiry archived', 'info');
+            fetchAndRenderInquiries(false);
+          };
+        });
+      } catch (err) {
+        console.warn('Inquiries monitor error:', err);
+      }
+    }
+
+    if (refreshBtn) {
+      refreshBtn.onclick = () => fetchAndRenderInquiries(false);
+    }
+
+    // Bell dropdown toggle
+    const bellBtn = document.getElementById('notification-bell-btn');
+    const dropdownEl = document.getElementById('notif-dropdown');
+    if (bellBtn && dropdownEl) {
+      bellBtn.onclick = (e) => {
+        e.stopPropagation();
+        dropdownEl.classList.toggle('hidden');
+      };
+      document.addEventListener('click', () => dropdownEl.classList.add('hidden'));
+    }
+
+    await fetchAndRenderInquiries(false);
+
+    if (!inquiryMonitorInitialized) {
+      inquiryMonitorInitialized = true;
+      // Cross-tab storage listener
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'yrsf_latest_inquiry') {
+          fetchAndRenderInquiries(true);
+        }
+      });
+      // Polling interval
+      setInterval(() => fetchAndRenderInquiries(true), 15000);
+    }
+  }
+
   // ─── Dashboard ──────────────────────────────────────
   async function loadDashboard() {
     try {
+      await initInquiriesMonitor();
+
       const [boats, addons, testimonials, faqs] = await Promise.all([
         supabase.from('boats').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('addons').select('id', { count: 'exact', head: true }).eq('status', 'active'),
@@ -177,6 +410,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('stat-addons').textContent = addons.count || 0;
       document.getElementById('stat-testimonials').textContent = testimonials.count || 0;
       document.getElementById('stat-faqs').textContent = faqs.count || 0;
+
+      if (typeof window.initRevenueSection === 'function') await window.initRevenueSection();
+      if (typeof window.initReviewsSection === 'function') await window.initReviewsSection();
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }
@@ -804,6 +1040,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         is_featured: document.getElementById('edit-boat-featured').checked,
         ical_feed_url: (() => {
           let u = document.getElementById('edit-boat-ical-url')?.value.trim() || null;
+          if (u && !u.includes('/') && !u.includes('.') && /^[a-zA-Z0-9_-]{6,35}$/.test(u)) return u;
           if (u && !u.startsWith('http://') && !u.startsWith('https://')) u = 'https://' + u;
           return u;
         })(),
@@ -1492,6 +1729,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('setting-logo-mobile').value = settings.logo_mobile?.value || '';
       document.getElementById('setting-business-name').value = settings.business_name?.value || '';
       document.getElementById('setting-business-phone').value = settings.business_phone?.value || '';
+      const emailInput = document.getElementById('setting-admin-notification-email');
+      if (emailInput) emailInput.value = settings.admin_notification_email?.value || 'georgeaguilera001@gmail.com';
       document.getElementById('setting-whatsapp-number').value = settings.whatsapp_number?.value || '';
       document.getElementById('setting-whatsapp-message').value = settings.whatsapp_auto_response?.value || '';
       document.getElementById('setting-hero-bg-image').value = settings.hero_bg_image?.value || '';
@@ -1521,6 +1760,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         logo_mobile: { value: document.getElementById('setting-logo-mobile').value.trim() },
         business_name: { value: document.getElementById('setting-business-name').value.trim() },
         business_phone: { value: document.getElementById('setting-business-phone').value.trim() },
+        admin_notification_email: { value: (document.getElementById('setting-admin-notification-email')?.value || '').trim() || 'georgeaguilera001@gmail.com' },
         whatsapp_number: { value: document.getElementById('setting-whatsapp-number').value.trim() },
         whatsapp_auto_response: { value: document.getElementById('setting-whatsapp-message').value.trim() },
         hero_bg_image: { value: document.getElementById('setting-hero-bg-image').value.trim() },
@@ -2895,80 +3135,266 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function syncAllIcalFeeds(showNotification = true) {
+    const syncBtn = document.getElementById('cal-sync-now-btn');
+    const calGrid = document.getElementById('cal-grid');
+    let originalBtnHtml = '';
+    let loaderEl = null;
+
+    if (showNotification && syncBtn) {
+      originalBtnHtml = syncBtn.innerHTML;
+      syncBtn.disabled = true;
+      syncBtn.classList.add('opacity-70');
+      syncBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">sync</span> Syncing...`;
+    }
+
+    if (showNotification && calGrid) {
+      calGrid.style.position = 'relative';
+      loaderEl = document.createElement('div');
+      loaderEl.id = 'cal-sync-loader';
+      loaderEl.className = 'absolute inset-0 bg-white/70 z-30 flex items-center justify-center flex-col gap-2 backdrop-blur-[1px]';
+      loaderEl.innerHTML = `
+        <div class="w-10 h-10 border-[4px] border-secondary/20 border-t-secondary rounded-full animate-spin"></div>
+        <p class="text-xs font-bold text-secondary uppercase tracking-widest">Syncing TimeTree...</p>
+      `;
+      calGrid.appendChild(loaderEl);
+    }
+
     await loadFleet(true); // Always force a fresh reload from Supabase DB!
-    const boatsWithIcal = fleetCache.filter(b => b.ical_feed_url && b.status === 'active');
+    let boatsWithIcal = fleetCache.filter(b => b.ical_feed_url && b.status === 'active');
+
+    // If a specific boat is selected in the calendar dropdown, sync only that boat for instant speed!
+    const boatFilterEl = document.getElementById('cal-boat-filter');
+    const selectedBoatId = boatFilterEl ? boatFilterEl.value : 'all';
+    if (selectedBoatId && selectedBoatId !== 'all') {
+      boatsWithIcal = boatsWithIcal.filter(b => b.id === selectedBoatId);
+    }
+
     if (boatsWithIcal.length === 0) {
-      if (showNotification) alert('ℹ️ No active yachts have an external iCal (.ics) feed saved yet!\n\nTo fix this:\n1. Make sure you ran the SQL command in Supabase: ALTER TABLE public.boats ADD COLUMN IF NOT EXISTS ical_feed_url TEXT;\n2. Go to Fleet Management -> Edit Yacht\n3. Paste a valid .ics feed link (from Google Cal, Apple Cal, Teamup, Boatsetter, or TimeTree Exporter) and click Save Yacht!');
+      if (showNotification) alert('ℹ️ No active yachts matching your selection have an external iCal (.ics) feed saved yet!\n\nMake sure the selected yacht has an iCal feed URL saved under Fleet Management -> Edit Yacht.');
       return;
     }
-    if (showNotification) showToast(`Syncing calendar feeds for ${boatsWithIcal.length} yacht(s)...`, 'info');
+    const targetLabel = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : `${boatsWithIcal.length} yacht(s)`;
+    if (showNotification) showToast(`Syncing calendar feed for ${targetLabel}...`, 'info');
     
     if (!window.externalIcsEvents) window.externalIcsEvents = [];
-    // Always deduplicate existing events before adding new ones
     window.externalIcsEvents = deduplicateIcsEvents(window.externalIcsEvents);
     let addedCount = 0;
+    let totalParsedCount = 0;
     
-    // Only import events that happened up to 1 month in the past or in the future
     const cutoffDateObj = new Date();
     cutoffDateObj.setDate(1);
     cutoffDateObj.setMonth(cutoffDateObj.getMonth() - 1);
     cutoffDateObj.setHours(0, 0, 0, 0);
     const cutoffDateStr = cutoffDateObj.toISOString().split('T')[0];
-    
-    for (const boat of boatsWithIcal) {
+
+    // Helper: Fast fetcher with 25s timeout to support Render.com / OnRender cold starts & proxies
+    const fetchIcsFast = async (url) => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+
+      const isValidContent = (txt) => {
+        if (!txt) return false;
+        const trimmed = txt.trim();
+        return trimmed.toUpperCase().includes('BEGIN:VEVENT') || trimmed.startsWith('[') || trimmed.startsWith('{');
+      };
+
+      const fetchDirect = async () => {
+        const res = await fetch(url, { signal: controller.signal });
+        if (res.ok) {
+          const text = await res.text();
+          if (isValidContent(text)) return text;
+        }
+        throw new Error('Direct failed');
+      };
+
+      const fetchSupabaseRpc = async () => {
+        const { data: rpcText, error: rpcErr } = await supabase.rpc('fetch_external_url', { target_url: url });
+        if (!rpcErr && isValidContent(rpcText)) return rpcText;
+        throw new Error('Supabase RPC failed');
+      };
+
+      const fetchAllOrigins = async () => {
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: controller.signal });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && isValidContent(json.contents)) return json.contents;
+        }
+        throw new Error('AllOrigins failed');
+      };
+
+      const fetchCodetabs = async () => {
+        const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, { signal: controller.signal });
+        if (res.ok) {
+          const text = await res.text();
+          if (isValidContent(text)) return text;
+        }
+        throw new Error('Codetabs failed');
+      };
+
       try {
-        window.externalIcsEvents = window.externalIcsEvents.filter(e => e.boat_id !== boat.id);
+        const result = await Promise.any([fetchDirect(), fetchSupabaseRpc(), fetchAllOrigins(), fetchCodetabs()]);
+        clearTimeout(timeout);
+        return result;
+      } catch (err) {
+        clearTimeout(timeout);
+        return null;
+      }
+    };
+
+    // Run all boats and URLs concurrently in parallel for blazing fast speed
+    await Promise.all(boatsWithIcal.map(async (boat) => {
+      try {
+        let syncSucceeded = false;
+        const parsedEventsForBoat = [];
         const rawUrls = (boat.ical_feed_url || '').split(/[\r\n,;]+/).map(u => u.trim()).filter(Boolean);
 
-        for (let url of rawUrls) {
-          if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            url = 'https://' + url;
-          }
+        await Promise.all(rawUrls.map(async (url) => {
+          const expandCandidateUrls = (u) => {
+            u = u.trim();
+            const list = [];
+            const cleanCode = u.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+            // If user entered short alphanumeric ID like 93TAtkhS37u2 (or if form prepended https://)
+            if (/^[a-zA-Z0-9_-]{6,35}$/.test(cleanCode)) {
+              // 1. Primary YRSF Render Proxy Endpoint
+              list.push(`https://yrsf-website.onrender.com/timetree.ics?c=${cleanCode}`);
+              // 2. Fallback Render proxy endpoints
+              list.push(`https://renderon.com/${cleanCode}`);
+              list.push(`https://renderon.com/calendar/${cleanCode}`);
+              list.push(`https://renderon.com/ics/${cleanCode}`);
+              // 3. TimeTree public endpoints
+              list.push(`https://timetreeapp.com/public_calendars/${cleanCode}.ics`);
+              list.push(`https://timetreeapp.com/calendars/${cleanCode}.ics`);
+              list.push(`https://api.timetreeapp.com/v1/calendars/${cleanCode}/events.ics`);
+              list.push(`https://timetreeapp.com/public_calendars/${cleanCode}/events.ics`);
+            }
+            u = u.replace(/^(webcal|ical):\/\//i, 'https://');
+            if (!u.startsWith('http://') && !u.startsWith('https://') && !/^[a-zA-Z0-9_-]{6,35}$/.test(u)) {
+              u = 'https://' + u;
+            }
+            if (u.startsWith('http://') || u.startsWith('https://')) {
+              list.push(u);
+            }
+            if ((u.includes('timetreeapp.com') || u.includes('render')) && !u.endsWith('.ics')) {
+              const clean = u.replace(/\/$/, '');
+              list.push(clean + '.ics');
+              list.push(clean + '/events.ics');
+              list.push(clean + '/ics');
+            }
+            return Array.from(new Set(list));
+          };
+
+          const candidates = expandCandidateUrls(url);
           let text = null;
-          try {
-            const res = await fetch(url);
-            if (res.ok) text = await res.text();
-          } catch (e) {}
-
-          // Fallback 1: Supabase database HTTP fetch
-          if (!text || !text.includes('BEGIN:VEVENT')) {
-            try {
-              const { data: rpcText, error: rpcErr } = await supabase.rpc('fetch_external_url', { target_url: url });
-              if (!rpcErr && rpcText && rpcText.includes('BEGIN:VEVENT')) text = rpcText;
-            } catch (e) {}
+          
+          // Fetch the primary Render proxies (first 2 candidates) in parallel for maximum speed
+          const primaryCandidates = candidates.slice(0, 2);
+          const primaryResults = await Promise.all(primaryCandidates.map(c => fetchIcsFast(c)));
+          text = primaryResults.find(t => t && (t.toUpperCase().includes('BEGIN:VEVENT') || t.trim().startsWith('[') || t.trim().startsWith('{')));
+          
+          if (text) {
+            syncSucceeded = true;
+          } else {
+            // Fall back to racing the other public/direct candidates in parallel if proxies failed
+            const fallbackCandidates = candidates.slice(2);
+            if (fallbackCandidates.length > 0) {
+              const fallbackResults = await Promise.all(fallbackCandidates.map(c => fetchIcsFast(c)));
+              text = fallbackResults.find(t => t && (t.toUpperCase().includes('BEGIN:VEVENT') || t.trim().startsWith('[') || t.trim().startsWith('{')));
+              if (text) syncSucceeded = true;
+            }
           }
 
-          // Fallback 2: AllOrigins JSON proxy
-          if (!text || !text.includes('BEGIN:VEVENT')) {
+          if (!text) {
+            console.warn(`Could not fetch valid iCal data for ${boat.name} from any candidate URL of: ${url}`);
+            return;
+          }
+
+          // If Render backend proxy returned JSON
+          if (text.trim().startsWith('[') || text.trim().startsWith('{')) {
             try {
-              const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-              if (res.ok) {
-                const json = await res.json();
-                if (json && json.contents && json.contents.includes('BEGIN:VEVENT')) text = json.contents;
+              const parsed = JSON.parse(text);
+              // Case 1: JSON wraps an .ics string (e.g. { "ics": "BEGIN:VCALENDAR..." })
+              if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+                let foundIcsStr = false;
+                for (const val of Object.values(parsed)) {
+                  if (typeof val === 'string' && val.includes('BEGIN:VEVENT')) {
+                    text = val; // Unwrap .ics string and fall through to iCal parser!
+                    foundIcsStr = true;
+                    break;
+                  }
+                }
+                if (foundIcsStr) {
+                  // Continue below to standard iCal parsing
+                } else {
+                  // Case 2: JSON wraps an array of event objects
+                  let evList = [];
+                  if (Array.isArray(parsed)) {
+                    evList = parsed;
+                  } else {
+                    for (const val of Object.values(parsed)) {
+                      if (Array.isArray(val)) {
+                        evList = val;
+                        break;
+                      }
+                    }
+                  }
+                  for (const ev of evList) {
+                    totalParsedCount++;
+                    const dt = ev.date || ev.startDate || ev.start_date || (ev.start ? String(ev.start).split('T')[0] : null) || ev.booking_date;
+                    if (!dt || dt < cutoffDateStr) continue;
+                    let tm = ev.time || ev.startTime || ev.start_time || 'All Day';
+                    if (ev.start && String(ev.start).includes('T')) {
+                      tm = String(ev.start).split('T')[1].substring(0, 5);
+                    }
+                    const cust = ev.summary || ev.title || ev.name || ev.customer || ev.customer_name || boat.ical_feed_label || 'External Booking';
+                    parsedEventsForBoat.push({
+                      id: 'ics_' + Math.random().toString(36).substr(2, 9),
+                      boat_id: boat.id,
+                      boat_name: boat.name,
+                      booking_date: dt,
+                      start_time: tm,
+                      status: 'external',
+                      customer_name: cust,
+                      source_label: boat.ical_feed_label || 'Render Sync'
+                    });
+                    addedCount++;
+                  }
+                  return;
+                }
+              } else if (Array.isArray(parsed)) {
+                for (const ev of parsed) {
+                  totalParsedCount++;
+                  const dt = ev.date || ev.startDate || ev.start_date || (ev.start ? String(ev.start).split('T')[0] : null) || ev.booking_date;
+                  if (!dt || dt < cutoffDateStr) continue;
+                  let tm = ev.time || ev.startTime || ev.start_time || 'All Day';
+                  if (ev.start && String(ev.start).includes('T')) {
+                    tm = String(ev.start).split('T')[1].substring(0, 5);
+                  }
+                  const cust = ev.summary || ev.title || ev.name || ev.customer || ev.customer_name || boat.ical_feed_label || 'External Booking';
+                  parsedEventsForBoat.push({
+                    id: 'ics_' + Math.random().toString(36).substr(2, 9),
+                    boat_id: boat.id,
+                    boat_name: boat.name,
+                    booking_date: dt,
+                    start_time: tm,
+                    status: 'external',
+                    customer_name: cust,
+                    source_label: boat.ical_feed_label || 'Render Sync'
+                  });
+                  addedCount++;
+                }
+                return;
               }
             } catch (e) {}
           }
 
-          // Fallback 3: CorsProxy
-          if (!text || !text.includes('BEGIN:VEVENT')) {
-            try {
-              const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-              if (res.ok) text = await res.text();
-            } catch (e) {}
-          }
-
-          if (!text || !text.includes('BEGIN:VEVENT')) {
-            console.warn(`Could not fetch valid iCal data for ${boat.name} from ${url}`);
-            continue;
-          }
-
-          const blocks = text.split('BEGIN:VEVENT');
+          // Unfold folded lines (RFC 5545 line folding)
+          const cleanText = text.replace(/\r?\n[ \t]/g, '');
+          const blocks = cleanText.split('BEGIN:VEVENT');
           for (let i = 1; i < blocks.length; i++) {
             const b = blocks[i].split('END:VEVENT')[0];
-            const sumMatch = b.match(/SUMMARY:(.*)/i);
+            const sumMatch = b.match(/SUMMARY[^\r\n:]*:(.*)/i);
             const summaryText = sumMatch ? sumMatch[1].trim() : '';
 
-            // Smart Keyword Filtering for Master Feeds:
             let filterKeyword = '';
             if (boat.ical_feed_label) {
               const lblStr = boat.ical_feed_label.trim();
@@ -2978,9 +3404,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               }
             }
 
-            if (filterKeyword && !summaryText.toLowerCase().includes(filterKeyword)) {
-              continue;
+            if (filterKeyword) {
+              const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+              const normSummary = normalize(summaryText);
+              const normKeyword = normalize(filterKeyword);
+              if (normKeyword && !normSummary.includes(normKeyword)) {
+                continue;
+              }
             }
+            totalParsedCount++;
 
             const formatIcsTime = (timeDigits) => {
               if (!timeDigits || timeDigits.length < 4) return '';
@@ -2998,7 +3430,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               const dtStr = startMatch[1];
               const startDateFormatted = `${dtStr.substring(0,4)}-${dtStr.substring(4,6)}-${dtStr.substring(6,8)}`;
 
-              // Determine dates range (handle multi-day events up to 14 days)
               let datesToPush = [startDateFormatted];
               if (endMatch && endMatch[1]) {
                 const endDtStr = endMatch[1];
@@ -3013,7 +3444,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     curDate.setDate(curDate.getDate() + 1);
                     daysCount++;
                   }
-                  // If all-day event in iCal, DTEND is non-inclusive end date, so pop last if >1
                   if (!startMatch[2] && datesToPush.length > 1) {
                     datesToPush.pop();
                   }
@@ -3034,16 +3464,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (dateFormatted < cutoffDateStr) continue;
                 const custName = summaryText || (boat.ical_feed_label || 'External Block');
                 
-                // Prevent duplicate sync events for the same boat on the same date + time + customer name
-                const isDup = window.externalIcsEvents.some(ex =>
-                  ex.boat_id === boat.id &&
+               const isDup = parsedEventsForBoat.some(ex =>
                   ex.booking_date === dateFormatted &&
                   ex.start_time === displayTime &&
                   ex.customer_name === custName
                 );
                 if (isDup) continue;
 
-                window.externalIcsEvents.push({
+                parsedEventsForBoat.push({
                   id: 'ics_' + Math.random().toString(36).substr(2, 9),
                   boat_id: boat.id,
                   boat_name: boat.name,
@@ -3057,14 +3485,14 @@ document.addEventListener('DOMContentLoaded', async () => {
               }
             }
           }
+        }));
+        if (syncSucceeded) {
+          window.externalIcsEvents = window.externalIcsEvents.filter(e => e.boat_id !== boat.id).concat(parsedEventsForBoat);
         }
       } catch (err) {
         console.warn('Could not sync iCal for boat ' + boat.name, err);
       }
-    }
-      
-    const boatFilterEl = document.getElementById('cal-boat-filter');
-    if (boatFilterEl) boatFilterEl.value = 'all';
+    }));
       
     try {
       window.externalIcsEvents = deduplicateIcsEvents(window.externalIcsEvents);
@@ -3076,9 +3504,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     } catch (e) {}
 
-    const sampleDates = Array.from(new Set(window.externalIcsEvents.map(e => `${e.boat_name}: ${e.booking_date}`))).slice(0, 3);
-    const detailStr = sampleDates.length > 0 ? ` [e.g., ${sampleDates.join(', ')}]` : '';
-    if (showNotification) showToast(`✓ Synced ${addedCount} calendar events!${detailStr}`, 'success');
+    if (showNotification) {
+      if (addedCount > 0) {
+        showToast(`✓ Synced ${addedCount} new calendar event(s) successfully!`, 'success');
+      } else if (totalParsedCount > 0) {
+        showToast(`✓ Calendar is already up to date!`, 'success');
+      } else {
+        const targetBoatName = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : 'selected yachts';
+        showToast(`⚠️ 0 events found for ${targetBoatName}. Make sure the TimeTree iCal secret link (.ics) is valid and set to public share.`, 'warning', 6000);
+      }
+    }
+    if (showNotification && syncBtn) {
+      syncBtn.disabled = false;
+      syncBtn.classList.remove('opacity-70');
+      syncBtn.innerHTML = originalBtnHtml;
+    }
+    if (showNotification && loaderEl && loaderEl.parentNode) {
+      loaderEl.parentNode.removeChild(loaderEl);
+    }
     renderCalendar();
   }
 
@@ -3765,103 +4208,6 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const msg = encodeURIComponent(`Hi ${name}! Thanks for yachting with Yacht Rentals of South Florida. Would you like to plan another charter experience soon?`);
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
-  };
-
-  // ─── 3. Crew Management Section ──────────────────────────────────────────
-  window.initCrewSection = async function() {
-    const tbody = document.getElementById('crew-table-body');
-    const addBtn = document.getElementById('add-crew-btn');
-    if (!tbody) return;
-
-    const { data: crewList } = await supabase.from('crew_members').select('*').order('name');
-    const list = crewList || [];
-
-    if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No crew members added yet. Click "Add Crew Member" to begin.</td></tr>`;
-    } else {
-      tbody.innerHTML = list.map(c => `
-        <tr class="border-b border-outline-variant">
-          <td class="px-4 py-3 font-bold text-on-surface text-sm">${c.name}</td>
-          <td class="px-4 py-3 text-on-surface-variant text-sm">${c.role}</td>
-          <td class="px-4 py-3 text-on-surface-variant text-sm">${c.phone || '-'}</td>
-          <td class="px-4 py-3 text-on-surface-variant text-sm">${c.license_number || '-'}</td>
-          <td class="px-4 py-3 text-center">
-            <span class="px-2 py-0.5 rounded-full text-xs font-bold ${c.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">${c.status}</span>
-          </td>
-          <td class="px-4 py-3 text-center">
-            <button onclick="deleteCrewMember('${c.id}', '${c.name}')" class="text-error hover:underline text-xs font-bold">Remove</button>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    if (addBtn && !addBtn._bound) {
-      addBtn._bound = true;
-      addBtn.addEventListener('click', async () => {
-        const name = prompt('Enter crew member name:');
-        if (!name) return;
-        const role = prompt('Enter role (Captain / First Mate / Steward / Chef):', 'Captain');
-        const phone = prompt('Enter phone number:', '');
-        const { error } = await supabase.from('crew_members').insert([{ name, role, phone, status: 'active' }]);
-        if (error) showToast('Error adding crew: ' + error.message, true);
-        else { showToast('Crew member added!'); initCrewSection(); }
-      });
-    }
-  };
-
-  window.deleteCrewMember = async function(id, name) {
-    if (!confirm(`Remove crew member "${name}"?`)) return;
-    await supabase.from('crew_members').delete().eq('id', id);
-    showToast('Crew member removed');
-    initCrewSection();
-  };
-
-  // ─── 4. Maintenance Log Section ──────────────────────────────────────────
-  window.initMaintenanceSection = async function() {
-    const listEl = document.getElementById('maintenance-list');
-    const addBtn = document.getElementById('add-maintenance-btn');
-    if (!listEl) return;
-
-    const { data: logs } = await supabase.from('maintenance_logs').select('*').order('created_at', { ascending: false });
-    const items = logs || [];
-
-    if (items.length === 0) {
-      listEl.innerHTML = `<p class="text-center text-on-surface-variant py-8 text-sm">No maintenance records logged yet.</p>`;
-    } else {
-      listEl.innerHTML = items.map(m => `
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 flex items-center justify-between">
-          <div>
-            <div class="flex items-center gap-2 mb-1">
-              <span class="font-bold text-on-surface">${m.boat_name || 'Fleet Yacht'}</span>
-              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${m.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${m.status.toUpperCase()}</span>
-            </div>
-            <p class="text-sm text-on-surface-variant">${m.description}</p>
-            <p class="text-xs text-on-surface-variant mt-1">Cost: $${m.cost || 0} | Scheduled: ${m.scheduled_date || 'N/A'}</p>
-          </div>
-          <button onclick="completeMaintenanceLog('${m.id}')" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold hover:opacity-90">Mark Done</button>
-        </div>
-      `).join('');
-    }
-
-    if (addBtn && !addBtn._bound) {
-      addBtn._bound = true;
-      addBtn.addEventListener('click', async () => {
-        const boat_name = prompt('Enter yacht name:', '68FT AZIMUT');
-        if (!boat_name) return;
-        const description = prompt('Enter maintenance description (e.g. Engine 100hr Service):');
-        if (!description) return;
-        const cost = prompt('Enter estimated cost ($):', '500');
-        await supabase.from('maintenance_logs').insert([{ boat_name, description, cost: parseFloat(cost || 0), status: 'scheduled' }]);
-        showToast('Maintenance log recorded');
-        initMaintenanceSection();
-      });
-    }
-  };
-
-  window.completeMaintenanceLog = async function(id) {
-    await supabase.from('maintenance_logs').update({ status: 'completed', completed_date: new Date().toISOString().split('T')[0] }).eq('id', id);
-    showToast('Maintenance marked as completed!');
-    initMaintenanceSection();
   };
 
   // ─── 5. Promos & Discounts Section ───────────────────────────────────────
