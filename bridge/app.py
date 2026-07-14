@@ -46,6 +46,83 @@ def home():
         "usage": "/timetree.ics?c=YOUR_CALENDAR_CODE"
     })
 
+CACHED_SESSION_ID = None
+
+def fetch_with_cached_or_fresh_session(cal_id, output_path, cli_debug):
+    global CACHED_SESSION_ID
+    session_file = "/tmp/timetree_session.txt"
+    if not CACHED_SESSION_ID and os.path.exists(session_file):
+        try:
+            with open(session_file, "r") as sf:
+                CACHED_SESSION_ID = sf.read().strip()
+        except Exception:
+            pass
+
+    try:
+        from timetree_exporter import TimeTreeEvent, ICalEventFormatter
+        from icalendar import Calendar
+        from timetree_exporter.api.auth import login
+        from timetree_exporter.api.calendar import TimeTreeCalendar
+    except Exception as e:
+        cli_debug["import_error"] = str(e)
+        return None
+
+    # 1. Attempt using existing session without calling login() API
+    if CACHED_SESSION_ID:
+        try:
+            cal_client = TimeTreeCalendar(CACHED_SESSION_ID)
+            metas = cal_client.get_metadata()
+            active = [m for m in metas if m.get("deactivated_at") is None and m.get("alias_code") == cal_id]
+            if active:
+                events = cal_client.get_events(active[0]["id"], active[0].get("name"))
+                cal = Calendar()
+                for ev in events:
+                    tt_ev = TimeTreeEvent.from_dict(ev)
+                    fmt = ICalEventFormatter(tt_ev)
+                    ic_ev = fmt.to_ical()
+                    if ic_ev:
+                        cal.add_component(ic_ev)
+                content = cal.to_ical().decode("utf-8")
+                with open(output_path, "w", encoding="utf-8") as f:
+                    f.write(content)
+                return content
+        except Exception as e:
+            cli_debug["cached_session_error"] = str(e)
+            CACHED_SESSION_ID = None
+            if os.path.exists(session_file):
+                try: os.remove(session_file)
+                except Exception: pass
+
+    # 2. If no valid session exists, perform fresh login and persist session_id
+    try:
+        new_session = login(TIMETREE_EMAIL, TIMETREE_PASSWORD)
+        if new_session:
+            CACHED_SESSION_ID = new_session
+            try:
+                with open(session_file, "w") as sf:
+                    sf.write(new_session)
+            except Exception:
+                pass
+            cal_client = TimeTreeCalendar(new_session)
+            metas = cal_client.get_metadata()
+            active = [m for m in metas if m.get("deactivated_at") is None and m.get("alias_code") == cal_id]
+            if active:
+                events = cal_client.get_events(active[0]["id"], active[0].get("name"))
+                cal = Calendar()
+                for ev in events:
+                    tt_ev = TimeTreeEvent.from_dict(ev)
+                    fmt = ICalEventFormatter(tt_ev)
+                    ic_ev = fmt.to_ical()
+                    if ic_ev:
+                        cal.add_component(ic_ev)
+                content = cal.to_ical().decode("utf-8")
+                with open(output_path, "w", encoding="utf-8") as f:
+                    f.write(content)
+                return content
+    except Exception as e:
+        cli_debug["fresh_login_error"] = str(e)
+    return None
+
 @app.route("/timetree.ics")
 def get_timetree_ics():
     # Default to SvJU6em68jir (Rem/S.G/T.A/Azu/Dis) if no calendar code provided
@@ -81,8 +158,15 @@ def get_timetree_ics():
                 pass
 
         cli_debug = {"email_set": bool(TIMETREE_EMAIL), "password_set": bool(TIMETREE_PASSWORD), "cal_id": cal_id}
-        # 1. Attempt using timetree-exporter CLI with credentials
+        # 1. Attempt session reusing direct fetcher, or fallback to CLI
         if TIMETREE_EMAIL and TIMETREE_PASSWORD:
+            content = fetch_with_cached_or_fresh_session(cal_id, output_path, cli_debug)
+            if content and "BEGIN:VCALENDAR" in content:
+                return Response(content, mimetype="text/calendar", headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "X-TimeTree-Cache": "MISS-SUCCESS"
+                })
+            # Fallback to CLI subprocess if Python direct API helper didn't return content
             try:
                 cmd = ["timetree-exporter", "-e", TIMETREE_EMAIL, "-c", cal_id, "-o", output_path]
                 res = subprocess.run(cmd, input=f"{TIMETREE_PASSWORD}\n", capture_output=True, text=True, timeout=25, env=os.environ.copy())
@@ -95,10 +179,10 @@ def get_timetree_ics():
                     if "BEGIN:VCALENDAR" in content:
                         return Response(content, mimetype="text/calendar", headers={
                             "Access-Control-Allow-Origin": "*",
-                            "X-TimeTree-Cache": "MISS-SUCCESS"
+                            "X-TimeTree-Cache": "MISS-CLI-SUCCESS"
                         })
             except Exception as e:
-                cli_debug["exception"] = str(e)
+                cli_debug["cli_exception"] = str(e)
         else:
             cli_debug["note"] = "TIMETREE_EMAIL or TIMETREE_PASSWORD environment variable is empty/missing on Render"
 
