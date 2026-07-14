@@ -3135,30 +3135,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function syncAllIcalFeeds(showNotification = true) {
-    const syncBtn = document.getElementById('cal-sync-now-btn');
-    const calGrid = document.getElementById('cal-grid');
-    let originalBtnHtml = '';
-    let loaderEl = null;
-
-    if (showNotification && syncBtn) {
-      originalBtnHtml = syncBtn.innerHTML;
-      syncBtn.disabled = true;
-      syncBtn.classList.add('opacity-70');
-      syncBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">sync</span> Syncing...`;
-    }
-
-    if (showNotification && calGrid) {
-      calGrid.style.position = 'relative';
-      loaderEl = document.createElement('div');
-      loaderEl.id = 'cal-sync-loader';
-      loaderEl.className = 'absolute inset-0 bg-white/70 z-30 flex items-center justify-center flex-col gap-2 backdrop-blur-[1px]';
-      loaderEl.innerHTML = `
-        <div class="w-10 h-10 border-[4px] border-secondary/20 border-t-secondary rounded-full animate-spin"></div>
-        <p class="text-xs font-bold text-secondary uppercase tracking-widest">Syncing TimeTree...</p>
-      `;
-      calGrid.appendChild(loaderEl);
-    }
-
     await loadFleet(true); // Always force a fresh reload from Supabase DB!
     let boatsWithIcal = fleetCache.filter(b => b.ical_feed_url && b.status === 'active');
 
@@ -3172,6 +3148,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (boatsWithIcal.length === 0) {
       if (showNotification) alert('ℹ️ No active yachts matching your selection have an external iCal (.ics) feed saved yet!\n\nMake sure the selected yacht has an iCal feed URL saved under Fleet Management -> Edit Yacht.');
       return;
+    }
+
+    const targetName = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : 'TimeTree (one by one)';
+    const syncBtn = document.getElementById('cal-sync-now-btn');
+    const calGrid = document.getElementById('cal-grid');
+    let originalBtnHtml = '';
+    let loaderEl = null;
+
+    if (showNotification && syncBtn) {
+      originalBtnHtml = syncBtn.innerHTML;
+      syncBtn.disabled = true;
+      syncBtn.classList.add('opacity-70');
+      syncBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">sync</span> Syncing ${boatsWithIcal.length === 1 ? 'Selected Yacht' : 'Yachts'}...`;
+    }
+
+    if (showNotification && calGrid) {
+      calGrid.style.position = 'relative';
+      loaderEl = document.createElement('div');
+      loaderEl.id = 'cal-sync-loader';
+      loaderEl.className = 'absolute inset-0 bg-white/70 z-30 flex items-center justify-center flex-col gap-2 backdrop-blur-[1px]';
+      loaderEl.innerHTML = `
+        <div class="w-10 h-10 border-[4px] border-secondary/20 border-t-secondary rounded-full animate-spin"></div>
+        <p class="text-xs font-bold text-secondary uppercase tracking-widest">Syncing ${targetName}...</p>
+      `;
+      calGrid.appendChild(loaderEl);
     }
     const targetLabel = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : `${boatsWithIcal.length} yacht(s)`;
     if (showNotification) showToast(`Syncing calendar feed for ${targetLabel}...`, 'info');
@@ -3251,8 +3252,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       return await fetchPromise;
     };
 
-    // Run all boats and URLs concurrently in parallel for blazing fast speed
-    await Promise.all(boatsWithIcal.map(async (boat) => {
+    // Process boats sequentially to eliminate burst rate limiting and share requests via inFlightFetches
+    for (const boat of boatsWithIcal) {
       try {
         let syncSucceeded = false;
         const parsedEventsForBoat = [];
@@ -3505,7 +3506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (err) {
         console.warn('Could not sync iCal for boat ' + boat.name, err);
       }
-    }));
+    }
       
     try {
       window.externalIcsEvents = deduplicateIcsEvents(window.externalIcsEvents);
