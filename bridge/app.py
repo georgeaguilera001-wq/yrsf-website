@@ -27,11 +27,15 @@ def get_timetree_ics():
 
     output_path = f"/tmp/{cal_id}.ics"
 
+    cli_debug = {"email_set": bool(TIMETREE_EMAIL), "password_set": bool(TIMETREE_PASSWORD)}
     # 1. Attempt using timetree-exporter CLI with credentials
     if TIMETREE_EMAIL and TIMETREE_PASSWORD:
         try:
             cmd = ["timetree-exporter", "-e", TIMETREE_EMAIL, "-p", TIMETREE_PASSWORD, "-c", cal_id, "-o", output_path]
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=25)
+            cli_debug["returncode"] = res.returncode
+            cli_debug["stdout"] = res.stdout[:500] if res.stdout else ""
+            cli_debug["stderr"] = res.stderr[:500] if res.stderr else ""
             if res.returncode == 0 and os.path.exists(output_path):
                 with open(output_path, "r", encoding="utf-8") as f:
                     content = f.read()
@@ -39,7 +43,9 @@ def get_timetree_ics():
                     "Access-Control-Allow-Origin": "*"
                 })
         except Exception as e:
-            pass
+            cli_debug["exception"] = str(e)
+    else:
+        cli_debug["note"] = "TIMETREE_EMAIL or TIMETREE_PASSWORD environment variable is empty/missing on Render"
 
     # 2. Fallback: Attempt mobile API / public fetch with browser headers
     try:
@@ -61,7 +67,8 @@ def get_timetree_ics():
         pass
 
     return jsonify({
-        "error": f"Could not export calendar {cal_id}. TimeTree blocked public scraping. Please ensure TIMETREE_EMAIL and TIMETREE_PASSWORD are set correctly in Render."
+        "error": f"Could not export calendar {cal_id}.",
+        "debug": cli_debug
     }), 502
 
 if __name__ == "__main__":
