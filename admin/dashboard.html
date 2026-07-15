@@ -122,15 +122,6 @@
             </button>
           </div>
         </li>
-        <li draggable="true" data-nav-id="revenue">
-          <div class="flex items-center gap-1 group">
-            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
-            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="revenue">
-              <span class="material-symbols-outlined">bar_chart</span>
-              <span class="font-label text-label-md">Revenue &amp; Analytics</span>
-            </button>
-          </div>
-        </li>
         <li draggable="true" data-nav-id="crm">
           <div class="flex items-center gap-1 group">
             <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
@@ -140,39 +131,12 @@
             </button>
           </div>
         </li>
-        <li draggable="true" data-nav-id="crew">
-          <div class="flex items-center gap-1 group">
-            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
-            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="crew">
-              <span class="material-symbols-outlined">anchor</span>
-              <span class="font-label text-label-md">Crew Management</span>
-            </button>
-          </div>
-        </li>
-        <li draggable="true" data-nav-id="maintenance">
-          <div class="flex items-center gap-1 group">
-            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
-            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="maintenance">
-              <span class="material-symbols-outlined">build</span>
-              <span class="font-label text-label-md">Maintenance Log</span>
-            </button>
-          </div>
-        </li>
         <li draggable="true" data-nav-id="promos">
           <div class="flex items-center gap-1 group">
             <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
             <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="promos">
               <span class="material-symbols-outlined">local_offer</span>
               <span class="font-label text-label-md">Promos &amp; Discounts</span>
-            </button>
-          </div>
-        </li>
-        <li draggable="true" data-nav-id="reviews">
-          <div class="flex items-center gap-1 group">
-            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
-            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="reviews">
-              <span class="material-symbols-outlined">star</span>
-              <span class="font-label text-label-md">Reviews Manager</span>
             </button>
           </div>
         </li>
@@ -235,6 +199,36 @@
       <!-- Dashboard Section -->
       <section class="admin-section" id="section-dashboard">
         <h1 class="font-headline text-headline-lg text-on-surface mb-md">Dashboard</h1>
+
+        <!-- Live Customer Inquiries & Notification Center -->
+        <div id="admin-inquiries-banner" class="mb-lg bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-outline-variant">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center">
+                <span class="material-symbols-outlined">notifications_active</span>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="font-headline font-bold text-lg text-on-surface">New Customer Inquiries</h2>
+                  <span id="inquiries-badge-count" class="px-2 py-0.5 rounded-full bg-secondary text-on-secondary text-xs font-bold">0</span>
+                </div>
+                <p class="text-xs text-on-surface-variant">Real-time charter inquiry leads awaiting followup</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="enable-browser-notifs-btn" class="px-3 py-1.5 rounded-xl border border-outline-variant hover:bg-surface-container text-xs font-bold text-on-surface flex items-center gap-1.5 transition-colors">
+                <span class="material-symbols-outlined text-[16px]">campaign</span> Enable Desktop Alerts
+              </button>
+              <button id="refresh-inquiries-btn" class="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface flex items-center gap-1.5 transition-colors">
+                <span class="material-symbols-outlined text-[16px]">refresh</span> Check Now
+              </button>
+            </div>
+          </div>
+          <div id="admin-inquiries-list" class="space-y-3">
+            <p class="text-sm text-on-surface-variant text-center py-6">Checking for new customer inquiries...</p>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md mb-lg">
           <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
             <div class="flex items-center gap-3 mb-2">
@@ -278,6 +272,86 @@
               <span class="material-symbols-outlined text-[18px]">open_in_new</span> View Website
             </a>
           </div>
+        </div>
+
+        <!-- Embedded Revenue & Analytics -->
+        <div class="mt-8 pt-8 border-t border-outline-variant">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="font-headline text-headline-md text-on-surface font-bold">Revenue &amp; Financial Analytics</h2>
+              <p class="font-body text-body-sm text-on-surface-variant">Live performance, collections, and booking trends</p>
+            </div>
+            <div>
+              <select id="revenue-year-filter" class="border border-outline-variant rounded-lg px-3 py-1.5 text-xs font-bold bg-surface-container-lowest">
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+              </select>
+            </div>
+          </div>
+          <!-- KPI Cards -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="revenue-kpi-cards">
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+              <p class="text-xs text-on-surface-variant font-bold mb-1">Total Revenue YTD</p>
+              <p id="kpi-revenue-ytd" class="text-2xl font-bold text-green-700">$0</p>
+            </div>
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+              <p class="text-xs text-on-surface-variant font-bold mb-1">Avg Booking Value</p>
+              <p id="kpi-avg-booking" class="text-2xl font-bold text-secondary">$0</p>
+            </div>
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+              <p class="text-xs text-on-surface-variant font-bold mb-1">Total Bookings</p>
+              <p id="kpi-total-bookings" class="text-2xl font-bold text-blue-700">0</p>
+            </div>
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+              <p class="text-xs text-on-surface-variant font-bold mb-1">Outstanding Balance</p>
+              <p id="kpi-outstanding" class="text-2xl font-bold text-amber-700">$0</p>
+            </div>
+          </div>
+          <!-- Charts -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+              <h3 class="font-headline font-bold text-sm mb-4">Monthly Revenue (Last 12 Months)</h3>
+              <div class="relative h-64 w-full">
+                <canvas id="chart-monthly-revenue"></canvas>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+              <h3 class="font-headline font-bold text-sm mb-4">Top Performing Boats</h3>
+              <div class="relative h-64 w-full">
+                <canvas id="chart-top-boats"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+              <h3 class="font-headline font-bold text-sm mb-4">Bookings by Day of Week</h3>
+              <div class="relative h-64 w-full">
+                <canvas id="chart-day-of-week"></canvas>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+              <h3 class="font-headline font-bold text-sm mb-4">Income vs. Deposits Collected</h3>
+              <div class="relative h-64 w-full">
+                <canvas id="chart-income-vs-deposits"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Embedded Reviews Manager -->
+        <div class="pt-8 border-t border-outline-variant">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="font-headline text-headline-md text-on-surface font-bold">Customer Reviews Moderation</h2>
+              <p class="font-body text-body-sm text-on-surface-variant">Approve or reject customer reviews submitted on the website</p>
+            </div>
+            <div class="flex gap-2">
+              <button id="reviews-filter-pending" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold">Pending</button>
+              <button id="reviews-filter-approved" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Approved</button>
+              <button id="reviews-filter-all" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">All</button>
+            </div>
+          </div>
+          <div id="reviews-list" class="flex flex-col gap-3"><p class="text-center text-on-surface-variant py-8 text-sm">Loading reviews...</p></div>
         </div>
       </section>
 
@@ -459,11 +533,10 @@
                 <div class="relative min-w-[250px]" id="cal-boat-search-container">
                   <div class="relative flex items-center">
                     <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary text-[18px]">directions_boat</span>
-                    <input type="text" id="cal-boat-search-input" value="⚓ Entire Fleet Calendar" placeholder="⚓ Entire Fleet Calendar" autocomplete="off" class="w-full pl-8 pr-8 py-1.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary transition-colors cursor-pointer"/>
+                    <input type="text" id="cal-boat-search-input" value="Select Yacht..." placeholder="Select Yacht..." autocomplete="off" class="w-full pl-8 pr-8 py-1.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary transition-colors cursor-pointer"/>
                     <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer text-sm" id="cal-boat-dropdown-toggle">expand_more</span>
                   </div>
                   <select id="cal-boat-filter" class="sr-only" tabindex="-1">
-                    <option value="all">⚓ Entire Fleet Calendar</option>
                   </select>
                   <div id="cal-boat-options-list" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto hidden divide-y divide-surface-container"></div>
                 </div>
@@ -672,6 +745,17 @@
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Phone Number</label>
                 <input type="tel" id="setting-business-phone" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
+              </div>
+            </div>
+          </div>
+          <!-- Inquiry Alerts / Notifications Config -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+            <h3 class="font-headline text-headline-md text-on-surface mb-md">Inquiry Notification Alerts</h3>
+            <div class="flex flex-col gap-md">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Notification Recipient Email</label>
+                <input type="email" id="setting-admin-notification-email" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="georgeaguilera001@gmail.com"/>
+                <p class="text-xs text-on-surface-variant mt-1.5">All customer charter inquiry leads submitted through the popup modal will automatically send an email alert to this address.</p>
               </div>
             </div>
           </div>
@@ -950,70 +1034,6 @@
         </div>
       </section>
 
-      <!-- Revenue & Analytics Section -->
-      <section id="section-revenue" class="admin-section hidden flex flex-col gap-lg">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Revenue &amp; Analytics</h1>
-            <p class="font-body text-body-md text-on-surface-variant">Financial performance and booking trends</p>
-          </div>
-          <div class="flex gap-2">
-            <select id="revenue-year-filter" class="border border-outline-variant rounded-lg px-3 py-2 text-sm bg-surface-container-lowest">
-              <option value="2026">2026</option>
-              <option value="2025">2025</option>
-            </select>
-          </div>
-        </div>
-        <!-- KPI Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="revenue-kpi-cards">
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-            <p class="text-xs text-on-surface-variant font-bold mb-1">Total Revenue YTD</p>
-            <p id="kpi-revenue-ytd" class="text-2xl font-bold text-green-700">$0</p>
-          </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-            <p class="text-xs text-on-surface-variant font-bold mb-1">Avg Booking Value</p>
-            <p id="kpi-avg-booking" class="text-2xl font-bold text-secondary">$0</p>
-          </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-            <p class="text-xs text-on-surface-variant font-bold mb-1">Total Bookings</p>
-            <p id="kpi-total-bookings" class="text-2xl font-bold text-blue-700">0</p>
-          </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-            <p class="text-xs text-on-surface-variant font-bold mb-1">Outstanding Balance</p>
-            <p id="kpi-outstanding" class="text-2xl font-bold text-amber-700">$0</p>
-          </div>
-        </div>
-        <!-- Charts -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-            <h3 class="font-headline font-bold text-sm mb-4">Monthly Revenue (Last 12 Months)</h3>
-            <div class="relative h-64 w-full">
-              <canvas id="chart-monthly-revenue"></canvas>
-            </div>
-          </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-            <h3 class="font-headline font-bold text-sm mb-4">Top Performing Boats</h3>
-            <div class="relative h-64 w-full">
-              <canvas id="chart-top-boats"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-            <h3 class="font-headline font-bold text-sm mb-4">Bookings by Day of Week</h3>
-            <div class="relative h-64 w-full">
-              <canvas id="chart-day-of-week"></canvas>
-            </div>
-          </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-            <h3 class="font-headline font-bold text-sm mb-4">Income vs. Deposits Collected</h3>
-            <div class="relative h-64 w-full">
-              <canvas id="chart-income-vs-deposits"></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- Customer CRM Section -->
       <section id="section-crm" class="admin-section hidden flex flex-col gap-lg">
         <div class="flex items-center justify-between mb-4">
@@ -1043,59 +1063,6 @@
             <tbody id="crm-table-body"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">Loading CRM...</td></tr></tbody>
           </table>
         </div>
-      </section>
-
-      <!-- Crew Management Section -->
-      <section id="section-crew" class="admin-section hidden flex flex-col gap-lg">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Crew Management</h1>
-            <p class="font-body text-body-md text-on-surface-variant">Manage captains, mates, and crew roster</p>
-          </div>
-          <button id="add-crew-btn" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
-            <span class="material-symbols-outlined text-[18px]">add</span> Add Crew Member
-          </button>
-        </div>
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
-          <table class="w-full">
-            <thead class="bg-surface-container border-b border-outline-variant">
-              <tr>
-                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Name</th>
-                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Role</th>
-                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Phone</th>
-                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">License #</th>
-                <th class="text-center px-4 py-3 font-label text-xs text-on-surface-variant">Status</th>
-                <th class="text-center px-4 py-3 font-label text-xs text-on-surface-variant">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="crew-table-body"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">Loading Crew...</td></tr></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Maintenance Log Section -->
-      <section id="section-maintenance" class="admin-section hidden flex flex-col gap-lg">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Maintenance Log</h1>
-            <p class="font-body text-body-md text-on-surface-variant">Track yacht maintenance, repairs, and inspections</p>
-          </div>
-          <button id="add-maintenance-btn" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
-            <span class="material-symbols-outlined text-[18px]">add</span> Log Maintenance
-          </button>
-        </div>
-        <div class="flex gap-2 flex-wrap items-center mb-4">
-          <select id="maintenance-boat-filter" class="border border-outline-variant rounded-lg px-3 py-2 text-sm bg-surface-container-lowest"><option value="all">All Boats</option></select>
-          <select id="maintenance-status-filter" class="border border-outline-variant rounded-lg px-3 py-2 text-sm bg-surface-container-lowest">
-            <option value="all">All Status</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="completed">Completed</option>
-            <option value="overdue">Overdue</option>
-          </select>
-        </div>
-        <div id="maintenance-list" class="flex flex-col gap-3"></div>
-      </section>
-
       <!-- Promos & Discounts Section -->
       <section id="section-promos" class="admin-section hidden flex flex-col gap-lg">
         <div class="flex items-center justify-between mb-4">
@@ -1122,24 +1089,6 @@
             <tbody id="promos-table-body"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No promo codes yet.</td></tr></tbody>
           </table>
         </div>
-      </section>
-
-      <!-- Reviews Manager Section -->
-      <section id="section-reviews" class="admin-section hidden flex flex-col gap-lg">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Reviews Manager</h1>
-            <p class="font-body text-body-md text-on-surface-variant">Approve or reject customer reviews before they go live</p>
-          </div>
-          <div class="flex gap-2">
-            <button id="reviews-filter-pending" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold">Pending</button>
-            <button id="reviews-filter-approved" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Approved</button>
-            <button id="reviews-filter-all" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">All</button>
-          </div>
-        </div>
-        <div id="reviews-list" class="flex flex-col gap-3"><p class="text-center text-on-surface-variant py-8 text-sm">Loading reviews...</p></div>
-      </section>
-
     </div>
   </main>
 

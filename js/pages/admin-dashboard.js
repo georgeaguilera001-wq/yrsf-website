@@ -2658,15 +2658,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       const searchIn = document.getElementById('cal-boat-search-input');
       const realSel = document.getElementById('cal-boat-filter');
       const listEl = document.getElementById('cal-boat-options-list');
-      if (searchIn) searchIn.value = name || '⚓ Entire Fleet Calendar';
+      const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
+      const targetId = id || (activeBoats[0]?.id || '');
+      const targetName = name || (activeBoats[0]?.name || '');
+      if (searchIn) searchIn.value = targetName;
       if (realSel) {
-        let opt = realSel.querySelector(`option[value="${id || 'all'}"]`);
+        let opt = realSel.querySelector(`option[value="${targetId}"]`);
         if (!opt) {
           opt = document.createElement('option');
-          opt.value = id || 'all';
+          opt.value = targetId;
           realSel.appendChild(opt);
         }
-        realSel.value = id || 'all';
+        realSel.value = targetId;
       }
       if (listEl) listEl.classList.add('hidden');
       renderCalendar();
@@ -2676,23 +2679,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const listEl = document.getElementById('cal-boat-options-list');
       if (!listEl) return;
       const boats = fleetCache || [];
-      const cleanFilter = filter.replace('⚓ Entire Fleet Calendar', '').trim();
+      const cleanFilter = filter.replace('Select Yacht...', '').trim();
       const filtered = boats.filter(b => (b.name || '').toLowerCase().includes(cleanFilter.toLowerCase()) || (b.capacity && String(b.capacity).includes(cleanFilter)));
       
       let html = '';
-      if ('entire fleet calendar'.includes(cleanFilter.toLowerCase()) || !cleanFilter) {
-        html += `
-          <div class="p-3 hover:bg-secondary-container/40 cursor-pointer flex items-center justify-between transition-colors cal-boat-option-item font-bold text-secondary bg-surface-container-lowest" data-id="all" data-name="⚓ Entire Fleet Calendar">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-sm text-secondary">directions_boat</span>
-              <span>⚓ Entire Fleet Calendar</span>
-            </div>
-            <span class="text-[10px] uppercase bg-secondary/10 text-secondary px-2 py-0.5 rounded font-bold">All Vessels</span>
-          </div>
-        `;
-      }
 
-      if (filtered.length === 0 && html === '') {
+      if (filtered.length === 0) {
         listEl.innerHTML = `<div class="p-3 text-center text-xs text-on-surface-variant font-label">No yachts matching "${escapeHtml(cleanFilter)}"</div>`;
         return;
       }
@@ -2721,15 +2713,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.renderCalBoatDropdownOptions(calBoatSearchInput.value);
         calBoatOptionsList?.classList.remove('hidden');
         if (!calBoatSearchInput.value.trim()) {
+          const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
           const realSel = document.getElementById('cal-boat-filter');
-          if (realSel) realSel.value = 'all';
+          if (realSel && activeBoats.length > 0) realSel.value = activeBoats[0].id;
           renderCalendar();
         }
       });
       calBoatSearchInput.addEventListener('focus', async () => {
         if (!fleetCache || fleetCache.length === 0) await loadFleet();
-        if (calBoatSearchInput.value === '⚓ Entire Fleet Calendar') calBoatSearchInput.select();
-        window.renderCalBoatDropdownOptions(calBoatSearchInput.value === '⚓ Entire Fleet Calendar' ? '' : calBoatSearchInput.value);
+        if (calBoatSearchInput.value === 'Select Yacht...') calBoatSearchInput.select();
+        window.renderCalBoatDropdownOptions(calBoatSearchInput.value === 'Select Yacht...' ? '' : calBoatSearchInput.value);
         calBoatOptionsList?.classList.remove('hidden');
       });
     }
@@ -2737,7 +2730,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (calBoatToggle) {
       calBoatToggle.addEventListener('click', async () => {
         if (!fleetCache || fleetCache.length === 0) await loadFleet();
-        window.renderCalBoatDropdownOptions(calBoatSearchInput?.value === '⚓ Entire Fleet Calendar' ? '' : (calBoatSearchInput?.value || ''));
+        window.renderCalBoatDropdownOptions(calBoatSearchInput?.value === 'Select Yacht...' ? '' : (calBoatSearchInput?.value || ''));
         calBoatOptionsList?.classList.toggle('hidden');
       });
     }
@@ -3138,9 +3131,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadFleet(true); // Always force a fresh reload from Supabase DB!
     let boatsWithIcal = fleetCache.filter(b => b.ical_feed_url && b.status === 'active');
 
-    // If a specific boat is selected in the calendar dropdown, sync only that boat for instant speed!
+    // Since entire fleet option is removed, always default to the first active yacht if none is selected
     const boatFilterEl = document.getElementById('cal-boat-filter');
-    const selectedBoatId = boatFilterEl ? boatFilterEl.value : 'all';
+    let selectedBoatId = boatFilterEl ? boatFilterEl.value : '';
+    const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
+    if (!selectedBoatId || selectedBoatId === 'all') {
+      if (activeBoats.length > 0) {
+        selectedBoatId = activeBoats[0].id;
+        if (boatFilterEl) {
+          let opt = boatFilterEl.querySelector(`option[value="${selectedBoatId}"]`);
+          if (!opt) {
+            opt = document.createElement('option');
+            opt.value = selectedBoatId;
+            boatFilterEl.appendChild(opt);
+          }
+          boatFilterEl.value = selectedBoatId;
+        }
+        const calBoatSearchInput = document.getElementById('cal-boat-search-input');
+        if (calBoatSearchInput) calBoatSearchInput.value = activeBoats[0].name;
+      }
+    }
     if (selectedBoatId && selectedBoatId !== 'all') {
       boatsWithIcal = boatsWithIcal.filter(b => b.id === selectedBoatId);
     }
@@ -3566,7 +3576,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const boatFilterEl = document.getElementById('cal-boat-filter');
-    const selectedBoatId = boatFilterEl ? boatFilterEl.value : 'all';
+    let selectedBoatId = boatFilterEl ? boatFilterEl.value : '';
+    const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
+    if (!selectedBoatId || selectedBoatId === 'all') {
+      if (activeBoats.length > 0) {
+        selectedBoatId = activeBoats[0].id;
+        if (boatFilterEl) {
+          let opt = boatFilterEl.querySelector(`option[value="${selectedBoatId}"]`);
+          if (!opt) {
+            opt = document.createElement('option');
+            opt.value = selectedBoatId;
+            boatFilterEl.appendChild(opt);
+          }
+          boatFilterEl.value = selectedBoatId;
+        }
+        const calBoatSearchInput = document.getElementById('cal-boat-search-input');
+        if (calBoatSearchInput && (calBoatSearchInput.value === 'Select Yacht...' || !calBoatSearchInput.value)) {
+          calBoatSearchInput.value = activeBoats[0].name;
+        }
+      }
+    }
 
     const year = calCurrentDate.getFullYear();
     const month = calCurrentDate.getMonth();
