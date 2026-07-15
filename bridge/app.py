@@ -13,6 +13,10 @@ CORS(app)  # Enables Access-Control-Allow-Origin: * for all endpoints
 TIMETREE_EMAIL = os.environ.get("TIMETREE_EMAIL", "")
 TIMETREE_PASSWORD = os.environ.get("TIMETREE_PASSWORD", "")
 
+# Supabase configuration for 24/7 background sync
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://udacadmmeyvykiiptsvb.supabase.co")
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkYWNhZG1tZXl2eWtpaXB0c3ZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MzY1MzAsImV4cCI6MjA5ODMxMjUzMH0.8cPpGjkEZ7WgChuwwovbK9rhjHRClnIElyygYABycR8")
+
 cal_locks = {}
 locks_mutex = threading.Lock()
 
@@ -228,6 +232,131 @@ def get_timetree_ics():
         "error": f"Could not export calendar {cal_id}.",
         "debug": cli_debug
     }), 502
+
+def run_all_boats_sync_to_supabase():
+    try:
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json"
+        }
+        res = requests.get(f"{SUPABASE_URL}/rest/v1/boats?status=eq.active&select=id,name,ical_feed_url,ical_feed_label", headers=headers, timeout=15)
+        if res.status_code != 200:
+            return {"error": "Failed to fetch boats from Supabase", "status": res.status_code}
+        
+        boats = res.json()
+        all_parsed_events = []
+        code_to_boats = {}
+        for b in boats:
+            feed_url = b.get("ical_feed_url") or ""
+            if "c=" in feed_url:
+                code = feed_url.split("c=")[1].split("&")[0].strip()
+                if code:
+                    code_to_boats.setdefault(code, []).append(b)
+
+        for code, boat_list in code_to_boats.items():
+            cli_debug = {}
+            output_path = f"/tmp/{code}.ics"
+            lock = get_cal_lock(code)
+            content = None
+            with lock:
+                content = fetch_with_cached_or_fresh_session(code, output_path, cli_debug)
+            
+            if not content and os.path.exists(output_path):
+                try:
+                    with open(output_path, "r", encoding="utf-8", errors="ignore") as f:
+                        content = f.read()
+                except Exception:
+                    pass
+
+            if content and "BEGIN:VCALENDAR" in content:
+                lines = content.splitlines()
+                for boat in boat_list:
+                    boat_id = boat["id"]
+                    boat_name = boat["name"]
+                    filter_label = (boat.get("ical_feed_label") or "").replace("Filter:", "").strip().lower()
+                    
+                    cur_event = {}
+                    in_event = False
+                    for line in lines:
+                        line_str = line.strip()
+                        if line_str == "BEGIN:VEVENT":
+                            in_event = True
+                            cur_event = {}
+                        elif line_str == "END:VEVENT" and in_event:
+                            in_event = False
+                            summary = cur_event.get("SUMMARY", "")
+                            summary_lower = summary.lower()
+                            
+                            is_match = False
+                            if filter_label:
+                                if filter_label in summary_lower or summary_lower in filter_label:
+                                    is_match = True
+                            else:
+                                if boat_name.lower() in summary_lower or summary_lower in boat_name.lower():
+                                    is_match = True
+
+                            if is_match and "DTSTART" in cur_event and "DTEND" in cur_event:
+                                all_parsed_events.append({
+                                    "boat_id": boat_id,
+                                    "start": cur_event["DTSTART"],
+                                    "end": cur_event["DTEND"],
+                                    "summary": summary,
+                                    "external": True
+                                })
+                        elif in_event and ":" in line_str:
+                            parts = line_str.split(":", 1)
+                            key_part = parts[0].split(";")[0].strip()
+                            val_part = parts[1].strip()
+                            if key_part in ("DTSTART", "DTEND"):
+                                val_clean = val_part.replace("Z", "")
+                                if len(val_clean) == 15 and "T" in val_clean:
+                                    val_part = f"{val_clean[:4]}-{val_clean[4:6]}-{val_clean[6:8]}T{val_clean[9:11]}:{val_clean[11:13]}:{val_clean[13:15]}"
+                                elif len(val_clean) == 8:
+                                    val_part = f"{val_clean[:4]}-{val_clean[4:6]}-{val_clean[6:8]}T00:00:00"
+                            cur_event[key_part] = val_part
+
+        patch_headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+        }
+        payload = {
+            "value": all_parsed_events,
+            "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        }
+        patch_res = requests.patch(
+            f"{SUPABASE_URL}/rest/v1/site_settings?key=eq.cached_ical_events",
+            headers=patch_headers,
+            json=payload,
+            timeout=15
+        )
+        return {
+            "status": "success",
+            "boats_processed": len(boats),
+            "events_synced": len(all_parsed_events),
+            "patch_status": patch_res.status_code
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+def background_auto_sync_loop():
+    time.sleep(20)  # Wait 20s after dyno startup before first automated check
+    while True:
+        try:
+            run_all_boats_sync_to_supabase()
+        except Exception:
+            pass
+        time.sleep(300)  # Sleep exactly 5 minutes (300 seconds) between automated fleet syncs
+
+# Start background auto-sync daemon thread
+threading.Thread(target=background_auto_sync_loop, daemon=True).start()
+
+@app.route("/cron/sync")
+def cron_sync_endpoint():
+    res = run_all_boats_sync_to_supabase()
+    return jsonify(res)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
