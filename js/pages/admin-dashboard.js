@@ -2653,11 +2653,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const calBoatToggle = document.getElementById('cal-boat-dropdown-toggle');
     const calBoatOptionsList = document.getElementById('cal-boat-options-list');
     const calBoatSearchContainer = document.getElementById('cal-boat-search-container');
+    const calBoatTrigger = document.getElementById('cal-boat-trigger');
 
     window.selectCalBoatOption = (id, name) => {
       const searchIn = document.getElementById('cal-boat-search-input');
       const realSel = document.getElementById('cal-boat-filter');
       const listEl = document.getElementById('cal-boat-options-list');
+      const toggleIcon = document.getElementById('cal-boat-dropdown-toggle');
       const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
       const targetId = id || (activeBoats[0]?.id || '');
       const targetName = name || (activeBoats[0]?.name || '');
@@ -2672,36 +2674,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         realSel.value = targetId;
       }
       if (listEl) listEl.classList.add('hidden');
+      if (toggleIcon) toggleIcon.classList.remove('rotate-180');
       renderCalendar();
     };
 
     window.renderCalBoatDropdownOptions = (filter = '') => {
+      const gridEl = document.getElementById('cal-boat-options-grid');
       const listEl = document.getElementById('cal-boat-options-list');
-      if (!listEl) return;
+      const targetContainer = gridEl || listEl;
+      const countEl = document.getElementById('cal-boat-options-count');
+      if (!targetContainer) return;
+      
       const boats = fleetCache || [];
       const cleanFilter = filter.replace('Select Yacht...', '').trim();
       const filtered = boats.filter(b => (b.name || '').toLowerCase().includes(cleanFilter.toLowerCase()) || (b.capacity && String(b.capacity).includes(cleanFilter)));
       
-      let html = '';
+      if (countEl) {
+        countEl.textContent = `${filtered.length} ${filtered.length === 1 ? 'Yacht' : 'Yachts'}`;
+      }
 
       if (filtered.length === 0) {
-        listEl.innerHTML = `<div class="p-3 text-center text-xs text-on-surface-variant font-label">No yachts matching "${escapeHtml(cleanFilter)}"</div>`;
+        targetContainer.innerHTML = `
+          <div class="p-6 text-center text-on-surface-variant flex flex-col items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-3xl text-outline">search_off</span>
+            <p class="text-xs font-bold text-on-surface">No yachts matching "${escapeHtml(cleanFilter)}"</p>
+            <p class="text-[11px] text-on-surface-variant/70">Try searching by name or guest capacity</p>
+          </div>
+        `;
         return;
       }
 
-      html += filtered.map(b => `
-        <div class="p-3 hover:bg-secondary-container/40 cursor-pointer flex items-center justify-between transition-colors cal-boat-option-item" data-id="${b.id}" data-name="${escapeHtml(b.name)}">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-sm ${b.ical_feed_url ? 'text-blue-600' : 'text-secondary'}">${b.ical_feed_url ? 'sync_desktop' : 'directions_boat'}</span>
-            <span class="font-bold text-on-surface text-xs">${escapeHtml(b.name)}</span>
+      const realSel = document.getElementById('cal-boat-filter');
+      const currentSelectedId = realSel ? realSel.value : '';
+
+      targetContainer.innerHTML = filtered.map(b => {
+        const isSelected = b.id === currentSelectedId;
+        const imgUrl = b.primary_image_url || 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=200&q=80';
+        const hasIcal = !!b.ical_feed_url;
+        
+        return `
+          <div class="p-2.5 rounded-xl hover:bg-surface-container/80 transition-all flex items-center justify-between cursor-pointer group cal-boat-option-item ${isSelected ? 'bg-secondary/10 ring-1 ring-secondary/40 shadow-sm' : ''}" data-id="${b.id}" data-name="${escapeHtml(b.name)}">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-surface-container flex-shrink-0 border border-outline-variant/60 shadow-sm group-hover:scale-105 transition-transform">
+                <img src="${imgUrl}" alt="${escapeHtml(b.name)}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=200&q=80'"/>
+                ${isSelected ? `<div class="absolute inset-0 bg-secondary/20 flex items-center justify-center backdrop-blur-[1px]"><span class="material-symbols-outlined text-white text-base drop-shadow-md">check_circle</span></div>` : ''}
+              </div>
+              <div class="flex flex-col min-w-0 pr-2 text-left">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-headline font-extrabold text-on-surface text-xs truncate group-hover:text-secondary transition-colors">${escapeHtml(b.name)}</span>
+                  ${hasIcal ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-bold shrink-0" title="iCal Sync Active"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span> iCal</span>` : `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[9px] font-bold shrink-0" title="Manual Only">Manual</span>`}
+                </div>
+                <div class="flex items-center gap-2 text-[11px] text-on-surface-variant font-medium mt-0.5">
+                  <span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[13px] text-secondary">straighten</span> ${b.length_ft || '55'}ft</span>
+                  <span>•</span>
+                  <span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[13px] text-secondary">group</span> ${b.capacity || 12} guests</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex-shrink-0 flex items-center pl-1">
+              <span class="material-symbols-outlined text-sm ${isSelected ? 'text-secondary font-bold' : 'text-outline group-hover:text-on-surface group-hover:translate-x-0.5'} transition-all">${isSelected ? 'check' : 'chevron_right'}</span>
+            </div>
           </div>
-          <span class="text-[11px] font-mono bg-surface-container px-2 py-0.5 rounded text-on-surface-variant font-bold">${b.capacity || 12} max</span>
-        </div>
-      `).join('');
+        `;
+      }).join('');
 
-      listEl.innerHTML = html;
-
-      listEl.querySelectorAll('.cal-boat-option-item').forEach(item => {
+      targetContainer.querySelectorAll('.cal-boat-option-item').forEach(item => {
         item.addEventListener('click', () => {
           window.selectCalBoatOption(item.dataset.id, item.dataset.name);
         });
@@ -2712,6 +2749,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       calBoatSearchInput.addEventListener('input', () => {
         window.renderCalBoatDropdownOptions(calBoatSearchInput.value);
         calBoatOptionsList?.classList.remove('hidden');
+        if (calBoatToggle) calBoatToggle.classList.add('rotate-180');
         if (!calBoatSearchInput.value.trim()) {
           const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
           const realSel = document.getElementById('cal-boat-filter');
@@ -2724,20 +2762,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (calBoatSearchInput.value === 'Select Yacht...') calBoatSearchInput.select();
         window.renderCalBoatDropdownOptions(calBoatSearchInput.value === 'Select Yacht...' ? '' : calBoatSearchInput.value);
         calBoatOptionsList?.classList.remove('hidden');
+        if (calBoatToggle) calBoatToggle.classList.add('rotate-180');
       });
     }
 
-    if (calBoatToggle) {
+    if (calBoatTrigger) {
+      calBoatTrigger.addEventListener('click', async (e) => {
+        if (e.target === calBoatSearchInput) return;
+        if (!fleetCache || fleetCache.length === 0) await loadFleet();
+        window.renderCalBoatDropdownOptions(calBoatSearchInput?.value === 'Select Yacht...' ? '' : (calBoatSearchInput?.value || ''));
+        const isHidden = calBoatOptionsList?.classList.contains('hidden');
+        if (isHidden) {
+          calBoatOptionsList?.classList.remove('hidden');
+          if (calBoatToggle) calBoatToggle.classList.add('rotate-180');
+          calBoatSearchInput?.focus();
+        } else {
+          calBoatOptionsList?.classList.add('hidden');
+          if (calBoatToggle) calBoatToggle.classList.remove('rotate-180');
+        }
+      });
+    } else if (calBoatToggle) {
       calBoatToggle.addEventListener('click', async () => {
         if (!fleetCache || fleetCache.length === 0) await loadFleet();
         window.renderCalBoatDropdownOptions(calBoatSearchInput?.value === 'Select Yacht...' ? '' : (calBoatSearchInput?.value || ''));
         calBoatOptionsList?.classList.toggle('hidden');
+        calBoatToggle?.classList.toggle('rotate-180');
       });
     }
 
     document.addEventListener('click', (e) => {
       if (calBoatSearchContainer && !calBoatSearchContainer.contains(e.target)) {
         calBoatOptionsList?.classList.add('hidden');
+        if (calBoatToggle) calBoatToggle.classList.remove('rotate-180');
       }
     });
 

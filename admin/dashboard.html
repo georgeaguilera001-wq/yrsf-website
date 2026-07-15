@@ -530,15 +530,32 @@
                 <button id="cal-today-btn" class="px-3 py-1 bg-surface-container text-on-surface-variant hover:text-on-surface rounded-lg text-xs font-bold transition-colors">Today</button>
               </div>
               <div class="flex flex-wrap items-center gap-3">
-                <div class="relative min-w-[250px]" id="cal-boat-search-container">
-                  <div class="relative flex items-center">
-                    <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary text-[18px]">directions_boat</span>
-                    <input type="text" id="cal-boat-search-input" value="Select Yacht..." placeholder="Select Yacht..." autocomplete="off" class="w-full pl-8 pr-8 py-1.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary transition-colors cursor-pointer"/>
-                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer text-sm" id="cal-boat-dropdown-toggle">expand_more</span>
+                <div class="relative min-w-[300px] sm:min-w-[340px]" id="cal-boat-search-container">
+                  <div id="cal-boat-trigger" class="flex items-center justify-between gap-3 px-3.5 py-2 bg-white hover:bg-surface-container-lowest border-2 border-outline-variant/80 hover:border-secondary/60 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                      <div class="w-8 h-8 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center flex-shrink-0 group-hover:bg-secondary group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">directions_boat</span>
+                      </div>
+                      <div class="flex flex-col text-left overflow-hidden">
+                        <span class="text-[10px] font-label font-bold uppercase tracking-wider text-on-surface-variant/70">Selected Yacht</span>
+                        <input type="text" id="cal-boat-search-input" value="Select Yacht..." placeholder="Search & select yacht..." autocomplete="off" class="w-full bg-transparent border-none p-0 text-xs sm:text-sm font-headline font-extrabold text-on-surface focus:outline-none focus:ring-0 truncate cursor-pointer"/>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                      <span class="material-symbols-outlined text-on-surface-variant text-lg transition-transform duration-200 group-hover:text-secondary" id="cal-boat-dropdown-toggle">expand_more</span>
+                    </div>
                   </div>
                   <select id="cal-boat-filter" class="sr-only" tabindex="-1">
                   </select>
-                  <div id="cal-boat-options-list" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto hidden divide-y divide-surface-container"></div>
+                  <div id="cal-boat-options-list" class="absolute left-0 right-0 sm:right-auto sm:w-[380px] top-full mt-2 bg-white/95 backdrop-blur-xl border border-outline-variant rounded-2xl shadow-2xl z-50 max-h-[420px] overflow-hidden hidden ring-1 ring-black/5 divide-y divide-surface-container/60 animate-in fade-in zoom-in-95 duration-150">
+                    <div class="px-3.5 py-2.5 bg-surface-container-lowest/90 sticky top-0 z-10 flex items-center justify-between border-b border-surface-container">
+                      <span class="text-[11px] font-label font-extrabold uppercase tracking-widest text-on-surface-variant/80 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm text-secondary">anchor</span> Available Fleet
+                      </span>
+                      <span class="text-[10px] bg-secondary/10 text-secondary font-bold px-2.5 py-0.5 rounded-full" id="cal-boat-options-count">0 Yachts</span>
+                    </div>
+                    <div id="cal-boat-options-grid" class="overflow-y-auto max-h-[350px] p-1.5 space-y-1"></div>
+                  </div>
                 </div>
                 <button id="cal-sync-now-btn" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm" title="Refresh external iCal feeds">
                   <span class="material-symbols-outlined text-[16px]">sync</span> Sync iCal Feeds
