@@ -3664,7 +3664,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let cellsHtml = '';
 
     for (let i = 0; i < firstDayIndex; i++) {
-      cellsHtml += `<div class="bg-surface-container-lowest min-h-[100px] p-2 opacity-30"></div>`;
+      cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-2xl min-h-[135px] sm:min-h-[155px] p-3 opacity-40"></div>`;
     }
 
     for (let day = 1; day <= totalDays; day++) {
@@ -3683,51 +3683,78 @@ document.addEventListener('DOMContentLoaded', async () => {
         return timeStringToMinutes(a.start_time) - timeStringToMinutes(b.start_time);
       });
 
+      const diffDays = Math.round((new Date(dateStr) - new Date(todayStr)) / (1000 * 60 * 60 * 24));
+      let weatherBadge = '';
+      if (diffDays >= 0 && diffDays <= 6) {
+        const icons = ['☀️ 85°', '⛅ 82°', '☀️ 86°', '🌤 84°', '🌧 80°', '☀️ 85°', '⛅ 83°'];
+        weatherBadge = `<span class="text-[10px] bg-amber-500/10 text-amber-800 border border-amber-500/20 px-2 py-0.5 rounded-lg font-extrabold flex items-center gap-1 shadow-2xs" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
+      } else if (diffDays > 6 && diffDays <= 14) {
+        weatherBadge = `<span class="text-[10px] text-on-surface-variant/60 font-medium" title="Long range forecast">⛅</span>`;
+      }
+
       const badgesHtml = allEvents.map(b => {
         if (b.status === 'external') {
           return `
-            <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="p-1.5 rounded-lg border text-[11px] font-bold truncate cursor-pointer hover:shadow-sm transition-all mb-1 bg-blue-50 text-blue-800 border-blue-200" title="[${escapeHtml(b.source_label)}] ${escapeHtml(b.customer_name)}">
-              <span class="font-mono text-[10px] mr-1">⏰</span> ${escapeHtml(b.start_time)} • ${escapeHtml(b.boat_name)}: ${escapeHtml(b.customer_name)}
+            <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="p-2 rounded-xl border border-blue-200/80 bg-gradient-to-r from-blue-50 to-indigo-50/70 hover:from-blue-100 hover:to-indigo-100 text-blue-900 shadow-2xs hover:shadow-sm transition-all mb-1.5 group/badge cursor-pointer flex items-center justify-between gap-1.5" title="[${escapeHtml(b.source_label)}] ${escapeHtml(b.customer_name)}">
+              <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                <span class="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
+                <span class="font-mono text-[10px] font-extrabold text-blue-700 bg-blue-100/90 px-1.5 py-0.5 rounded-md flex-shrink-0">${escapeHtml(b.start_time)}</span>
+                <span class="font-bold text-[11px] truncate text-on-surface">${escapeHtml(b.customer_name || 'Charter Booking')}</span>
+              </div>
+              <span class="material-symbols-outlined text-xs text-blue-500 opacity-60 group-hover/badge:opacity-100 group-hover/badge:translate-x-0.5 transition-all">event</span>
             </div>
           `;
         }
 
-        let bg = 'bg-secondary/10 text-secondary border-secondary/30';
-        if (b.status === 'completed') bg = 'bg-surface-container text-on-surface-variant border-outline-variant';
-        if (b.status === 'cancelled') bg = 'bg-red-50 text-red-700 border-red-200 line-through opacity-60';
+        let bgClass = 'bg-gradient-to-r from-secondary/10 to-secondary/5 border-secondary/30 text-secondary hover:bg-secondary/15';
+        let dotColor = 'bg-secondary';
+        let statusText = 'Confirmed';
+        if (b.status === 'completed') {
+          bgClass = 'bg-surface-container border-outline-variant text-on-surface-variant hover:bg-surface-container-high';
+          dotColor = 'bg-on-surface-variant';
+          statusText = 'Completed';
+        } else if (b.status === 'cancelled') {
+          bgClass = 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100/80 opacity-70';
+          dotColor = 'bg-red-600';
+          statusText = 'Cancelled';
+        }
 
         return `
-          <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="p-1.5 rounded-lg border text-[11px] font-bold truncate cursor-pointer hover:shadow-sm transition-all mb-1 ${bg}" title="${b.start_time} - ${b.boat_name} (${b.customer_name})">
-            <span class="font-mono text-[10px] mr-1">${b.start_time.split(' ')[0]}</span> ${b.boat_name}
+          <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="p-2 rounded-xl border text-[11px] font-bold transition-all mb-1.5 shadow-2xs hover:shadow-sm cursor-pointer flex items-center justify-between gap-1.5 group/badge ${bgClass}" title="${b.start_time} - ${b.boat_name} (${b.customer_name})">
+            <div class="flex items-center gap-1.5 min-w-0 flex-1">
+              <span class="w-2 h-2 rounded-full ${dotColor} flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
+              <span class="font-mono text-[10px] font-extrabold bg-white/80 px-1.5 py-0.5 rounded-md flex-shrink-0 shadow-2xs">${b.start_time.split(' ')[0]}</span>
+              <span class="font-bold truncate">${escapeHtml(b.customer_name || b.boat_name)}</span>
+            </div>
+            <span class="text-[9px] uppercase tracking-wider font-extrabold opacity-70 flex-shrink-0">${statusText}</span>
           </div>
         `;
       }).join('');
 
+      const tileBg = isToday 
+        ? 'bg-gradient-to-br from-secondary/5 via-white to-white border-2 border-secondary shadow-md ring-4 ring-secondary/10' 
+        : 'bg-white hover:bg-surface-container-lowest/90 border border-outline-variant/70 hover:border-secondary/50 shadow-xs hover:shadow-md';
+
       cellsHtml += `
-        <div onclick="window.showDayEventsModal('${dateStr}')" class="bg-surface-container-lowest min-h-[110px] p-2 flex flex-col justify-between hover:bg-surface-container-low/40 transition-colors cursor-pointer group">
+        <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-2xl min-h-[135px] sm:min-h-[155px] p-3 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden">
           <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full font-label text-xs font-bold ${isToday ? 'bg-secondary text-on-secondary shadow-sm' : 'text-on-surface group-hover:text-secondary'}">
-                ${day}
-              </span>
-              <div class="flex items-center gap-1">
-                ${(() => {
-                  const diffDays = Math.round((new Date(dateStr) - new Date(todayStr)) / (1000 * 60 * 60 * 24));
-                  if (diffDays >= 0 && diffDays <= 6) {
-                    const icons = ['☀️ 85°', '⛅ 82°', '☀️ 86°', '🌤 84°', '🌧 80°', '☀️ 85°', '⛅ 83°'];
-                    return `<span class="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-bold" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
-                  } else if (diffDays > 6 && diffDays <= 14) {
-                    return `<span class="text-[10px] text-on-surface-variant/70" title="Long range">☁️</span>`;
-                  }
-                  return '';
-                })()}
-                ${allEvents.length > 0 ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800">${allEvents.length}</span>` : ''}
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-1.5">
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-xl font-label text-xs font-black transition-transform group-hover/cell:scale-110 ${isToday ? 'bg-secondary text-white shadow-sm' : 'bg-surface-container text-on-surface group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary'}">
+                  ${day}
+                </span>
+                ${isToday ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary text-white font-black text-[9px] uppercase tracking-wider shadow-2xs">Today</span>` : ''}
+              </div>
+              <div class="flex items-center gap-1.5">
+                ${weatherBadge}
+                ${allEvents.length > 0 ? `<span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 shadow-2xs">${allEvents.length}</span>` : ''}
               </div>
             </div>
-            <div class="space-y-1 overflow-y-auto max-h-[85px] pr-0.5">
-              ${badgesHtml}
+            <div class="space-y-1 overflow-y-auto max-h-[105px] pr-0.5 scrollbar-thin">
+              ${badgesHtml || `<div class="pt-6 text-center opacity-0 group-hover/cell:opacity-100 transition-opacity"><span class="text-[10px] font-bold text-on-surface-variant/60 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-xs">add_circle</span> Add Booking</span></div>`}
             </div>
           </div>
+          ${allEvents.length === 0 ? `<div class="mt-auto text-right opacity-30 group-hover/cell:opacity-60 transition-opacity"><span class="text-[10px] font-mono font-bold text-on-surface-variant/60">No events</span></div>` : ''}
         </div>
       `;
     }
