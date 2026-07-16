@@ -1,0 +1,9 @@
+# Ignore large data dumps and scratch scripts for fast static deployments
+yachts_rows.csv
+miami_activity_blog_posts_long.csv
+scratch/
+timetree-proxy/
+bridge/
+*.py
+*.sql
+.gemini/
