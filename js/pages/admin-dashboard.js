@@ -3738,16 +3738,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       }).join('');
 
+      const isPast = dateStr < todayStr;
       const tileBg = isToday 
         ? 'bg-gradient-to-br from-secondary/5 via-white to-white border-2 border-secondary shadow-md ring-4 ring-secondary/10' 
-        : 'bg-white hover:bg-surface-container-lowest/90 border border-outline-variant/70 hover:border-secondary/50 shadow-xs hover:shadow-md';
+        : isPast
+          ? 'bg-surface-container-low/50 hover:bg-surface-container-lowest border border-outline-variant/40 hover:border-outline-variant/80 shadow-2xs opacity-70 hover:opacity-95'
+          : 'bg-white hover:bg-surface-container-lowest/90 border border-outline-variant/70 hover:border-secondary/50 shadow-xs hover:shadow-md';
+
+      const dayNumBg = isToday 
+        ? 'bg-secondary text-white shadow-sm' 
+        : isPast
+          ? 'bg-surface-container-high/50 text-on-surface-variant/70 group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary'
+          : 'bg-surface-container text-on-surface group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary';
 
       cellsHtml += `
         <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-2xl min-h-[140px] sm:min-h-[160px] p-2 sm:p-3 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
           <div class="min-w-0">
             <div class="flex flex-wrap items-start justify-between gap-1 mb-2 min-w-0">
               <div class="flex flex-wrap items-center gap-1 min-w-0">
-                <span class="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-xl font-label text-xs font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${isToday ? 'bg-secondary text-white shadow-sm' : 'bg-surface-container text-on-surface group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary'}">
+                <span class="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-xl font-label text-xs font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
                   ${day}
                 </span>
                 ${isToday ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider shadow-2xs shrink-0">Today</span>` : ''}
