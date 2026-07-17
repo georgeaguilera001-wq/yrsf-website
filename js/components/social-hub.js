@@ -14,6 +14,7 @@ let currentPhonePlatform = 'ig';
 let currentCalendarDate = new Date();
 let selectedMediaUrls = [];
 let allFleetPhotos = [];
+let currentGalleryViewMode = 'folders';
 
 export async function initSocialHub() {
   await loadZapierSettings();
@@ -30,6 +31,9 @@ export async function initSocialHub() {
   window.openSocialFleetGalleryModal = openSocialFleetGalleryModal;
   window.filterSocialFleetGallery = filterSocialFleetGallery;
   window.handleSocialGalleryUpload = handleSocialGalleryUpload;
+  window.setSocialGalleryViewMode = setSocialGalleryViewMode;
+  window.toggleGalleryFolder = toggleGalleryFolder;
+  window.selectAllInGalleryFolder = selectAllInGalleryFolder;
   window.applyAiSocialTemplate = applyAiSocialTemplate;
   window.setSchedulePreset = setSchedulePreset;
   window.saveSocialPost = saveSocialPost;
@@ -369,6 +373,48 @@ function filterSocialFleetGallery() {
   renderSocialFleetGalleryGrid();
 }
 
+function setSocialGalleryViewMode(mode) {
+  currentGalleryViewMode = mode;
+  const foldersBtn = document.getElementById('gallery-view-btn-folders');
+  const gridBtn = document.getElementById('gallery-view-btn-grid');
+  if (foldersBtn && gridBtn) {
+    if (mode === 'folders') {
+      foldersBtn.className = "px-2.5 py-1 rounded-md bg-secondary text-on-secondary transition-all flex items-center gap-1 cursor-pointer";
+      gridBtn.className = "px-2.5 py-1 rounded-md text-on-surface-variant transition-all flex items-center gap-1 cursor-pointer";
+    } else {
+      gridBtn.className = "px-2.5 py-1 rounded-md bg-secondary text-on-secondary transition-all flex items-center gap-1 cursor-pointer";
+      foldersBtn.className = "px-2.5 py-1 rounded-md text-on-surface-variant transition-all flex items-center gap-1 cursor-pointer";
+    }
+  }
+  renderSocialFleetGalleryGrid();
+}
+
+function toggleGalleryFolder(folderId) {
+  const el = document.getElementById(folderId);
+  const arrow = document.getElementById(`arrow-${folderId}`);
+  if (el) {
+    el.classList.toggle('hidden');
+    if (arrow) {
+      arrow.textContent = el.classList.contains('hidden') ? 'chevron_right' : 'expand_more';
+    }
+  }
+}
+
+function selectAllInGalleryFolder(boatName, select) {
+  const items = allFleetPhotos.filter(p => (p.boat_name || 'General Uploads') === boatName);
+  items.forEach(p => {
+    const idx = selectedMediaUrls.indexOf(p.url);
+    if (select && idx === -1) {
+      selectedMediaUrls.push(p.url);
+    } else if (!select && idx !== -1) {
+      selectedMediaUrls.splice(idx, 1);
+    }
+  });
+  renderMediaGrid();
+  updateSocialPhonePreview();
+  renderSocialFleetGalleryGrid();
+}
+
 function renderSocialFleetGalleryGrid() {
   const gridEl = document.getElementById('social-fleet-gallery-grid');
   const filterEl = document.getElementById('social-gallery-filter-boat');
@@ -388,21 +434,74 @@ function renderSocialFleetGalleryGrid() {
     return;
   }
 
-  gridEl.innerHTML = filtered.map(item => {
-    const isSelected = selectedMediaUrls.includes(item.url);
-    return `
-      <div onclick="window.toggleSocialMediaUrl('${item.url}')" class="relative aspect-square rounded-xl overflow-hidden border-2 ${isSelected ? 'border-secondary ring-2 ring-secondary' : 'border-outline-variant'} cursor-pointer group transition-all bg-black/20">
-        <img src="${item.url}" alt="${item.boat_name}" class="w-full h-full object-cover transition-transform group-hover:scale-105"/>
-        <div class="absolute inset-0 bg-black/40 flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity">
-          <span class="material-symbols-outlined text-white text-2xl">${isSelected ? 'check_circle' : 'add_circle'}</span>
+  if (currentGalleryViewMode === 'folders' && filterBoat === 'all') {
+    // Group photos by boat_name
+    const groups = {};
+    filtered.forEach(p => {
+      const name = p.boat_name || 'General Uploads';
+      if (!groups[name]) groups[name] = [];
+      groups[name].push(p);
+    });
+
+    // Render collapsible folders for each boat
+    gridEl.innerHTML = Object.keys(groups).map((boatName, groupIdx) => {
+      const photos = groups[boatName];
+      const folderSlug = `gallery-folder-${groupIdx}`;
+      const isFirst = groupIdx === 0; // First folder expanded by default
+      const selectedCountInGroup = photos.filter(p => selectedMediaUrls.includes(p.url)).length;
+
+      const photosHtml = photos.map(item => {
+        const isSelected = selectedMediaUrls.includes(item.url);
+        return `
+          <div onclick="window.toggleSocialMediaUrl('${item.url}')" class="relative aspect-square rounded-xl overflow-hidden border-2 ${isSelected ? 'border-secondary ring-2 ring-secondary' : 'border-outline-variant'} cursor-pointer group transition-all bg-black/20">
+            <img src="${item.url}" alt="${item.boat_name}" class="w-full h-full object-cover transition-transform group-hover:scale-105"/>
+            <div class="absolute inset-0 bg-black/40 flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity">
+              <span class="material-symbols-outlined text-white text-2xl">${isSelected ? 'check_circle' : 'add_circle'}</span>
+            </div>
+            ${isSelected ? '<span class="absolute top-1.5 right-1.5 bg-secondary text-on-secondary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md">✔</span>' : ''}
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="border border-outline-variant rounded-2xl bg-surface-container-lowest overflow-hidden shadow-xs mb-3">
+          <div onclick="window.toggleGalleryFolder('${folderSlug}')" class="px-4 py-3 bg-surface-container/60 hover:bg-surface-container border-b border-outline-variant/60 flex flex-wrap items-center justify-between gap-2 cursor-pointer transition-colors select-none">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-secondary text-2xl">folder_open</span>
+              <span class="font-headline text-sm font-bold text-on-surface">${boatName}</span>
+              <span class="px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary text-[11px] font-bold">${photos.length} photo${photos.length !== 1 ? 's' : ''}</span>
+              ${selectedCountInGroup > 0 ? `<span class="px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/30 text-green-600 text-[10px] font-bold">✔ ${selectedCountInGroup} selected</span>` : ''}
+            </div>
+            <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+              <button type="button" onclick="window.selectAllInGalleryFolder('${boatName}', true)" class="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-container-high border border-outline-variant text-[10px] font-bold text-on-surface transition-colors cursor-pointer">Select All in Folder</button>
+              ${selectedCountInGroup > 0 ? `<button type="button" onclick="window.selectAllInGalleryFolder('${boatName}', false)" class="px-2 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-[10px] font-bold text-red-600 transition-colors cursor-pointer">Clear</button>` : ''}
+              <span class="material-symbols-outlined text-lg text-on-surface-variant transition-transform" id="arrow-${folderSlug}">${isFirst ? 'expand_more' : 'chevron_right'}</span>
+            </div>
+          </div>
+          <div id="${folderSlug}" class="p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 ${isFirst ? '' : 'hidden'}">
+            ${photosHtml}
+          </div>
         </div>
-        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-1.5 text-[10px] text-white font-bold truncate">
-          ${item.boat_name}
+      `;
+    }).join('');
+  } else {
+    // Flat Grid view (or filtered by a specific boat)
+    gridEl.innerHTML = `<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">` + filtered.map(item => {
+      const isSelected = selectedMediaUrls.includes(item.url);
+      return `
+        <div onclick="window.toggleSocialMediaUrl('${item.url}')" class="relative aspect-square rounded-xl overflow-hidden border-2 ${isSelected ? 'border-secondary ring-2 ring-secondary' : 'border-outline-variant'} cursor-pointer group transition-all bg-black/20">
+          <img src="${item.url}" alt="${item.boat_name}" class="w-full h-full object-cover transition-transform group-hover:scale-105"/>
+          <div class="absolute inset-0 bg-black/40 flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity">
+            <span class="material-symbols-outlined text-white text-2xl">${isSelected ? 'check_circle' : 'add_circle'}</span>
+          </div>
+          <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-1.5 text-[10px] text-white font-bold truncate">
+            ${item.boat_name}
+          </div>
+          ${isSelected ? '<span class="absolute top-1.5 right-1.5 bg-secondary text-on-secondary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md">✔</span>' : ''}
         </div>
-        ${isSelected ? '<span class="absolute top-1.5 right-1.5 bg-secondary text-on-secondary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md">✔</span>' : ''}
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('') + `</div>`;
+  }
 }
 
 async function handleSocialGalleryUpload(event) {

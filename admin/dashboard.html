@@ -1090,16 +1090,22 @@
             <button type="button" onclick="document.getElementById('social-fleet-gallery-modal').classList.add('hidden')" class="text-on-surface-variant hover:text-on-surface p-1 rounded-lg">&times;</button>
           </div>
 
-          <div class="flex items-center gap-3 shrink-0">
-            <select id="social-gallery-filter-boat" onchange="window.filterSocialFleetGallery()" class="admin-field px-3 py-2 border border-outline-variant rounded-xl text-xs font-body text-on-surface bg-surface flex-1">
-              <option value="all">Show All Photos Across All Boats</option>
-            </select>
-            <button type="button" onclick="document.getElementById('social-gallery-upload-input').click()" class="px-3.5 py-2 bg-secondary text-on-secondary hover:opacity-90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0">
+          <div class="flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <div class="flex flex-wrap items-center gap-2 flex-1">
+              <select id="social-gallery-filter-boat" onchange="window.filterSocialFleetGallery()" class="admin-field px-3 py-2 border border-outline-variant rounded-xl text-xs font-body text-on-surface bg-surface max-w-xs">
+                <option value="all">Show All Photos Across All Boats</option>
+              </select>
+              <div class="flex rounded-lg bg-surface-container p-0.5 border border-outline-variant text-[11px] font-bold">
+                <button type="button" id="gallery-view-btn-folders" onclick="window.setSocialGalleryViewMode('folders')" class="px-2.5 py-1 rounded-md bg-secondary text-on-secondary transition-all flex items-center gap-1 cursor-pointer"><span class="material-symbols-outlined text-xs">folder</span> Folders by Boat</button>
+                <button type="button" id="gallery-view-btn-grid" onclick="window.setSocialGalleryViewMode('grid')" class="px-2.5 py-1 rounded-md text-on-surface-variant transition-all flex items-center gap-1 cursor-pointer"><span class="material-symbols-outlined text-xs">grid_view</span> Flat Grid</button>
+              </div>
+            </div>
+            <button type="button" onclick="document.getElementById('social-gallery-upload-input').click()" class="px-3.5 py-2 bg-secondary text-on-secondary hover:opacity-90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
               <span class="material-symbols-outlined text-sm">upload</span> Upload New from Device
             </button>
           </div>
 
-          <div id="social-fleet-gallery-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 overflow-y-auto flex-1 p-2 bg-surface-container/50 rounded-2xl border border-outline-variant min-h-[320px] max-h-[500px]">
+          <div id="social-fleet-gallery-grid" class="overflow-y-auto flex-1 p-2 bg-surface-container/30 rounded-2xl border border-outline-variant min-h-[360px] max-h-[520px]">
             <div class="col-span-full py-12 text-center text-on-surface-variant"><span class="admin-spinner inline-block mr-2"></span> Loading all fleet photos...</div>
           </div>
 
@@ -1950,7 +1956,7 @@
   </div>
 
   <div id="toast-container" class="toast-container"></div>
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260717_social_studio_gallery"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260717_social_studio_folders"></script>
   <script>
     // ── Sidebar Drag-and-Drop Reordering ─────────────────────────────────────
     (function() {
