@@ -3731,7 +3731,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let cellsHtml = '';
 
     for (let i = 0; i < firstDayIndex; i++) {
-      cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl sm:rounded-2xl min-h-[58px] sm:min-h-[155px] p-1 sm:p-3 opacity-40"></div>`;
+      cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl sm:rounded-2xl min-h-[58px] sm:min-h-[88px] lg:min-h-[96px] p-1 sm:p-2 opacity-40"></div>`;
     }
 
     for (let day = 1; day <= totalDays; day++) {
@@ -3754,7 +3754,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       let weatherBadge = '';
       if (diffDays >= 0 && diffDays <= 6) {
         const icons = ['☀️ 85°', '⛅ 82°', '☀️ 86°', '🌤 84°', '🌧 80°', '☀️ 85°', '⛅ 83°'];
-        weatherBadge = `<span class="hidden sm:flex text-[10px] bg-amber-500/10 text-amber-800 border border-amber-500/20 px-2 py-0.5 rounded-lg font-extrabold items-center gap-1 shadow-2xs" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
+        weatherBadge = `<span class="hidden sm:flex text-[10px] bg-amber-500/10 text-amber-800 border border-amber-500/20 px-1.5 py-0.5 rounded font-extrabold items-center gap-1 shadow-2xs" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
       } else if (diffDays > 6 && diffDays <= 14) {
         weatherBadge = `<span class="hidden sm:inline-block text-[10px] text-on-surface-variant/60 font-medium" title="Long range forecast">⛅</span>`;
       }
@@ -3762,15 +3762,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const badgesHtml = allEvents.map(b => {
         if (b.status === 'external') {
           return `
-            <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="p-1.5 sm:p-2 rounded-xl border border-blue-200/80 bg-gradient-to-r from-blue-50 to-indigo-50/70 hover:from-blue-100 hover:to-indigo-100 text-blue-900 shadow-2xs hover:shadow-sm transition-all mb-1.5 group/badge cursor-pointer flex flex-col gap-0.5 min-w-0 overflow-hidden leading-snug" title="[${escapeHtml(b.source_label)}] ${escapeHtml(b.customer_name)}">
-              <div class="flex items-center justify-between gap-1 min-w-0 w-full">
-                <div class="flex items-center gap-1 min-w-0">
-                  <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-600 flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
-                  <span class="font-mono text-[10px] font-extrabold text-blue-700 bg-blue-100/90 px-1.5 py-0.5 rounded-md truncate">${escapeHtml(b.start_time)}</span>
-                </div>
-                <span class="text-[9px] font-extrabold text-blue-600 bg-blue-200/50 px-1.5 py-0.5 rounded-md flex-shrink-0 flex items-center gap-0.5"><span class="material-symbols-outlined text-[10px]">event</span> iCal</span>
+            <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="px-1.5 py-1 rounded-lg border border-blue-200/80 bg-gradient-to-r from-blue-50 to-indigo-50/70 hover:from-blue-100 hover:to-indigo-100 text-blue-900 shadow-2xs hover:shadow-sm transition-all mb-1 group/badge cursor-pointer flex items-center justify-between gap-1 min-w-0 overflow-hidden leading-none" title="[${escapeHtml(b.source_label)}] ${escapeHtml(b.customer_name)}">
+              <div class="flex items-center gap-1 min-w-0 flex-1">
+                <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-600 flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
+                <span class="font-mono text-[9px] font-extrabold text-blue-700 bg-blue-100/90 px-1 py-0.5 rounded shrink-0">${escapeHtml(b.start_time.split(' - ')[0] || b.start_time)}</span>
+                <span class="font-bold text-[10px] text-on-surface truncate">${escapeHtml(b.customer_name || 'Charter Booking')}</span>
               </div>
-              <span class="font-bold text-[11px] text-on-surface truncate block min-w-0 w-full leading-normal pl-0.5">${escapeHtml(b.customer_name || 'Charter Booking')}</span>
+              <span class="text-[8px] font-extrabold text-blue-600 bg-blue-200/50 px-1 py-0.5 rounded shrink-0 flex items-center gap-0.5"><span class="material-symbols-outlined text-[9px]">event</span> iCal</span>
             </div>
           `;
         }
@@ -3792,15 +3790,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         return `
-          <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="p-1.5 sm:p-2 rounded-xl border text-[11px] font-bold transition-all mb-1.5 shadow-2xs hover:shadow-sm cursor-pointer flex flex-col gap-0.5 min-w-0 overflow-hidden leading-snug group/badge ${bgClass}" title="${b.start_time} - ${b.boat_name} (${b.customer_name})">
-            <div class="flex items-center justify-between gap-1 min-w-0 w-full">
-              <div class="flex items-center gap-1 min-w-0">
-                <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${dotColor} flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
-                <span class="font-mono text-[10px] font-extrabold bg-white/90 px-1.5 py-0.5 rounded-md truncate shadow-2xs text-on-surface">${b.start_time.split(' ')[0]}</span>
-              </div>
-              <span class="text-[8px] sm:text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-md flex-shrink-0 ${statusBadge}">${statusText}</span>
+          <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="px-1.5 py-1 rounded-lg border text-[10px] font-bold transition-all mb-1 shadow-2xs hover:shadow-sm cursor-pointer flex items-center justify-between gap-1 min-w-0 overflow-hidden leading-none group/badge ${bgClass}" title="${b.start_time} - ${b.boat_name} (${b.customer_name})">
+            <div class="flex items-center gap-1 min-w-0 flex-1">
+              <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${dotColor} flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
+              <span class="font-mono text-[9px] font-extrabold bg-white/90 px-1 py-0.5 rounded shrink-0 shadow-2xs text-on-surface">${b.start_time.split(' ')[0]}</span>
+              <span class="font-bold text-[10px] truncate">${escapeHtml(b.customer_name || b.boat_name)}</span>
             </div>
-            <span class="font-bold text-[11px] truncate block min-w-0 w-full leading-normal pl-0.5">${escapeHtml(b.customer_name || b.boat_name)}</span>
+            <span class="text-[8px] uppercase tracking-wider font-extrabold px-1 py-0.5 rounded shrink-0 ${statusBadge}">${statusText}</span>
           </div>
         `;
       }).join('');
@@ -3824,30 +3820,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         : '';
 
       cellsHtml += `
-        <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl sm:rounded-2xl min-h-[58px] sm:min-h-[160px] p-1.5 sm:p-3 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
+        <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl sm:rounded-2xl min-h-[58px] sm:min-h-[88px] lg:min-h-[96px] p-1.5 sm:p-2 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
           <div class="min-w-0 flex-1 flex flex-col justify-between">
             <div class="flex items-center justify-between gap-1 min-w-0">
               <div class="flex items-center gap-1 min-w-0">
-                <span class="inline-flex items-center justify-center w-5 h-5 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl font-label text-[11px] sm:text-xs font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
+                <span class="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-lg sm:rounded-xl font-label text-[11px] sm:text-xs font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
                   ${day}
                 </span>
-                ${isToday ? `<span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary text-white font-black text-[9px] uppercase tracking-wider shadow-2xs shrink-0">Today</span>` : ''}
+                ${isToday ? `<span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary text-white font-black text-[8px] uppercase tracking-wider shadow-2xs shrink-0">Today</span>` : ''}
               </div>
               <div class="flex items-center gap-1 shrink-0 ml-auto">
                 ${weatherBadge}
-                ${allEvents.length > 0 ? `<span class="hidden sm:inline-flex text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 shadow-2xs shrink-0">${allEvents.length}</span>` : ''}
+                ${allEvents.length > 0 ? `<span class="hidden sm:inline-flex text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 shadow-2xs shrink-0">${allEvents.length}</span>` : ''}
               </div>
             </div>
             
-            <!-- Desktop Detailed Event Badges -->
-            <div class="hidden sm:block space-y-1 overflow-y-auto max-h-[110px] pr-0.5 scrollbar-thin min-w-0 mt-2">
-              ${badgesHtml || `<div class="pt-6 text-center opacity-0 group-hover/cell:opacity-100 transition-opacity"><span class="text-[10px] font-bold text-on-surface-variant/60 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-xs">add_circle</span> Add Booking</span></div>`}
+            <!-- Desktop Detailed Event Badges (Compact Single Line) -->
+            <div class="hidden sm:block space-y-1 overflow-y-auto max-h-[56px] pr-0.5 scrollbar-thin min-w-0 mt-1">
+              ${badgesHtml || `<div class="pt-2 text-center opacity-0 group-hover/cell:opacity-100 transition-opacity"><span class="text-[9px] font-bold text-on-surface-variant/60 flex items-center justify-center gap-0.5"><span class="material-symbols-outlined text-[11px]">add_circle</span> Add Booking</span></div>`}
             </div>
 
             <!-- Mobile Compact Indicator Pill -->
             ${mobileIndicator}
           </div>
-          ${allEvents.length === 0 ? `<div class="hidden sm:block mt-auto text-right opacity-30 group-hover/cell:opacity-60 transition-opacity shrink-0"><span class="text-[10px] font-mono font-bold text-on-surface-variant/60">No events</span></div>` : ''}
+          ${allEvents.length === 0 ? `<div class="hidden sm:block mt-auto text-right opacity-30 group-hover/cell:opacity-60 transition-opacity shrink-0"><span class="text-[9px] font-mono font-bold text-on-surface-variant/60">No events</span></div>` : ''}
         </div>
       `;
     }
