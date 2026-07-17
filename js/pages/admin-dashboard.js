@@ -2861,7 +2861,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       const boats = fleetCache || [];
       const cleanFilter = filter.replace('Select Yacht...', '').trim();
-      const filtered = boats.filter(b => (b.name || '').toLowerCase().includes(cleanFilter.toLowerCase()) || (b.capacity && String(b.capacity).includes(cleanFilter)));
+      const filtered = boats
+        .filter(b => (b.name || '').toLowerCase().includes(cleanFilter.toLowerCase()) || (b.capacity && String(b.capacity).includes(cleanFilter)))
+        .sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
       
       if (countEl) {
         countEl.textContent = `${filtered.length} ${filtered.length === 1 ? 'Yacht' : 'Yachts'}`;
@@ -3888,11 +3890,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           ? 'bg-surface-container-low/50 hover:bg-surface-container-lowest border border-outline-variant/40 hover:border-outline-variant/80 shadow-2xs opacity-70 hover:opacity-95'
           : 'bg-white hover:bg-surface-container-lowest/90 border border-outline-variant/70 hover:border-secondary/50 shadow-xs hover:shadow-md';
 
+      const hasEvents = allEvents.length > 0;
+
       const dayNumBg = isToday 
         ? 'bg-secondary text-white shadow-sm' 
         : isPast
-          ? 'bg-surface-container-high/50 text-on-surface-variant/70 group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary'
-          : 'bg-surface-container text-on-surface group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary';
+          ? (hasEvents
+              ? 'bg-green-200/80 text-green-900 group-hover/cell:bg-green-300 group-hover/cell:text-green-950'
+              : 'bg-surface-container-high/50 text-on-surface-variant/70 group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary')
+          : (hasEvents
+              ? 'bg-green-100 text-green-900 shadow-sm ring-1 ring-green-300 group-hover/cell:bg-green-200 group-hover/cell:text-green-950'
+              : 'bg-surface-container text-on-surface group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary');
 
       if (isMobileView) {
         cellsHtml += `
