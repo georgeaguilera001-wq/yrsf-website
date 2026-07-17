@@ -63,12 +63,27 @@ export async function getBoats({
 
     query = query.range(offset, offset + limit - 1);
 
-    const { data, error, count } = await query;
+    let { data, error, count } = await query;
 
-    if (error) {
-      console.error('Error fetching boats:', error);
-      return { data: [], count: 0 };
+    if (error || !data || data.length === 0) {
+      console.warn('Main join query returned empty or error, falling back to direct boats table query:', error);
+      const fb = await supabase.from('boats').select('*').eq('status', 'active').order('sort_order', { ascending: true });
+      if (fb.data && fb.data.length > 0) {
+        data = fb.data;
+        count = fb.data.length;
+        // Fetch prices separately to ensure pricing shows
+        try {
+          const { data: allPrices } = await supabase.from('boat_prices').select('*');
+          const { data: allImages } = await supabase.from('boat_images').select('*');
+          data.forEach(b => {
+            b.boat_prices = (allPrices || []).filter(p => p.boat_id === b.id);
+            b.boat_images = (allImages || []).filter(i => i.boat_id === b.id);
+          });
+        } catch (e) {}
+      }
     }
+
+    if (!data) return { data: [], count: 0 };
 
     // Flatten the data
     const boats = (data || []).map(boat => ({
@@ -149,7 +164,7 @@ export async function getFeaturedBoats(limit = 6) {
       return [];
     }
 
-    return (data || []).map(boat => ({
+    const result = (data || []).map(boat => ({
       ...boat,
       primary_image_url: boat.boat_images?.[0]?.url || '',
       primary_image_alt: boat.boat_images?.[0]?.alt_text || boat.name,
@@ -160,6 +175,12 @@ export async function getFeaturedBoats(limit = 6) {
         ? boat.boat_prices.reduce((min, p) => p.price < min.price ? p : min, boat.boat_prices[0]).duration_label
         : ''
     }));
+
+    try {
+      localStorage.setItem('yrsf_featured_boats', JSON.stringify(result));
+    } catch(e) {}
+
+    return result;
   });
 }
 
