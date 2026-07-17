@@ -65,6 +65,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       btn.classList.remove('text-on-surface-variant', 'hover:bg-surface-container');
     }
 
+    // Sync mobile bottom navigation highlights
+    document.querySelectorAll('.mobile-bottom-nav-item').forEach(item => {
+      if (item.dataset.bottomSection === sectionId) {
+        item.classList.add('text-secondary', 'font-bold');
+        item.classList.remove('text-on-surface-variant');
+      } else {
+        item.classList.remove('text-secondary', 'font-bold');
+        item.classList.add('text-on-surface-variant');
+      }
+    });
+
     // Close mobile sidebar
     sidebar?.classList.remove('open');
     sidebarOverlay?.classList.remove('active');
@@ -72,6 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load section data
     loadSectionData(sectionId);
   }
+  window.showAdminSection = showSection;
 
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => showSection(btn.dataset.section));
