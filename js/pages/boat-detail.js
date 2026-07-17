@@ -51,7 +51,7 @@ async function initBoatDetailPage() {
     console.error('Error loading boat:', error);
     show404();
   }
-});
+}
 
 function show404() {
   const main = $('main');
