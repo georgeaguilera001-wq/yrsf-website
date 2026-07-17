@@ -13,6 +13,7 @@ let currentSocialTab = 'composer';
 let currentPhonePlatform = 'ig';
 let currentCalendarDate = new Date();
 let selectedMediaUrls = [];
+let allFleetPhotos = [];
 
 export async function initSocialHub() {
   await loadZapierSettings();
@@ -26,6 +27,9 @@ export async function initSocialHub() {
   window.updateSocialPhonePreview = updateSocialPhonePreview;
   window.loadYachtMediaForSocial = loadYachtMediaForSocial;
   window.promptAddSocialMediaUrl = promptAddSocialMediaUrl;
+  window.openSocialFleetGalleryModal = openSocialFleetGalleryModal;
+  window.filterSocialFleetGallery = filterSocialFleetGallery;
+  window.handleSocialGalleryUpload = handleSocialGalleryUpload;
   window.applyAiSocialTemplate = applyAiSocialTemplate;
   window.setSchedulePreset = setSchedulePreset;
   window.saveSocialPost = saveSocialPost;
@@ -274,6 +278,7 @@ function toggleSocialMediaUrl(url) {
   if (selectEl && selectEl.value) {
     loadYachtMediaForSocial(selectEl.value);
   }
+  renderSocialFleetGalleryGrid();
 }
 
 function promptAddSocialMediaUrl() {
@@ -287,6 +292,167 @@ function promptAddSocialMediaUrl() {
 function renderMediaGrid() {
   const countEl = document.getElementById('social-media-count');
   if (countEl) countEl.textContent = selectedMediaUrls.length;
+
+  const selectEl = document.getElementById('social-yacht-select');
+  const gridEl = document.getElementById('social-media-grid');
+  // If no yacht is actively selected in the dropdown, display the currently attached media directly in #social-media-grid
+  if ((!selectEl || !selectEl.value) && gridEl) {
+    if (selectedMediaUrls.length === 0) {
+      gridEl.innerHTML = '<p class="col-span-full text-[11px] text-on-surface-variant py-3 text-center">Select a yacht above, browse your fleet photos, or click "Add from My Gallery" to upload straight from your device.</p>';
+    } else {
+      gridEl.innerHTML = selectedMediaUrls.map((url, idx) => `
+        <div onclick="window.toggleSocialMediaUrl('${url}')" class="relative aspect-square rounded-lg overflow-hidden border-2 border-secondary ring-2 ring-secondary cursor-pointer group transition-all">
+          <img src="${url}" alt="Attached Photo" class="w-full h-full object-cover transition-transform group-hover:scale-105"/>
+          <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span class="material-symbols-outlined text-white text-xl">remove_circle</span>
+          </div>
+          <span class="absolute top-1 right-1 bg-secondary text-on-secondary rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold">✔</span>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+// ─── Cloud & Device Gallery Handlers ─────────────────────────────────────────
+async function openSocialFleetGalleryModal() {
+  const modal = document.getElementById('social-fleet-gallery-modal');
+  if (modal) modal.classList.remove('hidden');
+
+  const gridEl = document.getElementById('social-fleet-gallery-grid');
+  const filterEl = document.getElementById('social-gallery-filter-boat');
+  if (gridEl && allFleetPhotos.length === 0) {
+    gridEl.innerHTML = '<div class="col-span-full py-12 text-center text-on-surface-variant"><span class="admin-spinner inline-block mr-2"></span> Loading all fleet photos...</div>';
+  }
+
+  try {
+    const { data: boats } = await supabase.from('boats').select('id, name, image_url');
+    const { data: images } = await supabase.from('boat_images').select('url, boat_id, is_primary');
+
+    const boatMap = {};
+    if (boats) {
+      boats.forEach(b => { boatMap[b.id] = b.name; });
+    }
+
+    allFleetPhotos = [];
+    if (images && images.length > 0) {
+      images.forEach(img => {
+        allFleetPhotos.push({
+          url: img.url,
+          boat_id: img.boat_id,
+          boat_name: boatMap[img.boat_id] || 'Fleet Yacht'
+        });
+      });
+    }
+
+    // Also include primary boat images
+    if (boats) {
+      boats.forEach(b => {
+        if (b.image_url && !allFleetPhotos.some(p => p.url === b.image_url)) {
+          allFleetPhotos.push({ url: b.image_url, boat_id: b.id, boat_name: b.name });
+        }
+      });
+    }
+
+    // Populate filter select
+    if (filterEl && boats) {
+      filterEl.innerHTML = '<option value="all">Show All Photos Across All Boats</option>' +
+        boats.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    }
+  } catch (err) {
+    // Keep local cache if any
+  }
+
+  renderSocialFleetGalleryGrid();
+}
+
+function filterSocialFleetGallery() {
+  renderSocialFleetGalleryGrid();
+}
+
+function renderSocialFleetGalleryGrid() {
+  const gridEl = document.getElementById('social-fleet-gallery-grid');
+  const filterEl = document.getElementById('social-gallery-filter-boat');
+  const countEl = document.getElementById('social-gallery-selected-count');
+
+  if (countEl) countEl.textContent = selectedMediaUrls.length;
+  if (!gridEl) return;
+
+  const filterBoat = filterEl ? filterEl.value : 'all';
+  let filtered = allFleetPhotos;
+  if (filterBoat !== 'all') {
+    filtered = allFleetPhotos.filter(p => p.boat_id === filterBoat);
+  }
+
+  if (filtered.length === 0) {
+    gridEl.innerHTML = '<div class="col-span-full py-12 text-center text-on-surface-variant">No photos found across your fleet gallery yet. Click "Upload New from Device" above!</div>';
+    return;
+  }
+
+  gridEl.innerHTML = filtered.map(item => {
+    const isSelected = selectedMediaUrls.includes(item.url);
+    return `
+      <div onclick="window.toggleSocialMediaUrl('${item.url}')" class="relative aspect-square rounded-xl overflow-hidden border-2 ${isSelected ? 'border-secondary ring-2 ring-secondary' : 'border-outline-variant'} cursor-pointer group transition-all bg-black/20">
+        <img src="${item.url}" alt="${item.boat_name}" class="w-full h-full object-cover transition-transform group-hover:scale-105"/>
+        <div class="absolute inset-0 bg-black/40 flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity">
+          <span class="material-symbols-outlined text-white text-2xl">${isSelected ? 'check_circle' : 'add_circle'}</span>
+        </div>
+        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-1.5 text-[10px] text-white font-bold truncate">
+          ${item.boat_name}
+        </div>
+        ${isSelected ? '<span class="absolute top-1.5 right-1.5 bg-secondary text-on-secondary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md">✔</span>' : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function handleSocialGalleryUpload(event) {
+  const files = Array.from(event.target.files || []);
+  if (files.length === 0) return;
+
+  if (window.showToast) window.showToast(`Uploading ${files.length} file(s) from your device gallery...`, 'info', 4000);
+
+  for (const file of files) {
+    // Create instant local preview while uploading
+    const tempUrl = URL.createObjectURL(file);
+    selectedMediaUrls.push(tempUrl);
+    renderMediaGrid();
+    updateSocialPhonePreview();
+
+    try {
+      const cleanName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+      const fileName = `social_${Date.now()}_${Math.random().toString(36).substring(2, 6)}_${cleanName}`;
+      const filePath = `boats/${fileName}`;
+      const contentType = file.type || (file.name.match(/\.(mp4|mov|webm)$/i) ? 'video/mp4' : 'image/jpeg');
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false, contentType });
+
+      if (uploadError) throw new Error(uploadError.message);
+
+      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
+
+      // Replace temp preview with permanent Supabase URL
+      const idx = selectedMediaUrls.indexOf(tempUrl);
+      if (idx !== -1) {
+        selectedMediaUrls[idx] = publicUrl;
+      } else {
+        selectedMediaUrls.push(publicUrl);
+      }
+
+      allFleetPhotos.unshift({
+        url: publicUrl,
+        boat_name: 'Uploaded from Device'
+      });
+    } catch (err) {
+      if (window.showToast) window.showToast(`Note: Uploading ${file.name} directly to Supabase encountered a note (${err.message}). Using local browser preview.`, 'info');
+    }
+  }
+
+  renderMediaGrid();
+  updateSocialPhonePreview();
+  renderSocialFleetGalleryGrid();
+  if (window.showToast) window.showToast('✅ Gallery media attached successfully!', 'success');
 }
 
 // ─── Live iPhone Smartphone Preview (`ig` vs `tk`) ───────────────────────────

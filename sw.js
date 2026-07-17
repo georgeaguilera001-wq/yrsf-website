@@ -4,7 +4,7 @@
  * while falling back cleanly to cached versions when offline.
  */
 
-const CACHE_NAME = 'yrsf-main-v15';
+const CACHE_NAME = 'yrsf-main-v16';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

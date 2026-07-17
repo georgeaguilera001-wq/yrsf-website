@@ -877,14 +877,21 @@
                   <label class="text-xs font-bold text-on-surface flex items-center gap-1">
                     <span class="material-symbols-outlined text-sm">perm_media</span> Attached Media (<span id="social-media-count">0</span>)
                   </label>
-                  <div class="flex gap-1.5">
-                    <button type="button" onclick="window.promptAddSocialMediaUrl()" class="px-2.5 py-1 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-lg text-[11px] font-bold border border-outline-variant transition-colors flex items-center gap-1 cursor-pointer">
+                  <div class="flex gap-1.5 flex-wrap">
+                    <input type="file" id="social-gallery-upload-input" accept="image/*,video/*" multiple class="hidden" onchange="window.handleSocialGalleryUpload(event)" />
+                    <button type="button" onclick="document.getElementById('social-gallery-upload-input').click()" class="px-3 py-1.5 bg-secondary text-on-secondary hover:opacity-90 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs">
+                      <span class="material-symbols-outlined text-xs">photo_library</span> Add from My Gallery
+                    </button>
+                    <button type="button" onclick="window.openSocialFleetGalleryModal()" class="px-2.5 py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-lg text-[11px] font-bold border border-outline-variant transition-colors flex items-center gap-1 cursor-pointer">
+                      <span class="material-symbols-outlined text-xs">grid_view</span> Browse All Fleet Photos
+                    </button>
+                    <button type="button" onclick="window.promptAddSocialMediaUrl()" class="px-2.5 py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-lg text-[11px] font-bold border border-outline-variant transition-colors flex items-center gap-1 cursor-pointer">
                       <span class="material-symbols-outlined text-xs">link</span> Add URL
                     </button>
                   </div>
                 </div>
                 <div id="social-media-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 p-2 bg-surface-container rounded-xl border border-outline-variant min-h-[80px]">
-                  <p class="col-span-full text-[11px] text-on-surface-variant py-3 text-center">Select a yacht above or click "Add URL" to attach high-res images and reels.</p>
+                  <p class="col-span-full text-[11px] text-on-surface-variant py-3 text-center">Select a yacht above, browse your fleet photos, or click "Add from My Gallery" to upload straight from your device.</p>
                 </div>
               </div>
             </div>
@@ -1069,6 +1076,41 @@
           </div>
         </div>
       </section>
+
+      <!-- Social Fleet Gallery Modal -->
+      <div id="social-fleet-gallery-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-3xl max-w-3xl w-full p-6 shadow-2xl flex flex-col gap-5 relative max-h-[90vh] overflow-hidden">
+          <div class="flex items-center justify-between border-b border-outline-variant pb-3 shrink-0">
+            <div>
+              <h3 class="font-headline text-headline-md text-on-surface font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary text-2xl">photo_library</span> All Fleet &amp; Gallery Photos
+              </h3>
+              <p class="font-body text-caption text-on-surface-variant">Pick from all imported Google Drive, Dropbox, and yacht photos across your entire fleet.</p>
+            </div>
+            <button type="button" onclick="document.getElementById('social-fleet-gallery-modal').classList.add('hidden')" class="text-on-surface-variant hover:text-on-surface p-1 rounded-lg">&times;</button>
+          </div>
+
+          <div class="flex items-center gap-3 shrink-0">
+            <select id="social-gallery-filter-boat" onchange="window.filterSocialFleetGallery()" class="admin-field px-3 py-2 border border-outline-variant rounded-xl text-xs font-body text-on-surface bg-surface flex-1">
+              <option value="all">Show All Photos Across All Boats</option>
+            </select>
+            <button type="button" onclick="document.getElementById('social-gallery-upload-input').click()" class="px-3.5 py-2 bg-secondary text-on-secondary hover:opacity-90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0">
+              <span class="material-symbols-outlined text-sm">upload</span> Upload New from Device
+            </button>
+          </div>
+
+          <div id="social-fleet-gallery-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 overflow-y-auto flex-1 p-2 bg-surface-container/50 rounded-2xl border border-outline-variant min-h-[320px] max-h-[500px]">
+            <div class="col-span-full py-12 text-center text-on-surface-variant"><span class="admin-spinner inline-block mr-2"></span> Loading all fleet photos...</div>
+          </div>
+
+          <div class="flex items-center justify-between border-t border-outline-variant pt-4 shrink-0">
+            <span class="text-xs font-bold text-on-surface"><span id="social-gallery-selected-count">0</span> photo(s) selected</span>
+            <button type="button" onclick="document.getElementById('social-fleet-gallery-modal').classList.add('hidden'); window.updateSocialPhonePreview();" class="px-6 py-2.5 bg-secondary text-on-secondary hover:opacity-90 rounded-xl text-xs font-bold transition-all shadow-sm">
+              Done &amp; Attach Selected Photos
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Zapier Setup & Test Modal -->
       <div id="zapier-setup-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
@@ -1908,7 +1950,7 @@
   </div>
 
   <div id="toast-container" class="toast-container"></div>
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260717_social_studio"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260717_social_studio_gallery"></script>
   <script>
     // ── Sidebar Drag-and-Drop Reordering ─────────────────────────────────────
     (function() {
