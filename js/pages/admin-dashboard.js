@@ -422,9 +422,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('stat-addons').textContent = addons.count || 0;
       document.getElementById('stat-testimonials').textContent = testimonials.count || 0;
       document.getElementById('stat-faqs').textContent = faqs.count || 0;
-
-      if (typeof window.initRevenueSection === 'function') await window.initRevenueSection();
-      if (typeof window.initReviewsSection === 'function') await window.initReviewsSection();
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }

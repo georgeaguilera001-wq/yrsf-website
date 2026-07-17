@@ -387,86 +387,86 @@
             </a>
           </div>
         </div>
+      </section>
 
-        <!-- Embedded Revenue & Analytics -->
-        <div class="mt-8 pt-8 border-t border-outline-variant">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h2 class="font-headline text-headline-md text-on-surface font-bold">Revenue &amp; Financial Analytics</h2>
-              <p class="font-body text-body-sm text-on-surface-variant">Live performance, collections, and booking trends</p>
-            </div>
-            <div>
-              <select id="revenue-year-filter" class="border border-outline-variant rounded-lg px-3 py-1.5 text-xs font-bold bg-surface-container-lowest">
-                <option value="2026">2026</option>
-                <option value="2025">2025</option>
-              </select>
+      <!-- Standalone Revenue & Financial Analytics Section -->
+      <section class="admin-section hidden" id="section-revenue">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Revenue &amp; Financial Analytics</h1>
+            <p class="font-body text-body-md text-on-surface-variant mt-1">Live performance, collections, and booking trends</p>
+          </div>
+          <div>
+            <select id="revenue-year-filter" class="border border-outline-variant rounded-xl px-4 py-2 text-sm font-bold bg-surface-container-lowest shadow-sm">
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+        </div>
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="revenue-kpi-cards">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-2xs">
+            <p class="text-xs text-on-surface-variant font-bold mb-1">Total Revenue YTD</p>
+            <p id="kpi-revenue-ytd" class="text-2xl font-bold text-green-700">$0</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-2xs">
+            <p class="text-xs text-on-surface-variant font-bold mb-1">Avg Booking Value</p>
+            <p id="kpi-avg-booking" class="text-2xl font-bold text-secondary">$0</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-2xs">
+            <p class="text-xs text-on-surface-variant font-bold mb-1">Total Bookings</p>
+            <p id="kpi-total-bookings" class="text-2xl font-bold text-blue-700">0</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-2xs">
+            <p class="text-xs text-on-surface-variant font-bold mb-1">Outstanding Balance</p>
+            <p id="kpi-outstanding" class="text-2xl font-bold text-amber-700">$0</p>
+          </div>
+        </div>
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm">
+            <h3 class="font-headline font-bold text-sm mb-4">Monthly Revenue (Last 12 Months)</h3>
+            <div class="relative h-64 w-full">
+              <canvas id="chart-monthly-revenue"></canvas>
             </div>
           </div>
-          <!-- KPI Cards -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="revenue-kpi-cards">
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-              <p class="text-xs text-on-surface-variant font-bold mb-1">Total Revenue YTD</p>
-              <p id="kpi-revenue-ytd" class="text-2xl font-bold text-green-700">$0</p>
-            </div>
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-              <p class="text-xs text-on-surface-variant font-bold mb-1">Avg Booking Value</p>
-              <p id="kpi-avg-booking" class="text-2xl font-bold text-secondary">$0</p>
-            </div>
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-              <p class="text-xs text-on-surface-variant font-bold mb-1">Total Bookings</p>
-              <p id="kpi-total-bookings" class="text-2xl font-bold text-blue-700">0</p>
-            </div>
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-              <p class="text-xs text-on-surface-variant font-bold mb-1">Outstanding Balance</p>
-              <p id="kpi-outstanding" class="text-2xl font-bold text-amber-700">$0</p>
-            </div>
-          </div>
-          <!-- Charts -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-              <h3 class="font-headline font-bold text-sm mb-4">Monthly Revenue (Last 12 Months)</h3>
-              <div class="relative h-64 w-full">
-                <canvas id="chart-monthly-revenue"></canvas>
-              </div>
-            </div>
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-              <h3 class="font-headline font-bold text-sm mb-4">Top Performing Boats</h3>
-              <div class="relative h-64 w-full">
-                <canvas id="chart-top-boats"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-              <h3 class="font-headline font-bold text-sm mb-4">Bookings by Day of Week</h3>
-              <div class="relative h-64 w-full">
-                <canvas id="chart-day-of-week"></canvas>
-              </div>
-            </div>
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-              <h3 class="font-headline font-bold text-sm mb-4">Income vs. Deposits Collected</h3>
-              <div class="relative h-64 w-full">
-                <canvas id="chart-income-vs-deposits"></canvas>
-              </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm">
+            <h3 class="font-headline font-bold text-sm mb-4">Top Performing Boats</h3>
+            <div class="relative h-64 w-full">
+              <canvas id="chart-top-boats"></canvas>
             </div>
           </div>
         </div>
-
-        <!-- Embedded Reviews Manager -->
-        <div class="pt-8 border-t border-outline-variant">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h2 class="font-headline text-headline-md text-on-surface font-bold">Customer Reviews Moderation</h2>
-              <p class="font-body text-body-sm text-on-surface-variant">Approve or reject customer reviews submitted on the website</p>
-            </div>
-            <div class="flex gap-2">
-              <button id="reviews-filter-pending" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold">Pending</button>
-              <button id="reviews-filter-approved" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Approved</button>
-              <button id="reviews-filter-all" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">All</button>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm">
+            <h3 class="font-headline font-bold text-sm mb-4">Bookings by Day of Week</h3>
+            <div class="relative h-64 w-full">
+              <canvas id="chart-day-of-week"></canvas>
             </div>
           </div>
-          <div id="reviews-list" class="flex flex-col gap-3"><p class="text-center text-on-surface-variant py-8 text-sm">Loading reviews...</p></div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm">
+            <h3 class="font-headline font-bold text-sm mb-4">Income vs. Deposits Collected</h3>
+            <div class="relative h-64 w-full">
+              <canvas id="chart-income-vs-deposits"></canvas>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <!-- Standalone Reviews Manager Section -->
+      <section class="admin-section hidden" id="section-reviews">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Customer Reviews Moderation</h1>
+            <p class="font-body text-body-md text-on-surface-variant mt-1">Approve or reject customer reviews submitted on the website</p>
+          </div>
+          <div class="flex gap-2">
+            <button id="reviews-filter-pending" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold shadow-2xs">Pending</button>
+            <button id="reviews-filter-approved" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Approved</button>
+            <button id="reviews-filter-all" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">All</button>
+          </div>
+        </div>
+        <div id="reviews-list" class="flex flex-col gap-3"><p class="text-center text-on-surface-variant py-8 text-sm">Loading reviews...</p></div>
       </section>
 
       <!-- Fleet Section -->
@@ -1822,17 +1822,9 @@
           <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">settings</span>
           <span class="font-label text-[11px] font-bold text-on-surface truncate">Site Config</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('whatsapp')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">smart_toy</span>
-          <span class="font-label text-[11px] font-bold text-on-surface truncate">WhatsApp Bot</span>
-        </button>
         <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('reviews')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
           <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">star</span>
           <span class="font-label text-[11px] font-bold text-on-surface truncate">Reviews</span>
-        </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('navigation')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">menu_open</span>
-          <span class="font-label text-[11px] font-bold text-on-surface truncate">Navigation</span>
         </button>
         <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('faqs')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
           <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">quiz</span>
