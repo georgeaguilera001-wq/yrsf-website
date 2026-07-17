@@ -783,6 +783,23 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
             </div>
             <p class="text-xs text-on-surface-variant mb-3">Upload multiple photos/videos from your device or gallery. Drag thumbnails left/right to reorder. First item is used as the cover media.</p>
+            
+            <div class="bg-surface-container p-3 rounded-xl border border-outline-variant mb-3 flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <label class="block font-label text-xs font-bold text-secondary flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">cloud_sync</span> Import Directly from Google Drive or Dropbox Folder
+                </label>
+                <span id="cloud-import-status" class="text-xs font-bold text-on-surface-variant"></span>
+              </div>
+              <div class="flex gap-2 flex-col sm:flex-row">
+                <input type="text" id="edit-boat-photo-link" value="${escapeHtml(boat?.photo_link || '')}" placeholder="Paste Google Drive or Dropbox shared folder link here..." class="admin-field flex-1 px-3 py-2 border border-outline-variant rounded-lg font-body text-xs text-on-surface bg-surface-container-lowest focus:ring-secondary focus:border-secondary"/>
+                <button type="button" id="import-cloud-folder-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-sm cursor-pointer">
+                  <span class="material-symbols-outlined text-sm">download</span> Pull All Photos Now
+                </button>
+              </div>
+              <p class="text-[10px] text-on-surface-variant leading-tight">No need to download files to your computer! Paste the folder link and click "Pull All Photos Now" to transfer all pictures from Drive/Dropbox straight into this yacht's gallery below.</p>
+            </div>
+
             <div id="photo-manager-grid" class="flex gap-3 overflow-x-auto pb-2 min-h-[90px]">
               <!-- Photos injected via JS -->
             </div>
@@ -1126,6 +1143,138 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
     }
 
+    const importCloudBtn = document.getElementById('import-cloud-folder-btn');
+    const cloudInput = document.getElementById('edit-boat-photo-link');
+    const cloudStatus = document.getElementById('cloud-import-status');
+
+    if (importCloudBtn && cloudInput) {
+      importCloudBtn.onclick = async () => {
+        let link = cloudInput.value.trim();
+        if (!link) {
+          showToast('Please paste a Google Drive or Dropbox shared folder link first.', 'warning');
+          cloudInput.focus();
+          return;
+        }
+        if (!link.startsWith('http')) link = 'https://' + link;
+
+        const GOOGLE_KEY = 'AIzaSyDtEp1y-e-nV6HYM6S8H4qDU1ksb8DMFvM';
+        const DROPBOX_TOKEN = 'sl.u.AGm6WinlTqCFquxpAf1_xj2ARVpzJXIGR2TohkEigLGF8isnoQY4G3Up5mpTmnk5RyWSOtdexvCoa-2-Eskc2zgHunnrz0mnjUm221Z9HOfIczNYpfNEpFnxC2NirAiNnuljMhpxXu1oczuBg8BG78iaAujDJ8XuKt_q1gq99sGV7tKFMA2HP4JDNcqQgvNiOa-4WcPO-mJ3vjkqSvEjbKGzEcV9QSTf0EqJopzk7OyUGk_OheQAfECFJuiY056049zgHtljsoiRiflZCEuGNy1NWyoBnGFwZwwA5ramI1rDYovy_p09zikTkMSA9ycsnTPsF4gz6HB48ZLpxHX7Ek_0Y_CZhdMh5CuqgRyO1pomjHqpHF9mqKDxsNE5mkyeZL0Whoy5XgMI2Mta-wS-kNQ--TluTlRr1i-kvmIHgg1QiBWiMMPwsaGAHTfZ9iJ2ZDSZkJU1kt2I1WKSePBLXRe2eM7yJK_Z1rYHs6Q1oNNq40Dm6zlx_MGeO-0lH9JQ802_NNr9TCMOd_ws_HVGlD2njGCpNnNsBpx-x2D6mtmnGAVvlGRj6DEbtPGQVR6P0iNMpRWu21RbRRoyUcmjC1a4gZ6Ae8XCfuzKBz4a0t3pd7njZ-IymPMBsgeFM1a6H0kwP9dANSA8h8QLnIdYNoV6LwW6hIqYcIC64tyxvQ1R-4pEQLB1SAA82crhY3HAu2E02LxbdgWI3yALN1HB578q3znhNO4cjPbIY7lyd0BM2e2OwzjRJg0nSHFBAhzOIBlqr4WrytYbOrJcgpJKM6f_zUwLwpzWf_PTwYBqwmW4lKD94OCdZwy28lMP2oL1TqTfUDzKOVv2MX6fKO9-DcVY0Pc-ua3ee5BHSohycB8Dgckq6df6Bdp-CneJ1E6-VV04GPE2oBJJlJ5cQ184APjxMYJ_JJmKtLCs5PxyQK4hSpSbdgp4kboxfroL2g8dKjxn0vTwlzPiKxZuXFziuLLiUDG5PQ350Z2fMZPrzqIrVz2GRy6aT9AdgACUyNNiBovB8SyieLIo9KuwFQV3c5TUuY_a0IsB_JEhYfn0pHEYiCbOnKUGddPXXvd1HjdtvY_QI-4l0zsHuGJ5D4xsPtvFsbp3hjcijG3HiB2ytCu4iAmOYLGO770PmHlFxQR6jWjZZoB9ebJ-KW8YOkpdaUnLO8gQklMRnL8lGfh1qR9A_yiewqT3D22K6TolOEb-ZKdG1y6hoFs4Do2I9S-ssGbZ6fyyfrzIW-W8279LQBAf-_FZGurpQGLIdKgybgjGyCiqljLcsc9u4YzHBoC7xbBqdCds4xMAWlwNprP40m6rvZFpBDPDiWaVJKJ4N2vB38I7z2-Nv1NF2NpPZgQGxLoaxbw2w7xNAPikvmstXRdcPib15lzPMBS37DxdOpIJjeVDfC0j5Tm6OJQeprsoVGt8IPbuYOIWJmrizs66cJkT18LjP0MksJmk-y3mZm9FTK2tZJRCwtRoSuqn_yb-xtO0';
+
+        importCloudBtn.disabled = true;
+        const originalBtnHtml = importCloudBtn.innerHTML;
+        importCloudBtn.innerHTML = `<span class="admin-spinner w-4 h-4"></span> Connecting...`;
+        if (cloudStatus) cloudStatus.textContent = 'Scanning cloud folder...';
+
+        try {
+          let files = [];
+          if (link.includes('drive.google.com')) {
+            const match = link.match(/folders\/([a-zA-Z0-9_-]+)/);
+            if (!match) throw new Error('Could not extract folder ID from Google Drive URL. Ensure it looks like https://drive.google.com/drive/folders/ABC...');
+            const folderId = match[1];
+            const res = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&fields=files(id,name,mimeType)&key=${GOOGLE_KEY}`);
+            if (!res.ok) throw new Error('Google Drive API error: ' + await res.text());
+            const data = await res.json();
+            files = (data.files || []).filter(f => f.mimeType.startsWith('image/')).map(f => ({
+              name: f.name,
+              downloadFn: async () => {
+                const dlRes = await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}?alt=media&key=${GOOGLE_KEY}`);
+                if (!dlRes.ok) throw new Error('Drive download failed');
+                return await dlRes.blob();
+              }
+            }));
+          } else if (link.includes('dropbox.com')) {
+            const res = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${DROPBOX_TOKEN}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ path: "", shared_link: { url: link } })
+            });
+            if (!res.ok) throw new Error('Dropbox error: Make sure the link is a valid public shared folder');
+            const data = await res.json();
+            files = (data.entries || []).filter(f => f['.tag'] === 'file' && f.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)).map(f => ({
+              name: f.name,
+              downloadFn: async () => {
+                const dlRes = await fetch('https://content.dropboxapi.com/2/sharing/get_shared_link_file', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${DROPBOX_TOKEN}`,
+                    'Dropbox-API-Arg': JSON.stringify({ url: link, path: "/" + f.name })
+                  }
+                });
+                if (!dlRes.ok) throw new Error('Dropbox file download failed');
+                return await dlRes.blob();
+              }
+            }));
+          } else {
+            throw new Error('Please enter a valid Google Drive or Dropbox folder URL.');
+          }
+
+          if (files.length === 0) {
+            throw new Error('No image files found in that cloud folder.');
+          }
+
+          showToast(`Pulling ${files.length} images from cloud directly...`, 'info', 5000);
+          if (cloudStatus) cloudStatus.textContent = `Transferring 0 / ${files.length}...`;
+
+          let count = 0;
+          for (const file of files) {
+            count++;
+            if (cloudStatus) cloudStatus.textContent = `Transferring ${count} / ${files.length}...`;
+            importCloudBtn.innerHTML = `<span class="admin-spinner w-4 h-4"></span> ${count}/${files.length}`;
+            
+            const tempPreview = 'https://placehold.co/200x200/1e293b/38bdf8?text=Loading+' + count;
+            const tempItem = { url: tempPreview, uploading: true, file_name: file.name };
+            currentPhotos.push(tempItem);
+            renderPhotoManager();
+
+            try {
+              const blob = await file.downloadFn();
+              const cleanName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+              const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}-${cleanName}`;
+              const filePath = `boats/${fileName}`;
+              const contentType = blob.type || 'image/jpeg';
+
+              const { error: uploadError } = await supabase.storage
+                .from('images')
+                .upload(filePath, blob, { cacheControl: '3600', upsert: false, contentType });
+
+              if (uploadError) throw uploadError;
+
+              const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
+
+              const idx = currentPhotos.indexOf(tempItem);
+              if (idx !== -1) {
+                currentPhotos[idx] = { url: publicUrl };
+              }
+              renderPhotoManager();
+            } catch (err) {
+              console.error('Failed file:', file.name, err);
+              const idx = currentPhotos.indexOf(tempItem);
+              if (idx !== -1) currentPhotos.splice(idx, 1);
+              renderPhotoManager();
+            }
+          }
+
+          if (cloudStatus) {
+            cloudStatus.textContent = `✓ Imported ${files.length} photos!`;
+            cloudStatus.className = 'text-xs font-bold text-green-600';
+          }
+          showToast(`✓ Imported ${files.length} photos straight from the cloud! Remember to click Save Changes.`, 'success', 6000);
+        } catch (err) {
+          showToast(`⚠️ Cloud Import Error: ${err.message}`, 'error', 7000);
+          if (cloudStatus) {
+            cloudStatus.textContent = `Error: ${err.message}`;
+            cloudStatus.className = 'text-xs font-bold text-red-600';
+          }
+        } finally {
+          importCloudBtn.disabled = false;
+          importCloudBtn.innerHTML = originalBtnHtml;
+        }
+      };
+    }
+
     renderPhotoManager();
 
     // Pricing Tiers Logic
@@ -1213,7 +1362,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (u && !u.startsWith('http://') && !u.startsWith('https://')) u = 'https://' + u;
           return u;
         })(),
-        ical_feed_label: document.getElementById('edit-boat-ical-label')?.value.trim() || null
+        ical_feed_label: document.getElementById('edit-boat-ical-label')?.value.trim() || null,
+        photo_link: document.getElementById('edit-boat-photo-link')?.value.trim() || null
       };
 
       if (boatData.ical_feed_url && (boatData.ical_feed_url.includes('timetr.ee/s/') || boatData.ical_feed_url.includes('/invitations/'))) {
