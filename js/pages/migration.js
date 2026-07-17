@@ -2,7 +2,32 @@ import { requireAuth } from '../services/auth.js';
 import { supabase } from '../config/supabase.js';
 
 const GOOGLE_KEY = 'AIzaSyDtEp1y-e-nV6HYM6S8H4qDU1ksb8DMFvM';
-const DROPBOX_TOKEN = 'sl.u.AGm6WinlTqCFquxpAf1_xj2ARVpzJXIGR2TohkEigLGF8isnoQY4G3Up5mpTmnk5RyWSOtdexvCoa-2-Eskc2zgHunnrz0mnjUm221Z9HOfIczNYpfNEpFnxC2NirAiNnuljMhpxXu1oczuBg8BG78iaAujDJ8XuKt_q1gq99sGV7tKFMA2HP4JDNcqQgvNiOa-4WcPO-mJ3vjkqSvEjbKGzEcV9QSTf0EqJopzk7OyUGk_OheQAfECFJuiY056049zgHtljsoiRiflZCEuGNy1NWyoBnGFwZwwA5ramI1rDYovy_p09zikTkMSA9ycsnTPsF4gz6HB48ZLpxHX7Ek_0Y_CZhdMh5CuqgRyO1pomjHqpHF9mqKDxsNE5mkyeZL0Whoy5XgMI2Mta-wS-kNQ--TluTlRr1i-kvmIHgg1QiBWiMMPwsaGAHTfZ9iJ2ZDSZkJU1kt2I1WKSePBLXRe2eM7yJK_Z1rYHs6Q1oNNq40Dm6zlx_MGeO-0lH9JQ802_NNr9TCMOd_ws_HVGlD2njGCpNnNsBpx-x2D6mtmnGAVvlGRj6DEbtPGQVR6P0iNMpRWu21RbRRoyUcmjC1a4gZ6Ae8XCfuzKBz4a0t3pd7njZ-IymPMBsgeFM1a6H0kwP9dANSA8h8QLnIdYNoV6LwW6hIqYcIC64tyxvQ1R-4pEQLB1SAA82crhY3HAu2E02LxbdgWI3yALN1HB578q3znhNO4cjPbIY7lyd0BM2e2OwzjRJg0nSHFBAhzOIBlqr4WrytYbOrJcgpJKM6f_zUwLwpzWf_PTwYBqwmW4lKD94OCdZwy28lMP2oL1TqTfUDzKOVv2MX6fKO9-DcVY0Pc-ua3ee5BHSohycB8Dgckq6df6Bdp-CneJ1E6-VV04GPE2oBJJlJ5cQ184APjxMYJ_JJmKtLCs5PxyQK4hSpSbdgp4kboxfroL2g8dKjxn0vTwlzPiKxZuXFziuLLiUDG5PQ350Z2fMZPrzqIrVz2GRy6aT9AdgACUyNNiBovB8SyieLIo9KuwFQV3c5TUuY_a0IsB_JEhYfn0pHEYiCbOnKUGddPXXvd1HjdtvY_QI-4l0zsHuGJ5D4xsPtvFsbp3hjcijG3HiB2ytCu4iAmOYLGO770PmHlFxQR6jWjZZoB9ebJ-KW8YOkpdaUnLO8gQklMRnL8lGfh1qR9A_yiewqT3D22K6TolOEb-ZKdG1y6hoFs4Do2I9S-ssGbZ6fyyfrzIW-W8279LQBAf-_FZGurpQGLIdKgybgjGyCiqljLcsc9u4YzHBoC7xbBqdCds4xMAWlwNprP40m6rvZFpBDPDiWaVJKJ4N2vB38I7z2-Nv1NF2NpPZgQGxLoaxbw2w7xNAPikvmstXRdcPib15lzPMBS37DxdOpIJjeVDfC0j5Tm6OJQeprsoVGt8IPbuYOIWJmrizs66cJkT18LjP0MksJmk-y3mZm9FTK2tZJRCwtRoSuqn_yb-xtO0';
+
+async function getDropboxAccessToken() {
+  if (window._cachedDropboxToken && Date.now() < window._dropboxTokenExpiry) {
+    return window._cachedDropboxToken;
+  }
+  const APP_KEY = 'kmjfb3ppc5ehe08';
+  const APP_SECRET = '79dyuepoujk7o3i';
+  const REFRESH_TOKEN = 'oAZiFQJtSo4AAAAAAAAAAcyEQA0jHAYk2dZrIyIYictEe9_kHiLxe_OGnZCDkfV8';
+  
+  const authHeader = 'Basic ' + btoa(`${APP_KEY}:${APP_SECRET}`);
+  const res = await fetch('https://api.dropboxapi.com/oauth2/token', {
+    method: 'POST',
+    headers: {
+      'Authorization': authHeader,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: `grant_type=refresh_token&refresh_token=${REFRESH_TOKEN}`
+  });
+  if (!res.ok) {
+    throw new Error('Dropbox auto-renewal failed: ' + await res.text());
+  }
+  const data = await res.json();
+  window._cachedDropboxToken = data.access_token;
+  window._dropboxTokenExpiry = Date.now() + ((data.expires_in - 300) * 1000);
+  return window._cachedDropboxToken;
+}
 
 const logOutput = document.getElementById('log-output');
 const startBtn = document.getElementById('start-btn');
@@ -102,6 +127,7 @@ async function processGoogleDrive(boat, url) {
 }
 
 async function processDropbox(boat, url) {
+  const DROPBOX_TOKEN = await getDropboxAccessToken();
   const res = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
     method: 'POST',
     headers: {
