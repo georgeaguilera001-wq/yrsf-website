@@ -18,9 +18,7 @@
   <link rel="icon" href="https://yachtrentalsofsouthflorida.com/admin/logo.png?v=3" type="image/png"/>
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/admin/sw.js').catch(e => console.warn('SW reg failed:', e));
-      });
+      navigator.serviceWorker.register('/admin/sw.js', { scope: '/admin/' }).catch(e => console.warn('SW reg failed:', e));
     }
   </script>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -31,7 +29,34 @@
 </head>
 <body class="bg-surface min-h-screen flex items-center justify-center px-md">
   <div class="w-full max-w-md">
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg relative">
+      <div class="absolute top-4 right-4">
+        <button id="install-pwa-btn" onclick="window.triggerPWAInstall()" class="bg-secondary text-on-secondary px-3 py-1 rounded-lg text-xs font-bold hover:bg-opacity-90 transition-all flex items-center gap-1 shadow-sm border border-secondary/20">
+          <span class="material-symbols-outlined text-[16px]">install_desktop</span>
+          <span>Install App</span>
+        </button>
+      </div>
+      <script>
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+        });
+        window.triggerPWAInstall = async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') deferredPrompt = null;
+          } else {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (isIOS) {
+              alert("📲 To install YRSF Admin onto your iPhone:\n\n1. Tap the Share button (square with an up arrow ↑ at the bottom of Safari).\n2. Scroll down and tap 'Add to Home Screen ➕'.\n\nIt will appear as a standalone app right on your iPhone!");
+            } else {
+              alert("💡 To install YRSF Admin on Microsoft Edge or Chrome:\n\n1. Look at the right side of your top URL/Address bar.\n2. Click the small computer/square icon [+] labeled 'App available'\n3. Click 'Install'!\n\n(If hidden: Click the 3 dots (...) menu in the top right of Edge/Chrome ➔ Apps ➔ Install YRSF Admin Portal)");
+            }
+          }
+        };
+      </script>
       <div class="text-center mb-lg">
         <h1 class="font-display text-display-lg text-secondary font-bold mb-2">YRSF</h1>
         <p class="font-body text-body-md text-on-surface-variant">Admin Portal</p>

@@ -1,9 +1,9 @@
 /**
  * YRSF Admin Portal — Service Worker
- * Enables PWA installation and offline caching for static assets.
+ * Enables PWA installation and offline caching.
  */
 
-const CACHE_NAME = 'yrsf-admin-v1';
+const CACHE_NAME = 'yrsf-admin-v2';
 const ASSETS_TO_CACHE = [
   '/admin/dashboard.html',
   '/admin/index.html',
@@ -14,10 +14,17 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(async (cache) => {
+      for (const asset of ASSETS_TO_CACHE) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn('SW cache add skipped:', asset, err);
+        }
+      }
+    })
   );
 });
 
@@ -36,14 +43,13 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network first for API/Supabase calls, cache fallback for static assets
   if (event.request.url.includes('supabase.co') || event.request.method !== 'GET') {
     return;
   }
   event.respondWith(
-    fetch(event.request)
-      .catch(() => {
-        return caches.match(event.request);
-      })
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).catch(() => cached);
+    })
   );
 });

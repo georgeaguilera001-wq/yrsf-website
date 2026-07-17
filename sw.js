@@ -3,7 +3,7 @@
  * Enables PWA installation and offline caching.
  */
 
-const CACHE_NAME = 'yrsf-main-v1';
+const CACHE_NAME = 'yrsf-main-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -13,10 +13,17 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(async (cache) => {
+      for (const asset of ASSETS_TO_CACHE) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn('SW cache add skipped:', asset, err);
+        }
+      }
+    })
   );
 });
 
@@ -39,9 +46,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   event.respondWith(
-    fetch(event.request)
-      .catch(() => {
-        return caches.match(event.request);
-      })
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).catch(() => cached);
+    })
   );
 });

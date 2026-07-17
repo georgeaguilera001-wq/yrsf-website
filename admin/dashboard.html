@@ -18,9 +18,7 @@
   <link rel="icon" href="https://yachtrentalsofsouthflorida.com/admin/logo.png?v=3" type="image/png"/>
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/admin/sw.js').catch(e => console.warn('SW reg failed:', e));
-      });
+      navigator.serviceWorker.register('/admin/sw.js', { scope: '/admin/' }).catch(e => console.warn('SW reg failed:', e));
     }
   </script>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -212,11 +210,10 @@
             if (outcome === 'accepted') deferredPrompt = null;
           } else {
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
             if (isIOS) {
               alert("📲 To install YRSF Admin onto your iPhone:\n\n1. Tap the Share button (square with an up arrow ↑ at the bottom of Safari).\n2. Scroll down and tap 'Add to Home Screen ➕'.\n\nIt will appear as a standalone app right on your iPhone!");
             } else {
-              alert("💻 To install YRSF Admin on your PC/Mac:\n\nLook for the Install / App Icon right inside your browser address bar (top right of Chrome/Edge/Safari), or click Share ➔ Add to Dock / Install App.\n\nIt will install directly to your Desktop / Applications folder!");
+              alert("💡 To install YRSF Admin on Microsoft Edge or Chrome:\n\n1. Look at the right side of your top URL/Address bar.\n2. Click the small computer/square icon [+] labeled 'App available'\n3. Click 'Install'!\n\n(If hidden: Click the 3 dots (...) menu in the top right of Edge/Chrome ➔ Apps ➔ Install YRSF Admin Portal)");
             }
           }
         };
