@@ -187,7 +187,7 @@
   </aside>
 
   <!-- Main Content -->
-  <main class="admin-main transition-all pb-32 lg:pb-0" style="margin-left: 264px;">
+  <main class="admin-main transition-all pb-44 lg:pb-0" style="margin-left: 264px;">
     <!-- Mobile Header -->
     <div class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest border-b border-outline-variant px-4 py-3 flex items-center gap-3">
       <button class="p-2 rounded-lg hover:bg-surface-container transition-colors" id="sidebar-toggle">
@@ -1656,43 +1656,43 @@
     </div>
   </div>
 
-  <!-- Mobile Bottom Navigation Bar (50% Taller: h-24 / 96px) -->
-  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-md border-t border-outline-variant/60 px-2 pb-2 flex items-center justify-around h-24 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+  <!-- Mobile Bottom Navigation Bar (144px / h-36 Taller) -->
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-md border-t border-outline-variant/60 px-2 pb-6 flex items-center justify-around h-36 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
     <!-- HOME -->
-    <button onclick="if(window.showAdminSection) window.showAdminSection('dashboard')" data-bottom-section="dashboard" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1.5 w-16 text-secondary font-bold transition-colors group">
-      <div class="relative px-3 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
+    <button onclick="if(window.showAdminSection) window.showAdminSection('dashboard')" data-bottom-section="dashboard" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-2 w-16 text-secondary font-bold transition-colors group">
+      <div class="relative px-3 py-1.5 rounded-full group-hover:bg-secondary/10 transition-colors">
         <span class="material-symbols-outlined text-[24px]">home</span>
       </div>
       <span class="font-caption text-[11px] tracking-tight">HOME</span>
     </button>
 
     <!-- BOOKINGS -->
-    <button onclick="if(window.showAdminSection) window.showAdminSection('bookings')" data-bottom-section="bookings" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1.5 w-16 text-on-surface-variant transition-colors group">
-      <div class="relative px-3 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
+    <button onclick="if(window.showAdminSection) window.showAdminSection('bookings')" data-bottom-section="bookings" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-2 w-16 text-on-surface-variant transition-colors group">
+      <div class="relative px-3 py-1.5 rounded-full group-hover:bg-secondary/10 transition-colors">
         <span class="material-symbols-outlined text-[24px]">calendar_month</span>
       </div>
       <span class="font-caption text-[11px] tracking-tight">BOOKINGS</span>
     </button>
 
     <!-- CENTER FLOATING + NEW BUTTON (Brand Blue #455f88 instead of orange) -->
-    <div class="relative flex flex-col items-center -mt-8">
+    <div class="relative flex flex-col items-center -mt-12">
       <button onclick="document.getElementById('quick-create-modal').classList.remove('hidden')" class="w-14 h-14 rounded-full bg-secondary text-white flex items-center justify-center shadow-lg hover:brightness-110 active:scale-95 transition-all border-4 border-surface-container-lowest focus:outline-none" title="Quick Actions">
         <span class="material-symbols-outlined text-[30px] leading-none">add</span>
       </button>
-      <span class="font-caption text-[11px] font-bold text-secondary mt-1 tracking-tight">NEW</span>
+      <span class="font-caption text-[11px] font-bold text-secondary mt-1.5 tracking-tight">NEW</span>
     </div>
 
     <!-- MAP / FLEET -->
-    <button onclick="if(window.showAdminSection) window.showAdminSection('fleet')" data-bottom-section="fleet" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1.5 w-16 text-on-surface-variant transition-colors group">
-      <div class="relative px-3 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
+    <button onclick="if(window.showAdminSection) window.showAdminSection('fleet')" data-bottom-section="fleet" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-2 w-16 text-on-surface-variant transition-colors group">
+      <div class="relative px-3 py-1.5 rounded-full group-hover:bg-secondary/10 transition-colors">
         <span class="material-symbols-outlined text-[24px]">map</span>
       </div>
       <span class="font-caption text-[11px] tracking-tight">MAP</span>
     </button>
 
     <!-- MENU (Side drawer toggle) -->
-    <button onclick="document.getElementById('sidebar-toggle')?.click()" class="flex flex-col items-center justify-center gap-1.5 w-16 text-on-surface-variant hover:text-secondary transition-colors group">
-      <div class="relative px-3 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
+    <button onclick="document.getElementById('sidebar-toggle')?.click()" class="flex flex-col items-center justify-center gap-2 w-16 text-on-surface-variant hover:text-secondary transition-colors group">
+      <div class="relative px-3 py-1.5 rounded-full group-hover:bg-secondary/10 transition-colors">
         <span class="material-symbols-outlined text-[24px]">menu</span>
       </div>
       <span class="font-caption text-[11px] tracking-tight">MENU</span>
