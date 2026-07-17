@@ -770,7 +770,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <span class="material-symbols-outlined text-secondary text-lg">photo_library</span> Photo Gallery &amp; Reordering
               </h4>
               <div class="flex items-center gap-2 flex-wrap">
-                <input type="file" id="boat-gallery-upload-input" accept="image/*,video/*" multiple class="hidden" />
+                <input type="file" id="boat-gallery-upload-input" accept="image/*,video/*,.mp4,.mov,.webm,.jpg,.jpeg,.png,.webp" multiple class="hidden" />
                 <button type="button" id="upload-photo-btn" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold hover:opacity-90 flex items-center gap-1 shadow-2xs transition-all cursor-pointer">
                   <span class="material-symbols-outlined text-sm">cloud_upload</span> Upload Photos / Videos
                 </button>
@@ -1060,25 +1060,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     if (addPhotoBtn) {
-      addPhotoBtn.addEventListener('click', () => {
+      addPhotoBtn.onclick = () => {
         const url = prompt('Enter Image or Video URL (e.g., https://...jpg or https://...mp4):');
         if (url && url.trim()) {
           currentPhotos.push({ url: url.trim() });
           renderPhotoManager();
         }
-      });
+      };
     }
 
     if (uploadPhotoBtn && galleryUploadInput) {
-      uploadPhotoBtn.addEventListener('click', () => {
+      uploadPhotoBtn.onclick = () => {
+        galleryUploadInput.value = '';
         galleryUploadInput.click();
-      });
+      };
 
-      galleryUploadInput.addEventListener('change', async (e) => {
+      galleryUploadInput.onchange = async (e) => {
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
 
-        showToast(`Uploading ${files.length} file(s) from your gallery...`, 'info', 4000);
+        showToast(`Uploading ${files.length} photo(s)/video(s) from your gallery...`, 'info', 4000);
 
         for (const file of files) {
           const tempPreviewUrl = URL.createObjectURL(file);
@@ -1087,14 +1088,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           renderPhotoManager();
 
           try {
-            const fileExt = file.name.split('.').pop() || (file.type.includes('video') ? 'mp4' : 'jpg');
             const cleanName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
             const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}-${cleanName}`;
             const filePath = `boats/${fileName}`;
+            const contentType = file.type || (file.name.match(/\.(mp4|mov|webm)$/i) ? 'video/mp4' : 'image/jpeg');
 
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('images')
-              .upload(filePath, file, { cacheControl: '3600', upsert: false, contentType: file.type || (file.name.match(/\.(mp4|mov|webm)$/i) ? 'video/mp4' : 'image/jpeg') });
+              .upload(filePath, file, { cacheControl: '3600', upsert: false, contentType });
 
             if (uploadError) {
               throw new Error(uploadError.message);
@@ -1118,8 +1119,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         galleryUploadInput.value = '';
-        showToast(`✓ Gallery media uploaded! Remember to click Save Changes when finished.`, 'success', 5000);
-      });
+        showToast(`✓ All ${files.length} media item(s) uploaded! Remember to click Save Changes when finished.`, 'success', 5000);
+      };
     }
 
     renderPhotoManager();
