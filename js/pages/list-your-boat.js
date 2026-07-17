@@ -8,7 +8,7 @@ import { renderNavbar } from '../components/navbar.js';
 import { renderFooter } from '../components/footer.js';
 import { slugify } from '../utils/formatters.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+function initListYourBoatPage() {
   const urlParams = new URLSearchParams(window.location.search);
   const isAdminEmbed = urlParams.get('admin_embed') === 'true';
 
@@ -299,4 +299,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initListYourBoatPage);
+} else {
+  initListYourBoatPage();
+}

@@ -12,7 +12,7 @@ import { initLazyLoading } from '../utils/lazy-load.js';
 import { renderSkeletons } from '../utils/dom.js';
 import { initMarinaMap } from '../components/map.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initHomePage() {
   // Initialize shared components immediately
   initNavbar('home');
   initFooter();
@@ -152,4 +152,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     setTimeout(initMapWhenIdle, 600);
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHomePage);
+} else {
+  initHomePage();
+}

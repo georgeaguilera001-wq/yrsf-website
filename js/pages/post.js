@@ -8,7 +8,7 @@ import { getBlogBySlug } from '../services/blogs.js';
 import { getAllSettings } from '../services/settings.js';
 import { escapeHtml } from '../utils/dom.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initPostPage() {
   // 1. Render layout components
   initNavbar();
   initFooter();
@@ -100,4 +100,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
   wrapper.classList.remove('hidden');
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPostPage);
+} else {
+  initPostPage();
+}

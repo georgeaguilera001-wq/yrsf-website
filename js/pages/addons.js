@@ -10,7 +10,7 @@ import { renderAddonCard, renderFeaturedAddonCard } from '../components/addon-ca
 import { initLazyLoading } from '../utils/lazy-load.js';
 import { renderSkeletons } from '../utils/dom.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initAddonsPage() {
   initNavbar('addons');
   initFooter();
   initToastContainer();
@@ -58,4 +58,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   initLazyLoading();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAddonsPage);
+} else {
+  initAddonsPage();
+}

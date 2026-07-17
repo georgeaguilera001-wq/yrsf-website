@@ -7,7 +7,7 @@ import { initFooter } from '../components/footer.js';
 import { getPublishedBlogs } from '../services/blogs.js';
 import { escapeHtml } from '../utils/dom.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initBlogPage() {
   // 1. Render layout components
   initNavbar('blog');
   initFooter();
@@ -95,4 +95,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Error loading blogs:', error);
     grid.innerHTML = `<div class="col-span-full text-center py-xl text-error font-body">Failed to load articles.</div>`;
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initBlogPage);
+} else {
+  initBlogPage();
+}

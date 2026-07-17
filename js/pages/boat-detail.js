@@ -16,7 +16,7 @@ import { updateMetaTags, generateBoatSchema, injectSchema } from '../utils/seo.j
 import { supabase } from '../config/supabase.js';
 import { openInquiryModal } from '../components/inquiry-modal.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initBoatDetailPage() {
   initNavbar('boats');
   initFooter();
   initToastContainer();
@@ -442,7 +442,11 @@ function populateBoatDetail(boat) {
     drawCalendar();
   }
 
-  renderAvailabilityCalendar(boat);
+  try {
+    renderAvailabilityCalendar(boat);
+  } catch (e) {
+    console.warn('Calendar init warning:', e);
+  }
 
   // Tab switching
   const tabs = document.querySelectorAll('#detail-tabs button');
@@ -588,4 +592,10 @@ function populateBoatDetail(boat) {
 
   // Initialize lazy loading
   initLazyLoading();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initBoatDetailPage);
+} else {
+  initBoatDetailPage();
 }

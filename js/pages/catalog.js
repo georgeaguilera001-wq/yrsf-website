@@ -13,7 +13,7 @@ import { getUrlParam, setUrlParams, renderSkeletons } from '../utils/dom.js';
 import { getFavorites, isFavorite } from '../utils/favorites.js';
 import { clearCache } from '../utils/cache.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initCatalogPage() {
   clearCache('boats_');
   initNavbar('boats');
   initFooter();
@@ -237,4 +237,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initial load
   await loadBoats({ search: urlSearch || '' });
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCatalogPage);
+} else {
+  initCatalogPage();
+}
