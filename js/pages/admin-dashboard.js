@@ -999,7 +999,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const addPhotoBtn = document.getElementById('add-photo-btn');
     const uploadPhotoBtn = document.getElementById('upload-photo-btn');
     const galleryUploadInput = document.getElementById('boat-gallery-upload-input');
-    let currentPhotos = (boat?.images || []).map(img => typeof img === 'string' ? { url: img } : img);
+    let currentPhotos = (boat?.boat_images || boat?.images || []).map(img => typeof img === 'string' ? { url: img } : { ...img });
 
     function isMediaVideo(url) {
       if (!url || typeof url !== 'string') return false;
