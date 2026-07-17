@@ -3749,7 +3749,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const fetchPromise = (async () => {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 20000);
+        const timeout = setTimeout(() => controller.abort(), 45000);
 
         const isValidContent = (txt) => {
           if (!txt) return false;
@@ -3814,27 +3814,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         await Promise.all(rawUrls.map(async (url) => {
           const expandCandidateUrls = (u) => {
             u = u.trim().replace(/^(webcal|ical):\/\//i, 'https://');
-            // If user saved old bridge URL in database, automatically upgrade it to our active bridge
             if (u.includes('yrsf-timetree-bridge.onrender.com')) {
               u = u.replace('yrsf-timetree-bridge.onrender.com', 'yrsf-website.onrender.com');
             }
             const list = [];
             const cleanCode = u.replace(/^https?:\/\//i, '').replace(/\/$/, '');
-            // If user entered short alphanumeric ID like 93TAtkhS37u2
-            if (/^[a-zA-Z0-9_-]{6,35}$/.test(cleanCode)) {
-              // 1. Primary YRSF Render Proxy Endpoint
-              list.push(`https://yrsf-website.onrender.com/timetree.ics?c=${cleanCode}`);
-              // 2. Fallback Render proxy endpoints
-              list.push(`https://renderon.com/${cleanCode}`);
-              list.push(`https://renderon.com/calendar/${cleanCode}`);
-              list.push(`https://renderon.com/ics/${cleanCode}`);
-              // 3. TimeTree public endpoints
-              list.push(`https://timetreeapp.com/public_calendars/${cleanCode}.ics`);
-              list.push(`https://timetreeapp.com/calendars/${cleanCode}.ics`);
-              list.push(`https://api.timetreeapp.com/v1/calendars/${cleanCode}/events.ics`);
-              list.push(`https://timetreeapp.com/public_calendars/${cleanCode}/events.ics`);
+            let extractedCode = cleanCode;
+            const ttMatch = u.match(/(?:public_calendars|calendars|calendar|c=)\/([a-zA-Z0-9_-]+)/i) || u.match(/[?&]c=([a-zA-Z0-9_-]+)/i);
+            if (ttMatch && ttMatch[1]) {
+              extractedCode = ttMatch[1];
             }
-            if (!u.startsWith('http://') && !u.startsWith('https://') && !/^[a-zA-Z0-9_-]{6,35}$/.test(u)) {
+            if (/^[a-zA-Z0-9_-]{4,35}$/.test(extractedCode)) {
+              // 1. Primary YRSF Render Proxy Endpoint
+              list.push(`https://yrsf-website.onrender.com/timetree.ics?c=${extractedCode}`);
+              // 2. Fallback Render proxy endpoints
+              list.push(`https://renderon.com/${extractedCode}`);
+              list.push(`https://renderon.com/calendar/${extractedCode}`);
+              list.push(`https://renderon.com/ics/${extractedCode}`);
+              // 3. TimeTree public endpoints
+              list.push(`https://timetreeapp.com/public_calendars/${extractedCode}.ics`);
+              list.push(`https://timetreeapp.com/calendars/${extractedCode}.ics`);
+              list.push(`https://api.timetreeapp.com/v1/calendars/${extractedCode}/events.ics`);
+              list.push(`https://timetreeapp.com/public_calendars/${extractedCode}/events.ics`);
+            }
+            if (!u.startsWith('http://') && !u.startsWith('https://') && !/^[a-zA-Z0-9_-]{4,35}$/.test(u)) {
               u = 'https://' + u;
             }
             if (u.startsWith('http://') || u.startsWith('https://')) {
@@ -3852,21 +3855,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           const candidates = expandCandidateUrls(url);
           let text = null;
           
-          // Fetch the primary Render proxies (first 2 candidates) in parallel for maximum speed
-          const primaryCandidates = candidates.slice(0, 2);
-          const primaryResults = await Promise.all(primaryCandidates.map(c => fetchIcsFast(c)));
-          text = primaryResults.find(t => t && (t.toUpperCase().includes('BEGIN:VEVENT') || t.trim().startsWith('[') || t.trim().startsWith('{')));
-          
+          // Race all candidate endpoints simultaneously so if proxies or direct URLs work, it resolves as fast as possible
+          const results = await Promise.all(candidates.map(c => fetchIcsFast(c)));
+          text = results.find(t => t && (t.toUpperCase().includes('BEGIN:VEVENT') || t.trim().startsWith('[') || t.trim().startsWith('{')));
           if (text) {
             syncSucceeded = true;
-          } else {
-            // Fall back to racing the other public/direct candidates in parallel if proxies failed
-            const fallbackCandidates = candidates.slice(2);
-            if (fallbackCandidates.length > 0) {
-              const fallbackResults = await Promise.all(fallbackCandidates.map(c => fetchIcsFast(c)));
-              text = fallbackResults.find(t => t && (t.toUpperCase().includes('BEGIN:VEVENT') || t.trim().startsWith('[') || t.trim().startsWith('{')));
-              if (text) syncSucceeded = true;
-            }
           }
 
           if (!text) {
