@@ -1760,101 +1760,101 @@
     </button>
   </nav>
 
-  <!-- Mobile Full Menu Pop-up Modal -->
-  <div id="mobile-menu-modal" class="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 hidden animate-fade-in">
-    <div class="bg-surface-container-lowest text-on-surface rounded-t-3xl sm:rounded-3xl max-h-[85vh] w-full max-w-lg flex flex-col shadow-2xl border-t sm:border border-outline-variant overflow-hidden animate-slide-up">
+  <!-- Mobile Full Menu Pop-up Modal (Compact & Scaled Down) -->
+  <div id="mobile-menu-modal" class="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3.5 hidden animate-fade-in">
+    <div class="bg-surface-container-lowest text-on-surface rounded-2xl max-h-[80vh] w-full max-w-md flex flex-col shadow-2xl border border-outline-variant overflow-hidden animate-slide-up">
       <!-- Modal Header -->
-      <div class="p-4 sm:p-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest sticky top-0 z-10">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center">
-            <span class="material-symbols-outlined text-lg">widgets</span>
+      <div class="px-3.5 py-3 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest sticky top-0 z-10">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full bg-secondary/10 text-secondary flex items-center justify-center">
+            <span class="material-symbols-outlined text-base">widgets</span>
           </div>
-          <h3 class="font-headline font-bold text-base sm:text-lg text-on-surface">Full Admin Menu</h3>
+          <h3 class="font-headline font-bold text-sm text-on-surface">Admin Menu</h3>
         </div>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface font-bold transition-colors">
-          <span class="material-symbols-outlined text-lg">close</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden')" class="w-7 h-7 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-base">close</span>
         </button>
       </div>
 
       <!-- Menu Grid/List -->
-      <div class="p-4 sm:p-5 overflow-y-auto flex-1 grid grid-cols-2 gap-2.5 pb-8">
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('dashboard')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">dashboard</span>
-          <span class="font-label text-xs font-bold text-on-surface">Dashboard</span>
+      <div class="p-3 overflow-y-auto flex-1 grid grid-cols-2 gap-2 pb-4">
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('dashboard')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">dashboard</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Dashboard</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('bookings')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">calendar_month</span>
-          <span class="font-label text-xs font-bold text-on-surface">Bookings</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('bookings')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">calendar_month</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Bookings</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('fleet')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">directions_boat</span>
-          <span class="font-label text-xs font-bold text-on-surface">Fleet Inventory</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('fleet')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">directions_boat</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Fleet Inventory</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('addons')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">post_add</span>
-          <span class="font-label text-xs font-bold text-on-surface">Add-ons</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('addons')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">post_add</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Add-ons</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('staff')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">badge</span>
-          <span class="font-label text-xs font-bold text-on-surface">Staff & Timeclock</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('staff')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">badge</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Staff & Timeclock</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('content')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">description</span>
-          <span class="font-label text-xs font-bold text-on-surface">CMS Pages</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('content')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">description</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">CMS Pages</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('revenue')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">insights</span>
-          <span class="font-label text-xs font-bold text-on-surface">Revenue</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('revenue')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">insights</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Revenue</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('crm')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">groups</span>
-          <span class="font-label text-xs font-bold text-on-surface">CRM & Customers</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('crm')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">groups</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">CRM & Customers</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('partners')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">handshake</span>
-          <span class="font-label text-xs font-bold text-on-surface">Partner Portal</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('partners')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">handshake</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Partner Portal</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('seo')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">travel_explore</span>
-          <span class="font-label text-xs font-bold text-on-surface">SEO Settings</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('seo')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">travel_explore</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">SEO Settings</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('settings')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">settings</span>
-          <span class="font-label text-xs font-bold text-on-surface">Site Config</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('settings')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">settings</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Site Config</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('whatsapp')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">smart_toy</span>
-          <span class="font-label text-xs font-bold text-on-surface">WhatsApp Bot</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('whatsapp')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">smart_toy</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">WhatsApp Bot</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('reviews')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">star</span>
-          <span class="font-label text-xs font-bold text-on-surface">Reviews</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('reviews')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">star</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Reviews</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('navigation')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">menu_open</span>
-          <span class="font-label text-xs font-bold text-on-surface">Navigation</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('navigation')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">menu_open</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Navigation</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('faqs')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">quiz</span>
-          <span class="font-label text-xs font-bold text-on-surface">FAQs</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('faqs')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">quiz</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">FAQs</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('map')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">location_on</span>
-          <span class="font-label text-xs font-bold text-on-surface">Map Locations</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('map')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">location_on</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Map Locations</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('promos')" class="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
-          <span class="material-symbols-outlined text-secondary text-xl group-hover:scale-110 transition-transform">local_offer</span>
-          <span class="font-label text-xs font-bold text-on-surface">Promos & Discounts</span>
+        <button onclick="document.getElementById('mobile-menu-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('promos')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group col-span-2">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">local_offer</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Promos & Discounts</span>
         </button>
       </div>
 
       <!-- Modal Footer -->
-      <div class="p-4 border-t border-outline-variant bg-surface-container-low flex items-center justify-between gap-3">
-        <a href="/" target="_blank" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface transition-colors">
-          <span class="material-symbols-outlined text-[16px]">public</span> View Live Site
+      <div class="px-3.5 py-2.5 border-t border-outline-variant bg-surface-container-low flex items-center justify-between gap-2.5">
+        <a href="/" target="_blank" class="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-[11px] font-bold text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-[15px]">public</span> Live Site
         </a>
-        <button onclick="document.getElementById('logout-btn')?.click()" class="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-error/10 hover:bg-error/20 text-error text-xs font-bold transition-colors">
-          <span class="material-symbols-outlined text-[16px]">logout</span> Sign Out
+        <button onclick="document.getElementById('logout-btn')?.click()" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-error/10 hover:bg-error/20 text-error text-[11px] font-bold transition-colors">
+          <span class="material-symbols-outlined text-[15px]">logout</span> Sign Out
         </button>
       </div>
     </div>
