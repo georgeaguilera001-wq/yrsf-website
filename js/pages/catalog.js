@@ -11,8 +11,10 @@ import { renderFilterBar, initFilterBar } from '../components/filter-bar.js';
 import { initLazyLoading } from '../utils/lazy-load.js';
 import { getUrlParam, setUrlParams, renderSkeletons } from '../utils/dom.js';
 import { getFavorites, isFavorite } from '../utils/favorites.js';
+import { clearCache } from '../utils/cache.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  clearCache('boats_');
   initNavbar('boats');
   initFooter();
   initToastContainer();
@@ -41,12 +43,47 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Check if showing favorites only
   const showFavorites = getUrlParam('favorites') === 'true';
 
+  /** Progressive Grid Render: inserts boat cards batch by batch so mobile rendering never freezes or blocks */
+  function renderProgressiveGrid(boats) {
+    if (!grid) return;
+    grid.innerHTML = '';
+    let idx = 0;
+    const batchSize = window.innerWidth < 1024 ? 2 : 4;
+    function nextBatch() {
+      const slice = boats.slice(idx, idx + batchSize);
+      if (slice.length === 0) return;
+      const html = slice.map(boat => renderBoatCard(boat)).join('');
+      grid.insertAdjacentHTML('beforeend', html);
+      initBoatCards(grid);
+      idx += batchSize;
+      if (idx < boats.length) {
+        requestAnimationFrame(() => setTimeout(nextBatch, 25));
+      }
+    }
+    nextBatch();
+  }
+
   /** Load and render boats */
   async function loadBoats(filters = {}) {
     if (!grid) return;
 
-    // Show skeletons
-    grid.innerHTML = renderSkeletons(6);
+    // Check instant cache if no filters applied yet
+    const isDefaultFilter = !filters.search && (!filters.sortBy || filters.sortBy === 'sort_order') && !filters.minCapacity && !filters.maxCapacity && !filters.minLength && !filters.maxLength;
+    if (isDefaultFilter && !showFavorites) {
+      try {
+        const cachedPublic = localStorage.getItem('yrsf_public_fleet_cache');
+        if (cachedPublic) {
+          const parsed = JSON.parse(cachedPublic);
+          if (parsed && parsed.length > 0) {
+            renderProgressiveGrid(parsed);
+          }
+        }
+      } catch(e) {}
+    }
+
+    if (grid.innerHTML.trim() === '') {
+      grid.innerHTML = renderSkeletons(6);
+    }
     if (emptyState) emptyState.classList.add('hidden');
 
     try {
@@ -60,6 +97,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         limit: 50
       });
 
+      if (isDefaultFilter && !showFavorites && boats && boats.length > 0) {
+        try { localStorage.setItem('yrsf_public_fleet_cache', JSON.stringify(boats)); } catch(e) {}
+      }
+
       // Filter favorites client-side if needed
       let displayBoats = boats;
       if (showFavorites) {
@@ -68,8 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       if (displayBoats.length > 0) {
-        grid.innerHTML = displayBoats.map(boat => renderBoatCard(boat)).join('');
-        initBoatCards(grid);
+        renderProgressiveGrid(displayBoats);
         if (emptyState) emptyState.classList.add('hidden');
         
         // Show share banner if viewing favorites

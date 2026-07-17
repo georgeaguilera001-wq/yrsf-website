@@ -446,18 +446,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tbody = document.getElementById('fleet-table-body');
     if (!tbody) return;
 
-    if (forceRefresh || !allAdminBoatsCache) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-xl"><span class="admin-spinner"></span></td></tr>';
+    // 1. Instant local storage cache check so mobile NEVER shows empty spinner if boats were loaded previously
+    if (!allAdminBoatsCache && !forceRefresh) {
       try {
-        allAdminBoatsCache = await getAllBoats();
-        fleetCache = allAdminBoatsCache || [];
+        const localCached = localStorage.getItem('yrsf_admin_fleet_cache');
+        if (localCached) {
+          allAdminBoatsCache = JSON.parse(localCached);
+          fleetCache = allAdminBoatsCache;
+          renderFleetTable();
+        }
+      } catch (e) {}
+    }
+
+    if (forceRefresh || !allAdminBoatsCache) {
+      if (!allAdminBoatsCache) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-xl"><span class="admin-spinner"></span></td></tr>';
+      }
+      try {
+        const fetched = await getAllBoats();
+        if (fetched && fetched.length > 0) {
+          allAdminBoatsCache = fetched;
+          fleetCache = fetched;
+          try { localStorage.setItem('yrsf_admin_fleet_cache', JSON.stringify(fetched)); } catch(e) {}
+        }
       } catch (error) {
         console.error('Error loading fleet:', error);
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-xl text-error">Error loading fleet data.</td></tr>';
+        if (!allAdminBoatsCache) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-xl text-error">Error loading fleet data.</td></tr>';
+        }
         return;
       }
     } else {
       fleetCache = allAdminBoatsCache || [];
+      // Quietly refresh in background without clearing screen
+      if (!forceRefresh) {
+        getAllBoats().then(fetched => {
+          if (fetched && fetched.length > 0) {
+            allAdminBoatsCache = fetched;
+            fleetCache = fetched;
+            try { localStorage.setItem('yrsf_admin_fleet_cache', JSON.stringify(fetched)); } catch(e) {}
+            renderFleetTable();
+          }
+        }).catch(() => {});
+      }
     }
     
     renderFleetTable();
@@ -471,7 +502,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusVal = fleetStatusFilter?.value || 'all';
     const sortVal = fleetSortFilter?.value || 'length_asc';
 
-    // Broad search: split query into words, match ANY word across ALL boat fields
     const searchWords = searchVal.trim().split(/\s+/).filter(Boolean);
     let filtered = allAdminBoatsCache.filter(b => {
       const haystack = [
@@ -499,70 +529,95 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    tbody.innerHTML = filtered.map(boat => `
-      <tr class="admin-table-row border-b border-outline-variant hover:bg-surface-container-low transition-colors">
-        <td class="px-md py-4">
-          <div class="flex items-center gap-3">
-            ${boat.primary_image_url ? `<img src="${boat.primary_image_url}" alt="" class="w-12 h-12 rounded-lg object-cover"/>` : '<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-outline-variant">image</span></div>'}
-            <div>
-              <p class="font-label text-label-md text-on-surface">${escapeHtml(boat.name)}</p>
-              <p class="font-caption text-caption text-on-surface-variant">${escapeHtml(boat.manufacturer || '')}</p>
-            </div>
-          </div>
-        </td>
-        <td class="px-md py-4 font-caption text-caption text-on-surface-variant">${escapeHtml(boat.vessel_id || '-')}</td>
-        <td class="px-md py-4 font-caption text-caption text-on-surface-variant">${boat.capacity || '-'} guests</td>
-        <td class="px-md py-4">
-          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-caption ${
-            boat.status === 'active' ? 'bg-green-100 text-green-700' :
-            boat.status === 'maintenance' ? 'bg-yellow-100 text-yellow-700' :
-            'bg-gray-100 text-gray-600'
-          }">
-            <span class="w-1.5 h-1.5 rounded-full ${
-              boat.status === 'active' ? 'bg-green-500' :
-              boat.status === 'maintenance' ? 'bg-yellow-500' :
-              'bg-gray-400'
-            }"></span>
-            ${boat.status}
-          </span>
-        </td>
-        <td class="px-md py-4">
-          ${boat.is_featured ? '<span class="material-symbols-outlined text-secondary" style="font-variation-settings: \'FILL\' 1;">star</span>' : '<span class="material-symbols-outlined text-outline-variant">star</span>'}
-        </td>
-        <td class="px-md py-4 text-right">
-          <div class="flex items-center justify-end gap-2 row-actions">
-            <button class="edit-boat-btn p-2 hover:bg-surface-container rounded-lg transition-colors" data-id="${boat.id}" title="Edit">
-              <span class="material-symbols-outlined text-[18px]">edit</span>
-            </button>
-            <button class="delete-boat-btn p-2 hover:bg-error-container rounded-lg transition-colors text-error" data-id="${boat.id}" data-name="${escapeHtml(boat.name)}" title="Delete">
-              <span class="material-symbols-outlined text-[18px]">delete</span>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
+    // Clear existing table and render boats progressively so mobile screen fills instantly
+    tbody.innerHTML = '';
+    let i = 0;
+    const batchSize = window.innerWidth < 1024 ? 3 : 6;
 
-    // Attach event listeners
-    tbody.querySelectorAll('.edit-boat-btn').forEach(btn => {
-      btn.addEventListener('click', () => openBoatEditor(btn.dataset.id));
-    });
-    tbody.querySelectorAll('.delete-boat-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const confirmed = await confirmModal(
-          `Are you sure you want to delete "${btn.dataset.name}"? This action cannot be undone.`,
-          { title: 'Delete Yacht', confirmText: 'Delete', destructive: true }
-        );
-        if (confirmed) {
-          try {
-            await deleteBoat(btn.dataset.id);
-            showToast('Yacht deleted successfully', 'success');
-            loadFleet(true);
-          } catch (err) {
-            showToast('Error deleting yacht: ' + err.message, 'error');
-          }
+    function renderNextBatch() {
+      const batch = filtered.slice(i, i + batchSize);
+      if (batch.length === 0) return;
+
+      const html = batch.map(boat => `
+        <tr class="admin-table-row border-b border-outline-variant hover:bg-surface-container-low transition-colors animate-in fade-in duration-200">
+          <td class="px-md py-4">
+            <div class="flex items-center gap-3">
+              ${boat.primary_image_url ? `<img src="${boat.primary_image_url}" alt="" loading="lazy" decoding="async" class="w-12 h-12 rounded-lg object-cover"/>` : '<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-outline-variant">image</span></div>'}
+              <div>
+                <p class="font-label text-label-md text-on-surface">${escapeHtml(boat.name)}</p>
+                <p class="font-caption text-caption text-on-surface-variant">${escapeHtml(boat.manufacturer || '')}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-md py-4 font-caption text-caption text-on-surface-variant">${escapeHtml(boat.vessel_id || '-')}</td>
+          <td class="px-md py-4 font-caption text-caption text-on-surface-variant">${boat.capacity || '-'} guests</td>
+          <td class="px-md py-4">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-caption ${
+              boat.status === 'active' ? 'bg-green-100 text-green-700' :
+              boat.status === 'maintenance' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-gray-100 text-gray-600'
+            }">
+              <span class="w-1.5 h-1.5 rounded-full ${
+                boat.status === 'active' ? 'bg-green-500' :
+                boat.status === 'maintenance' ? 'bg-yellow-500' :
+                'bg-gray-400'
+              }"></span>
+              ${boat.status}
+            </span>
+          </td>
+          <td class="px-md py-4">
+            ${boat.is_featured ? '<span class="material-symbols-outlined text-secondary" style="font-variation-settings: \'FILL\' 1;">star</span>' : '<span class="material-symbols-outlined text-outline-variant">star</span>'}
+          </td>
+          <td class="px-md py-4 text-right">
+            <div class="flex items-center justify-end gap-2 row-actions">
+              <button class="edit-boat-btn p-2 hover:bg-surface-container rounded-lg transition-colors" data-id="${boat.id}" title="Edit">
+                <span class="material-symbols-outlined text-[18px]">edit</span>
+              </button>
+              <button class="delete-boat-btn p-2 hover:bg-error-container rounded-lg transition-colors text-error" data-id="${boat.id}" data-name="${escapeHtml(boat.name)}" title="Delete">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      tbody.insertAdjacentHTML('beforeend', html);
+
+      // Attach listeners for newly added rows right away
+      batch.forEach(boat => {
+        const editBtn = tbody.querySelector(`.edit-boat-btn[data-id="${boat.id}"]`);
+        const delBtn = tbody.querySelector(`.delete-boat-btn[data-id="${boat.id}"]`);
+        if (editBtn && !editBtn._attached) {
+          editBtn._attached = true;
+          editBtn.addEventListener('click', () => openBoatEditor(boat.id));
+        }
+        if (delBtn && !delBtn._attached) {
+          delBtn._attached = true;
+          delBtn.addEventListener('click', async () => {
+            const confirmed = await confirmModal(
+              `Are you sure you want to delete "${boat.name}"? This action cannot be undone.`,
+              { title: 'Delete Yacht', confirmText: 'Delete', destructive: true }
+            );
+            if (confirmed) {
+              try {
+                await deleteBoat(boat.id);
+                showToast('Yacht deleted successfully', 'success');
+                loadFleet(true);
+              } catch (err) {
+                showToast('Error deleting yacht: ' + err.message, 'error');
+              }
+            }
+          });
         }
       });
-    });
+
+      i += batchSize;
+      if (i < filtered.length) {
+        requestAnimationFrame(() => setTimeout(renderNextBatch, 20));
+      }
+    }
+
+    renderNextBatch();
   }
 
   // Add Boat button
