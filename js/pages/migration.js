@@ -127,11 +127,12 @@ async function processGoogleDrive(boat, url) {
 }
 
 async function processDropbox(boat, url) {
-  const DROPBOX_TOKEN = await getDropboxAccessToken();
-  const res = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
+  let entries = [];
+  let token = await getDropboxAccessToken();
+  let res = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${DROPBOX_TOKEN}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -140,28 +141,74 @@ async function processDropbox(boat, url) {
     })
   });
 
-  if (!res.ok) throw new Error('Dropbox API error: ' + await res.text());
+  if (!res.ok) {
+    if (res.status === 401) {
+      window._cachedDropboxToken = null;
+      token = await getDropboxAccessToken();
+      res = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: "", shared_link: { url: url } })
+      });
+    }
+    if (!res.ok) throw new Error('Dropbox API error: ' + await res.text());
+  }
   
-  const data = await res.json();
-  const files = (data.entries || []).filter(f => f['.tag'] === 'file' && f.name.match(/\.(jpg|jpeg|png|gif|webp)$/i));
-  log(`Found ${files.length} images in Dropbox.`, 'info');
+  let data = await res.json();
+  entries = entries.concat(data.entries || []);
+
+  while (data.has_more && data.cursor) {
+    const contRes = await fetch('https://api.dropboxapi.com/2/files/list_folder/continue', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ cursor: data.cursor })
+    });
+    if (!contRes.ok) break;
+    data = await contRes.json();
+    entries = entries.concat(data.entries || []);
+  }
+
+  const files = entries.filter(f => f['.tag'] === 'file' && f.name.match(/\.(jpg|jpeg|png|gif|webp|heic|mov|mp4)$/i));
+  log(`Found ${files.length} media files in Dropbox folder.`, 'info');
 
   await uploadFiles(boat, files.map(f => ({
     id: f.id,
     name: f.name,
     downloadFn: async () => {
-      const dlRes = await fetch('https://content.dropboxapi.com/2/sharing/get_shared_link_file', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${DROPBOX_TOKEN}`,
-          'Dropbox-API-Arg': JSON.stringify({
-            url: url,
-            path: "/" + f.name
-          })
+      await new Promise(r => setTimeout(r, 300));
+      for (let attempt = 1; attempt <= 4; attempt++) {
+        let currentToken = await getDropboxAccessToken();
+        const dlRes = await fetch('https://content.dropboxapi.com/2/sharing/get_shared_link_file', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${currentToken}`,
+            'Dropbox-API-Arg': JSON.stringify({
+              url: url,
+              path: "/" + f.name
+            })
+          }
+        });
+
+        if (dlRes.ok) return await dlRes.blob();
+
+        if (dlRes.status === 401) {
+          window._cachedDropboxToken = null;
+          continue;
         }
-      });
-      if (!dlRes.ok) throw new Error('Dropbox Download error');
-      return await dlRes.blob();
+
+        if (dlRes.status === 429 || dlRes.status >= 500) {
+          const waitTime = Math.pow(2, attempt) * 1200;
+          log(`Dropbox rate limit hit downloading ${f.name}. Pausing ${waitTime/1000}s before retry...`, 'warning');
+          await new Promise(r => setTimeout(r, waitTime));
+          continue;
+        }
+
+        throw new Error(`Dropbox Download error (${dlRes.status}): ` + await dlRes.text());
+      }
+      throw new Error(`Dropbox download failed after 4 retries for ${f.name}`);
     }
   })));
 }
