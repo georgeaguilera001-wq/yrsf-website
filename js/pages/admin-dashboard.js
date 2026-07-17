@@ -12,6 +12,7 @@ import { supabase } from '../config/supabase.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal, confirmModal } from '../components/modal.js';
 import { escapeHtml, formatPrice, slugify } from '../utils/dom.js';
+import { initSocialHub } from '../components/social-hub.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // ─── Auth Guard ─────────────────────────────────────
@@ -114,6 +115,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         break;
       case 'addons':
         await loadAdminAddons();
+        break;
+      case 'social':
+        if (!loaded.social) { await initSocialHub(); loaded.social = true; }
         break;
       case 'content':
         if (!loaded.content) { await loadContent(); loaded.content = true; }
