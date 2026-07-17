@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard | YRSF</title>
   <meta name="robots" content="noindex, nofollow"/>
+  <link rel="manifest" href="/admin/manifest.json"/>
+  <meta name="theme-color" content="#455f88"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="YRSF Admin"/>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23455f88'><rect width='512' height='512' rx='100' fill='%23455f88'/><path d='M256 160l-120 180h240L256 160z' fill='white'/></svg>"/>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/admin/sw.js').catch(e => console.warn('SW reg failed:', e));
+      });
+    }
+  </script>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -171,10 +184,38 @@
 
     <!-- Top Notification & Status Bar -->
     <div class="sticky top-0 z-30 bg-surface-container-lowest/90 backdrop-blur border-b border-outline-variant px-4 lg:px-8 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-        <span class="text-xs font-bold text-on-surface-variant">System Live</span>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+          <span class="text-xs font-bold text-on-surface-variant">System Live</span>
+        </div>
+        <button id="install-pwa-btn" onclick="window.triggerPWAInstall()" class="bg-secondary text-on-secondary px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-opacity-90 transition-all flex items-center gap-1.5 shadow-sm border border-secondary/20">
+          <span class="material-symbols-outlined text-[16px]">install_desktop</span>
+          <span>Install App</span>
+        </button>
       </div>
+      <script>
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+        });
+        window.triggerPWAInstall = async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') deferredPrompt = null;
+          } else {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            if (isIOS) {
+              alert("📲 To install YRSF Admin onto your iPhone:\n\n1. Tap the Share button (square with an up arrow ↑ at the bottom of Safari).\n2. Scroll down and tap 'Add to Home Screen ➕'.\n\nIt will appear as a standalone app right on your iPhone!");
+            } else {
+              alert("💻 To install YRSF Admin on your PC/Mac:\n\nLook for the Install / App Icon right inside your browser address bar (top right of Chrome/Edge/Safari), or click Share ➔ Add to Dock / Install App.\n\nIt will install directly to your Desktop / Applications folder!");
+            }
+          }
+        };
+      </script>
       <div class="flex items-center gap-4">
         <!-- Notification Bell -->
         <div class="relative">

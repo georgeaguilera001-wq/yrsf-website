@@ -1,0 +1,25 @@
+{
+  "name": "Yacht Rentals of South Florida",
+  "short_name": "YRSF",
+  "description": "Miami's Premier Luxury Yacht Charters & Fleet Marketplace",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f9f9f9",
+  "theme_color": "#455f88",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23455f88'><rect width='512' height='512' rx='100' fill='%23455f88'/><path d='M256 120c-35 0-70-12-100-33-61 43-140 43-201 0C170 515 135 526 100 526h-50v50h50c35 0 69-9 101-25 63 32 138 32 201 0 32 16 66 25 101 25h50v-50h-50zM100 476h2v-2h-2z' fill='white'/><path d='M256 140c-35 0-70-12-100-33-61 43-140 43-201 0C170 515 135 526 100 526h-50v50h50c35 0 69-9 101-25 63 32 138 32 201 0 32 16 66 25 101 25h50v-50h-50zM99 476H100c40 0 76-22 101-50 25 28 60 50 101 50s76-22 101-50c25 28 60 50 101 50h1l47-168c2-6 1-13-1-19s-8-10-15-12l-158-42v-116c0-28-23-50-50-50h-75v25h75v75h-75c-28 0-50 23-50 50v116l-32 11c-6 2-12 6-15 12s-4 13-1 19L99 476zM151 151h302v100L303 201 151 251v-100z' fill='white'/><path d='M256 160l-120 180h240L256 160z' fill='white'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23455f88'><rect width='512' height='512' rx='100' fill='%23455f88'/><path d='M256 160l-120 180h240L256 160z' fill='white'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
