@@ -96,6 +96,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     switch (section) {
       case 'dashboard':
         await loadDashboard();
+        // Also load embedded modules inside the dashboard
+        if (!loaded.dashboardContent) {
+          await Promise.all([loadFAQs(), loadTestimonials(), initReviewsSection()]);
+          loaded.dashboardContent = true;
+        }
         break;
       case 'fleet':
         await loadFleet();
@@ -131,9 +136,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         else { await initCRMSection(); }
       case 'promos':
         if (!loaded.promos) { await initPromosSection(); loaded.promos = true; }
-        break;
-      case 'reviews':
-        if (!loaded.reviews) { await initReviewsSection(); loaded.reviews = true; }
         break;
     }
   }
@@ -1403,9 +1405,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // ─── Content (FAQ, Testimonials, Blogs) ─────────────
+  // ─── Content (Blogs only — FAQs & Testimonials are now in Dashboard) ─────
   async function loadContent() {
-    await Promise.all([loadFAQs(), loadTestimonials(), loadBlogs()]);
+    await loadBlogs();
   }
 
   // ─── Blogs ──────────────────────────────────────────

@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   deposit_amount    DECIMAL(10,2) DEFAULT 0.00,
   remaining_balance DECIMAL(10,2) DEFAULT 0.00,
   payment_method    TEXT,
-  status            TEXT        DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'completed', 'cancelled')),
+  status            TEXT        DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'completed', 'cancelled', 'inquiry')),
   special_requests  TEXT,
   created_at        TIMESTAMPTZ DEFAULT NOW(),
   updated_at        TIMESTAMPTZ DEFAULT NOW()

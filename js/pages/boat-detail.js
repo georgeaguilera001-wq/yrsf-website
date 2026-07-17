@@ -13,6 +13,8 @@ import { formatPrice, escapeHtml, getUrlParam, $ } from '../utils/dom.js';
 import { isFavorite, toggleFavorite } from '../utils/favorites.js';
 import { contactOnWhatsApp, shareNative } from '../utils/share.js';
 import { updateMetaTags, generateBoatSchema, injectSchema } from '../utils/seo.js';
+import { supabase } from '../config/supabase.js';
+import { openInquiryModal } from '../components/inquiry-modal.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   initNavbar('boats');
@@ -245,26 +247,212 @@ function populateBoatDetail(boat) {
     }
   }
 
+  // --- Customer-Facing Live Availability Calendar ---
+  async function renderAvailabilityCalendar(boat) {
+    const availTab = $('#tab-availability');
+    if (!availTab) return;
+
+    let bookedDates = new Set();
+    try {
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select('booking_date, status')
+        .or(`boat_id.eq.${boat.id},boat_name.ilike.${boat.name}`)
+        .in('status', ['confirmed', 'completed']);
+      (bookings || []).forEach(b => {
+        if (b.booking_date) bookedDates.add(b.booking_date.split('T')[0]);
+      });
+    } catch (err) {
+      console.warn('Could not fetch bookings for availability calendar:', err);
+    }
+
+    let currDate = new Date();
+    let currentMonth = currDate.getMonth();
+    let currentYear = currDate.getFullYear();
+    let selectedDateStr = null;
+    let selectedSlot = 'Morning (10:00 AM)';
+
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    function drawCalendar() {
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      let daysHtml = '';
+      for (let i = 0; i < firstDay; i++) {
+        daysHtml += `<div class="p-2 bg-surface-container-lowest/30 rounded-lg"></div>`;
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateObj = new Date(currentYear, currentMonth, day);
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        const dateStr = `${y}-${m}-${d}`;
+
+        const isPast = dateStr < todayStr;
+        const isBooked = bookedDates.has(dateStr);
+        const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+        const isSelected = selectedDateStr === dateStr;
+
+        let statusBadge = '';
+        let cellClasses = 'p-3 rounded-xl border flex flex-col justify-between min-h-[76px] transition-all ';
+
+        if (isPast) {
+          cellClasses += 'bg-surface-container-lowest/50 border-outline-variant/40 opacity-40 cursor-not-allowed';
+          statusBadge = `<span class="text-[10px] text-on-surface-variant font-medium">Past</span>`;
+        } else if (isBooked) {
+          cellClasses += 'bg-red-50/70 border-red-200 cursor-not-allowed';
+          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">Reserved</span>`;
+        } else {
+          cellClasses += isSelected
+            ? 'bg-secondary/10 border-secondary ring-2 ring-secondary cursor-pointer shadow-sm'
+            : 'bg-surface-container-lowest hover:bg-surface-container border-outline-variant cursor-pointer';
+          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800">Available</span>`;
+        }
+
+        daysHtml += `
+          <div class="${cellClasses}" ${!isPast && !isBooked ? `data-calendar-date="${dateStr}"` : ''}>
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-sm ${isPast ? 'text-on-surface-variant' : 'text-on-surface'}">${day}</span>
+            </div>
+            <div class="mt-2">${statusBadge}</div>
+          </div>
+        `;
+      }
+
+      availTab.innerHTML = `
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 md:p-6 shadow-sm">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-outline-variant">
+            <div>
+              <h3 class="font-headline font-bold text-xl text-on-surface">Live Availability Calendar</h3>
+              <p class="text-sm text-on-surface-variant">Check real-time charter availability for the ${escapeHtml(boat.name)}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="cal-prev-btn" class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface flex items-center justify-center">
+                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+              </button>
+              <span class="font-bold text-base px-3 min-w-[150px] text-center">${monthNames[currentMonth]} ${currentYear}</span>
+              <button id="cal-next-btn" class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface flex items-center justify-center">
+                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Legend -->
+          <div class="flex flex-wrap items-center gap-4 mb-4 text-xs font-medium text-on-surface-variant">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span> Available for Charter</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Reserved / Booked</span>
+          </div>
+
+          <!-- Day Names -->
+          <div class="grid grid-cols-7 gap-2 mb-2">
+            ${dayNames.map(name => `<div class="text-center text-xs font-bold text-on-surface-variant py-1">${name}</div>`).join('')}
+          </div>
+
+          <!-- Calendar Grid -->
+          <div class="grid grid-cols-7 gap-2">
+            ${daysHtml}
+          </div>
+
+          <!-- Interactive Slot Selector Panel -->
+          ${selectedDateStr ? `
+            <div class="mt-6 pt-6 border-t border-outline-variant bg-surface-container-low/60 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <p class="text-xs text-on-surface-variant uppercase tracking-wider font-bold">Selected Date</p>
+                <p class="text-lg font-bold text-on-surface">${new Date(selectedDateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                ${['Morning (10:00 AM)', 'Afternoon (2:00 PM)', 'Sunset Cruise (5:30 PM)'].map(slot => `
+                  <button type="button" class="slot-select-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedSlot === slot ? 'bg-secondary text-on-secondary shadow-sm' : 'bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container'}" data-slot="${slot}">${slot}</button>
+                `).join('')}
+              </div>
+              <button id="cal-book-whatsapp-btn" class="bg-secondary text-on-secondary px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-all flex items-center gap-2 shadow-sm whitespace-nowrap">
+                <span class="material-symbols-outlined text-[18px]">chat</span> Request This Date
+              </button>
+            </div>
+          ` : `
+            <div class="mt-6 pt-6 border-t border-outline-variant text-center text-sm text-on-surface-variant">
+              Click any <strong class="text-green-700">Available</strong> date above to select your preferred charter time slot.
+            </div>
+          `}
+        </div>
+      `;
+
+      const prevBtn = availTab.querySelector('#cal-prev-btn');
+      if (prevBtn) prevBtn.onclick = () => {
+        currentMonth--;
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+        drawCalendar();
+      };
+      const nextBtn = availTab.querySelector('#cal-next-btn');
+      if (nextBtn) nextBtn.onclick = () => {
+        currentMonth++;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        drawCalendar();
+      };
+
+      availTab.querySelectorAll('[data-calendar-date]').forEach(cell => {
+        cell.onclick = () => {
+          selectedDateStr = cell.dataset.calendarDate;
+          drawCalendar();
+        };
+      });
+
+      availTab.querySelectorAll('.slot-select-btn').forEach(sbtn => {
+        sbtn.onclick = () => {
+          selectedSlot = sbtn.dataset.slot;
+          drawCalendar();
+        };
+      });
+
+      const calBookBtn = availTab.querySelector('#cal-book-whatsapp-btn');
+      if (calBookBtn) {
+        calBookBtn.onclick = () => {
+          const formattedDateObj = new Date(selectedDateStr + 'T12:00:00');
+          const dateLabel = formattedDateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+          contactOnWhatsApp(boat.name, `Hi! I checked live availability and would like to request a charter for the ${boat.name} on ${dateLabel} (${selectedSlot}). Is this date ready to book?`);
+        };
+      }
+    }
+
+    drawCalendar();
+  }
+
+  renderAvailabilityCalendar(boat);
+
   // Tab switching
   const tabs = document.querySelectorAll('#detail-tabs button');
+  function switchToTab(targetTab) {
+    tabs.forEach(t => {
+      const active = t.dataset.tab === targetTab;
+      t.classList.toggle('text-secondary', active);
+      t.classList.toggle('border-b-2', active);
+      t.classList.toggle('border-secondary', active);
+      t.classList.toggle('text-on-surface-variant', !active);
+    });
+    ['overview', 'specs', 'amenities', 'availability'].forEach(name => {
+      const el = $(`#tab-${name}`);
+      if (el) el.classList.toggle('hidden', name !== targetTab);
+    });
+  }
+
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      // Update active tab style
-      tabs.forEach(t => {
-        t.classList.remove('text-secondary', 'border-b-2', 'border-secondary');
-        t.classList.add('text-on-surface-variant');
-      });
-      tab.classList.add('text-secondary', 'border-b-2', 'border-secondary');
-      tab.classList.remove('text-on-surface-variant');
-
-      // Show/hide content
-      const tabName = tab.dataset.tab;
-      ['overview', 'specs', 'amenities'].forEach(name => {
-        const el = $(`#tab-${name}`);
-        if (el) el.classList.toggle('hidden', name !== tabName);
-      });
+      switchToTab(tab.dataset.tab);
     });
   });
+
+  const checkAvailBtn = $('#view-calendar-btn');
+  if (checkAvailBtn) {
+    checkAvailBtn.addEventListener('click', () => {
+      switchToTab('availability');
+      const tabsEl = $('#detail-tabs');
+      if (tabsEl) tabsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
 
   // --- Pricing Tiers & Dynamic Day-of-Week Switcher ---
   function priceMatchesDay(p, dayCode) {
@@ -294,15 +482,21 @@ function populateBoatDetail(boat) {
       function renderDayPrices(dayCode) {
         const matched = prices.filter(p => priceMatchesDay(p, dayCode));
         const list = matched.length > 0 ? matched : prices;
-        pricingEl.innerHTML = list.map(p => `
+        const isWeekendDay = dayCode && ['Sat', 'Sun', 'sat', 'sun', 'Saturday', 'Sunday'].includes(dayCode);
+        const multiplier = isWeekendDay ? 1.10 : 1.0;
+
+        pricingEl.innerHTML = list.map(p => {
+          const adjPrice = Math.round(p.price * multiplier);
+          return `
           <div class="flex items-center justify-between p-4 rounded-lg border ${p.is_popular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
             <div>
               <p class="font-label-md text-label-md text-on-surface">${escapeHtml(cleanDurationLabel(p.duration_label))}</p>
-              ${p.is_popular ? '<span class="text-caption text-secondary">Most Popular</span>' : ''}
+              ${p.is_popular ? '<span class="text-caption text-secondary font-bold">Most Popular</span>' : ''}
             </div>
-            <p class="font-headline-md text-headline-md text-secondary">${formatPrice(p.price)}</p>
+            <p class="font-headline-md text-headline-md text-secondary">${formatPrice(adjPrice)}</p>
           </div>
-        `).join('');
+          `;
+        }).join('');
       }
 
       if (daySelectorEl) {
@@ -327,6 +521,15 @@ function populateBoatDetail(boat) {
       if (daySelectorEl) daySelectorEl.classList.add('hidden');
       pricingEl.innerHTML = '<p class="text-on-surface-variant">Contact us for pricing.</p>';
     }
+  }
+
+  // --- Request Charter Inquiry Button ---
+  const inquireBtn = $('#inquire-popup-btn');
+  if (inquireBtn) {
+    inquireBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openInquiryModal({ boatName: boat.name, boatId: boat.id });
+    });
   }
 
   // --- WhatsApp Book Button ---

@@ -12,8 +12,8 @@ export function shareOnWhatsApp(message, whatsappNumber = DEFAULT_WHATSAPP) {
 }
 
 /** Open WhatsApp with a boat inquiry message */
-export function contactOnWhatsApp(boatName, whatsappNumber = DEFAULT_WHATSAPP) {
-  const message = `Hi! I'm interested in the ${boatName}. Could you share availability and pricing?`;
+export function contactOnWhatsApp(boatName, customMessage = null, whatsappNumber = DEFAULT_WHATSAPP) {
+  const message = customMessage || `Hi! I'm interested in the ${boatName}. Could you share availability and pricing?`;
   shareOnWhatsApp(message, whatsappNumber);
 }
 

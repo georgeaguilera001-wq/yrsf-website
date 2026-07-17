@@ -299,6 +299,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO site_settings (key, value) VALUES
   ('seo_default_title',       '{"value": "Luxury Yacht Rentals Miami | Private Boat Charters YRSF"}'::jsonb),
   ('seo_default_description', '{"value": "Experience the sun-drenched spirit of Miami with YRSF. Professional yacht rentals and unforgettable memories on the water."}'::jsonb),
+  ('admin_notification_email','{"value": "georgeaguilera001@gmail.com"}'::jsonb),
   ('whatsapp_number',         '{"value": "13059902192"}'::jsonb),
   ('whatsapp_auto_response',  '{"value": "Hi! Thank you for reaching out to Yacht Rentals of South Florida. How can we help you plan your perfect day on the water?", "enabled": true}'::jsonb),
   ('business_name',           '{"value": "Yacht Rentals of South Florida"}'::jsonb),

@@ -48,11 +48,15 @@ export async function withCache(key, fetcher, ttlMs = DEFAULT_TTL) {
   const promise = (async () => {
     try {
       const data = await fetcher();
-      const item = { time: Date.now(), data };
-      memoryCache.set(key, item);
-      try {
-        sessionStorage.setItem('yrsf_cache_' + key, JSON.stringify(item));
-      } catch (e) {}
+      const isEmptyArray = Array.isArray(data) && data.length === 0;
+      const isEmptyObj = data && typeof data === 'object' && Array.isArray(data.data) && data.data.length === 0;
+      if (!isEmptyArray && !isEmptyObj && data != null) {
+        const item = { time: Date.now(), data };
+        memoryCache.set(key, item);
+        try {
+          sessionStorage.setItem('yrsf_cache_' + key, JSON.stringify(item));
+        } catch (e) {}
+      }
       return data;
     } finally {
       inFlightRequests.delete(key);
