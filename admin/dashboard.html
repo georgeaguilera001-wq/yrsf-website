@@ -1665,10 +1665,10 @@
     </div>
   </div>
 
-  <!-- Mobile Bottom Navigation Bar (10% Smaller) -->
-  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-md border-t border-outline-variant/60 px-2 pb-5 flex items-center justify-around h-[130px] shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+  <!-- Mobile Bottom Navigation Bar (20% Shorter: 104px height) -->
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-md border-t border-outline-variant/60 px-2 pb-3 flex items-center justify-around h-[104px] shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
     <!-- HOME -->
-    <button onclick="if(window.showAdminSection) window.showAdminSection('dashboard')" data-bottom-section="dashboard" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1.5 w-[58px] text-secondary font-bold transition-colors group">
+    <button onclick="if(window.showAdminSection) window.showAdminSection('dashboard')" data-bottom-section="dashboard" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1 w-[58px] text-secondary font-bold transition-colors group">
       <div class="relative px-2.5 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
         <span class="material-symbols-outlined text-[22px]">home</span>
       </div>
@@ -1676,7 +1676,7 @@
     </button>
 
     <!-- CALENDAR -->
-    <button onclick="if(window.showAdminSection) window.showAdminSection('bookings')" data-bottom-section="bookings" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1.5 w-[58px] text-on-surface-variant transition-colors group">
+    <button onclick="if(window.showAdminSection) window.showAdminSection('bookings')" data-bottom-section="bookings" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1 w-[58px] text-on-surface-variant transition-colors group">
       <div class="relative px-2.5 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
         <span class="material-symbols-outlined text-[22px]">calendar_month</span>
       </div>
@@ -1684,15 +1684,15 @@
     </button>
 
     <!-- CENTER FLOATING + NEW BUTTON (Brand Blue #455f88 instead of orange, 10% Smaller: 76px circle) -->
-    <div class="relative flex flex-col items-center -mt-12">
+    <div class="relative flex flex-col items-center -mt-10">
       <button onclick="document.getElementById('quick-create-modal').classList.remove('hidden')" class="w-[76px] h-[76px] rounded-full bg-secondary text-white flex items-center justify-center shadow-xl hover:brightness-110 active:scale-95 transition-all border-[4.5px] border-surface-container-lowest focus:outline-none" title="Quick Actions">
         <span class="material-symbols-outlined text-[40px] leading-none">add</span>
       </button>
-      <span class="font-caption text-[11px] font-bold text-secondary mt-1 tracking-tight">NEW</span>
+      <span class="font-caption text-[11px] font-bold text-secondary mt-0.5 tracking-tight">NEW</span>
     </div>
 
     <!-- FLEET -->
-    <button onclick="if(window.showAdminSection) window.showAdminSection('fleet')" data-bottom-section="fleet" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1.5 w-[58px] text-on-surface-variant transition-colors group">
+    <button onclick="if(window.showAdminSection) window.showAdminSection('fleet')" data-bottom-section="fleet" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1 w-[58px] text-on-surface-variant transition-colors group">
       <div class="relative px-2.5 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
         <span class="material-symbols-outlined text-[22px]">directions_boat</span>
       </div>
@@ -1700,7 +1700,7 @@
     </button>
 
     <!-- MENU (Side drawer toggle) -->
-    <button onclick="document.getElementById('sidebar-toggle')?.click()" class="flex flex-col items-center justify-center gap-1.5 w-[58px] text-on-surface-variant hover:text-secondary transition-colors group">
+    <button onclick="document.getElementById('sidebar-toggle')?.click()" class="flex flex-col items-center justify-center gap-1 w-[58px] text-on-surface-variant hover:text-secondary transition-colors group">
       <div class="relative px-2.5 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
         <span class="material-symbols-outlined text-[22px]">menu</span>
       </div>
