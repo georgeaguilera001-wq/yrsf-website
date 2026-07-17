@@ -10,13 +10,13 @@
   "theme_color": "#455f88",
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "https://yachtrentalsofsouthflorida.com/logo.png?v=2",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.png",
+      "src": "https://yachtrentalsofsouthflorida.com/logo.png?v=2",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
