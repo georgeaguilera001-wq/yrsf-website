@@ -1624,9 +1624,9 @@
     li[data-nav-id] { transition: opacity 0.15s; }
   </style>
 
-  <!-- Quick Create Action Modal (Triggered by mobile center + NEW button) -->
-  <div id="quick-create-modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm hidden transition-opacity">
-    <div class="bg-surface-container-lowest w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl border border-outline-variant animate-in slide-in-from-bottom">
+  <!-- Quick Create Action Modal (Centered in middle of screen) -->
+  <div id="quick-create-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md hidden transition-all">
+    <div class="bg-surface-container-lowest w-full max-w-md rounded-3xl p-6 shadow-2xl border border-outline-variant/80 animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-4">
         <h3 class="font-headline text-headline-md font-bold text-secondary flex items-center gap-2">
           <span class="material-symbols-outlined">add_circle</span> Quick Actions
