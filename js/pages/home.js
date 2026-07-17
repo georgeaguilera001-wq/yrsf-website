@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (Array.isArray(boats) && boats.length > 0) {
           grid.innerHTML = boats.map(boat => renderBoatCard(boat)).join('');
           initBoatCards(grid);
+          initLazyLoading();
         } else {
           grid.innerHTML = renderSkeletons(4);
         }
@@ -108,6 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (boats.length > 0) {
           grid.innerHTML = boats.map(boat => renderBoatCard(boat)).join('');
           initBoatCards(grid);
+          initLazyLoading();
         } else if (!grid.querySelector('.boat-card')) {
           grid.innerHTML = `
             <div class="col-span-full text-center py-xl">

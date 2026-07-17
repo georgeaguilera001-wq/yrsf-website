@@ -18,11 +18,12 @@ export function renderAddonCard(addon) {
     <div class="group bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:shadow-lg transition-all flex flex-col card-hover">
       <div class="relative h-64 overflow-hidden">
         <img
-          class="lazy-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          data-src="${imgUrl}"
+          class="lazy-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 loaded"
+          src="${imgUrl}"
           alt="${imgAlt}"
-          src="${placeholderSrc(400, 256)}"
           loading="lazy"
+          decoding="async"
+          onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e293b/94a3b8?text=No+Photo';"
         />
         ${badge}
       </div>
@@ -63,11 +64,12 @@ export function renderFeaturedAddonCard(addon) {
       <div class="flex flex-col md:flex-row h-full">
         <div class="md:w-1/2 relative min-h-[300px]">
           <img
-            class="lazy-image w-full h-full object-cover"
-            data-src="${imgUrl}"
+            class="lazy-image w-full h-full object-cover loaded"
+            src="${imgUrl}"
             alt="${imgAlt}"
-            src="${placeholderSrc(600, 400)}"
             loading="lazy"
+            decoding="async"
+            onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e293b/94a3b8?text=No+Photo';"
           />
         </div>
         <div class="md:w-1/2 p-md flex flex-col">

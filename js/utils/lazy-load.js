@@ -36,27 +36,28 @@ export function lazyLoadImage(element) {
 
 /** Internal: load the element's real source */
 function lazyLoadElement(el) {
+  if (!el) return;
   if (el.dataset.src) {
-    // For <img> elements
+    const src = el.dataset.src;
+    delete el.dataset.src;
     if (el.tagName === 'IMG') {
       el.decoding = 'async';
-      el.src = el.dataset.src;
       el.onload = () => el.classList.add('loaded');
       el.onerror = () => {
         el.classList.add('loaded');
-        // Keep placeholder on error
+        el.src = 'https://placehold.co/600x400/1e293b/94a3b8?text=No+Photo';
       };
+      el.src = src;
     } else {
-      // For other elements, set as background
-      el.style.backgroundImage = `url('${el.dataset.src}')`;
+      el.style.backgroundImage = `url('${src}')`;
       el.classList.add('loaded');
     }
-    delete el.dataset.src;
   }
 
   if (el.dataset.bg) {
-    el.style.backgroundImage = `url('${el.dataset.bg}')`;
-    el.classList.add('loaded');
+    const bg = el.dataset.bg;
     delete el.dataset.bg;
+    el.style.backgroundImage = `url('${bg}')`;
+    el.classList.add('loaded');
   }
 }

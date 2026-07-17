@@ -48,16 +48,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!grid) return;
     grid.innerHTML = '';
     let idx = 0;
-    const batchSize = window.innerWidth < 1024 ? 2 : 4;
+    const batchSize = window.innerWidth < 1024 ? 4 : 8;
     function nextBatch() {
       const slice = boats.slice(idx, idx + batchSize);
       if (slice.length === 0) return;
       const html = slice.map(boat => renderBoatCard(boat)).join('');
       grid.insertAdjacentHTML('beforeend', html);
       initBoatCards(grid);
+      initLazyLoading();
       idx += batchSize;
       if (idx < boats.length) {
-        requestAnimationFrame(() => setTimeout(nextBatch, 25));
+        requestAnimationFrame(() => setTimeout(nextBatch, 15));
       }
     }
     nextBatch();

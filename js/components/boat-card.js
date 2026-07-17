@@ -88,11 +88,12 @@ export function renderBoatCard(boat, options = {}) {
           </div>
         ` : `
           <img
-            class="lazy-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            data-src="${imgUrl}"
+            class="lazy-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 loaded"
+            src="${imgUrl}"
             alt="${imgAlt}"
-            src="${placeholderSrc(400, 250)}"
             loading="lazy"
+            decoding="async"
+            onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e293b/94a3b8?text=No+Photo';"
           />
         `}
         ${boat.is_featured ? '<div class="absolute top-2.5 left-2.5 bg-secondary text-on-secondary px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm z-10">FEATURED</div>' : ''}
