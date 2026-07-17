@@ -800,7 +800,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <p class="text-[10px] text-on-surface-variant leading-tight">No need to download files to your computer! Paste the folder link and click "Pull All Photos Now" to transfer all pictures from Drive/Dropbox straight into this yacht's gallery below.</p>
             </div>
 
-            <div id="photo-manager-grid" class="flex gap-3 overflow-x-auto pb-2 min-h-[90px]">
+            <div id="photo-manager-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3.5 max-h-[360px] overflow-y-auto p-2.5 bg-surface-container-lowest rounded-xl border border-outline-variant/60 min-h-[110px]">
               <!-- Photos injected via JS -->
             </div>
           </div>
@@ -1033,37 +1033,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isVideo = isMediaVideo(img.url);
         const isUploading = img.uploading;
         return `
-          <div class="relative group flex-shrink-0 w-24 h-24 rounded-xl border border-outline-variant overflow-hidden bg-surface ${isUploading ? 'opacity-70 animate-pulse cursor-wait' : 'cursor-move shadow-xs hover:shadow-md'} transition-all" draggable="${!isUploading}" data-photo-idx="${i}">
+          <div class="relative group aspect-square rounded-xl border border-outline-variant overflow-hidden bg-surface ${isUploading ? 'opacity-70 animate-pulse cursor-wait' : 'cursor-move shadow-xs hover:shadow-md'} transition-all" draggable="${!isUploading}" data-photo-idx="${i}">
             ${isVideo ? `
               <video src="${escapeHtml(img.url)}" class="w-full h-full object-cover pointer-events-none" muted playsinline></video>
               <div class="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
                 <span class="material-symbols-outlined text-white text-2xl drop-shadow">play_circle</span>
               </div>
             ` : `
-              <img src="${escapeHtml(img.url)}" class="w-full h-full object-cover"/>
+              <img src="${escapeHtml(img.url)}" class="w-full h-full object-cover pointer-events-none"/>
             `}
-            ${i === 0 ? `<span class="absolute top-1 left-1 bg-secondary text-on-secondary text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-10">COVER</span>` : ''}
-            ${isUploading ? `
+            ${i === 0 ? `<span class="absolute top-1.5 left-1.5 bg-secondary text-on-secondary text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-10">COVER</span>` : ''}
+            
+            ${!isUploading ? `
+              <!-- Hover Overlay with Quick Action Buttons -->
+              <div class="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5 z-10">
+                <div class="flex justify-between items-center w-full">
+                  ${i > 0 ? `
+                    <button type="button" onclick="window.setCoverPhoto(${i})" class="bg-secondary/90 hover:bg-secondary text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-0.5 cursor-pointer" title="Make Cover Photo">
+                      ⭐ Cover
+                    </button>
+                  ` : `<span></span>`}
+                  <button type="button" onclick="window.removeBoatPhoto(${i})" class="bg-red-600/90 hover:bg-red-700 text-white w-6 h-6 rounded-full text-xs flex items-center justify-center shadow cursor-pointer" title="Delete">&times;</button>
+                </div>
+                <div class="flex justify-center items-center gap-1.5 w-full pb-0.5">
+                  ${i > 0 ? `
+                    <button type="button" onclick="window.moveBoatPhoto(${i}, -1)" class="bg-white/95 hover:bg-white text-gray-900 w-6 h-6 rounded-full flex items-center justify-center shadow text-xs font-bold cursor-pointer" title="Move Left">
+                      ⬅️
+                    </button>
+                  ` : ''}
+                  ${i < currentPhotos.length - 1 ? `
+                    <button type="button" onclick="window.moveBoatPhoto(${i}, 1)" class="bg-white/95 hover:bg-white text-gray-900 w-6 h-6 rounded-full flex items-center justify-center shadow text-xs font-bold cursor-pointer" title="Move Right">
+                      ➡️
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+            ` : `
               <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white p-1 text-center z-20">
                 <span class="admin-spinner w-4 h-4 mb-1"></span>
                 <span class="text-[8px] font-bold">Uploading...</span>
               </div>
-            ` : `
-              <button type="button" onclick="window.removeBoatPhoto(${i})" class="absolute top-1 right-1 bg-red-600/90 hover:bg-red-700 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow">&times;</button>
             `}
           </div>
         `;
       }).join('');
 
-      // Enable drag to reorder
+      // Enable drag to reorder with clear visual feedback
       let draggedIdx = null;
       photoGrid.querySelectorAll('[draggable="true"]').forEach(el => {
         el.addEventListener('dragstart', (e) => {
           draggedIdx = parseInt(el.dataset.photoIdx);
+          el.classList.add('opacity-40');
         });
-        el.addEventListener('dragover', (e) => e.preventDefault());
+        el.addEventListener('dragend', () => {
+          el.classList.remove('opacity-40');
+        });
+        el.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          el.classList.add('ring-2', 'ring-secondary', 'ring-offset-2', 'scale-105');
+        });
+        el.addEventListener('dragleave', () => {
+          el.classList.remove('ring-2', 'ring-secondary', 'ring-offset-2', 'scale-105');
+        });
         el.addEventListener('drop', (e) => {
           e.preventDefault();
+          el.classList.remove('ring-2', 'ring-secondary', 'ring-offset-2', 'scale-105');
           const targetIdx = parseInt(el.dataset.photoIdx);
           if (draggedIdx !== null && draggedIdx !== targetIdx) {
             const moved = currentPhotos.splice(draggedIdx, 1)[0];
@@ -1076,6 +1110,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.removeBoatPhoto = (idx) => {
       currentPhotos.splice(idx, 1);
+      renderPhotoManager();
+    };
+
+    window.setCoverPhoto = (idx) => {
+      if (idx <= 0 || idx >= currentPhotos.length) return;
+      const moved = currentPhotos.splice(idx, 1)[0];
+      currentPhotos.unshift(moved);
+      renderPhotoManager();
+    };
+
+    window.moveBoatPhoto = (idx, direction) => {
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= currentPhotos.length) return;
+      const moved = currentPhotos.splice(idx, 1)[0];
+      currentPhotos.splice(targetIdx, 0, moved);
       renderPhotoManager();
     };
 
