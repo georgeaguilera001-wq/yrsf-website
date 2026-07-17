@@ -749,15 +749,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           <!-- Drag & Drop Photo Manager -->
           <div class="pt-md border-t border-outline-variant bg-surface-container-low p-4 rounded-xl border border-outline-variant">
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
               <h4 class="font-headline text-[15px] font-bold text-on-surface flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-secondary text-lg">photo_library</span> Photo Gallery &amp; Reordering
               </h4>
-              <button type="button" id="add-photo-btn" class="px-3 py-1 bg-secondary text-on-secondary rounded-lg text-xs font-bold hover:opacity-90 flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">add_photo_alternate</span> Add Photo URL
-              </button>
+              <div class="flex items-center gap-2 flex-wrap">
+                <input type="file" id="boat-gallery-upload-input" accept="image/*,video/*" multiple class="hidden" />
+                <button type="button" id="upload-photo-btn" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold hover:opacity-90 flex items-center gap-1 shadow-2xs transition-all cursor-pointer">
+                  <span class="material-symbols-outlined text-sm">cloud_upload</span> Upload Photos / Videos
+                </button>
+                <button type="button" id="add-photo-btn" class="px-2.5 py-1.5 bg-surface-container-high text-on-surface hover:bg-surface-container-highest rounded-lg text-xs font-bold transition-colors flex items-center gap-1 border border-outline-variant cursor-pointer" title="Add Image/Video URL from web">
+                  <span class="material-symbols-outlined text-sm">link</span> URL
+                </button>
+              </div>
             </div>
-            <p class="text-xs text-on-surface-variant mb-3">Drag thumbnails left/right to reorder your yacht photos. First photo is used as the cover image.</p>
+            <p class="text-xs text-on-surface-variant mb-3">Upload multiple photos/videos from your device or gallery. Drag thumbnails left/right to reorder. First item is used as the cover media.</p>
             <div id="photo-manager-grid" class="flex gap-3 overflow-x-auto pb-2 min-h-[90px]">
               <!-- Photos injected via JS -->
             </div>
@@ -972,21 +978,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Photo Gallery Logic
     const photoGrid = document.getElementById('photo-manager-grid');
     const addPhotoBtn = document.getElementById('add-photo-btn');
+    const uploadPhotoBtn = document.getElementById('upload-photo-btn');
+    const galleryUploadInput = document.getElementById('boat-gallery-upload-input');
     let currentPhotos = (boat?.images || []).map(img => typeof img === 'string' ? { url: img } : img);
+
+    function isMediaVideo(url) {
+      if (!url || typeof url !== 'string') return false;
+      return /\.(mp4|mov|webm|ogg)$/i.test(url) || url.includes('video/') || url.includes('data:video');
+    }
 
     function renderPhotoManager() {
       if (!photoGrid) return;
       if (currentPhotos.length === 0) {
-        photoGrid.innerHTML = `<p class="text-xs text-on-surface-variant py-4">No photos yet. Click "Add Photo URL" to attach images.</p>`;
+        photoGrid.innerHTML = `<p class="text-xs text-on-surface-variant py-4">No photos yet. Click "Upload Photos / Videos" to attach images or videos from your gallery/device.</p>`;
         return;
       }
-      photoGrid.innerHTML = currentPhotos.map((img, i) => `
-        <div class="relative group flex-shrink-0 w-24 h-24 rounded-xl border border-outline-variant overflow-hidden bg-surface cursor-move" draggable="true" data-photo-idx="${i}">
-          <img src="${escapeHtml(img.url)}" class="w-full h-full object-cover"/>
-          ${i === 0 ? `<span class="absolute top-1 left-1 bg-secondary text-on-secondary text-[9px] font-bold px-1.5 py-0.5 rounded shadow">COVER</span>` : ''}
-          <button type="button" onclick="window.removeBoatPhoto(${i})" class="absolute top-1 right-1 bg-red-600/80 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
-        </div>
-      `).join('');
+      photoGrid.innerHTML = currentPhotos.map((img, i) => {
+        const isVideo = isMediaVideo(img.url);
+        const isUploading = img.uploading;
+        return `
+          <div class="relative group flex-shrink-0 w-24 h-24 rounded-xl border border-outline-variant overflow-hidden bg-surface ${isUploading ? 'opacity-70 animate-pulse cursor-wait' : 'cursor-move shadow-xs hover:shadow-md'} transition-all" draggable="${!isUploading}" data-photo-idx="${i}">
+            ${isVideo ? `
+              <video src="${escapeHtml(img.url)}" class="w-full h-full object-cover pointer-events-none" muted playsinline></video>
+              <div class="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+                <span class="material-symbols-outlined text-white text-2xl drop-shadow">play_circle</span>
+              </div>
+            ` : `
+              <img src="${escapeHtml(img.url)}" class="w-full h-full object-cover"/>
+            `}
+            ${i === 0 ? `<span class="absolute top-1 left-1 bg-secondary text-on-secondary text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-10">COVER</span>` : ''}
+            ${isUploading ? `
+              <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white p-1 text-center z-20">
+                <span class="admin-spinner w-4 h-4 mb-1"></span>
+                <span class="text-[8px] font-bold">Uploading...</span>
+              </div>
+            ` : `
+              <button type="button" onclick="window.removeBoatPhoto(${i})" class="absolute top-1 right-1 bg-red-600/90 hover:bg-red-700 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow">&times;</button>
+            `}
+          </div>
+        `;
+      }).join('');
 
       // Enable drag to reorder
       let draggedIdx = null;
@@ -1014,13 +1045,67 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (addPhotoBtn) {
       addPhotoBtn.addEventListener('click', () => {
-        const url = prompt('Enter Image URL (e.g., https://...jpg):');
+        const url = prompt('Enter Image or Video URL (e.g., https://...jpg or https://...mp4):');
         if (url && url.trim()) {
           currentPhotos.push({ url: url.trim() });
           renderPhotoManager();
         }
       });
     }
+
+    if (uploadPhotoBtn && galleryUploadInput) {
+      uploadPhotoBtn.addEventListener('click', () => {
+        galleryUploadInput.click();
+      });
+
+      galleryUploadInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        showToast(`Uploading ${files.length} file(s) from your gallery...`, 'info', 4000);
+
+        for (const file of files) {
+          const tempPreviewUrl = URL.createObjectURL(file);
+          const tempItem = { url: tempPreviewUrl, uploading: true, file_name: file.name };
+          currentPhotos.push(tempItem);
+          renderPhotoManager();
+
+          try {
+            const fileExt = file.name.split('.').pop() || (file.type.includes('video') ? 'mp4' : 'jpg');
+            const cleanName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}-${cleanName}`;
+            const filePath = `boats/${fileName}`;
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('images')
+              .upload(filePath, file, { cacheControl: '3600', upsert: false, contentType: file.type || (file.name.match(/\.(mp4|mov|webm)$/i) ? 'video/mp4' : 'image/jpeg') });
+
+            if (uploadError) {
+              throw new Error(uploadError.message);
+            }
+
+            const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
+
+            const idx = currentPhotos.indexOf(tempItem);
+            if (idx !== -1) {
+              currentPhotos[idx] = { url: publicUrl };
+            }
+            renderPhotoManager();
+          } catch (err) {
+            showToast(`⚠️ Failed to upload ${file.name}: ${err.message}`, 'error', 6000);
+            const idx = currentPhotos.indexOf(tempItem);
+            if (idx !== -1) {
+              currentPhotos.splice(idx, 1);
+            }
+            renderPhotoManager();
+          }
+        }
+
+        galleryUploadInput.value = '';
+        showToast(`✓ Gallery media uploaded! Remember to click Save Changes when finished.`, 'success', 5000);
+      });
+    }
+
     renderPhotoManager();
 
     // Pricing Tiers Logic
@@ -1139,6 +1224,19 @@ document.addEventListener('DOMContentLoaded', async () => {
           };
         });
         await updateBoatPrices(savedBoat.id, prices);
+
+        // Save Images & Videos
+        const cleanImages = currentPhotos
+          .filter(p => !p.uploading && p.url && (p.url.startsWith('http') || p.url.startsWith('/')))
+          .map((p, idx) => ({
+            url: p.url,
+            alt_text: p.alt_text || `${savedBoat.name} image ${idx + 1}`,
+            is_primary: idx === 0,
+            sort_order: idx
+          }));
+        if (cleanImages.length > 0 || !isNew) {
+          await updateBoatImages(savedBoat.id, cleanImages);
+        }
 
         closeModal();
         loaded.dashboard = false;

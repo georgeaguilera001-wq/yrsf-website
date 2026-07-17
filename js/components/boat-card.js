@@ -6,6 +6,7 @@
 import { isFavorite, toggleFavorite } from '../utils/favorites.js';
 import { contactOnWhatsApp } from '../utils/share.js';
 import { formatPrice, escapeHtml, placeholderSrc } from '../utils/dom.js';
+import { openInquiryModal } from './inquiry-modal.js';
 
 function priceMatchesDay(p, dayCode) {
   const label = (p.duration_label || '').toLowerCase();
@@ -37,8 +38,17 @@ function getDayPricingInfo(prices, dayCode) {
   if (!prices || prices.length === 0) return { minPrice: null, html: '' };
   const matched = prices.filter(p => priceMatchesDay(p, dayCode));
   const list = matched.length > 0 ? matched : prices;
-  const minPrice = Math.min(...list.map(p => p.price));
-  const html = list.map(p => `
+
+  const isWeekendDay = dayCode && ['Sat', 'Sun', 'sat', 'sun', 'Saturday', 'Sunday'].includes(dayCode);
+  const multiplier = isWeekendDay ? 1.10 : 1.0;
+
+  const adjustedList = list.map(p => ({
+    ...p,
+    price: Math.round(p.price * multiplier)
+  }));
+
+  const minPrice = Math.min(...adjustedList.map(p => p.price));
+  const html = adjustedList.map(p => `
     <div class="flex justify-between items-center py-1.5 border-b border-outline-variant last:border-0 text-[12px] @sm:text-[14px]">
       <span class="text-on-surface-variant font-medium">${escapeHtml(cleanDurationLabel(p.duration_label))}</span>
       <span class="font-bold text-on-surface">${formatPrice(p.price)}</span>
@@ -67,62 +77,71 @@ export function renderBoatCard(boat, options = {}) {
   const priceDisplay = info.minPrice ? formatPrice(info.minPrice) : (boat.min_price ? formatPrice(boat.min_price) : 'Contact');
   const pricesHtml = info.html;
 
-  return `
+      const isVideo = imgUrl && typeof imgUrl === 'string' && (/\.(mp4|mov|webm|ogg)$/i.test(imgUrl) || imgUrl.includes('video/'));
+      return `
     <div class="group @container bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden card-hover flex flex-col flex-grow w-full relative" data-boat-id="${boat.id}" data-prices="${escapeHtml(JSON.stringify(boat.boat_prices || []))}">
-      <a href="/boat.html?slug=${slug}" class="block relative w-full aspect-square overflow-hidden">
-        <img
-          class="lazy-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          data-src="${imgUrl}"
-          alt="${imgAlt}"
-          src="${placeholderSrc(400, 256)}"
-          loading="lazy"
-        />
-        ${boat.is_featured ? '<div class="absolute top-4 left-4 bg-secondary text-on-secondary px-3 py-1 rounded-full text-[10px] @sm:text-[12px] font-bold">FEATURED</div>' : ''}
+      <a href="/boat.html?slug=${slug}" class="block relative w-full aspect-[16/10] overflow-hidden">
+        ${isVideo ? `
+          <video src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" muted playsinline loop></video>
+          <div class="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none group-hover:bg-black/30 transition-colors">
+            <span class="material-symbols-outlined text-white text-3xl drop-shadow-md">play_circle</span>
+          </div>
+        ` : `
+          <img
+            class="lazy-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            data-src="${imgUrl}"
+            alt="${imgAlt}"
+            src="${placeholderSrc(400, 250)}"
+            loading="lazy"
+          />
+        `}
+        ${boat.is_featured ? '<div class="absolute top-2.5 left-2.5 bg-secondary text-on-secondary px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm z-10">FEATURED</div>' : ''}
       </a>
-      <div class="p-4 @sm:p-md flex-grow flex flex-col">
-        <div class="flex justify-between items-start mb-2 gap-2">
-          <h3 class="font-headline-md text-[18px] @sm:text-headline-md text-on-surface leading-tight truncate" title="${name}">${name}</h3>
+      <div class="p-3.5 flex-grow flex flex-col">
+        <div class="flex justify-between items-center mb-1 gap-2">
+          <h3 class="font-headline font-bold text-base text-on-surface leading-tight truncate" title="${name}">${name}</h3>
           <button class="favorite-btn p-1 ${favorited ? 'active' : ''} shrink-0" data-boat-id="${boat.id}" aria-label="Toggle favorite">
-            <span class="material-symbols-outlined text-[20px] @sm:text-[24px]">favorite</span>
+            <span class="material-symbols-outlined text-[18px]">favorite</span>
           </button>
         </div>
-        <div class="flex flex-wrap items-center gap-2 @sm:gap-4 text-[11px] @sm:text-caption text-on-surface-variant mb-3">
-          ${boat.length_ft ? `<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] @sm:text-[16px]">straighten</span>${boat.length_ft}ft</span>` : ''}
-          ${boat.capacity ? `<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] @sm:text-[16px]">group</span>${boat.capacity} guests</span>` : ''}
-          ${boat.location ? `<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] @sm:text-[16px]">location_on</span>${escapeHtml(boat.location)}</span>` : ''}
+        <div class="flex flex-wrap items-center gap-2.5 text-[11px] text-on-surface-variant mb-2.5">
+          ${boat.length_ft ? `<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">straighten</span>${boat.length_ft}ft</span>` : ''}
+          ${boat.capacity ? `<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">group</span>${boat.capacity} guests</span>` : ''}
+          ${boat.location ? `<span class="flex items-center gap-1 truncate max-w-[120px]"><span class="material-symbols-outlined text-[13px]">location_on</span>${escapeHtml(boat.location)}</span>` : ''}
         </div>
 
         ${hasPrices ? `
-        <div class="day-pricing-selector flex items-center justify-between gap-1 bg-surface-container-low p-1 rounded-lg border border-outline-variant mb-4">
+        <div class="day-pricing-selector flex items-center justify-between gap-0.5 bg-surface-container-low p-0.5 rounded-lg border border-outline-variant mb-3">
           ${days.map(d => `
-            <button type="button" class="card-day-btn flex-1 py-1 rounded text-[10px] @sm:text-[11px] font-bold transition-all text-center ${d === currentDayName ? 'bg-secondary text-on-secondary shadow-sm active-day' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'}" data-day="${d}">${d}</button>
+            <button type="button" class="card-day-btn flex-1 py-0.5 rounded text-[9px] font-bold transition-all text-center ${d === currentDayName ? 'bg-secondary text-on-secondary shadow-sm active-day' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'}" data-day="${d}">${d}</button>
           `).join('')}
         </div>
         ` : ''}
 
-        <div class="flex flex-col @sm:flex-row items-start @sm:items-center justify-between gap-3 mt-auto">
-          <div class="flex items-center gap-3">
+        <div class="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-outline-variant/60">
+          <div class="flex items-center gap-1.5 min-w-0">
             <div>
-              <span class="text-[10px] @sm:text-caption font-caption text-on-surface-variant">Starting at</span>
-              <div class="text-secondary font-bold text-[18px] @sm:text-headline-md leading-tight card-price-display">${priceDisplay}</div>
+              <span class="block text-[10px] font-caption text-on-surface-variant leading-none">Starting at</span>
+              <div class="text-secondary font-bold text-base leading-tight card-price-display truncate">${priceDisplay}</div>
             </div>
             ${hasPrices ? `
-            <button class="pricing-toggle-btn p-1 mt-3 bg-surface-container-lowest hover:bg-surface-container rounded-full border border-outline-variant transition-colors flex items-center justify-center shadow-sm" aria-label="View Pricing Tiers">
-              <span class="material-symbols-outlined text-[18px] text-on-surface-variant transition-transform duration-300">keyboard_arrow_down</span>
+            <button class="pricing-toggle-btn p-1 bg-surface-container-lowest hover:bg-surface-container rounded-full border border-outline-variant transition-colors flex items-center justify-center shadow-sm shrink-0" aria-label="View Pricing Tiers" title="View pricing tiers">
+              <span class="material-symbols-outlined text-[16px] text-on-surface-variant transition-transform duration-300">keyboard_arrow_down</span>
             </button>
             ` : ''}
           </div>
-          <div class="flex w-full @sm:w-auto gap-2 mt-2 @sm:mt-0">
-            <button class="flex-1 @sm:flex-none flex items-center justify-center bg-surface-container-high text-on-surface-variant px-3 py-2 rounded-lg font-label-md hover:bg-surface-container transition-colors whatsapp-btn" data-boat-name="${name}" aria-label="Contact on WhatsApp">
-              <span class="material-symbols-outlined text-[16px] @sm:text-[18px]">chat</span>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button type="button" class="flex items-center justify-center bg-secondary/10 hover:bg-secondary/20 text-secondary px-3 py-1.5 rounded-lg text-xs font-bold transition-colors card-inquire-btn" data-boat-id="${boat.id}" data-boat-name="${escapeHtml(name)}" title="Charter Inquiry">Inquire</button>
+            <button class="flex items-center justify-center bg-green-50 text-green-700 border border-green-200 p-1.5 rounded-lg hover:bg-green-100 transition-colors whatsapp-btn" data-boat-name="${name}" aria-label="Contact on WhatsApp" title="WhatsApp Inquiry">
+              <span class="material-symbols-outlined text-[16px]">chat</span>
             </button>
-            <a class="flex-1 @sm:flex-none text-center bg-secondary text-on-secondary px-3 @sm:px-4 py-2 rounded-lg text-[12px] @sm:text-[14px] font-label-md hover:opacity-90 transition-colors" href="/boat.html?slug=${slug}">View Details</a>
           </div>
         </div>
+        <a class="mt-2.5 w-full block text-center bg-secondary text-on-secondary py-2.5 rounded-lg text-xs font-bold hover:opacity-90 transition-colors shadow-sm" href="/boat.html?slug=${slug}">View Details</a>
         
         <!-- Expandable Pricing List -->
         ${hasPrices ? `
-        <div class="pricing-tiers-wrapper absolute inset-x-2 bottom-16 z-20 bg-surface-container-lowest/95 backdrop-blur-md rounded-xl border border-outline-variant shadow-xl transition-all duration-300 opacity-0 pointer-events-none translate-y-4">
+        <div class="pricing-tiers-wrapper absolute inset-x-2 bottom-14 z-20 bg-surface-container-lowest/95 backdrop-blur-md rounded-xl border border-outline-variant shadow-xl transition-all duration-300 opacity-0 pointer-events-none translate-y-4">
           <div class="p-3 relative">
             <button class="pricing-close-btn absolute top-2 right-2 p-1 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors flex items-center justify-center" aria-label="Close Pricing">
               <span class="material-symbols-outlined text-[16px]">close</span>
@@ -193,6 +212,18 @@ export function initBoatCards(container) {
       if (listEl && info.html) {
         listEl.innerHTML = info.html;
       }
+    });
+  });
+
+  // Inquiry buttons
+  container.querySelectorAll('.card-inquire-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openInquiryModal({
+        boatName: btn.dataset.boatName || 'Yacht Charter',
+        boatId: btn.dataset.boatId || null
+      });
     });
   });
 
