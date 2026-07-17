@@ -254,6 +254,7 @@ function populateBoatDetail(boat) {
 
     let bookedDates = new Set();
     try {
+      // 1. Fetch manual bookings from the bookings table
       const { data: bookings } = await supabase
         .from('bookings')
         .select('booking_date, status')
@@ -264,6 +265,26 @@ function populateBoatDetail(boat) {
       });
     } catch (err) {
       console.warn('Could not fetch bookings for availability calendar:', err);
+    }
+
+    try {
+      // 2. Also pull iCal-synced external events (TimeTree, Google Calendar, etc.)
+      //    These are saved to site_settings after admin runs "Sync Now"
+      const { data: setting } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'cached_ical_events')
+        .single();
+      const icalEvents = setting?.value || [];
+      icalEvents.forEach(ev => {
+        // Only mark dates that belong to this boat
+        if (ev.boat_id === boat.id || (ev.boat_name && ev.boat_name.toLowerCase() === boat.name.toLowerCase())) {
+          if (ev.booking_date) bookedDates.add(ev.booking_date.split('T')[0]);
+        }
+      });
+    } catch (err) {
+      // Non-fatal — calendar still works from manual bookings
+      console.warn('Could not fetch iCal events for availability calendar:', err);
     }
 
     let currDate = new Date();
