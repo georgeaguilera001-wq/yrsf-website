@@ -4186,25 +4186,29 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     availPanel.id = 'avail-panel';
     availPanel.className = 'mt-4 border border-outline-variant rounded-2xl overflow-hidden';
     availPanel.innerHTML = `
-      <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 px-4 py-3 border-b border-outline-variant flex items-center gap-2">
-        <span class="material-symbols-outlined text-secondary text-lg">auto_awesome</span>
-        <div>
+      <button id="avail-panel-toggle" aria-expanded="false"
+        class="w-full bg-gradient-to-r from-secondary/10 to-secondary/5 px-4 py-3 border-b border-outline-variant flex items-center gap-2 text-left hover:from-secondary/15 hover:to-secondary/10 transition-colors">
+        <span class="material-symbols-outlined text-secondary text-lg shrink-0">auto_awesome</span>
+        <div class="flex-1 min-w-0">
           <h4 class="font-headline font-bold text-sm text-on-surface">Availability Analysis — ${escapeHtml(boatLabel)}</h4>
           <p class="text-[11px] text-on-surface-variant">Operating hours: 10:00 AM – 2:00 AM • ${avail.totalFreeHrs} hrs free today</p>
         </div>
-        <span class="ml-auto text-[11px] font-bold px-2 py-1 rounded-full ${avail.totalFreeHrs > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}">${avail.totalFreeHrs > 0 ? `${avail.totalFreeHrs} hrs open` : 'Fully Booked'}</span>
-      </div>
-      <div class="p-4 space-y-2">
-        ${windowsHtml}
-      </div>
-      <div id="ai-summary-panel" class="px-4 pb-4">
-        <div class="bg-gradient-to-r from-violet-50 to-purple-50 border border-purple-200 rounded-xl p-3 flex items-start gap-2">
-          <span class="material-symbols-outlined text-purple-600 text-lg mt-0.5">psychology</span>
-          <div class="flex-1">
-            <p class="text-[11px] font-bold text-purple-800 mb-1">AI Availability Summary</p>
-            <p id="ai-summary-text" class="text-xs text-purple-900 italic">
-              <span class="animate-pulse">✨ Generating smart summary...</span>
-            </p>
+        <span class="ml-2 text-[11px] font-bold px-2 py-1 rounded-full shrink-0 ${avail.totalFreeHrs > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}">${avail.totalFreeHrs > 0 ? `${avail.totalFreeHrs} hrs open` : 'Fully Booked'}</span>
+        <span id="avail-chevron" class="material-symbols-outlined text-on-surface-variant text-lg ml-1 shrink-0 transition-transform duration-200" style="transform: rotate(-90deg)">expand_more</span>
+      </button>
+      <div id="avail-panel-body" class="hidden">
+        <div class="p-4 space-y-2">
+          ${windowsHtml}
+        </div>
+        <div id="ai-summary-panel" class="px-4 pb-4">
+          <div class="bg-gradient-to-r from-violet-50 to-purple-50 border border-purple-200 rounded-xl p-3 flex items-start gap-2">
+            <span class="material-symbols-outlined text-purple-600 text-lg mt-0.5">psychology</span>
+            <div class="flex-1">
+              <p class="text-[11px] font-bold text-purple-800 mb-1">AI Availability Summary</p>
+              <p id="ai-summary-text" class="text-xs text-purple-900 italic">
+                <span class="animate-pulse">✨ Generating smart summary...</span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -4212,6 +4216,25 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
     contentEl.after(availPanel);
     modal.classList.remove('hidden');
+
+    // Wire up the toggle
+    const toggleBtn = availPanel.querySelector('#avail-panel-toggle');
+    const panelBody = availPanel.querySelector('#avail-panel-body');
+    const chevron   = availPanel.querySelector('#avail-chevron');
+    if (toggleBtn && panelBody && chevron) {
+      toggleBtn.addEventListener('click', () => {
+        const isOpen = !panelBody.classList.contains('hidden');
+        if (isOpen) {
+          panelBody.classList.add('hidden');
+          chevron.style.transform = 'rotate(-90deg)';
+          toggleBtn.setAttribute('aria-expanded', 'false');
+        } else {
+          panelBody.classList.remove('hidden');
+          chevron.style.transform = 'rotate(0deg)';
+          toggleBtn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
 
     // ── Fetch Gemini summary asynchronously ──
     const summaryEl = document.getElementById('ai-summary-text');
