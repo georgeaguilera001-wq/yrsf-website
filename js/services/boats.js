@@ -14,7 +14,7 @@ import { withCache, clearCache } from '../utils/cache.js';
  */
 export async function getBoats({
   search = '',
-  sortBy = 'sort_order',
+  sortBy = 'length_asc',
   sortOrder = 'asc',
   minCapacity = null,
   maxCapacity = null,
@@ -174,7 +174,7 @@ export async function getFeaturedBoats(limit = 6) {
       min_price_label: boat.boat_prices?.length > 0
         ? boat.boat_prices.reduce((min, p) => p.price < min.price ? p : min, boat.boat_prices[0]).duration_label
         : ''
-    }));
+    })).sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
 
     try {
       localStorage.setItem('yrsf_featured_boats', JSON.stringify(result));

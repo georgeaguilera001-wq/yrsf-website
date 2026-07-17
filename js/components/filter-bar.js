@@ -19,10 +19,10 @@ export function renderFilterBar() {
         />
       </div>
       <select id="sort-select" class="filter-select bg-surface-container-lowest border border-outline-variant rounded-lg pl-4 pr-10 py-3 font-body-md text-on-surface focus:ring-secondary focus:border-secondary">
+        <option value="length_asc" selected>Size: Small to Large</option>
         <option value="sort_order">Featured</option>
         <option value="price_asc">Price: Low to High</option>
         <option value="price_desc">Price: High to Low</option>
-        <option value="length_asc">Size: Small to Large</option>
         <option value="length_desc">Size: Large to Small</option>
         <option value="capacity_desc">Capacity: Most Guests</option>
       </select>
@@ -63,7 +63,7 @@ export function initFilterBar(onFilterChange) {
 
   function getFilters() {
     const search = searchInput?.value?.trim() || '';
-    const sortBy = sortSelect?.value || 'sort_order';
+    const sortBy = sortSelect?.value || 'length_asc';
 
     // Parse capacity range
     let minCapacity = null, maxCapacity = null;

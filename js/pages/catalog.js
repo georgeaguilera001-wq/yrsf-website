@@ -69,7 +69,7 @@ async function initCatalogPage() {
     if (!grid) return;
 
     // Check instant cache if no filters applied yet
-    const isDefaultFilter = !filters.search && (!filters.sortBy || filters.sortBy === 'sort_order') && !filters.minCapacity && !filters.maxCapacity && !filters.minLength && !filters.maxLength;
+    const isDefaultFilter = !filters.search && (!filters.sortBy || filters.sortBy === 'length_asc') && !filters.minCapacity && !filters.maxCapacity && !filters.minLength && !filters.maxLength;
     if (isDefaultFilter && !showFavorites) {
       try {
         const cachedPublic = localStorage.getItem('yrsf_public_fleet_cache');
@@ -90,7 +90,7 @@ async function initCatalogPage() {
     try {
       const { data: boats, count } = await getBoats({
         search: filters.search || '',
-        sortBy: filters.sortBy || 'sort_order',
+        sortBy: filters.sortBy || 'length_asc',
         minCapacity: filters.minCapacity,
         maxCapacity: filters.maxCapacity,
         minLength: filters.minLength,
@@ -194,7 +194,7 @@ async function initCatalogPage() {
       // Update URL params
       setUrlParams({
         search: filters.search || null,
-        sort: filters.sortBy !== 'sort_order' ? filters.sortBy : null
+        sort: filters.sortBy !== 'length_asc' ? filters.sortBy : null
       });
 
     } catch (error) {
