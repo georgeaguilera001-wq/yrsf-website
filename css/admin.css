@@ -162,3 +162,20 @@
     overflow: hidden !important;
   }
 }
+
+/* --- Prevent iOS Safari Auto-Zoom on Select / Input Focus ---
+   iOS zooms in whenever a focused form element has font-size < 16px.
+   Forcing 16px on mobile suppresses this without affecting visual layout.
+   touch-action: manipulation disables double-tap zoom on interactive elements. */
+@media (max-width: 1023px) {
+  select,
+  input,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  button,
+  a {
+    touch-action: manipulation;
+  }
+}
