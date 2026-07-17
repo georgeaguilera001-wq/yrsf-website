@@ -247,29 +247,37 @@ function populateBoatDetail(boat) {
     }
   }
 
-  // --- Customer-Facing Live Availability Calendar ---
+  // --- Customer-Facing Live Availability & Demand Calendar ---
   async function renderAvailabilityCalendar(boat) {
     const availTab = $('#tab-availability');
     if (!availTab) return;
 
-    let bookedDates = new Set();
+    const hasLiveIcal = !!(boat.ical_feed_url && boat.ical_feed_url.trim().length > 0);
+    let dailyEventsMap = new Map();
+
     try {
       // 1. Fetch manual bookings from the bookings table
       const { data: bookings } = await supabase
         .from('bookings')
-        .select('booking_date, status')
+        .select('booking_date, start_time, status')
         .or(`boat_id.eq.${boat.id},boat_name.ilike.${boat.name}`)
         .in('status', ['confirmed', 'completed']);
       (bookings || []).forEach(b => {
-        if (b.booking_date) bookedDates.add(b.booking_date.split('T')[0]);
+        if (b.booking_date) {
+          const dStr = b.booking_date.split('T')[0];
+          if (!dailyEventsMap.has(dStr)) dailyEventsMap.set(dStr, []);
+          dailyEventsMap.get(dStr).push({
+            time: b.start_time || 'Charter Window',
+            source: 'Charter Booking'
+          });
+        }
       });
     } catch (err) {
-      console.warn('Could not fetch bookings for availability calendar:', err);
+      console.warn('Could not fetch manual bookings for availability calendar:', err);
     }
 
     try {
-      // 2. Also pull iCal-synced external events (TimeTree, Google Calendar, etc.)
-      //    These are saved to site_settings after admin runs "Sync Now"
+      // 2. Pull iCal-synced external events
       const { data: setting } = await supabase
         .from('site_settings')
         .select('value')
@@ -277,13 +285,18 @@ function populateBoatDetail(boat) {
         .single();
       const icalEvents = setting?.value || [];
       icalEvents.forEach(ev => {
-        // Only mark dates that belong to this boat
         if (ev.boat_id === boat.id || (ev.boat_name && ev.boat_name.toLowerCase() === boat.name.toLowerCase())) {
-          if (ev.booking_date) bookedDates.add(ev.booking_date.split('T')[0]);
+          if (ev.booking_date) {
+            const dStr = ev.booking_date.split('T')[0];
+            if (!dailyEventsMap.has(dStr)) dailyEventsMap.set(dStr, []);
+            dailyEventsMap.get(dStr).push({
+              time: ev.start_time || 'Charter Event',
+              source: ev.source_label || 'iCal Sync'
+            });
+          }
         }
       });
     } catch (err) {
-      // Non-fatal — calendar still works from manual bookings
       console.warn('Could not fetch iCal events for availability calendar:', err);
     }
 
@@ -314,8 +327,8 @@ function populateBoatDetail(boat) {
         const dateStr = `${y}-${m}-${d}`;
 
         const isPast = dateStr < todayStr;
-        const isBooked = bookedDates.has(dateStr);
-        const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+        const events = dailyEventsMap.get(dateStr) || [];
+        const bookingCount = events.length;
         const isSelected = selectedDateStr === dateStr;
 
         let statusBadge = '';
@@ -324,32 +337,44 @@ function populateBoatDetail(boat) {
         if (isPast) {
           cellClasses += 'bg-surface-container-lowest/50 border-outline-variant/40 opacity-40 cursor-not-allowed';
           statusBadge = `<span class="text-[10px] text-on-surface-variant font-medium">Past</span>`;
-        } else if (isBooked) {
-          cellClasses += 'bg-red-50/70 border-red-200 cursor-not-allowed';
-          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">Reserved</span>`;
+        } else if (!hasLiveIcal) {
+          cellClasses += isSelected
+            ? 'bg-amber-500/10 border-amber-600 ring-2 ring-amber-500 cursor-pointer shadow-sm'
+            : 'bg-surface-container-lowest hover:bg-amber-50/50 border-outline-variant cursor-pointer';
+          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100/90 text-amber-900 border border-amber-300/70 block text-center truncate" title="This boat does not have live availability set up">No Live Feed</span>`;
+        } else if (bookingCount > 0) {
+          cellClasses += isSelected
+            ? 'bg-amber-500/15 border-amber-600 ring-2 ring-amber-500 cursor-pointer shadow-sm'
+            : 'bg-amber-50/80 hover:bg-amber-100/90 border-amber-300/80 cursor-pointer shadow-2xs';
+          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-200/90 text-amber-950 border border-amber-400 block text-center truncate" title="${bookingCount} Charter(s) Booked on this date">${bookingCount} ${bookingCount === 1 ? 'Booking' : 'Bookings'}</span>`;
         } else {
           cellClasses += isSelected
             ? 'bg-secondary/10 border-secondary ring-2 ring-secondary cursor-pointer shadow-sm'
             : 'bg-surface-container-lowest hover:bg-surface-container border-outline-variant cursor-pointer';
-          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800">Available</span>`;
+          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300/70 block text-center truncate">0 Bookings • Open</span>`;
         }
 
         daysHtml += `
-          <div class="${cellClasses}" ${!isPast && !isBooked ? `data-calendar-date="${dateStr}"` : ''}>
+          <div class="${cellClasses}" ${!isPast ? `data-calendar-date="${dateStr}"` : ''}>
             <div class="flex items-center justify-between">
               <span class="font-bold text-sm ${isPast ? 'text-on-surface-variant' : 'text-on-surface'}">${day}</span>
+              ${bookingCount > 0 && !isPast ? `<span class="w-2 h-2 rounded-full bg-amber-600 animate-pulse" title="High Demand"></span>` : ''}
             </div>
             <div class="mt-2">${statusBadge}</div>
           </div>
         `;
       }
 
+      const selectedDayEvents = selectedDateStr ? (dailyEventsMap.get(selectedDateStr) || []) : [];
+
       availTab.innerHTML = `
         <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 md:p-6 shadow-sm">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-outline-variant">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-outline-variant">
             <div>
-              <h3 class="font-headline font-bold text-xl text-on-surface">Live Availability Calendar</h3>
-              <p class="text-sm text-on-surface-variant">Check real-time charter availability for the ${escapeHtml(boat.name)}</p>
+              <h3 class="font-headline font-bold text-xl text-on-surface flex items-center gap-2">
+                Live Charter Demand & Schedule
+              </h3>
+              <p class="text-sm text-on-surface-variant">Check daily bookings and departure windows for the ${escapeHtml(boat.name)}</p>
             </div>
             <div class="flex items-center gap-2">
               <button id="cal-prev-btn" class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface flex items-center justify-center">
@@ -362,11 +387,20 @@ function populateBoatDetail(boat) {
             </div>
           </div>
 
-          <!-- Legend -->
-          <div class="flex flex-wrap items-center gap-4 mb-4 text-xs font-medium text-on-surface-variant">
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span> Available for Charter</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Reserved / Booked</span>
-          </div>
+          ${!hasLiveIcal ? `
+            <div class="mb-5 p-3.5 bg-amber-50 border-2 border-amber-300 rounded-xl flex items-start gap-3 text-amber-950 shadow-xs animate-in fade-in duration-300">
+              <span class="material-symbols-outlined text-amber-600 text-xl shrink-0 mt-0.5">info</span>
+              <div class="text-xs">
+                <p class="font-bold text-sm">This boat does not have live availability set up</p>
+                <p class="mt-1 text-amber-900/90 leading-relaxed">To check specific charter times or request an itinerary, please select your desired date below to connect directly with our sales concierge.</p>
+              </div>
+            </div>
+          ` : `
+            <div class="flex flex-wrap items-center gap-4 mb-4 text-xs font-medium text-on-surface-variant">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> 0 Bookings • Open for Charter</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Charters Booked (Alternative time slots may still be open)</span>
+            </div>
+          `}
 
           <!-- Day Names -->
           <div class="grid grid-cols-7 gap-2 mb-2">
@@ -378,25 +412,45 @@ function populateBoatDetail(boat) {
             ${daysHtml}
           </div>
 
-          <!-- Interactive Slot Selector Panel -->
+          <!-- Interactive Slot & Booking Panel -->
           ${selectedDateStr ? `
-            <div class="mt-6 pt-6 border-t border-outline-variant bg-surface-container-low/60 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <p class="text-xs text-on-surface-variant uppercase tracking-wider font-bold">Selected Date</p>
-                <p class="text-lg font-bold text-on-surface">${new Date(selectedDateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+            <div class="mt-6 pt-6 border-t border-outline-variant bg-surface-container-low/60 rounded-xl p-4 flex flex-col gap-4 animate-in fade-in duration-200">
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div>
+                  <p class="text-xs text-on-surface-variant uppercase tracking-wider font-bold">Selected Date</p>
+                  <p class="text-lg font-bold text-on-surface">${new Date(selectedDateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                </div>
+                ${selectedDayEvents.length > 0 ? `
+                  <div class="bg-amber-100/90 border border-amber-300 rounded-lg px-3 py-2 text-xs text-amber-950 font-medium">
+                    <span class="font-bold">📅 Existing Bookings on this date:</span> ${selectedDayEvents.map(e => `[${escapeHtml(e.time)}]`).join(' ')}
+                  </div>
+                ` : ''}
               </div>
-              <div class="flex flex-wrap items-center gap-2">
-                ${['Morning (10:00 AM)', 'Afternoon (2:00 PM)', 'Sunset Cruise (5:30 PM)'].map(slot => `
-                  <button type="button" class="slot-select-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedSlot === slot ? 'bg-secondary text-on-secondary shadow-sm' : 'bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container'}" data-slot="${slot}">${slot}</button>
-                `).join('')}
+
+              ${!hasLiveIcal ? `
+                <p class="text-xs text-amber-900 font-medium bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                  ℹ️ Because this boat does not have live availability set up, our concierge will verify open schedule windows immediately upon inquiry.
+                </p>
+              ` : selectedDayEvents.length > 0 ? `
+                <p class="text-xs text-amber-900 font-medium bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                  ⚡ High Demand Date! Even though this yacht has ${selectedDayEvents.length} active charter(s) scheduled above, alternative departure times (Morning, Afternoon, or Sunset) may still be available. Select your preferred time below:
+                </p>
+              ` : ''}
+
+              <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                  ${['Morning (10:00 AM)', 'Afternoon (2:00 PM)', 'Sunset Cruise (5:30 PM)'].map(slot => `
+                    <button type="button" class="slot-select-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedSlot === slot ? 'bg-secondary text-on-secondary shadow-sm' : 'bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container'}" data-slot="${slot}">${slot}</button>
+                  `).join('')}
+                </div>
+                <button id="cal-book-whatsapp-btn" class="w-full md:w-auto bg-secondary text-on-secondary px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-sm whitespace-nowrap">
+                  <span class="material-symbols-outlined text-[18px]">chat</span> Request This Date
+                </button>
               </div>
-              <button id="cal-book-whatsapp-btn" class="bg-secondary text-on-secondary px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-all flex items-center gap-2 shadow-sm whitespace-nowrap">
-                <span class="material-symbols-outlined text-[18px]">chat</span> Request This Date
-              </button>
             </div>
           ` : `
-            <div class="mt-6 pt-6 border-t border-outline-variant text-center text-sm text-on-surface-variant">
-              Click any <strong class="text-green-700">Available</strong> date above to select your preferred charter time slot.
+            <div class="mt-6 pt-6 border-t border-outline-variant text-center text-sm text-on-surface-variant font-medium">
+              Click any date tile above to view current charter schedule and select your preferred time slot.
             </div>
           `}
         </div>
@@ -434,7 +488,8 @@ function populateBoatDetail(boat) {
         calBookBtn.onclick = () => {
           const formattedDateObj = new Date(selectedDateStr + 'T12:00:00');
           const dateLabel = formattedDateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-          contactOnWhatsApp(boat.name, `Hi! I checked live availability and would like to request a charter for the ${boat.name} on ${dateLabel} (${selectedSlot}). Is this date ready to book?`);
+          const noticeNote = !hasLiveIcal ? ' (Note: Checked on yacht without live availability set up)' : '';
+          contactOnWhatsApp(boat.name, `Hi! I checked charter demand and would like to request a reservation for the ${boat.name} on ${dateLabel} (${selectedSlot})${noticeNote}. Is this departure window available?`);
         };
       }
     }
