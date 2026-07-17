@@ -545,7 +545,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="flex items-center gap-3">
               ${boat.primary_image_url ? `<img src="${boat.primary_image_url}" alt="" loading="lazy" decoding="async" class="w-12 h-12 rounded-lg object-cover"/>` : '<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-outline-variant">image</span></div>'}
               <div>
-                <p class="font-label text-label-md text-on-surface">${escapeHtml(boat.name)}</p>
+                <p class="font-label text-label-md text-on-surface flex items-center gap-1.5">
+                  ${escapeHtml(boat.name)}
+                  ${boat.ical_feed_url ? `<span class="material-symbols-outlined text-[15px] text-emerald-600 shrink-0" title="iCal Connected" style="font-variation-settings:'FILL' 1">check_circle</span>` : ''}
+                </p>
                 <p class="font-caption text-caption text-on-surface-variant">${escapeHtml(boat.manufacturer || '')}</p>
               </div>
             </div>
@@ -2292,7 +2295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (commBoatSelect) {
           if (!fleetCache || fleetCache.length === 0) await loadFleet();
-          const boats = fleetCache || [];
+          const boats = [...(fleetCache || [])].sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
           commBoatSelect.innerHTML = '<option value="">-- Select Boat --</option>' +
             boats.map(b => `<option value="${b.id}" data-name="${b.name}">${b.name}</option>`).join('');
         }
@@ -2785,7 +2788,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const listEl = document.getElementById('book-boat-options-list');
       if (!listEl) return;
       const boats = fleetCache || [];
-      const filtered = boats.filter(b => (b.name || '').toLowerCase().includes(filter.toLowerCase()) || (b.capacity && String(b.capacity).includes(filter)));
+      const filtered = boats
+        .filter(b => (b.name || '').toLowerCase().includes(filter.toLowerCase()) || (b.capacity && String(b.capacity).includes(filter)))
+        .sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
       if (filtered.length === 0) {
         listEl.innerHTML = `<div class="p-3 text-center text-xs text-on-surface-variant font-label">No yachts matching "${escapeHtml(filter)}"</div>`;
         return;
@@ -3170,6 +3175,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadBookings() {
     const tbody = document.getElementById('manifest-table-body');
     if (!tbody) return;
+
+    if (!fleetCache || fleetCache.length === 0) loadFleet();
 
     try {
       const { data, error } = await supabase
@@ -3899,23 +3906,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       const isPast = dateStr < todayStr;
+      const hasEvents = allEvents.length > 0;
+
       const tileBg = isToday 
         ? 'bg-gradient-to-br from-secondary/5 via-white to-white border-2 border-secondary shadow-md ring-2 sm:ring-4 ring-secondary/10' 
-        : isPast
-          ? 'bg-surface-container-low/50 hover:bg-surface-container-lowest border border-outline-variant/40 hover:border-outline-variant/80 shadow-2xs opacity-70 hover:opacity-95'
-          : 'bg-white hover:bg-surface-container-lowest/90 border border-outline-variant/70 hover:border-secondary/50 shadow-xs hover:shadow-md';
-
-      const hasEvents = allEvents.length > 0;
+        : hasEvents
+          ? 'bg-green-100/90 border-2 border-green-400 shadow-sm hover:bg-green-200 text-green-950'
+          : isPast
+            ? 'bg-surface-container-low/50 hover:bg-surface-container-lowest border border-outline-variant/40 hover:border-outline-variant/80 shadow-2xs opacity-70 hover:opacity-95'
+            : 'bg-white hover:bg-surface-container-lowest/90 border border-outline-variant/70 hover:border-secondary/50 shadow-xs hover:shadow-md';
 
       const dayNumBg = isToday 
         ? 'bg-secondary text-white shadow-sm' 
-        : isPast
-          ? (hasEvents
-              ? 'bg-green-200/80 text-green-900 group-hover/cell:bg-green-300 group-hover/cell:text-green-950'
-              : 'bg-surface-container-high/50 text-on-surface-variant/70 group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary')
-          : (hasEvents
-              ? 'bg-green-100 text-green-900 shadow-sm ring-1 ring-green-300 group-hover/cell:bg-green-200 group-hover/cell:text-green-950'
-              : 'bg-surface-container text-on-surface group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary');
+        : hasEvents
+          ? 'bg-green-600 text-white shadow-sm ring-2 ring-green-300 group-hover/cell:bg-green-700'
+          : isPast
+            ? 'bg-surface-container-high/50 text-on-surface-variant/70 group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary'
+            : 'bg-surface-container text-on-surface group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary';
 
       if (isMobileView) {
         cellsHtml += `
