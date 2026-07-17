@@ -520,11 +520,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (sortVal === 'capacity_desc') return (b.capacity || 0) - (a.capacity || 0);
       if (sortVal === 'length_desc') return (b.length_ft || 0) - (a.length_ft || 0);
       if (sortVal === 'length_asc') return (a.length_ft || 0) - (b.length_ft || 0);
+      if (sortVal === 'ical_yes') return (!!b.ical_feed_url ? 1 : 0) - (!!a.ical_feed_url ? 1 : 0);
+      if (sortVal === 'ical_no') return (!!a.ical_feed_url ? 1 : 0) - (!!b.ical_feed_url ? 1 : 0);
       return 0;
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-xl text-on-surface-variant font-body text-body-md">No yachts found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-xl text-on-surface-variant font-body text-body-md">No yachts found.</td></tr>';
       return;
     }
 
@@ -566,6 +568,18 @@ document.addEventListener('DOMContentLoaded', async () => {
           </td>
           <td class="px-md py-4">
             ${boat.is_featured ? '<span class="material-symbols-outlined text-secondary" style="font-variation-settings: \'FILL\' 1;">star</span>' : '<span class="material-symbols-outlined text-outline-variant">star</span>'}
+          </td>
+          <td class="px-md py-4">
+            ${boat.ical_feed_url
+              ? `<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold" title="iCal feed connected">
+                  <span class="material-symbols-outlined text-[14px] text-emerald-600" style="font-variation-settings:'FILL' 1">check_circle</span>
+                  iCal
+                </span>`
+              : `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container text-on-surface-variant text-[11px] font-bold" title="No iCal feed">
+                  <span class="material-symbols-outlined text-[14px] text-outline-variant">radio_button_unchecked</span>
+                  None
+                </span>`
+            }
           </td>
           <td class="px-md py-4 text-right">
             <div class="flex items-center justify-end gap-2 row-actions">
