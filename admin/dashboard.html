@@ -426,33 +426,36 @@
           </button>
         </div>
 
-        <!-- Data Migration Tool -->
-        <div class="bg-secondary-container text-on-secondary-container border border-secondary-fixed rounded-xl p-md mb-md">
-          <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <h3 class="font-headline text-headline-md font-bold mb-1">Migrate Legacy Data</h3>
-              <p class="font-body text-body-md opacity-90">Upload your old <code>yachts_rows.csv</code> to automatically import your entire fleet, including base64 images and pricing tiers.</p>
+        <!-- Data Migration Tool (Way Smaller & Slimmer) -->
+        <div class="bg-surface-container-low border border-outline-variant/60 rounded-lg p-3 mb-6 shadow-2xs">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary text-[20px] shrink-0">upload_file</span>
+              <div class="text-xs">
+                <span class="font-bold text-on-surface">Migrate Legacy Data:</span>
+                <span class="text-on-surface-variant ml-1">Upload <code>yachts_rows.csv</code> to auto-import fleet.</span>
+              </div>
             </div>
-            <div class="flex flex-col gap-2 min-w-[250px]">
+            <div class="flex items-center gap-2 shrink-0">
               <input type="file" id="migration-csv" accept=".csv" class="hidden">
-              <label for="migration-csv" class="cursor-pointer bg-white text-secondary px-4 py-2 rounded-lg font-label text-label-md text-center hover:bg-surface-container transition-colors shadow-sm border border-outline-variant">
-                Select CSV File
+              <label for="migration-csv" class="cursor-pointer bg-white text-on-surface px-2.5 py-1 rounded text-xs font-bold hover:bg-surface-container transition-colors border border-outline-variant shadow-2xs">
+                Select CSV
               </label>
-              <button id="start-migration-btn" disabled class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-all shadow-sm">
-                Start Migration
+              <button id="start-migration-btn" disabled class="bg-secondary text-white px-2.5 py-1 rounded text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all shadow-2xs">
+                Start Import
               </button>
             </div>
           </div>
           <!-- Progress UI -->
-          <div id="migration-progress" class="hidden mt-4 pt-4 border-t border-secondary-fixed-dim">
-            <div class="flex justify-between font-label text-label-md mb-2">
+          <div id="migration-progress" class="hidden mt-2 pt-2 border-t border-outline-variant/40">
+            <div class="flex justify-between font-label text-[11px] mb-1 text-on-surface-variant">
               <span id="migration-status">Processing...</span>
               <span id="migration-count">0 / 0</span>
             </div>
-            <div class="w-full bg-white/50 rounded-full h-2 mb-2">
-              <div id="migration-bar" class="bg-secondary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            <div class="w-full bg-outline-variant/40 rounded-full h-1.5 mb-2">
+              <div id="migration-bar" class="bg-secondary h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
-            <div id="migration-log" class="bg-gray-900 text-green-400 p-3 rounded-lg h-32 overflow-y-auto font-mono text-xs whitespace-pre-wrap"></div>
+            <div id="migration-log" class="bg-gray-900 text-green-400 p-2 rounded h-20 overflow-y-auto font-mono text-[11px] whitespace-pre-wrap"></div>
           </div>
         </div>
 
