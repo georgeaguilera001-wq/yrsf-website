@@ -3731,7 +3731,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let cellsHtml = '';
 
     for (let i = 0; i < firstDayIndex; i++) {
-      cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-2xl min-h-[135px] sm:min-h-[155px] p-3 opacity-40"></div>`;
+      cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl sm:rounded-2xl min-h-[58px] sm:min-h-[155px] p-1 sm:p-3 opacity-40"></div>`;
     }
 
     for (let day = 1; day <= totalDays; day++) {
@@ -3754,9 +3754,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       let weatherBadge = '';
       if (diffDays >= 0 && diffDays <= 6) {
         const icons = ['☀️ 85°', '⛅ 82°', '☀️ 86°', '🌤 84°', '🌧 80°', '☀️ 85°', '⛅ 83°'];
-        weatherBadge = `<span class="text-[10px] bg-amber-500/10 text-amber-800 border border-amber-500/20 px-2 py-0.5 rounded-lg font-extrabold flex items-center gap-1 shadow-2xs" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
+        weatherBadge = `<span class="hidden sm:flex text-[10px] bg-amber-500/10 text-amber-800 border border-amber-500/20 px-2 py-0.5 rounded-lg font-extrabold items-center gap-1 shadow-2xs" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
       } else if (diffDays > 6 && diffDays <= 14) {
-        weatherBadge = `<span class="text-[10px] text-on-surface-variant/60 font-medium" title="Long range forecast">⛅</span>`;
+        weatherBadge = `<span class="hidden sm:inline-block text-[10px] text-on-surface-variant/60 font-medium" title="Long range forecast">⛅</span>`;
       }
 
       const badgesHtml = allEvents.map(b => {
@@ -3807,7 +3807,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const isPast = dateStr < todayStr;
       const tileBg = isToday 
-        ? 'bg-gradient-to-br from-secondary/5 via-white to-white border-2 border-secondary shadow-md ring-4 ring-secondary/10' 
+        ? 'bg-gradient-to-br from-secondary/5 via-white to-white border-2 border-secondary shadow-md ring-2 sm:ring-4 ring-secondary/10' 
         : isPast
           ? 'bg-surface-container-low/50 hover:bg-surface-container-lowest border border-outline-variant/40 hover:border-outline-variant/80 shadow-2xs opacity-70 hover:opacity-95'
           : 'bg-white hover:bg-surface-container-lowest/90 border border-outline-variant/70 hover:border-secondary/50 shadow-xs hover:shadow-md';
@@ -3818,26 +3818,36 @@ document.addEventListener('DOMContentLoaded', async () => {
           ? 'bg-surface-container-high/50 text-on-surface-variant/70 group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary'
           : 'bg-surface-container text-on-surface group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary';
 
+      // Mobile trip count indicator pill
+      const mobileIndicator = allEvents.length > 0 
+        ? `<div class="sm:hidden mt-auto w-full pt-1"><span class="block w-full text-center bg-secondary text-white font-black text-[9px] py-0.5 px-1 rounded truncate shadow-2xs leading-tight">${allEvents.length} ${allEvents.length === 1 ? 'Trip' : 'Trips'}</span></div>`
+        : '';
+
       cellsHtml += `
-        <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-2xl min-h-[140px] sm:min-h-[160px] p-2 sm:p-3 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
-          <div class="min-w-0">
-            <div class="flex flex-wrap items-start justify-between gap-1 mb-2 min-w-0">
-              <div class="flex flex-wrap items-center gap-1 min-w-0">
-                <span class="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-xl font-label text-xs font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
+        <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl sm:rounded-2xl min-h-[58px] sm:min-h-[160px] p-1.5 sm:p-3 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
+          <div class="min-w-0 flex-1 flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-1 min-w-0">
+              <div class="flex items-center gap-1 min-w-0">
+                <span class="inline-flex items-center justify-center w-5 h-5 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl font-label text-[11px] sm:text-xs font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
                   ${day}
                 </span>
-                ${isToday ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider shadow-2xs shrink-0">Today</span>` : ''}
+                ${isToday ? `<span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary text-white font-black text-[9px] uppercase tracking-wider shadow-2xs shrink-0">Today</span>` : ''}
               </div>
               <div class="flex items-center gap-1 shrink-0 ml-auto">
                 ${weatherBadge}
-                ${allEvents.length > 0 ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 shadow-2xs shrink-0">${allEvents.length}</span>` : ''}
+                ${allEvents.length > 0 ? `<span class="hidden sm:inline-flex text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 shadow-2xs shrink-0">${allEvents.length}</span>` : ''}
               </div>
             </div>
-            <div class="space-y-1 overflow-y-auto max-h-[110px] pr-0.5 scrollbar-thin min-w-0">
+            
+            <!-- Desktop Detailed Event Badges -->
+            <div class="hidden sm:block space-y-1 overflow-y-auto max-h-[110px] pr-0.5 scrollbar-thin min-w-0 mt-2">
               ${badgesHtml || `<div class="pt-6 text-center opacity-0 group-hover/cell:opacity-100 transition-opacity"><span class="text-[10px] font-bold text-on-surface-variant/60 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-xs">add_circle</span> Add Booking</span></div>`}
             </div>
+
+            <!-- Mobile Compact Indicator Pill -->
+            ${mobileIndicator}
           </div>
-          ${allEvents.length === 0 ? `<div class="mt-auto text-right opacity-30 group-hover/cell:opacity-60 transition-opacity shrink-0"><span class="text-[10px] font-mono font-bold text-on-surface-variant/60">No events</span></div>` : ''}
+          ${allEvents.length === 0 ? `<div class="hidden sm:block mt-auto text-right opacity-30 group-hover/cell:opacity-60 transition-opacity shrink-0"><span class="text-[10px] font-mono font-bold text-on-surface-variant/60">No events</span></div>` : ''}
         </div>
       `;
     }

@@ -589,44 +589,44 @@
             </div>
 
             <!-- Calendar Header -->
-            <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-5 mb-6 pb-5 border-b border-outline-variant/80">
-              <div class="flex flex-wrap items-center justify-between sm:justify-start gap-4">
-                <div class="flex items-center gap-3.5">
-                  <div class="w-12 h-12 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center shadow-xs border border-secondary/20">
-                    <span class="material-symbols-outlined text-2xl">calendar_month</span>
+            <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-5 mb-3 sm:mb-6 pb-3 sm:pb-5 border-b border-outline-variant/80">
+              <div class="flex flex-wrap items-center justify-between sm:justify-start gap-3 sm:gap-4">
+                <div class="flex items-center gap-2.5 sm:gap-3.5">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center shadow-xs border border-secondary/20">
+                    <span class="material-symbols-outlined text-xl sm:text-2xl">calendar_month</span>
                   </div>
                   <div>
-                    <span class="text-[10px] font-label font-extrabold uppercase tracking-widest text-secondary block">Vessel Schedule & Live Feeds</span>
-                    <h2 id="cal-month-title" class="font-headline text-2xl sm:text-3xl font-black text-on-surface tracking-tight">July 2026</h2>
+                    <span class="text-[9px] sm:text-[10px] font-label font-extrabold uppercase tracking-widest text-secondary block">Schedule & Live Feeds</span>
+                    <h2 id="cal-month-title" class="font-headline text-xl sm:text-3xl font-black text-on-surface tracking-tight">July 2026</h2>
                   </div>
                 </div>
                 <!-- Navigation Pill Group -->
-                <div class="flex items-center bg-surface-container-low border border-outline-variant/80 rounded-2xl p-1 shadow-xs">
-                  <button id="cal-prev-btn" class="w-9 h-9 rounded-xl hover:bg-white text-on-surface hover:shadow-xs flex items-center justify-center transition-all cursor-pointer" title="Previous Month">
-                    <span class="material-symbols-outlined text-lg">chevron_left</span>
+                <div class="flex items-center bg-surface-container-low border border-outline-variant/80 rounded-xl sm:rounded-2xl p-0.5 sm:p-1 shadow-xs ml-auto sm:ml-0">
+                  <button id="cal-prev-btn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl hover:bg-white text-on-surface hover:shadow-xs flex items-center justify-center transition-all cursor-pointer" title="Previous Month">
+                    <span class="material-symbols-outlined text-base sm:text-lg">chevron_left</span>
                   </button>
-                  <button id="cal-today-btn" class="px-3.5 py-1.5 rounded-xl hover:bg-white text-xs font-extrabold text-on-surface hover:shadow-xs transition-all font-label cursor-pointer">Today</button>
-                  <button id="cal-next-btn" class="w-9 h-9 rounded-xl hover:bg-white text-on-surface hover:shadow-xs flex items-center justify-center transition-all cursor-pointer" title="Next Month">
-                    <span class="material-symbols-outlined text-lg">chevron_right</span>
+                  <button id="cal-today-btn" class="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl hover:bg-white text-[11px] sm:text-xs font-extrabold text-on-surface hover:shadow-xs transition-all font-label cursor-pointer">Today</button>
+                  <button id="cal-next-btn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl hover:bg-white text-on-surface hover:shadow-xs flex items-center justify-center transition-all cursor-pointer" title="Next Month">
+                    <span class="material-symbols-outlined text-base sm:text-lg">chevron_right</span>
                   </button>
                 </div>
               </div>
 
               <!-- Controls Right Side -->
-              <div class="flex flex-wrap items-center gap-3">
-                <div class="relative min-w-[300px] sm:min-w-[340px]" id="cal-boat-search-container">
-                  <div id="cal-boat-trigger" class="flex items-center justify-between gap-3 px-3.5 py-2 bg-white hover:bg-surface-container-lowest border-2 border-outline-variant/80 hover:border-secondary/60 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group">
-                    <div class="flex items-center gap-3 overflow-hidden">
-                      <div class="w-8 h-8 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center flex-shrink-0 group-hover:bg-secondary group-hover:text-white transition-colors">
-                        <span class="material-symbols-outlined text-[18px]">directions_boat</span>
+              <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                <div class="relative w-full sm:w-auto min-w-0 sm:min-w-[340px]" id="cal-boat-search-container">
+                  <div id="cal-boat-trigger" class="flex items-center justify-between gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white hover:bg-surface-container-lowest border-2 border-outline-variant/80 hover:border-secondary/60 rounded-xl sm:rounded-2xl shadow-2xs sm:shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                    <div class="flex items-center gap-2 sm:gap-3 overflow-hidden">
+                      <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-secondary/10 text-secondary flex items-center justify-center flex-shrink-0 group-hover:bg-secondary group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-[16px] sm:text-[18px]">directions_boat</span>
                       </div>
                       <div class="flex flex-col text-left overflow-hidden">
-                        <span class="text-[10px] font-label font-bold uppercase tracking-wider text-on-surface-variant/70">Selected Yacht</span>
+                        <span class="text-[9px] sm:text-[10px] font-label font-bold uppercase tracking-wider text-on-surface-variant/70">Selected Yacht</span>
                         <input type="text" id="cal-boat-search-input" value="Select Yacht..." placeholder="Search & select yacht..." autocomplete="off" class="w-full bg-transparent border-none p-0 text-xs sm:text-sm font-headline font-extrabold text-on-surface focus:outline-none focus:ring-0 truncate cursor-pointer"/>
                       </div>
                     </div>
                     <div class="flex items-center gap-1 flex-shrink-0">
-                      <span class="material-symbols-outlined text-on-surface-variant text-lg transition-transform duration-200 group-hover:text-secondary" id="cal-boat-dropdown-toggle">expand_more</span>
+                      <span class="material-symbols-outlined text-on-surface-variant text-base sm:text-lg transition-transform duration-200 group-hover:text-secondary" id="cal-boat-dropdown-toggle">expand_more</span>
                     </div>
                   </div>
                   <select id="cal-boat-filter" class="sr-only" tabindex="-1">
@@ -641,7 +641,7 @@
                     <div id="cal-boat-options-grid" class="overflow-y-auto max-h-[350px] p-1.5 space-y-1"></div>
                   </div>
                 </div>
-                <button id="cal-sync-now-btn" class="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center gap-2 text-xs cursor-pointer group" title="Refresh external iCal feeds">
+                <button id="cal-sync-now-btn" class="w-full sm:w-auto justify-center px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl sm:rounded-2xl shadow-2xs sm:shadow-sm hover:shadow-md transition-all flex items-center gap-2 text-xs cursor-pointer group" title="Refresh external iCal feeds">
                   <span class="material-symbols-outlined text-base group-hover:rotate-180 transition-transform duration-500">sync</span> Sync iCal Feeds
                 </button>
                 <span id="cal-last-synced-badge" class="text-[11px] font-extrabold text-emerald-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl shadow-2xs">
@@ -651,12 +651,12 @@
             </div>
 
             <!-- Days of Week Header -->
-            <div class="grid grid-cols-7 gap-2 sm:gap-3 mb-3 bg-surface-container-lowest/90 backdrop-blur-md border border-outline-variant/60 rounded-2xl p-3 shadow-2xs text-center font-label text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">
+            <div class="grid grid-cols-7 gap-1 sm:gap-3 mb-1.5 sm:mb-3 bg-surface-container-lowest/90 backdrop-blur-md border border-outline-variant/60 rounded-xl sm:rounded-2xl py-1.5 px-1 sm:p-3 shadow-2xs text-center font-label text-[10px] sm:text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">
               <div class="text-secondary font-black">Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div class="text-secondary font-black">Sat</div>
             </div>
 
             <!-- Calendar Grid -->
-            <div id="cal-grid" class="grid grid-cols-7 gap-2 sm:gap-2.5 bg-transparent rounded-2xl overflow-hidden">
+            <div id="cal-grid" class="grid grid-cols-7 gap-1 sm:gap-2.5 bg-transparent rounded-xl sm:rounded-2xl overflow-hidden">
               <!-- Calendar cells injected by JS -->
             </div>
           </div>
@@ -1675,12 +1675,12 @@
       <span class="font-caption text-[10px] tracking-tight">HOME</span>
     </button>
 
-    <!-- BOOKINGS -->
+    <!-- CALENDAR -->
     <button onclick="if(window.showAdminSection) window.showAdminSection('bookings')" data-bottom-section="bookings" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1.5 w-[58px] text-on-surface-variant transition-colors group">
       <div class="relative px-2.5 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
         <span class="material-symbols-outlined text-[22px]">calendar_month</span>
       </div>
-      <span class="font-caption text-[10px] tracking-tight">BOOKINGS</span>
+      <span class="font-caption text-[10px] tracking-tight">CALENDAR</span>
     </button>
 
     <!-- CENTER FLOATING + NEW BUTTON (Brand Blue #455f88 instead of orange, 10% Smaller: 76px circle) -->
