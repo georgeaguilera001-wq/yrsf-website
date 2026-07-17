@@ -143,6 +143,8 @@
 /* --- Mobile Calendar Grid Strict 1x1 Squares --- */
 @media (max-width: 1023px) {
   #cal-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
     align-items: start !important;
     grid-auto-rows: max-content !important;
   }
@@ -154,9 +156,9 @@
     max-height: none !important;
     align-self: start !important;
     display: flex !important;
-    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
     padding: 2px !important;
+    overflow: hidden !important;
   }
 }

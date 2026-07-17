@@ -3698,6 +3698,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const boatFilterEl = document.getElementById('cal-boat-filter');
     let selectedBoatId = boatFilterEl ? boatFilterEl.value : '';
     const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
+    const isMobileView = window.innerWidth < 1024;
+    if (!window._hasCalResizeListener) {
+      window.addEventListener('resize', () => {
+        if (document.getElementById('section-bookings') && !document.getElementById('section-bookings').classList.contains('hidden')) {
+          renderCalendar();
+        }
+      });
+      window._hasCalResizeListener = true;
+    }
+
     if (!selectedBoatId || selectedBoatId === 'all') {
       if (activeBoats.length > 0) {
         selectedBoatId = activeBoats[0].id;
@@ -3728,7 +3738,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     let cellsHtml = '';
 
     for (let i = 0; i < firstDayIndex; i++) {
-      cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl lg:rounded-2xl aspect-square lg:aspect-auto lg:min-h-[96px] p-1 lg:p-2 opacity-40"></div>`;
+      if (isMobileView) {
+        cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl aspect-square w-full opacity-40" style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important;"></div>`;
+      } else {
+        cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl lg:rounded-2xl aspect-square lg:aspect-auto lg:min-h-[96px] p-1 lg:p-2 opacity-40"></div>`;
+      }
     }
 
     for (let day = 1; day <= totalDays; day++) {
@@ -3747,57 +3761,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return timeStringToMinutes(a.start_time) - timeStringToMinutes(b.start_time);
       });
 
-      const diffDays = Math.round((new Date(dateStr) - new Date(todayStr)) / (1000 * 60 * 60 * 24));
-      let weatherBadge = '';
-      if (diffDays >= 0 && diffDays <= 6) {
-        const icons = ['☀️ 85°', '⛅ 82°', '☀️ 86°', '🌤 84°', '🌧 80°', '☀️ 85°', '⛅ 83°'];
-        weatherBadge = `<span class="hidden lg:flex text-[10px] bg-amber-500/10 text-amber-800 border border-amber-500/20 px-1.5 py-0.5 rounded font-extrabold items-center gap-1 shadow-2xs" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
-      } else if (diffDays > 6 && diffDays <= 14) {
-        weatherBadge = `<span class="hidden lg:inline-block text-[10px] text-on-surface-variant/60 font-medium" title="Long range forecast">⛅</span>`;
-      }
-
-      const badgesHtml = allEvents.map(b => {
-        if (b.status === 'external') {
-          return `
-            <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="px-1.5 py-1 rounded-lg border border-blue-200/80 bg-gradient-to-r from-blue-50 to-indigo-50/70 hover:from-blue-100 hover:to-indigo-100 text-blue-900 shadow-2xs hover:shadow-sm transition-all mb-1 group/badge cursor-pointer flex items-center justify-between gap-1 min-w-0 overflow-hidden leading-none" title="[${escapeHtml(b.source_label)}] ${escapeHtml(b.customer_name)}">
-              <div class="flex items-center gap-1 min-w-0 flex-1">
-                <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-600 flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
-                <span class="font-mono text-[9px] font-extrabold text-blue-700 bg-blue-100/90 px-1 py-0.5 rounded shrink-0">${escapeHtml(b.start_time.split(' - ')[0] || b.start_time)}</span>
-                <span class="font-bold text-[10px] text-on-surface truncate">${escapeHtml(b.customer_name || 'Charter Booking')}</span>
-              </div>
-              <span class="text-[8px] font-extrabold text-blue-600 bg-blue-200/50 px-1 py-0.5 rounded shrink-0 flex items-center gap-0.5"><span class="material-symbols-outlined text-[9px]">event</span> iCal</span>
-            </div>
-          `;
-        }
-
-        let bgClass = 'bg-gradient-to-r from-secondary/10 to-secondary/5 border-secondary/30 text-secondary hover:bg-secondary/15';
-        let dotColor = 'bg-secondary';
-        let statusBadge = 'bg-secondary/10 text-secondary border border-secondary/20';
-        let statusText = 'Confirmed';
-        if (b.status === 'completed') {
-          bgClass = 'bg-surface-container border-outline-variant text-on-surface-variant hover:bg-surface-container-high';
-          dotColor = 'bg-on-surface-variant';
-          statusBadge = 'bg-surface-container-high text-on-surface-variant border border-outline-variant';
-          statusText = 'Completed';
-        } else if (b.status === 'cancelled') {
-          bgClass = 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100/80 opacity-75';
-          dotColor = 'bg-red-600';
-          statusBadge = 'bg-red-100 text-red-800 border border-red-200';
-          statusText = 'Cancelled';
-        }
-
-        return `
-          <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="px-1.5 py-1 rounded-lg border text-[10px] font-bold transition-all mb-1 shadow-2xs hover:shadow-sm cursor-pointer flex items-center justify-between gap-1 min-w-0 overflow-hidden leading-none group/badge ${bgClass}" title="${b.start_time} - ${b.boat_name} (${b.customer_name})">
-            <div class="flex items-center gap-1 min-w-0 flex-1">
-              <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${dotColor} flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
-              <span class="font-mono text-[9px] font-extrabold bg-white/90 px-1 py-0.5 rounded shrink-0 shadow-2xs text-on-surface">${b.start_time.split(' ')[0]}</span>
-              <span class="font-bold text-[10px] truncate">${escapeHtml(b.customer_name || b.boat_name)}</span>
-            </div>
-            <span class="text-[8px] uppercase tracking-wider font-extrabold px-1 py-0.5 rounded shrink-0 ${statusBadge}">${statusText}</span>
-          </div>
-        `;
-      }).join('');
-
       const isPast = dateStr < todayStr;
       const tileBg = isToday 
         ? 'bg-gradient-to-br from-secondary/5 via-white to-white border-2 border-secondary shadow-md ring-2 sm:ring-4 ring-secondary/10' 
@@ -3811,30 +3774,91 @@ document.addEventListener('DOMContentLoaded', async () => {
           ? 'bg-surface-container-high/50 text-on-surface-variant/70 group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary'
           : 'bg-surface-container text-on-surface group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary';
 
-      cellsHtml += `
-        <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl lg:rounded-2xl aspect-square lg:aspect-auto lg:min-h-[96px] p-1 lg:p-2 flex flex-col items-center justify-center lg:items-stretch lg:justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
-          <div class="min-w-0 flex-1 flex flex-col items-center justify-center lg:items-stretch lg:justify-between w-full">
-            <div class="flex items-center justify-center lg:justify-between gap-1 min-w-0 w-full">
-              <div class="flex items-center justify-center lg:justify-start gap-1 min-w-0 w-full lg:w-auto">
-                <span class="inline-flex items-center justify-center w-8 h-8 lg:w-6 lg:h-6 rounded-xl font-label text-sm lg:text-xs font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
-                  ${day}
-                </span>
-                ${isToday ? `<span class="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary text-white font-black text-[8px] uppercase tracking-wider shadow-2xs shrink-0">Today</span>` : ''}
-              </div>
-              <div class="hidden lg:flex items-center gap-1 shrink-0 ml-auto">
-                ${weatherBadge}
-                ${allEvents.length > 0 ? `<span class="hidden lg:inline-flex text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 shadow-2xs shrink-0">${allEvents.length}</span>` : ''}
-              </div>
-            </div>
-            
-            <!-- Desktop Detailed Event Badges (Compact Single Line) - Strictly 1024px+ (lg:) -->
-            <div class="hidden lg:block space-y-1 overflow-y-auto max-h-[56px] pr-0.5 scrollbar-thin min-w-0 mt-1">
-              ${badgesHtml || `<div class="pt-2 text-center opacity-0 group-hover/cell:opacity-100 transition-opacity"><span class="text-[9px] font-bold text-on-surface-variant/60 flex items-center justify-center gap-0.5"><span class="material-symbols-outlined text-[11px]">add_circle</span> Add Booking</span></div>`}
-            </div>
+      if (isMobileView) {
+        cellsHtml += `
+          <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl aspect-square w-full p-1 flex items-center justify-center transition-all duration-200 cursor-pointer group/cell relative overflow-hidden min-w-0" style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important; display: flex !important; align-items: center !important; justify-content: center !important; overflow: hidden !important;">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl font-label text-sm font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
+              ${day}
+            </span>
           </div>
-          ${allEvents.length === 0 ? `<div class="hidden lg:block mt-auto text-right opacity-30 group-hover/cell:opacity-60 transition-opacity shrink-0"><span class="text-[9px] font-mono font-bold text-on-surface-variant/60">No events</span></div>` : ''}
-        </div>
-      `;
+        `;
+      } else {
+        const diffDays = Math.round((new Date(dateStr) - new Date(todayStr)) / (1000 * 60 * 60 * 24));
+        let weatherBadge = '';
+        if (diffDays >= 0 && diffDays <= 6) {
+          const icons = ['☀️ 85°', '⛅ 82°', '☀️ 86°', '🌤 84°', '🌧 80°', '☀️ 85°', '⛅ 83°'];
+          weatherBadge = `<span class="hidden lg:flex text-[10px] bg-amber-500/10 text-amber-800 border border-amber-500/20 px-1.5 py-0.5 rounded font-extrabold items-center gap-1 shadow-2xs" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
+        } else if (diffDays > 6 && diffDays <= 14) {
+          weatherBadge = `<span class="hidden lg:inline-block text-[10px] text-on-surface-variant/60 font-medium" title="Long range forecast">⛅</span>`;
+        }
+
+        const badgesHtml = allEvents.map(b => {
+          if (b.status === 'external') {
+            return `
+              <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="px-1.5 py-1 rounded-lg border border-blue-200/80 bg-gradient-to-r from-blue-50 to-indigo-50/70 hover:from-blue-100 hover:to-indigo-100 text-blue-900 shadow-2xs hover:shadow-sm transition-all mb-1 group/badge cursor-pointer flex items-center justify-between gap-1 min-w-0 overflow-hidden leading-none" title="[${escapeHtml(b.source_label)}] ${escapeHtml(b.customer_name)}">
+                <div class="flex items-center gap-1 min-w-0 flex-1">
+                  <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-600 flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
+                  <span class="font-mono text-[9px] font-extrabold text-blue-700 bg-blue-100/90 px-1 py-0.5 rounded shrink-0">${escapeHtml(b.start_time.split(' - ')[0] || b.start_time)}</span>
+                  <span class="font-bold text-[10px] text-on-surface truncate">${escapeHtml(b.customer_name || 'Charter Booking')}</span>
+                </div>
+                <span class="text-[8px] font-extrabold text-blue-600 bg-blue-200/50 px-1 py-0.5 rounded shrink-0 flex items-center gap-0.5"><span class="material-symbols-outlined text-[9px]">event</span> iCal</span>
+              </div>
+            `;
+          }
+
+          let bgClass = 'bg-gradient-to-r from-secondary/10 to-secondary/5 border-secondary/30 text-secondary hover:bg-secondary/15';
+          let dotColor = 'bg-secondary';
+          let statusBadge = 'bg-secondary/10 text-secondary border border-secondary/20';
+          let statusText = 'Confirmed';
+          if (b.status === 'completed') {
+            bgClass = 'bg-surface-container border-outline-variant text-on-surface-variant hover:bg-surface-container-high';
+            dotColor = 'bg-on-surface-variant';
+            statusBadge = 'bg-surface-container-high text-on-surface-variant border border-outline-variant';
+            statusText = 'Completed';
+          } else if (b.status === 'cancelled') {
+            bgClass = 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100/80 opacity-75';
+            dotColor = 'bg-red-600';
+            statusBadge = 'bg-red-100 text-red-800 border border-red-200';
+            statusText = 'Cancelled';
+          }
+
+          return `
+            <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="px-1.5 py-1 rounded-lg border text-[10px] font-bold transition-all mb-1 shadow-2xs hover:shadow-sm cursor-pointer flex items-center justify-between gap-1 min-w-0 overflow-hidden leading-none group/badge ${bgClass}" title="${b.start_time} - ${b.boat_name} (${b.customer_name})">
+              <div class="flex items-center gap-1 min-w-0 flex-1">
+                <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${dotColor} flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
+                <span class="font-mono text-[9px] font-extrabold bg-white/90 px-1 py-0.5 rounded shrink-0 shadow-2xs text-on-surface">${b.start_time.split(' ')[0]}</span>
+                <span class="font-bold text-[10px] truncate">${escapeHtml(b.customer_name || b.boat_name)}</span>
+              </div>
+              <span class="text-[8px] uppercase tracking-wider font-extrabold px-1 py-0.5 rounded shrink-0 ${statusBadge}">${statusText}</span>
+            </div>
+          `;
+        }).join('');
+
+        cellsHtml += `
+          <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl lg:rounded-2xl aspect-square lg:aspect-auto lg:min-h-[96px] p-1 lg:p-2 flex flex-col items-center justify-center lg:items-stretch lg:justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
+            <div class="min-w-0 flex-1 flex flex-col items-center justify-center lg:items-stretch lg:justify-between w-full">
+              <div class="flex items-center justify-between gap-1 min-w-0 w-full">
+                <div class="flex items-center justify-center lg:justify-start gap-1 min-w-0 w-full lg:w-auto">
+                  <span class="inline-flex items-center justify-center w-8 h-8 lg:w-6 lg:h-6 rounded-xl font-label text-sm lg:text-xs font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
+                    ${day}
+                  </span>
+                  ${isToday ? `<span class="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary text-white font-black text-[8px] uppercase tracking-wider shadow-2xs shrink-0">Today</span>` : ''}
+                </div>
+                <div class="hidden lg:flex items-center gap-1 shrink-0 ml-auto">
+                  ${weatherBadge}
+                  ${allEvents.length > 0 ? `<span class="hidden lg:inline-flex text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 shadow-2xs shrink-0">${allEvents.length}</span>` : ''}
+                </div>
+              </div>
+              
+              <!-- Desktop Detailed Event Badges (Compact Single Line) - Strictly 1024px+ (lg:) -->
+              <div class="hidden lg:block space-y-1 overflow-y-auto max-h-[56px] pr-0.5 scrollbar-thin min-w-0 mt-1">
+                ${badgesHtml || `<div class="pt-2 text-center opacity-0 group-hover/cell:opacity-100 transition-opacity"><span class="text-[9px] font-bold text-on-surface-variant/60 flex items-center justify-center gap-0.5"><span class="material-symbols-outlined text-[11px]">add_circle</span> Add Booking</span></div>`}
+              </div>
+            </div>
+            ${allEvents.length === 0 ? `<div class="hidden lg:block mt-auto text-right opacity-30 group-hover/cell:opacity-60 transition-opacity shrink-0"><span class="text-[9px] font-mono font-bold text-on-surface-variant/60">No events</span></div>` : ''}
+          </div>
+        `;
+      }
     }
 
     grid.innerHTML = cellsHtml;
