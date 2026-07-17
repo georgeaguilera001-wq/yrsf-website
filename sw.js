@@ -1,9 +1,10 @@
 /**
  * YRSF Main Website — Service Worker
- * Enables PWA installation and offline caching.
+ * Network-First caching strategy ensures the site ALWAYS loads live updates instantly
+ * while falling back cleanly to cached versions when offline.
  */
 
-const CACHE_NAME = 'yrsf-main-v2';
+const CACHE_NAME = 'yrsf-main-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -41,14 +42,24 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Network-First strategy: Always fetch live code first so changes show instantly!
 self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('supabase.co') || event.request.method !== 'GET') {
     return;
   }
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).catch(() => cached);
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });

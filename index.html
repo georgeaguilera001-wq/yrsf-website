@@ -29,8 +29,15 @@
 <link rel="apple-touch-icon" sizes="120x120" href="https://yachtrentalsofsouthflorida.com/logo.png?v=3"/>
 <script>
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch(e => console.warn('Root SW reg failed:', e));
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      reg.update();
+    }).catch(e => console.warn('Root SW reg failed:', e));
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
     });
   }
 </script>

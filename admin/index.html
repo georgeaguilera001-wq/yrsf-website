@@ -18,7 +18,16 @@
   <link rel="icon" href="https://yachtrentalsofsouthflorida.com/admin/logo.png?v=3" type="image/png"/>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/admin/sw.js', { scope: '/admin/' }).catch(e => console.warn('SW reg failed:', e));
+      navigator.serviceWorker.register('/admin/sw.js', { scope: '/admin/' }).then(reg => {
+        reg.update();
+      }).catch(e => console.warn('SW reg failed:', e));
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
     }
   </script>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
