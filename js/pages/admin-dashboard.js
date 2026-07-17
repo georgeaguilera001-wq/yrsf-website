@@ -2665,6 +2665,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   let calendarSourceFilter = 'all';
 
   function initBookingsSection() {
+    // ── Pre-warm fleet cache so the boat dropdown is instant on first tap ──
+    if (!fleetCache || fleetCache.length === 0) {
+      loadFleet().then(() => {
+        // Silently pre-render dropdown options after data arrives
+        if (typeof window.renderCalBoatDropdownOptions === 'function') {
+          window.renderCalBoatDropdownOptions('');
+        }
+      });
+    }
+
     const tabManifest = document.getElementById('tab-btn-manifest');
     const tabCal = document.getElementById('tab-btn-calendar');
     const viewManifest = document.getElementById('view-manifest');
@@ -2921,19 +2931,22 @@ document.addEventListener('DOMContentLoaded', async () => {
           renderCalendar();
         }
       });
-      calBoatSearchInput.addEventListener('focus', async () => {
-        if (!fleetCache || fleetCache.length === 0) await loadFleet();
-        if (calBoatSearchInput.value === 'Select Yacht...') calBoatSearchInput.select();
+      calBoatSearchInput.addEventListener('focus', () => {
+        // Render immediately from whatever is already cached — no await
         window.renderCalBoatDropdownOptions(calBoatSearchInput.value === 'Select Yacht...' ? '' : calBoatSearchInput.value);
         calBoatOptionsList?.classList.remove('hidden');
         if (calBoatToggle) calBoatToggle.classList.add('rotate-180');
+        // If cache is empty, load in the background and re-render silently
+        if (!fleetCache || fleetCache.length === 0) {
+          loadFleet().then(() => window.renderCalBoatDropdownOptions(''));
+        }
       });
     }
 
     if (calBoatTrigger) {
-      calBoatTrigger.addEventListener('click', async (e) => {
+      calBoatTrigger.addEventListener('click', (e) => {
         if (e.target === calBoatSearchInput) return;
-        if (!fleetCache || fleetCache.length === 0) await loadFleet();
+        // Render instantly from cache — no await
         window.renderCalBoatDropdownOptions(calBoatSearchInput?.value === 'Select Yacht...' ? '' : (calBoatSearchInput?.value || ''));
         const isHidden = calBoatOptionsList?.classList.contains('hidden');
         if (isHidden) {
@@ -2944,13 +2957,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           calBoatOptionsList?.classList.add('hidden');
           if (calBoatToggle) calBoatToggle.classList.remove('rotate-180');
         }
+        // Background refresh if cache is stale
+        if (!fleetCache || fleetCache.length === 0) {
+          loadFleet().then(() => window.renderCalBoatDropdownOptions(''));
+        }
       });
     } else if (calBoatToggle) {
-      calBoatToggle.addEventListener('click', async () => {
-        if (!fleetCache || fleetCache.length === 0) await loadFleet();
+      calBoatToggle.addEventListener('click', () => {
+        // Render instantly from cache — no await
         window.renderCalBoatDropdownOptions(calBoatSearchInput?.value === 'Select Yacht...' ? '' : (calBoatSearchInput?.value || ''));
         calBoatOptionsList?.classList.toggle('hidden');
         calBoatToggle?.classList.toggle('rotate-180');
+        if (!fleetCache || fleetCache.length === 0) {
+          loadFleet().then(() => window.renderCalBoatDropdownOptions(''));
+        }
       });
     }
 
