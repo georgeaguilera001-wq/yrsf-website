@@ -139,3 +139,24 @@
 .admin-card:hover {
   border-color: #455f88;
 }
+
+/* --- Mobile Calendar Grid Strict 1x1 Squares --- */
+@media (max-width: 1023px) {
+  #cal-grid {
+    align-items: start !important;
+    grid-auto-rows: max-content !important;
+  }
+  #cal-grid > div {
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    align-self: start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2px !important;
+  }
+}
