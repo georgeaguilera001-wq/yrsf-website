@@ -50,9 +50,11 @@
 
   <!-- Sidebar -->
   <aside class="admin-sidebar fixed left-0 top-0 h-full bg-surface-container-lowest border-r border-outline-variant flex flex-col z-50" style="width: 264px;" id="admin-sidebar">
-    <div class="p-md border-b border-outline-variant">
-      <a href="/" class="font-display text-headline-md text-secondary font-bold">YRSF</a>
-      <p class="font-caption text-caption text-on-surface-variant">Admin Portal</p>
+    <div class="p-4 border-b border-outline-variant flex flex-col gap-1.5">
+      <a href="/" class="block">
+        <img src="/img/logo-wide.png" alt="Yacht Rentals of South Florida" class="h-10 w-auto object-contain"/>
+      </a>
+      <p class="font-caption text-caption text-on-surface-variant font-medium pl-1">Admin Portal</p>
     </div>
 
     <nav class="flex-1 p-sm overflow-y-auto">
@@ -178,11 +180,13 @@
   <!-- Main Content -->
   <main class="admin-main transition-all pb-24 lg:pb-0" style="margin-left: 264px;">
     <!-- Mobile Header -->
-    <div class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest border-b border-outline-variant p-4 flex items-center gap-3">
+    <div class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest border-b border-outline-variant px-4 py-3 flex items-center gap-3">
       <button class="p-2 rounded-lg hover:bg-surface-container transition-colors" id="sidebar-toggle">
         <span class="material-symbols-outlined">menu</span>
       </button>
-      <span class="font-headline text-headline-md font-bold text-secondary">YRSF</span>
+      <a href="/" class="flex items-center">
+        <img src="/img/logo-wide.png" alt="YRSF Logo" class="h-8 sm:h-9 w-auto object-contain"/>
+      </a>
     </div>
 
     <!-- Top Notification & Status Bar -->

@@ -39,8 +39,8 @@ export function renderNavbar(activePage = '') {
   return `
     <header class="fixed top-0 left-0 w-full z-50 glass-nav border-b border-outline-variant transition-shadow" id="main-nav">
       <nav class="flex justify-between items-center w-full px-lg py-4 max-w-container-max mx-auto">
-        <a href="/index.html" id="nav-logo" class="font-display-lg text-headline-md font-bold text-secondary flex items-center gap-2">
-          <span class="material-symbols-outlined text-3xl">directions_boat</span> YRSF
+        <a href="/index.html" id="nav-logo" class="flex items-center">
+          <img src="/img/logo-wide.png" alt="Yacht Rentals of South Florida" class="h-10 sm:h-12 w-auto object-contain"/>
         </a>
         
         <div class="hidden md:flex items-center gap-md font-label-md text-label-md">
