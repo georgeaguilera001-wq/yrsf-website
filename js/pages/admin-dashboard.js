@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const emailEl = document.getElementById('admin-user-email');
   if (emailEl && user?.email) emailEl.textContent = user.email;
 
+  // Pre-fetch settings to make modals instant
+  settingsCache = await getAllSettings();
+
   // ─── Logout ─────────────────────────────────────────
   document.getElementById('logout-btn')?.addEventListener('click', async () => {
     await logout();
@@ -2994,6 +2997,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadStaffUsers();
   };
 
+
   window.deleteTimecard = async (id) => {
     if (!confirm('Are you sure you want to delete this shift timecard?')) return;
     const { error } = await supabase.from('staff_timecards').delete().eq('id', id);
@@ -3016,6 +3020,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ─── Charter Bookings & Daily Manifest System ─────────
   let bookingsCache = [];
+  let settingsCache = null;
   let currentManifestFilter = 'today';
   let currentManifestDate = new Date().toISOString().split('T')[0];
   let calCurrentDate = new Date();
@@ -5112,10 +5117,12 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   };
 
   window.openMessagePreview = async (id) => {
-    const { data: b } = await supabase.from('bookings').select('*').eq('id', id).single();
+    if (!bookingsCache || bookingsCache.length === 0) await loadBookings();
+    const b = bookingsCache.find(x => x.id === id);
     if (!b) return;
     
-    const settings = await getAllSettings();
+    if (!settingsCache) settingsCache = await getAllSettings();
+    const settings = settingsCache;
     let template = settings.whatsapp_booking_template?.value;
     if (!template) {
       template = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} is confirmed! We look forward to welcoming you aboard.";
