@@ -579,21 +579,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const html = batch.map(boat => `
         <tr class="admin-table-row border-b border-outline-variant hover:bg-surface-container-low transition-colors animate-in fade-in duration-200">
-          <td class="px-md py-4">
-            <div class="flex items-center gap-3">
-              ${boat.primary_image_url ? `<img src="${boat.primary_image_url}" alt="" loading="lazy" decoding="async" class="w-12 h-12 rounded-lg object-cover"/>` : '<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-outline-variant">image</span></div>'}
+          <td class="px-3 py-3">
+            <div class="flex items-center gap-3 cursor-pointer group" onclick="document.querySelector('.edit-boat-btn[data-id=\\'${boat.id}\\']')?.click()" title="Edit ${escapeHtml(boat.name)}">
+              ${boat.primary_image_url ? `<img src="${boat.primary_image_url}" alt="" loading="lazy" decoding="async" class="w-12 h-12 rounded-lg object-cover group-hover:ring-2 ring-secondary transition-all"/>` : '<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center group-hover:ring-2 ring-secondary transition-all"><span class="material-symbols-outlined text-outline-variant">image</span></div>'}
               <div>
-                <p class="font-label text-label-md text-on-surface flex items-center gap-1.5">
+                <p class="font-label text-label-md text-secondary group-hover:underline flex items-center gap-1.5 whitespace-nowrap">
                   ${escapeHtml(boat.name)}
                   ${boat.ical_feed_url ? `<span class="material-symbols-outlined text-[15px] text-emerald-600 shrink-0" title="iCal Connected" style="font-variation-settings:'FILL' 1">check_circle</span>` : ''}
                 </p>
-                <p class="font-caption text-caption text-on-surface-variant">${escapeHtml(boat.manufacturer || '')}</p>
+                <p class="font-caption text-caption text-on-surface-variant truncate max-w-[120px]">${escapeHtml(boat.manufacturer || '')}</p>
               </div>
             </div>
           </td>
-          <td class="px-md py-4 font-caption text-caption text-on-surface-variant">${escapeHtml(boat.vessel_id || '-')}</td>
-          <td class="px-md py-4 font-caption text-caption text-on-surface-variant">${boat.capacity || '-'} guests</td>
-          <td class="px-md py-4">
+          <td class="px-3 py-3 font-caption text-caption text-on-surface-variant whitespace-nowrap">${escapeHtml(boat.vessel_id || '-')}</td>
+          <td class="px-3 py-3 font-caption text-caption text-on-surface-variant whitespace-nowrap">${boat.capacity || '-'} guests</td>
+          <td class="px-3 py-3 whitespace-nowrap">
             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-caption ${
               boat.status === 'active' ? 'bg-green-100 text-green-700' :
               boat.status === 'maintenance' ? 'bg-yellow-100 text-yellow-700' :
@@ -607,10 +607,10 @@ document.addEventListener('DOMContentLoaded', async () => {
               ${boat.status}
             </span>
           </td>
-          <td class="px-md py-4">
+          <td class="px-3 py-3 whitespace-nowrap">
             ${boat.is_featured ? '<span class="material-symbols-outlined text-secondary" style="font-variation-settings: \'FILL\' 1;">star</span>' : '<span class="material-symbols-outlined text-outline-variant">star</span>'}
           </td>
-          <td class="px-md py-4">
+          <td class="px-3 py-3 whitespace-nowrap">
             ${boat.ical_feed_url
               ? `<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold" title="iCal feed connected">
                   <span class="material-symbols-outlined text-[14px] text-emerald-600" style="font-variation-settings:'FILL' 1">check_circle</span>
@@ -622,12 +622,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </span>`
             }
           </td>
-          <td class="px-md py-4 text-right">
-            <div class="flex items-center justify-end gap-2 row-actions">
-              <button class="edit-boat-btn p-2 hover:bg-surface-container rounded-lg transition-colors" data-id="${boat.id}" title="Edit">
+          <td class="px-3 py-3 text-right whitespace-nowrap">
+            <div class="flex items-center justify-end gap-1 row-actions">
+              <button class="edit-boat-btn p-1.5 hover:bg-surface-container rounded-lg transition-colors" data-id="${boat.id}" title="Edit">
                 <span class="material-symbols-outlined text-[18px]">edit</span>
               </button>
-              <button class="delete-boat-btn p-2 hover:bg-error-container rounded-lg transition-colors text-error" data-id="${boat.id}" data-name="${escapeHtml(boat.name)}" title="Delete">
+              <button class="delete-boat-btn p-1.5 hover:bg-error-container rounded-lg transition-colors text-error" data-id="${boat.id}" data-name="${escapeHtml(boat.name)}" title="Delete">
                 <span class="material-symbols-outlined text-[18px]">delete</span>
               </button>
             </div>
