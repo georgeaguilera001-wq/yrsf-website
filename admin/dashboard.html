@@ -1133,7 +1133,7 @@
       </div>
 
       <!-- Zapier Setup & Test Modal -->
-      <div id="zapier-setup-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div id="zapier-setup-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-surface-container-lowest border border-outline-variant rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-5 relative max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b border-outline-variant pb-3">
             <h3 class="font-headline text-headline-md text-on-surface font-bold flex items-center gap-2">
@@ -2203,11 +2203,11 @@
   </nav>
 
   <!-- Message Preview Modal -->
-  <div id="message-preview-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div id="message-preview-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-surface-container-lowest text-on-surface rounded-2xl w-full max-w-lg shadow-xl border border-outline-variant animate-in zoom-in-95 duration-200">
       <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
         <h3 class="font-headline text-headline-md font-bold text-on-surface">Preview Confirmation Message</h3>
-        <button type="button" onclick="document.getElementById('message-preview-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+        <button type="button" onclick="document.getElementById('message-preview-modal').classList.add('hidden'); document.getElementById('message-preview-modal').classList.remove('flex');" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
           <span class="material-symbols-outlined text-[20px]">close</span>
         </button>
       </div>
