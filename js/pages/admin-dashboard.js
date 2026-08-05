@@ -1666,10 +1666,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             <label class="block font-label text-label-md text-on-surface-variant mb-2">Description</label>
             <textarea id="edit-addon-desc" rows="3" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg">${escapeHtml(addon?.description || '')}</textarea>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
             <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Price Text (e.g., "$250/hr")</label>
-              <input type="text" id="edit-addon-price-text" value="${escapeHtml(addon?.price_text || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
+              <label class="block font-label text-label-md text-on-surface-variant mb-2">Display Price Text</label>
+              <input type="text" id="edit-addon-price-text" placeholder="e.g., $250/hr" value="${escapeHtml(addon?.price_text || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
+            </div>
+            <div>
+              <label class="block font-label text-label-md text-on-surface-variant mb-2">Calc Price Value ($)</label>
+              <input type="number" step="0.01" min="0" id="edit-addon-price-value" placeholder="250.00" value="${addon?.price_value || ''}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
             </div>
             <div>
               <label class="block font-label text-label-md text-on-surface-variant mb-2">Badge (optional)</label>
@@ -1713,6 +1717,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         name: document.getElementById('edit-addon-name').value.trim(),
         description: document.getElementById('edit-addon-desc').value.trim() || null,
         price_text: document.getElementById('edit-addon-price-text').value.trim() || null,
+        price_value: parseFloat(document.getElementById('edit-addon-price-value').value) || null,
         badge: document.getElementById('edit-addon-badge').value.trim() || null,
         image_url: document.getElementById('edit-addon-image').value.trim() || null,
         status: document.getElementById('edit-addon-status').value,
