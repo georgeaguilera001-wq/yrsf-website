@@ -1296,6 +1296,29 @@
               </div>
             </div>
           </div>
+
+          <!-- Quo SMS API Settings -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+            <h3 class="font-headline text-title-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary">sms</span> Quo (OpenPhone) Integration
+            </h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Quo API Key</label>
+                <input type="text" id="setting-quo-api-key" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="Enter your Quo API key (e.g., 0a17aaecd...)" value="0a17aaecd376f44708bc17d8e42e06acc4b215605f24451cce99a10a55bb5500">
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Quo "From" Phone Number</label>
+                <input type="text" id="setting-quo-phone" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="e.g., +1234567890">
+                <p class="text-xs text-on-surface-variant mt-1.5">This must include the country code (e.g., +1). This number will be used to send all automated messages.</p>
+              </div>
+              <div class="pt-2">
+                <button type="button" onclick="window.saveQuoSettings()" class="px-5 py-2.5 bg-secondary text-on-secondary hover:opacity-90 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer">
+                  Save Quo Settings
+                </button>
+              </div>
+            </div>
+          </div>
           <!-- Hero Content -->
           <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
             <h3 class="font-headline text-headline-md text-on-surface mb-md">Homepage Hero</h3>
@@ -2196,6 +2219,9 @@
       <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row gap-3 rounded-b-2xl justify-end">
         <button id="btn-copy-message" class="px-5 py-2.5 bg-surface text-on-surface border border-outline-variant hover:bg-surface-container rounded-xl font-label text-sm font-bold flex items-center justify-center gap-2 transition-colors">
           <span class="material-symbols-outlined text-[18px]">content_copy</span> Copy to Clipboard
+        </button>
+        <button id="btn-send-quo" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-label text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm">
+          <span class="material-symbols-outlined text-[18px]">sms</span> Send via Quo SMS
         </button>
         <button id="btn-send-whatsapp" class="px-5 py-2.5 bg-green-600 text-white hover:bg-green-700 rounded-xl font-label text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm">
           <span class="material-symbols-outlined text-[18px]">chat</span> Send via WhatsApp

@@ -5140,7 +5140,8 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const modal = document.getElementById('message-preview-modal');
     const textArea = document.getElementById('preview-message-text');
     const btnCopy = document.getElementById('btn-copy-message');
-    const btnSend = document.getElementById('btn-send-whatsapp');
+    const btnSendWhatsApp = document.getElementById('btn-send-whatsapp');
+    const btnSendQuo = document.getElementById('btn-send-quo');
 
     if (modal && textArea) {
       textArea.value = text;
@@ -5149,8 +5150,10 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       // Clear old listeners
       const newBtnCopy = btnCopy.cloneNode(true);
       btnCopy.parentNode.replaceChild(newBtnCopy, btnCopy);
-      const newBtnSend = btnSend.cloneNode(true);
-      btnSend.parentNode.replaceChild(newBtnSend, btnSend);
+      const newBtnSendWhatsApp = btnSendWhatsApp.cloneNode(true);
+      btnSendWhatsApp.parentNode.replaceChild(newBtnSendWhatsApp, btnSendWhatsApp);
+      const newBtnSendQuo = btnSendQuo?.cloneNode(true);
+      if (newBtnSendQuo) btnSendQuo.parentNode.replaceChild(newBtnSendQuo, btnSendQuo);
 
       newBtnCopy.addEventListener('click', () => {
         navigator.clipboard.writeText(text).then(() => {
@@ -5158,7 +5161,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
         });
       });
 
-      newBtnSend.addEventListener('click', () => {
+      newBtnSendWhatsApp.addEventListener('click', () => {
         if (!b.customer_phone) {
           showToast('No phone number recorded for this booking.', true);
           return;
@@ -5166,6 +5169,16 @@ Write ONLY the summary sentence(s), no extra explanation.`;
         const cleanPhone = b.customer_phone.replace(/[^0-9]/g, '');
         window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
       });
+
+      if (newBtnSendQuo) {
+        newBtnSendQuo.addEventListener('click', async () => {
+          if (!b.customer_phone) {
+            showToast('No phone number recorded for this booking.', true);
+            return;
+          }
+          await window.sendQuoSMS(b.customer_phone, text);
+        });
+      }
     }
   };
 
@@ -5555,8 +5568,80 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
   }
 
+  // ─── Quo (OpenPhone) Integration ───────────────────
+  window.saveQuoSettings = async function() {
+    const apiKey = document.getElementById('setting-quo-api-key')?.value.trim();
+    const phone = document.getElementById('setting-quo-phone')?.value.trim();
+    
+    await updateSettings({
+      quo_api_key: { value: apiKey },
+      quo_phone: { value: phone }
+    });
+    
+    showToast('Quo Settings saved successfully!', 'success');
+  };
+
+  window.sendQuoSMS = async function(toPhone, message) {
+    const settings = await getAllSettings();
+    const apiKey = settings.quo_api_key?.value;
+    const fromPhone = settings.quo_phone?.value;
+
+    if (!apiKey || !fromPhone) {
+      showToast('Quo API Key or From Phone missing! Please configure in Settings.', true);
+      return false;
+    }
+
+    // Format phone numbers (ensure starting with '+')
+    let cleanTo = toPhone.replace(/[^0-9+]/g, '');
+    if (!cleanTo.startsWith('+')) cleanTo = '+' + (cleanTo.length === 10 ? '1' : '') + cleanTo;
+    
+    let cleanFrom = fromPhone.replace(/[^0-9+]/g, '');
+    if (!cleanFrom.startsWith('+')) cleanFrom = '+' + (cleanFrom.length === 10 ? '1' : '') + cleanFrom;
+
+    try {
+      const btn = document.getElementById('btn-send-quo');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) btn.innerHTML = '<span class="admin-spinner w-4 h-4 mr-2"></span> Sending...';
+      
+      const response = await fetch('https://api.openphone.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: cleanFrom,
+          to: [cleanTo],
+          content: message
+        })
+      });
+
+      if (btn) btn.innerHTML = originalText;
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || response.statusText || 'Unknown Quo API error');
+      }
+
+      showToast('Message sent successfully via Quo!', 'success');
+      return true;
+    } catch (e) {
+      showToast('Failed to send Quo SMS: ' + e.message, true);
+      return false;
+    }
+  };
+
   // ─── Initial Load ───────────────────────────────────
+  async function loadQuoSettings() {
+    const settings = await getAllSettings();
+    const kInput = document.getElementById('setting-quo-api-key');
+    const pInput = document.getElementById('setting-quo-phone');
+    if (kInput && settings.quo_api_key) kInput.value = settings.quo_api_key.value || '0a17aaecd376f44708bc17d8e42e06acc4b215605f24451cce99a10a55bb5500';
+    if (pInput && settings.quo_phone) pInput.value = settings.quo_phone.value || '';
+  }
+  
   loadDashboard();
   loadCommissions();
   updateZapierStatusPill();
+  loadQuoSettings();
 });
