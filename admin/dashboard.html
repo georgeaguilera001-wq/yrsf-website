@@ -1943,24 +1943,21 @@
             <button type="button" id="stripe-charge-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-lg shadow transition-colors flex items-center justify-center gap-2">
               <span class="material-symbols-outlined text-sm">payment</span> Process Charge
             </button>
+        <div class="space-y-2 mb-3">
+          <label class="block font-label text-xs font-bold text-on-surface">Included Services & Add-ons</label>
+          <div class="flex flex-col gap-2" id="dynamic-addons-container">
+            <!-- Populated via JS -->
+            <div class="text-xs text-on-surface-variant animate-pulse">Loading add-ons...</div>
           </div>
-        </div>
-
-        <div class="space-y-2 mb-2">
-          <label class="block font-label text-xs font-bold text-on-surface">Quick Add-ons</label>
-          <div class="flex flex-wrap gap-2" id="addon-checkboxes">
-            <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container transition-colors text-xs font-bold text-on-surface">
-              <input type="checkbox" value="Jet Ski" class="addon-cb text-secondary rounded focus:ring-secondary focus:ring-offset-0"> Jet Ski
-            </label>
-            <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container transition-colors text-xs font-bold text-on-surface">
-              <input type="checkbox" value="DJ Service" class="addon-cb text-secondary rounded focus:ring-secondary focus:ring-offset-0"> DJ
-            </label>
-            <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container transition-colors text-xs font-bold text-on-surface">
-              <input type="checkbox" value="Catering" class="addon-cb text-secondary rounded focus:ring-secondary focus:ring-offset-0"> Catering
-            </label>
-            <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container transition-colors text-xs font-bold text-on-surface">
-              <input type="checkbox" value="Decoration Pkg" class="addon-cb text-secondary rounded focus:ring-secondary focus:ring-offset-0"> Decor
-            </label>
+          
+          <!-- Custom Addon Row -->
+          <div class="flex gap-2 items-center mt-2 p-2 rounded-xl bg-surface-container-low border border-outline-variant">
+            <span class="material-symbols-outlined text-on-surface-variant text-sm pl-1">add_circle</span>
+            <input type="text" id="custom-addon-name" placeholder="Custom Add-on Name..." class="flex-1 bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 px-1 py-1 placeholder:text-on-surface-variant/50">
+            <div class="flex items-center gap-1 bg-white border border-outline-variant rounded-lg px-2 py-1">
+              <span class="text-on-surface-variant text-xs font-bold">$</span>
+              <input type="number" id="custom-addon-price" placeholder="0.00" class="w-16 bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 p-0 text-right">
+            </div>
           </div>
         </div>
 

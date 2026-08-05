@@ -5,7 +5,7 @@
 
 import { requireAuth, logout, getUser } from '../services/auth.js';
 import { getAllBoats, createBoat, updateBoat, deleteBoat, getBoatById, updateBoatImages, updateBoatPrices, updateBoatAmenities, updateBoatSpecs } from '../services/boats.js';
-import { getAllAddons, createAddon, updateAddon, deleteAddon } from '../services/addons.js';
+import { getAddons, getAllAddons, createAddon, updateAddon, deleteAddon } from '../services/addons.js';
 import { getAllBlogs, createBlog, updateBlog, deleteBlog } from '../services/blogs.js';
 import { getAllSettings, updateSettings } from '../services/settings.js';
 import { supabase } from '../config/supabase.js';
@@ -3074,31 +3074,64 @@ document.addEventListener('DOMContentLoaded', async () => {
       const boatId = document.getElementById('book-boat-select')?.value;
       const duration = document.getElementById('book-duration')?.value;
       const priceInput = document.getElementById('book-price');
-      if (!boatId || !duration || !priceInput) return;
+      if (!priceInput) return;
       
-      const boat = (fleetCache || []).find(b => b.id === boatId);
-      if (boat && boat.boat_prices) {
-        const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
-        if (matchingPrice && matchingPrice.price) {
-          priceInput.value = matchingPrice.price;
-          
-          // Pre-fill deposit to 50%
-          const depositEl = document.getElementById('book-deposit');
-          if (depositEl) {
-            depositEl.value = (parseFloat(matchingPrice.price) * 0.5).toFixed(2);
+      let basePrice = 0;
+      let boatMatch = false;
+
+      // 1. Get Base Boat Price
+      if (boatId && duration) {
+        const boat = (fleetCache || []).find(b => b.id === boatId);
+        if (boat && boat.boat_prices) {
+          const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
+          if (matchingPrice && matchingPrice.price) {
+            basePrice = parseFloat(matchingPrice.price) || 0;
+            boatMatch = true;
           }
-          
-          if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
-          
-          // Small animation to show it updated automatically
-          priceInput.classList.add('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
-          if (depositEl) depositEl.classList.add('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
-          
-          setTimeout(() => {
-            priceInput.classList.remove('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
-            if (depositEl) depositEl.classList.remove('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
-          }, 1000);
         }
+      }
+
+      // 2. Sum Dynamic Add-ons
+      let addonsTotal = 0;
+      document.querySelectorAll('.dynamic-addon-row').forEach(row => {
+        const cb = row.querySelector('.addon-cb');
+        const qtyInput = row.querySelector('.addon-qty');
+        if (cb && cb.checked && qtyInput) {
+          const qty = parseInt(qtyInput.value) || 1;
+          const price = parseFloat(cb.dataset.price) || 0;
+          addonsTotal += (price * qty);
+        }
+      });
+
+      // 3. Add Custom Add-on
+      const customPriceInput = document.getElementById('custom-addon-price');
+      const customNameInput = document.getElementById('custom-addon-name');
+      let customTotal = 0;
+      if (customPriceInput && customPriceInput.value && customNameInput && customNameInput.value.trim() !== '') {
+        customTotal = parseFloat(customPriceInput.value) || 0;
+      }
+
+      // Update Total
+      if (boatMatch || addonsTotal > 0 || customTotal > 0) {
+        const newTotal = basePrice + addonsTotal + customTotal;
+        priceInput.value = newTotal.toFixed(2);
+        
+        // Pre-fill deposit to 50%
+        const depositEl = document.getElementById('book-deposit');
+        if (depositEl) {
+          depositEl.value = (newTotal * 0.5).toFixed(2);
+        }
+        
+        if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+        
+        // Animation
+        priceInput.classList.add('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
+        if (depositEl) depositEl.classList.add('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
+        
+        setTimeout(() => {
+          priceInput.classList.remove('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
+          if (depositEl) depositEl.classList.remove('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
+        }, 1000);
       }
     };
 
@@ -3367,10 +3400,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const payEl = document.getElementById('book-pay-method'); if (payEl) payEl.value = '';
         document.getElementById('book-status').value = 'confirmed';
         document.getElementById('book-notes').value = '';
-        document.querySelectorAll('.addon-cb').forEach(cb => cb.checked = false);
+        
+        // Reset Custom Addon
+        if (document.getElementById('custom-addon-name')) document.getElementById('custom-addon-name').value = '';
+        if (document.getElementById('custom-addon-price')) document.getElementById('custom-addon-price').value = '';
 
         if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
         if (!fleetCache || fleetCache.length === 0) await loadFleet();
+        
+        // Load Add-ons dynamically
+        await loadBookingAddons();
         window.selectBoatOption('', '');
         window.renderBoatDropdownOptions('');
         modal.classList.remove('hidden');
@@ -3575,7 +3614,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         const remaining_balance = Math.max(0, total_price - deposit_amount);
         const payment_method = document.getElementById('book-pay-method')?.value.trim() || null;
         const status = document.getElementById('book-status').value;
-        const special_requests = document.getElementById('book-notes').value.trim() || null;
+        let special_requests = document.getElementById('book-notes').value.trim() || '';
+
+        // Build dynamically checked Add-ons string
+        const selectedAddons = [];
+        document.querySelectorAll('.dynamic-addon-row').forEach(row => {
+          const cb = row.querySelector('.addon-cb');
+          const qty = row.querySelector('.addon-qty');
+          if (cb && cb.checked) {
+            const qtyVal = parseInt(qty.value) || 1;
+            const price = parseFloat(cb.dataset.price) || 0;
+            const priceStr = price > 0 ? ` ($${(price * qtyVal).toFixed(2)})` : '';
+            selectedAddons.push(`[Addon: ${qtyVal}x ${cb.dataset.name}${priceStr}]`);
+          }
+        });
+
+        // Add Custom Add-on if present
+        const customName = document.getElementById('custom-addon-name')?.value.trim();
+        const customPrice = parseFloat(document.getElementById('custom-addon-price')?.value) || 0;
+        if (customName) {
+          const priceStr = customPrice > 0 ? ` ($${customPrice.toFixed(2)})` : '';
+          selectedAddons.push(`[Custom Addon: ${customName}${priceStr}]`);
+        }
+
+        // Prepend to notes
+        if (selectedAddons.length > 0) {
+          special_requests = selectedAddons.join('\\n') + (special_requests ? '\\n\\n' + special_requests : '');
+        }
+
+        // Nullify if empty
+        special_requests = special_requests || null;
 
         const payload = { boat_id, boat_name, booking_date, start_time, duration_hours, customer_name, customer_phone, customer_email, guest_count, total_price, deposit_amount, remaining_balance, payment_method, status, special_requests, updated_at: new Date().toISOString() };
 
