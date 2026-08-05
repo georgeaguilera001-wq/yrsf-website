@@ -4065,16 +4065,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
 
             <div class="flex items-center justify-end gap-2 pt-3 border-t border-outline-variant mt-2">
-              <button onclick="window.printBookingInvoice('${b.id}')" class="px-2 py-1.5 bg-surface-container hover:bg-green-50 hover:text-green-700 rounded-lg font-label text-xs font-bold text-on-surface-variant flex items-center gap-1 transition-colors" title="Print Invoice">
+              <button onclick="event.stopPropagation(); window.printBookingInvoice('${b.id}')" class="px-2 py-1.5 bg-surface-container hover:bg-green-50 hover:text-green-700 rounded-lg font-label text-xs font-bold text-on-surface-variant flex items-center gap-1 transition-colors" title="Print Invoice">
                 <span class="material-symbols-outlined text-[16px]">receipt_long</span>
               </button>
-              <button onclick="window.openMessagePreview('${b.id}')" class="px-2 py-1.5 bg-surface-container hover:bg-green-50 hover:text-green-600 rounded-lg font-label text-xs font-bold text-on-surface-variant flex items-center gap-1 transition-colors" title="Send Confirmation Message">
+              <button onclick="event.stopPropagation(); window.openMessagePreview('${b.id}')" class="px-2 py-1.5 bg-surface-container hover:bg-green-50 hover:text-green-600 rounded-lg font-label text-xs font-bold text-on-surface-variant flex items-center gap-1 transition-colors" title="Send Confirmation Message">
                 <span class="material-symbols-outlined text-[16px]">chat</span>
               </button>
-              <button onclick="window.editBooking('${b.id}')" class="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high rounded-lg font-label text-xs font-bold text-on-surface flex items-center gap-1 transition-colors">
+              <button onclick="event.stopPropagation(); window.editBooking('${b.id}')" class="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high rounded-lg font-label text-xs font-bold text-on-surface flex items-center gap-1 transition-colors">
                 <span class="material-symbols-outlined text-[16px]">edit</span> Edit Details
               </button>
-              <button onclick="window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="px-2.5 py-1.5 text-error hover:bg-error-container rounded-lg font-label text-xs font-bold transition-colors">
+              <button onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="px-2.5 py-1.5 text-error hover:bg-error-container rounded-lg font-label text-xs font-bold transition-colors">
                 Cancel
               </button>
             </div>
