@@ -562,23 +562,23 @@
 
       <!-- Bookings & Manifest Section -->
       <section class="admin-section hidden" id="section-bookings">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-8">
           <div>
-            <h1 class="font-headline text-headline-lg text-on-surface">Charter Bookings &amp; Daily Manifest</h1>
-            <p class="font-body text-body-md text-on-surface-variant mt-1">Schedule charters, manage fleet departures, and view daily passenger/vessel manifests.</p>
+            <h1 class="font-headline text-xl sm:text-headline-lg text-on-surface tracking-tight">Charter Bookings &amp; Daily Manifest</h1>
+            <p class="font-body text-[11px] sm:text-body-md text-on-surface-variant mt-0.5 sm:mt-1 leading-snug">Schedule charters, manage fleet departures, and view daily passenger/vessel manifests.</p>
           </div>
-          <button id="add-booking-btn" class="bg-secondary text-on-secondary px-6 py-3 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-md">
-            <span class="material-symbols-outlined text-lg">add_circle</span> Create New Booking
+          <button id="add-booking-btn" class="w-full sm:w-auto justify-center bg-secondary text-on-secondary px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-label text-xs sm:text-sm font-bold hover:opacity-90 transition-all flex items-center gap-1.5 sm:gap-2 shadow-sm sm:shadow-md">
+            <span class="material-symbols-outlined text-base sm:text-lg">add_circle</span> Create New Booking
           </button>
         </div>
 
         <!-- Sub-navigation Tabs -->
-        <div class="flex border-b border-outline-variant mb-6 gap-6">
-          <button id="tab-btn-calendar" class="pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2">
-            <span class="material-symbols-outlined text-base">calendar_month</span> Monthly Calendar Grid
+        <div class="flex border-b border-outline-variant mb-4 sm:mb-6 gap-3 sm:gap-6 overflow-x-auto custom-scrollbar">
+          <button id="tab-btn-calendar" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-secondary font-label text-[11px] sm:text-sm font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
+            <span class="material-symbols-outlined text-sm sm:text-base">calendar_month</span> Monthly Calendar Grid
           </button>
-          <button id="tab-btn-manifest" class="pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors">
-            <span class="material-symbols-outlined text-base">format_list_bulleted</span> Daily &amp; Future Manifest
+          <button id="tab-btn-manifest" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-transparent font-label text-[11px] sm:text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 sm:gap-2 transition-colors">
+            <span class="material-symbols-outlined text-sm sm:text-base">format_list_bulleted</span> Daily Manifest List
           </button>
         </div>
 
