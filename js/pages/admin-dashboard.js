@@ -3081,12 +3081,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
         if (matchingPrice && matchingPrice.price) {
           priceInput.value = matchingPrice.price;
+          
+          // Pre-fill deposit to 50%
+          const depositEl = document.getElementById('book-deposit');
+          if (depositEl) {
+            depositEl.value = (parseFloat(matchingPrice.price) * 0.5).toFixed(2);
+          }
+          
           if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
           
           // Small animation to show it updated automatically
           priceInput.classList.add('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
+          if (depositEl) depositEl.classList.add('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
+          
           setTimeout(() => {
             priceInput.classList.remove('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
+            if (depositEl) depositEl.classList.remove('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
           }, 1000);
         }
       }
@@ -3357,6 +3367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const payEl = document.getElementById('book-pay-method'); if (payEl) payEl.value = '';
         document.getElementById('book-status').value = 'confirmed';
         document.getElementById('book-notes').value = '';
+        document.querySelectorAll('.addon-cb').forEach(cb => cb.checked = false);
 
         if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
         if (!fleetCache || fleetCache.length === 0) await loadFleet();
@@ -3389,6 +3400,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (bookBalHidden) bookBalHidden.value = rem.toFixed(2);
     };
+
+    document.querySelectorAll('.addon-cb').forEach(cb => {
+      cb.addEventListener('change', () => {
+        let notes = document.getElementById('book-notes').value.trim();
+        const addonText = `[Addon: ${cb.value}]`;
+        if (cb.checked) {
+          if (!notes.includes(addonText)) notes = notes ? notes + '\n' + addonText : addonText;
+        } else {
+          notes = notes.replace(new RegExp(`\\n?\\s*${addonText.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}`, 'g'), '').trim();
+        }
+        document.getElementById('book-notes').value = notes;
+      });
+    });
 
     if (bookPrice) bookPrice.addEventListener('input', updateBalanceCalc);
     if (bookDeposit) bookDeposit.addEventListener('input', updateBalanceCalc);
