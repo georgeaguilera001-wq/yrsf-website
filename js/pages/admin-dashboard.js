@@ -5126,7 +5126,14 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       .replace(/{price}/g, '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2}))
       .replace(/{deposit}/g, '$' + paid.toLocaleString(undefined, {minimumFractionDigits: 2}))
       .replace(/{balance}/g, '$' + bal.toLocaleString(undefined, {minimumFractionDigits: 2}))
-      .replace(/{addons}/g, b.special_requests || 'None');
+      .replace(/{addons}/g, b.special_requests || 'None')
+      .replace(/{address}/g, () => {
+        if (b.boat_id && typeof fleetCache !== 'undefined') {
+          const boat = fleetCache.find(x => x.id === b.boat_id);
+          if (boat && boat.location) return boat.location;
+        }
+        return 'Miami Marina';
+      });
 
     const modal = document.getElementById('message-preview-modal');
     const textArea = document.getElementById('preview-message-text');
