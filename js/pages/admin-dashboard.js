@@ -3786,8 +3786,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Webhook Dispatch for Confirmation Messages
             try {
-              const webhookUrl = 'https://hooks.zapier.com/hooks/catch/YOUR_ZAPIER_ID/'; // Replace with real webhook
-              fetch(webhookUrl, {
+              const settings = await getAllSettings();
+              const webhookUrl = settings.zapier_webhook_url?.value;
+              if (webhookUrl) {
+                fetch(webhookUrl, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
@@ -5461,7 +5463,100 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     initReviewsSection();
   };
 
+  // ─── Zapier Integration Logic ───────────────────────
+  window.openZapierSetupModal = async function() {
+    const settings = await getAllSettings();
+    const webhookInput = document.getElementById('zapier-webhook-url-input');
+    if (webhookInput) {
+      webhookInput.value = settings.zapier_webhook_url?.value || '';
+    }
+    document.getElementById('zapier-setup-modal')?.classList.remove('hidden');
+  };
+
+  window.saveZapierWebhookSettings = async function() {
+    const webhookInput = document.getElementById('zapier-webhook-url-input');
+    if (webhookInput) {
+      await updateSettings({
+        zapier_webhook_url: { value: webhookInput.value.trim() }
+      });
+      showToast('Zapier webhook saved successfully!', 'success');
+      document.getElementById('zapier-setup-modal')?.classList.add('hidden');
+      updateZapierStatusPill(webhookInput.value.trim());
+    }
+  };
+
+  window.sendZapierTestPayload = async function() {
+    const webhookInput = document.getElementById('zapier-webhook-url-input');
+    const url = webhookInput ? webhookInput.value.trim() : '';
+    if (!url) {
+      showToast('Please enter a webhook URL first!', true);
+      return;
+    }
+    try {
+      showToast('Sending test payload...');
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'test_connection',
+          message: 'Hello from YRSF! Your Zapier connection is working.',
+          timestamp: new Date().toISOString()
+        })
+      });
+      showToast('Test payload sent! Check Zapier.', 'success');
+    } catch (e) {
+      showToast('Failed to send test payload: ' + e.message, true);
+    }
+  };
+
+  window.dispatchSocialPostNow = async function() {
+    const settings = await getAllSettings();
+    const url = settings.zapier_webhook_url?.value;
+    if (!url) {
+      showToast('Zapier is not configured! Click Zapier Setup to configure it first.', true);
+      return;
+    }
+    
+    const payload = {
+      event: 'social_post',
+      content: 'Book your dream yacht today with YRSF! 🛥️✨',
+      image_urls: ['https://example.com/yacht.jpg'],
+      platforms: ['instagram', 'facebook']
+    };
+
+    try {
+      showToast('Dispatching to Zapier...');
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      showToast('Post dispatched to Zapier!', 'success');
+    } catch (e) {
+      showToast('Failed to dispatch post: ' + e.message, true);
+    }
+  };
+
+  async function updateZapierStatusPill(url = null) {
+    const statusPill = document.getElementById('zapier-status-pill');
+    if (!statusPill) return;
+    
+    if (url === null) {
+      const settings = await getAllSettings();
+      url = settings.zapier_webhook_url?.value;
+    }
+
+    if (url && url.trim() !== '') {
+      statusPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Zapier Connected';
+    } else {
+      statusPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Zapier Not Configured';
+    }
+  }
+
   // ─── Initial Load ───────────────────────────────────
   loadDashboard();
   loadCommissions();
+  updateZapierStatusPill();
 });
