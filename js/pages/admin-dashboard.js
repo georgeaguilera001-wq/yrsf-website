@@ -27,8 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const emailEl = document.getElementById('admin-user-email');
   if (emailEl && user?.email) emailEl.textContent = user.email;
 
-  // Pre-fetch settings to make modals instant
-  settingsCache = await getAllSettings();
+  // Pre-fetch settings to make modals instant (declared here to avoid TDZ)
+  let settingsCache = null;
+  try { settingsCache = await getAllSettings(); } catch(e) { console.warn('Settings pre-fetch failed:', e); }
 
   // ─── Logout ─────────────────────────────────────────
   document.getElementById('logout-btn')?.addEventListener('click', async () => {
@@ -3019,8 +3020,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   refreshCommissionsBtn?.addEventListener('click', loadCommissions);
 
   // ─── Charter Bookings & Daily Manifest System ─────────
+  // settingsCache is declared at the top of DOMContentLoaded
   let bookingsCache = [];
-  let settingsCache = null;
   let currentManifestFilter = 'today';
   let currentManifestDate = new Date().toISOString().split('T')[0];
   let calCurrentDate = new Date();
