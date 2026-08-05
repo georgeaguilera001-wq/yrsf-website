@@ -3790,11 +3790,12 @@ document.addEventListener('DOMContentLoaded', async () => {
               const webhookUrl = settings.zapier_webhook_url?.value;
               if (webhookUrl) {
                 fetch(webhookUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ event: 'new_booking', data: payload })
-              });
+                  method: 'POST',
+                  mode: 'no-cors',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ event: 'new_booking', data: payload })
+                });
+              }
             } catch(e) {}
           }
           modal.classList.add('hidden');
