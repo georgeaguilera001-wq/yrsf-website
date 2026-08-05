@@ -1044,7 +1044,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <span class="material-symbols-outlined text-white text-2xl drop-shadow">play_circle</span>
               </div>
             ` : `
-              <img src="${escapeHtml(img.url)}" class="w-full h-full object-cover pointer-events-none"/>
+              <img src="${escapeHtml(img.url)}" loading="lazy" class="w-full h-full object-cover pointer-events-none"/>
             `}
             ${i === 0 ? `<span class="absolute top-1.5 left-1.5 bg-secondary text-on-secondary text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-10">COVER</span>` : ''}
             
@@ -1721,7 +1721,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       list.innerHTML = blogs.map(b => `
         <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md flex items-center justify-between gap-md">
           <div class="flex items-center gap-4 flex-1 min-w-0">
-            ${b.image_url ? `<img src="${b.image_url}" class="w-12 h-12 rounded object-cover shrink-0" alt=""/>` : `<div class="w-12 h-12 rounded bg-surface-container flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-outline-variant text-[20px]">image</span></div>`}
+            ${b.image_url ? `<img src="${b.image_url}" loading="lazy" class="w-12 h-12 rounded object-cover shrink-0" alt=""/>` : `<div class="w-12 h-12 rounded bg-surface-container flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-outline-variant text-[20px]">image</span></div>`}
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
                 <p class="font-label text-label-md text-on-surface truncate">${escapeHtml(b.title)}</p>
@@ -2848,20 +2848,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   let commissionsCache = [];
-  async function loadCommissions() {
+  let isFetchingCommissions = false;
+  async function loadCommissions(forceRefresh = false) {
     const tbody = document.getElementById('commissions-table-body');
     if (!tbody) return;
 
-    try {
-      const { data: comms, error } = await supabase
-        .from('staff_commissions')
-        .select('*, staff_users(name, role)')
-        .order('charter_date', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      commissionsCache = comms || [];
-
+    const render = () => {
       const totalComm = commissionsCache.reduce((acc, c) => acc + (parseFloat(c.commission_amount) || 0), 0);
       const statComm = document.getElementById('stat-staff-commissions');
       if (statComm) statComm.textContent = `$${totalComm.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -2870,23 +2862,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-on-surface-variant">No charter sale commissions logged yet. Click "Log Charter Sale / Commission" above!</td></tr>`;
         return;
       }
-
+      
       tbody.innerHTML = commissionsCache.map(comm => {
         const staff = comm.staff_users || { name: 'Unknown', role: 'Staff' };
         const dateStr = new Date(comm.charter_date + 'T00:00:00').toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-
         return `
           <tr class="hover:bg-surface-container-low/50 transition-colors">
             <td class="p-4">
-              <p class="font-bold text-on-surface">${staff.name}</p>
-              <p class="text-[11px] text-on-surface-variant">${staff.role}</p>
+              <p class="font-bold text-on-surface">${escapeHtml(staff.name)}</p>
+              <p class="text-[11px] text-on-surface-variant">${escapeHtml(staff.role)}</p>
             </td>
-            <td class="p-4 font-bold text-secondary">${comm.boat_name}</td>
+            <td class="p-4 font-bold text-secondary">${escapeHtml(comm.boat_name || '')}</td>
             <td class="p-4 text-xs font-mono text-on-surface-variant">${dateStr}</td>
             <td class="p-4 font-mono text-sm">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
             <td class="p-4 font-mono font-bold text-amber-700">${comm.commission_rate}%</td>
             <td class="p-4 font-mono font-extrabold text-green-700 text-base">$${parseFloat(comm.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-            <td class="p-4 text-xs text-on-surface-variant max-w-xs truncate">${comm.client_notes || '-'}</td>
+            <td class="p-4 text-xs text-on-surface-variant max-w-xs truncate">${escapeHtml(comm.client_notes || '-')}</td>
             <td class="p-4 text-right">
               <button onclick="window.deleteCommission('${comm.id}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Commission Log">
                 <span class="material-symbols-outlined text-[18px]">delete</span>
@@ -2895,9 +2886,38 @@ document.addEventListener('DOMContentLoaded', async () => {
           </tr>
         `;
       }).join('');
-    } catch (err) {
-      console.error('Error loading commissions:', err);
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-red-600">Error loading commission logs: ${err.message}</td></tr>`;
+    };
+
+    const doFetch = async () => {
+      if (isFetchingCommissions) return;
+      isFetchingCommissions = true;
+      try {
+        const { data: comms, error } = await supabase
+          .from('staff_commissions')
+          .select('*, staff_users(name, role)')
+          .order('charter_date', { ascending: false })
+          .limit(50);
+        if (error) throw error;
+        commissionsCache = comms || [];
+        render();
+      } catch (err) {
+        console.error('Error loading commissions:', err);
+        if (!commissionsCache || commissionsCache.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-red-600">Error loading commissions: ${err.message}</td></tr>`;
+        }
+      } finally {
+        isFetchingCommissions = false;
+      }
+    };
+
+    if (commissionsCache && commissionsCache.length > 0 && !forceRefresh) {
+      render();
+      doFetch(); // SWR
+    } else {
+      if (!commissionsCache || commissionsCache.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8"><span class="admin-spinner"></span></td></tr>`;
+      }
+      await doFetch();
     }
   }
 
@@ -3194,7 +3214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="p-2.5 rounded-xl hover:bg-surface-container/80 transition-all flex items-center justify-between cursor-pointer group cal-boat-option-item ${isSelected ? 'bg-secondary/10 ring-1 ring-secondary/40 shadow-sm' : ''}" data-id="${b.id}" data-name="${escapeHtml(b.name)}">
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-surface-container flex-shrink-0 border border-outline-variant/60 shadow-sm group-hover:scale-105 transition-transform">
-                <img src="${imgUrl}" alt="${escapeHtml(b.name)}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=200&q=80'"/>
+                <img src="${imgUrl}" loading="lazy" alt="${escapeHtml(b.name)}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=200&q=80'"/>
                 ${isSelected ? `<div class="absolute inset-0 bg-secondary/20 flex items-center justify-center backdrop-blur-[1px]"><span class="material-symbols-outlined text-white text-base drop-shadow-md">check_circle</span></div>` : ''}
               </div>
               <div class="flex flex-col min-w-0 pr-2 text-left">
@@ -3454,35 +3474,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadBookings();
   }
 
-  async function loadBookings() {
+  let isFetchingBookings = false;
+  async function loadBookings(forceRefresh = false) {
     const tbody = document.getElementById('manifest-table-body');
     if (!tbody) return;
 
     if (!fleetCache || fleetCache.length === 0) loadFleet();
 
-    try {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*')
-        .order('booking_date', { ascending: true })
-        .order('start_time', { ascending: true });
-
-      if (error) throw error;
-      bookingsCache = data || [];
-
+    const doFetch = async () => {
+      if (isFetchingBookings) return;
+      isFetchingBookings = true;
       try {
-        const { data: cachedSetting } = await supabase.from('site_settings').select('value').eq('key', 'cached_ical_events').single();
-        if (cachedSetting && cachedSetting.value && Array.isArray(cachedSetting.value) && cachedSetting.value.length > 0) {
-          window.externalIcsEvents = deduplicateIcsEvents(cachedSetting.value);
-          localStorage.setItem('yrsf_external_ics_events', JSON.stringify(window.externalIcsEvents));
-        }
-      } catch (e) {}
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .order('booking_date', { ascending: true })
+          .order('start_time', { ascending: true });
 
+        if (error) throw error;
+        bookingsCache = data || [];
+
+        try {
+          const { data: cachedSetting } = await supabase.from('site_settings').select('value').eq('key', 'cached_ical_events').single();
+          if (cachedSetting && cachedSetting.value && Array.isArray(cachedSetting.value) && cachedSetting.value.length > 0) {
+            window.externalIcsEvents = deduplicateIcsEvents(cachedSetting.value);
+            localStorage.setItem('yrsf_external_ics_events', JSON.stringify(window.externalIcsEvents));
+          }
+        } catch (e) {}
+
+        renderManifestTable();
+        renderCalendar();
+      } catch (err) {
+        console.error('Error loading bookings:', err);
+        if (!bookingsCache || bookingsCache.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-600">Error loading charter manifest: ${err.message}. Make sure to run the bookings migration SQL!</td></tr>`;
+        }
+      } finally {
+        isFetchingBookings = false;
+      }
+    };
+
+    if (bookingsCache && bookingsCache.length > 0 && !forceRefresh) {
       renderManifestTable();
       renderCalendar();
-    } catch (err) {
-      console.error('Error loading bookings:', err);
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-600">Error loading charter manifest: ${err.message}. Make sure to run the bookings migration SQL!</td></tr>`;
+      doFetch(); // background fetch (stale-while-revalidate)
+    } else {
+      if (!bookingsCache || bookingsCache.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8"><span class="admin-spinner"></span></td></tr>`;
+      }
+      await doFetch();
     }
   }
 
@@ -4154,6 +4194,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const totalDays = new Date(year, month + 1, 0).getDate();
     const todayStr = new Date().toISOString().split('T')[0];
 
+    // O(N) Hash Map Optimization for Calendar Rendering
+    const bookingsByDate = {};
+    const externalByDate = {};
+    
+    (bookingsCache || []).forEach(b => {
+      if (selectedBoatId !== 'all' && b.boat_id !== selectedBoatId) return;
+      if (!bookingsByDate[b.booking_date]) bookingsByDate[b.booking_date] = [];
+      bookingsByDate[b.booking_date].push(b);
+    });
+    
+    if (calendarSourceFilter !== 'internal') {
+      (window.externalIcsEvents || []).forEach(e => {
+        if (selectedBoatId !== 'all' && e.boat_id !== selectedBoatId) return;
+        if (!externalByDate[e.booking_date]) externalByDate[e.booking_date] = [];
+        externalByDate[e.booking_date].push(e);
+      });
+    }
+
     let cellsHtml = '';
 
     for (let i = 0; i < firstDayIndex; i++) {
@@ -4168,13 +4226,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const isToday = dateStr === todayStr;
       
-      let dayBookings = bookingsCache.filter(b => b.booking_date === dateStr);
-      let dayExternal = calendarSourceFilter === 'internal' ? [] : (window.externalIcsEvents || []).filter(e => e.booking_date === dateStr);
-
-      if (selectedBoatId !== 'all') {
-        dayBookings = dayBookings.filter(b => b.boat_id === selectedBoatId);
-        dayExternal = dayExternal.filter(e => e.boat_id === selectedBoatId);
-      }
+      const dayBookings = bookingsByDate[dateStr] || [];
+      const dayExternal = externalByDate[dateStr] || [];
 
       const allEvents = [...dayBookings, ...dayExternal].sort((a, b) => {
         return timeStringToMinutes(a.start_time) - timeStringToMinutes(b.start_time);
