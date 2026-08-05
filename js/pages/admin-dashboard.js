@@ -3189,6 +3189,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         realSel.value = id || '';
       }
       if (listEl) listEl.classList.add('hidden');
+      
+      // Update Duration options dynamically
+      const durationEl = document.getElementById('book-duration');
+      if (durationEl) {
+        if (!id) {
+          durationEl.innerHTML = '<option value="">-- Select Yacht First --</option>';
+        } else {
+          const boat = (fleetCache || []).find(b => b.id === id);
+          if (boat && boat.boat_prices && boat.boat_prices.length > 0) {
+            const sortedPrices = [...boat.boat_prices].sort((a, b) => a.duration_hours - b.duration_hours);
+            durationEl.innerHTML = sortedPrices.map(p => 
+              `<option value="${p.duration_hours}">${escapeHtml(p.duration_label)} - $${parseFloat(p.price).toLocaleString()}</option>`
+            ).join('');
+          } else {
+            durationEl.innerHTML = '<option value="4">4 Hours (Default) - Custom Pricing</option>';
+          }
+        }
+      }
+
       updateDynamicPrice();
     };
 
