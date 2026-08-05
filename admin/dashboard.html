@@ -1901,8 +1901,15 @@
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
-              <label class="block font-label text-xs font-bold text-on-surface mb-1">Payment Notes / Method</label>
-              <input type="text" id="book-pay-method" placeholder="e.g. Zelle deposit, cash balance at dock" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs"/>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Payment Method *</label>
+              <select id="book-pay-method" required class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+                <option value="none">-- Select Method --</option>
+                <option value="stripe">💳 Credit Card (Stripe Portal)</option>
+                <option value="zelle">📱 Zelle</option>
+                <option value="cashapp">💸 CashApp</option>
+                <option value="cash">💵 Cash (At Dock)</option>
+                <option value="other">Other / Manual</option>
+              </select>
             </div>
             <div>
               <label class="block font-label text-xs font-bold text-on-surface mb-1">Booking Status</label>
@@ -1911,6 +1918,38 @@
                 <option value="completed">✓ Completed &amp; Fully Paid</option>
                 <option value="cancelled">🔴 Cancelled / Refunded</option>
               </select>
+            </div>
+          </div>
+          
+          <!-- Stripe Payment Portal UI (Hidden by default) -->
+          <div id="stripe-portal-container" class="hidden mt-3 p-4 rounded-xl bg-white border border-indigo-200 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-bold text-indigo-900 text-xs flex items-center gap-1"><span class="material-symbols-outlined text-sm">lock</span> Secure Stripe Terminal</span>
+              <div class="flex gap-1">
+                <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-100">VISA</span>
+                <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-100">MC</span>
+                <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-100">AMEX</span>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-[10px] uppercase font-bold text-on-surface-variant mb-1">Card Number</label>
+                <input type="text" id="stripe-card-num" placeholder="0000 0000 0000 0000" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500"/>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[10px] uppercase font-bold text-on-surface-variant mb-1">Expiry (MM/YY)</label>
+                  <input type="text" id="stripe-card-exp" placeholder="MM/YY" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500"/>
+                </div>
+                <div>
+                  <label class="block text-[10px] uppercase font-bold text-on-surface-variant mb-1">CVC</label>
+                  <input type="text" id="stripe-card-cvc" placeholder="123" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500"/>
+                </div>
+              </div>
+              <button type="button" id="stripe-charge-btn" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-lg shadow transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-sm">payment</span> Process Charge
+              </button>
             </div>
           </div>
         </div>

@@ -3070,6 +3070,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const boatOptionsList = document.getElementById('book-boat-options-list');
     const boatSearchContainer = document.getElementById('book-boat-search-container');
 
+    const updateDynamicPrice = () => {
+      const boatId = document.getElementById('book-boat-select')?.value;
+      const duration = document.getElementById('book-duration')?.value;
+      const priceInput = document.getElementById('book-price');
+      if (!boatId || !duration || !priceInput) return;
+      
+      const boat = (fleetCache || []).find(b => b.id === boatId);
+      if (boat && boat.boat_prices) {
+        const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
+        if (matchingPrice && matchingPrice.price) {
+          priceInput.value = matchingPrice.price;
+          if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+          
+          // Small animation to show it updated automatically
+          priceInput.classList.add('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
+          setTimeout(() => {
+            priceInput.classList.remove('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
+          }, 1000);
+        }
+      }
+    };
+
+    const bookDurationEl = document.getElementById('book-duration');
+    if (bookDurationEl) {
+      bookDurationEl.addEventListener('change', updateDynamicPrice);
+    }
+
     window.selectBoatOption = (id, name) => {
       const searchIn = document.getElementById('book-boat-search-input');
       const realSel = document.getElementById('book-boat-select');
@@ -3080,6 +3107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         realSel.value = id || '';
       }
       if (listEl) listEl.classList.add('hidden');
+      updateDynamicPrice();
     };
 
     window.renderBoatDropdownOptions = (filter = '') => {
@@ -3365,6 +3393,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (bookPrice) bookPrice.addEventListener('input', updateBalanceCalc);
     if (bookDeposit) bookDeposit.addEventListener('input', updateBalanceCalc);
 
+    // Stripe Payment UI Logic
+    const payMethodSelect = document.getElementById('book-pay-method');
+    const stripePortal = document.getElementById('stripe-portal-container');
+    const stripeBtn = document.getElementById('stripe-charge-btn');
+
+    if (payMethodSelect && stripePortal) {
+      payMethodSelect.addEventListener('change', () => {
+        if (payMethodSelect.value === 'stripe') {
+          stripePortal.classList.remove('hidden');
+          setTimeout(() => stripePortal.classList.add('animate-fade-in'), 10);
+        } else {
+          stripePortal.classList.add('hidden');
+        }
+      });
+    }
+
+    if (stripeBtn) {
+      stripeBtn.addEventListener('click', () => {
+        const num = document.getElementById('stripe-card-num')?.value;
+        if (!num || num.length < 15) {
+          showToast('Please enter a valid card number', true);
+          return;
+        }
+        
+        // Simulate Stripe Processing (Test Mode / No Backend Keys)
+        const originalHtml = stripeBtn.innerHTML;
+        stripeBtn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white"></span> Processing...';
+        stripeBtn.disabled = true;
+        
+        setTimeout(() => {
+          stripeBtn.innerHTML = '<span class="material-symbols-outlined text-sm">check_circle</span> Charge Successful';
+          stripeBtn.classList.replace('bg-indigo-600', 'bg-green-600');
+          stripeBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-green-700');
+          
+          showToast('Payment processed successfully! (Test Mode)', 'success');
+          
+          // Auto-fill deposit to match total price
+          const price = document.getElementById('book-price')?.value;
+          const depositEl = document.getElementById('book-deposit');
+          if (depositEl && price) {
+            depositEl.value = price;
+            if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+          }
+          
+          document.getElementById('book-status').value = 'completed';
+        }, 1500);
+      });
+    }
+
     // View switcher (Table vs Cards)
     const btnTable = document.getElementById('view-mode-table');
     const btnCards = document.getElementById('view-mode-cards');
@@ -3421,6 +3498,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { error } = await supabase.from('bookings').insert([{ ...payload, created_at: new Date().toISOString() }]);
             if (error) throw error;
             showToast('🛥️ New charter scheduled & manifest updated!', 'success');
+            
+            // Webhook Dispatch for Confirmation Messages
+            try {
+              const webhookUrl = 'https://hooks.zapier.com/hooks/catch/YOUR_ZAPIER_ID/'; // Replace with real webhook
+              fetch(webhookUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ event: 'new_booking', data: payload })
+              });
+            } catch(e) {}
           }
           modal.classList.add('hidden');
           loadBookings();
