@@ -2232,6 +2232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (emailInput) emailInput.value = settings.admin_notification_email?.value || 'georgeaguilera001@gmail.com';
       document.getElementById('setting-whatsapp-number').value = settings.whatsapp_number?.value || '';
       document.getElementById('setting-whatsapp-message').value = settings.whatsapp_auto_response?.value || '';
+      document.getElementById('setting-whatsapp-template').value = settings.whatsapp_booking_template?.value || '';
       document.getElementById('setting-hero-bg-image').value = settings.hero_bg_image?.value || '';
       document.getElementById('setting-hero-tagline').value = settings.hero_tagline?.value || '';
       document.getElementById('setting-hero-title').value = settings.hero_title?.value || '';
@@ -2262,6 +2263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         admin_notification_email: { value: (document.getElementById('setting-admin-notification-email')?.value || '').trim() || 'georgeaguilera001@gmail.com' },
         whatsapp_number: { value: document.getElementById('setting-whatsapp-number').value.trim() },
         whatsapp_auto_response: { value: document.getElementById('setting-whatsapp-message').value.trim() },
+        whatsapp_booking_template: { value: document.getElementById('setting-whatsapp-template').value.trim() },
         hero_bg_image: { value: document.getElementById('setting-hero-bg-image').value.trim() },
         hero_tagline: { value: document.getElementById('setting-hero-tagline').value.trim() },
         hero_title: { value: document.getElementById('setting-hero-title').value.trim() },
@@ -5066,19 +5068,26 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const { data: b } = await supabase.from('bookings').select('*').eq('id', id).single();
     if (!b) return;
     const price = parseFloat(b.total_price || b.amount || 0);
-    const paid = parseFloat(b.deposit_paid || b.paid_amount || price * 0.3 || 0);
-    const bal = Math.max(0, price - paid);
+    const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
+    const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
+    
+    let specialHtml = '';
+    if (b.special_requests) {
+      specialHtml = `<tr><td colspan="2"><strong>Add-ons / Special Requests:</strong><br><span style="white-space: pre-wrap;">${escapeHtml(b.special_requests)}</span></td></tr>`;
+    }
+
     const win = window.open('', '_blank');
     win.document.write(`
       <html><head><title>Invoice - ${b.customer_name}</title>
       <style>body{font-family:sans-serif;padding:40px;color:#111}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}.hdr{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:20px}</style>
       </head><body>
       <div class="hdr"><div><h1 style="margin:0">YACHT RENTALS OF SOUTH FLORIDA</h1><p>Miami, FL | (305) 990-2192</p></div><h2>CHARTER INVOICE</h2></div>
-      <p><strong>Customer:</strong> ${b.customer_name}<br><strong>Phone:</strong> ${b.customer_phone || '-'}<br><strong>Date:</strong> ${b.charter_date || b.date}</p>
+      <p><strong>Customer:</strong> ${b.customer_name}<br><strong>Phone:</strong> ${b.customer_phone || '-'}<br><strong>Date:</strong> ${b.booking_date}</p>
       <table><tr><th>Description</th><th>Amount</th></tr>
-      <tr><td>Yacht Charter: ${b.boat_name || 'Fleet Yacht'} (${b.duration_hours || 4} Hours)</td><td>$${price.toLocaleString()}</td></tr>
-      <tr><td>Deposit Paid</td><td>-$${paid.toLocaleString()}</td></tr>
-      <tr style="font-size:1.2em"><th>Balance Due</th><th>$${bal.toLocaleString()}</th></tr>
+      <tr><td>Yacht Charter: ${b.boat_name || 'Fleet Yacht'} (${b.duration_hours || 4} Hours)</td><td>$${price.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
+      ${specialHtml}
+      <tr><td>Deposit Paid</td><td>-$${paid.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
+      <tr style="font-size:1.2em"><th>Balance Due</th><th>$${bal.toLocaleString(undefined, {minimumFractionDigits: 2})}</th></tr>
       </table>
       <p style="margin-top:40px;color:#666;font-size:0.9em">Thank you for yachting with YRSF!</p>
       <script>window.print()</script>
@@ -5090,9 +5099,20 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   window.sendBookingWhatsApp = async (id) => {
     const { data: b } = await supabase.from('bookings').select('*').eq('id', id).single();
     if (!b || !b.customer_phone) { showToast('No phone number recorded for this booking', true); return; }
+    
+    const settings = await getAllSettings();
+    let template = settings.whatsapp_booking_template?.value;
+    if (!template) {
+      template = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} is confirmed! We look forward to welcoming you aboard.";
+    }
+
+    const text = template
+      .replace(/{customer_name}/g, b.customer_name || 'Guest')
+      .replace(/{boat_name}/g, b.boat_name || 'our luxury yacht')
+      .replace(/{date}/g, b.booking_date || '');
+
     const cleanPhone = b.customer_phone.replace(/[^0-9]/g, '');
-    const text = encodeURIComponent(`Hi ${b.customer_name}! Your charter booking aboard ${b.boat_name || 'our luxury yacht'} on ${b.charter_date || b.date} is confirmed! We look forward to welcoming you aboard.`);
-    window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   window.deleteBooking = async (id, name) => {
