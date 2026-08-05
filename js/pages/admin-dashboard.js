@@ -3129,13 +3129,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.selectCalBoatOption = (id, name) => {
       const searchIn = document.getElementById('cal-boat-search-input');
+      const labelEl = document.getElementById('cal-boat-label');
       const realSel = document.getElementById('cal-boat-filter');
       const listEl = document.getElementById('cal-boat-options-list');
       const toggleIcon = document.getElementById('cal-boat-dropdown-toggle');
       const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
       const targetId = id || (activeBoats[0]?.id || '');
       const targetName = name || (activeBoats[0]?.name || '');
-      if (searchIn) searchIn.value = targetName;
+      
+      if (labelEl) labelEl.textContent = targetName;
+      if (searchIn) searchIn.value = '';
+      
       if (realSel) {
         let opt = realSel.querySelector(`option[value="${targetId}"]`);
         if (!opt) {
