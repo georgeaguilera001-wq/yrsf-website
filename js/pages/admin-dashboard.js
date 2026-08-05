@@ -3397,12 +3397,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     const payMethodSelect = document.getElementById('book-pay-method');
     const stripePortal = document.getElementById('stripe-portal-container');
     const stripeBtn = document.getElementById('stripe-charge-btn');
+    
+    let stripe = null;
+    let cardElement = null;
 
     if (payMethodSelect && stripePortal) {
       payMethodSelect.addEventListener('change', () => {
         if (payMethodSelect.value === 'stripe') {
           stripePortal.classList.remove('hidden');
           setTimeout(() => stripePortal.classList.add('animate-fade-in'), 10);
+          
+          if (!stripe) {
+            stripe = Stripe('pk_test_51U17UdROaRIm1Sl3Aew8SrkfR7HJaNALA6YOHkkRKUweLP5ONcjtqYdLj0aiPtYlobWqlEGZOgm8u6L4LSuk2p1G001yqlYgrH');
+            const elements = stripe.elements();
+            cardElement = elements.create('card', {
+              style: {
+                base: {
+                  iconColor: '#4f46e5',
+                  color: '#1f2937',
+                  fontWeight: '500',
+                  fontFamily: 'monospace, Roboto, Open Sans, Segoe UI, sans-serif',
+                  fontSize: '14px',
+                  fontSmoothing: 'antialiased',
+                  '::placeholder': { color: '#9ca3af' },
+                },
+                invalid: { iconColor: '#ef4444', color: '#ef4444' },
+              },
+            });
+            cardElement.mount('#payment-element');
+            cardElement.on('change', (event) => {
+              const displayError = document.getElementById('payment-message');
+              if (event.error) {
+                displayError.textContent = event.error.message;
+                displayError.classList.remove('hidden');
+              } else {
+                displayError.textContent = '';
+                displayError.classList.add('hidden');
+              }
+            });
+          }
         } else {
           stripePortal.classList.add('hidden');
         }
@@ -3410,35 +3443,68 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (stripeBtn) {
-      stripeBtn.addEventListener('click', () => {
-        const num = document.getElementById('stripe-card-num')?.value;
-        if (!num || num.length < 15) {
-          showToast('Please enter a valid card number', true);
+      stripeBtn.addEventListener('click', async () => {
+        if (!stripe || !cardElement) return;
+        
+        const price = document.getElementById('book-price')?.value;
+        if (!price || parseFloat(price) <= 0) {
+          showToast('Total price must be greater than 0', true);
           return;
         }
-        
-        // Simulate Stripe Processing (Test Mode / No Backend Keys)
+
         const originalHtml = stripeBtn.innerHTML;
         stripeBtn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white"></span> Processing...';
         stripeBtn.disabled = true;
         
-        setTimeout(() => {
-          stripeBtn.innerHTML = '<span class="material-symbols-outlined text-sm">check_circle</span> Charge Successful';
-          stripeBtn.classList.replace('bg-indigo-600', 'bg-green-600');
-          stripeBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-green-700');
+        try {
+          // 1. Ask backend for PaymentIntent client secret
+          const res = await fetch('https://yrsf-website.onrender.com/create-payment-intent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: Math.round(parseFloat(price) * 100), // convert to cents
+              customer_name: document.getElementById('book-cust-name')?.value || '',
+              customer_phone: document.getElementById('book-cust-phone')?.value || '',
+              boat_name: document.getElementById('book-boat-select')?.options[document.getElementById('book-boat-select').selectedIndex]?.text.split(' (')[0] || ''
+            })
+          });
           
-          showToast('Payment processed successfully! (Test Mode)', 'success');
+          if (!res.ok) throw new Error('Failed to initialize payment');
+          const { clientSecret } = await res.json();
           
-          // Auto-fill deposit to match total price
-          const price = document.getElementById('book-price')?.value;
-          const depositEl = document.getElementById('book-deposit');
-          if (depositEl && price) {
-            depositEl.value = price;
-            if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+          // 2. Confirm the card payment with Stripe
+          const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+              card: cardElement,
+              billing_details: {
+                name: document.getElementById('book-cust-name')?.value || 'Guest',
+              },
+            }
+          });
+          
+          if (error) {
+            document.getElementById('payment-message').textContent = error.message;
+            document.getElementById('payment-message').classList.remove('hidden');
+            stripeBtn.innerHTML = originalHtml;
+            stripeBtn.disabled = false;
+          } else if (paymentIntent.status === 'succeeded') {
+            stripeBtn.innerHTML = '<span class="material-symbols-outlined text-sm">check_circle</span> Charge Successful';
+            stripeBtn.classList.replace('bg-indigo-600', 'bg-green-600');
+            stripeBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-green-700');
+            showToast('Stripe payment processed successfully!', 'success');
+            
+            const depositEl = document.getElementById('book-deposit');
+            if (depositEl && price) {
+              depositEl.value = price;
+              if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+            }
+            document.getElementById('book-status').value = 'completed';
           }
-          
-          document.getElementById('book-status').value = 'completed';
-        }, 1500);
+        } catch(err) {
+          showToast('Error processing payment: ' + err.message, true);
+          stripeBtn.innerHTML = originalHtml;
+          stripeBtn.disabled = false;
+        }
       });
     }
 

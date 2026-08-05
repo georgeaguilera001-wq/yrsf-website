@@ -1,3 +1,4 @@
+import stripe
 from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
 import requests
@@ -8,6 +9,33 @@ import threading
 
 app = Flask(__name__)
 CORS(app)  # Enables Access-Control-Allow-Origin: * for all endpoints
+
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+
+@app.route("/create-payment-intent", methods=["POST"])
+def create_payment_intent():
+    try:
+        data = request.json
+        # Create a PaymentIntent with the order amount and currency
+        intent = stripe.PaymentIntent.create(
+            amount=int(data.get('amount', 0)), # amount in cents
+            currency='usd',
+            automatic_payment_methods={
+                'enabled': True,
+            },
+            description=f"YRSF Charter - {data.get('boat_name', 'Yacht')}",
+            metadata={
+                "customer_name": data.get('customer_name', ''),
+                "customer_phone": data.get('customer_phone', ''),
+                "booking_date": data.get('booking_date', ''),
+                "boat_name": data.get('boat_name', '')
+            }
+        )
+        return jsonify({
+            'clientSecret': intent.client_secret
+        })
+    except Exception as e:
+        return jsonify(error=str(e)), 403
 
 # Set your TimeTree Account Email and Password in Render Environment Variables
 TIMETREE_EMAIL = os.environ.get("TIMETREE_EMAIL", "")
