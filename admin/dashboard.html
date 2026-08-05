@@ -1881,6 +1881,24 @@
           </div>
         </div>
 
+        <div class="space-y-2 mb-3 bg-surface-container-low p-3 rounded-xl border border-outline-variant">
+          <label class="block font-label text-xs font-bold text-secondary uppercase tracking-wider mb-2">Included Services & Add-ons</label>
+          <div class="flex flex-col gap-2" id="dynamic-addons-container">
+            <!-- Populated via JS -->
+            <div class="text-xs text-on-surface-variant animate-pulse">Loading add-ons...</div>
+          </div>
+          
+          <!-- Custom Addon Row -->
+          <div class="flex gap-2 items-center mt-2 p-2 rounded-xl bg-white border border-outline-variant">
+            <span class="material-symbols-outlined text-on-surface-variant text-sm pl-1">add_circle</span>
+            <input type="text" id="custom-addon-name" placeholder="Custom Add-on Name..." class="flex-1 bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 px-1 py-1 placeholder:text-on-surface-variant/50">
+            <div class="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant rounded-lg px-2 py-1">
+              <span class="text-on-surface-variant text-xs font-bold">$</span>
+              <input type="number" id="custom-addon-price" placeholder="0.00" class="w-16 bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 p-0 text-right">
+            </div>
+          </div>
+        </div>
+
         <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 space-y-3">
           <p class="font-label text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
             <span class="material-symbols-outlined text-[16px]">payments</span> Financial Details &amp; Balance
@@ -1943,23 +1961,7 @@
             <button type="button" id="stripe-charge-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-lg shadow transition-colors flex items-center justify-center gap-2">
               <span class="material-symbols-outlined text-sm">payment</span> Process Charge
             </button>
-        <div class="space-y-2 mb-3">
-          <label class="block font-label text-xs font-bold text-on-surface">Included Services & Add-ons</label>
-          <div class="flex flex-col gap-2" id="dynamic-addons-container">
-            <!-- Populated via JS -->
-            <div class="text-xs text-on-surface-variant animate-pulse">Loading add-ons...</div>
-          </div>
-          
-          <!-- Custom Addon Row -->
-          <div class="flex gap-2 items-center mt-2 p-2 rounded-xl bg-surface-container-low border border-outline-variant">
-            <span class="material-symbols-outlined text-on-surface-variant text-sm pl-1">add_circle</span>
-            <input type="text" id="custom-addon-name" placeholder="Custom Add-on Name..." class="flex-1 bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 px-1 py-1 placeholder:text-on-surface-variant/50">
-            <div class="flex items-center gap-1 bg-white border border-outline-variant rounded-lg px-2 py-1">
-              <span class="text-on-surface-variant text-xs font-bold">$</span>
-              <input type="number" id="custom-addon-price" placeholder="0.00" class="w-16 bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 p-0 text-right">
-            </div>
-          </div>
-        </div>
+
 
         <div>
           <label class="block font-label text-xs font-bold text-on-surface mb-1">Additional Notes / Special Requests</label>
