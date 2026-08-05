@@ -3154,7 +3154,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Update Total
       if (boatMatch || addonsTotal > 0 || customTotal > 0) {
-        const newTotal = basePrice + addonsTotal + customTotal;
+        const subtotal = basePrice + addonsTotal + customTotal;
+        const tax = subtotal * 0.07;
+        const newTotal = subtotal + tax;
         priceInput.value = newTotal.toFixed(2);
         
         // Pre-fill deposit to 50%
@@ -5068,6 +5070,8 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const { data: b } = await supabase.from('bookings').select('*').eq('id', id).single();
     if (!b) return;
     const price = parseFloat(b.total_price || b.amount || 0);
+    const subtotal = price / 1.07;
+    const tax = price - subtotal;
     const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
     const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
     
@@ -5084,8 +5088,10 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       <div class="hdr"><div><h1 style="margin:0">YACHT RENTALS OF SOUTH FLORIDA</h1><p>Miami, FL | (305) 990-2192</p></div><h2>CHARTER INVOICE</h2></div>
       <p><strong>Customer:</strong> ${b.customer_name}<br><strong>Phone:</strong> ${b.customer_phone || '-'}<br><strong>Date:</strong> ${b.booking_date}</p>
       <table><tr><th>Description</th><th>Amount</th></tr>
-      <tr><td>Yacht Charter: ${b.boat_name || 'Fleet Yacht'} (${b.duration_hours || 4} Hours)</td><td>$${price.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
+      <tr><td>Yacht Charter: ${b.boat_name || 'Fleet Yacht'} (${b.duration_hours || 4} Hours) & Add-ons</td><td>$${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
       ${specialHtml}
+      <tr><td>Taxes & Fees (7%)</td><td>$${tax.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
+      <tr style="font-size:1.1em; border-top:2px solid #222;"><th>Total Price</th><th>$${price.toLocaleString(undefined, {minimumFractionDigits: 2})}</th></tr>
       <tr><td>Deposit Paid</td><td>-$${paid.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
       <tr style="font-size:1.2em"><th>Balance Due</th><th>$${bal.toLocaleString(undefined, {minimumFractionDigits: 2})}</th></tr>
       </table>
