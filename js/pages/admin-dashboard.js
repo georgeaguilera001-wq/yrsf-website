@@ -86,6 +86,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   window.showAdminSection = showSection;
 
+  // Global Fleet Tab Switcher
+  window.switchFleetTab = (tab) => {
+    const yachtsTab = document.getElementById('fleet-tab-yachts');
+    const addonsTab = document.getElementById('fleet-tab-addons');
+    const btnYachts = document.getElementById('fleet-tab-btn-yachts');
+    const btnAddons = document.getElementById('fleet-tab-btn-addons');
+    const addBoatBtn = document.getElementById('add-boat-btn');
+    const addAddonBtn = document.getElementById('add-addon-btn');
+
+    if (tab === 'yachts') {
+      yachtsTab.classList.remove('hidden');
+      addonsTab.classList.add('hidden');
+      
+      btnYachts.classList.replace('border-transparent', 'border-secondary');
+      btnYachts.classList.replace('text-on-surface-variant', 'text-secondary');
+      
+      btnAddons.classList.replace('border-secondary', 'border-transparent');
+      btnAddons.classList.replace('text-secondary', 'text-on-surface-variant');
+
+      addBoatBtn?.classList.remove('hidden');
+      addAddonBtn?.classList.add('hidden');
+    } else {
+      addonsTab.classList.remove('hidden');
+      yachtsTab.classList.add('hidden');
+      
+      btnAddons.classList.replace('border-transparent', 'border-secondary');
+      btnAddons.classList.replace('text-on-surface-variant', 'text-secondary');
+      
+      btnYachts.classList.replace('border-secondary', 'border-transparent');
+      btnYachts.classList.replace('text-secondary', 'text-on-surface-variant');
+
+      addAddonBtn?.classList.remove('hidden');
+      addBoatBtn?.classList.add('hidden');
+    }
+  };
+
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => showSection(btn.dataset.section));
   });
@@ -105,6 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         break;
       case 'fleet':
         await loadFleet();
+        await loadAdminAddons();
         break;
       case 'bookings':
         if (!loaded.bookings) { initBookingsSection(); loaded.bookings = true; }
@@ -112,9 +149,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         break;
       case 'partners':
         if (!loaded.partners) { initPartnerSection(); loaded.partners = true; }
-        break;
-      case 'addons':
-        await loadAdminAddons();
         break;
       case 'social':
         if (!loaded.social) { await initSocialHub(); loaded.social = true; }
