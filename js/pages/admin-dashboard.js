@@ -3996,7 +3996,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <button onclick="window.printBookingInvoice('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors" title="Generate PDF Invoice">
               <span class="material-symbols-outlined text-[18px]">receipt_long</span>
             </button>
-            <button onclick="window.sendBookingWhatsApp('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors ml-1" title="Send WhatsApp Confirmation">
+            <button onclick="window.openMessagePreview('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors ml-1" title="Send WhatsApp Confirmation">
               <span class="material-symbols-outlined text-[18px]">chat</span>
             </button>
             <button onclick="window.editBooking('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors ml-1" title="Edit Booking">
@@ -5102,9 +5102,9 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     win.document.close();
   };
 
-  window.sendBookingWhatsApp = async (id) => {
+  window.openMessagePreview = async (id) => {
     const { data: b } = await supabase.from('bookings').select('*').eq('id', id).single();
-    if (!b || !b.customer_phone) { showToast('No phone number recorded for this booking', true); return; }
+    if (!b) return;
     
     const settings = await getAllSettings();
     let template = settings.whatsapp_booking_template?.value;
@@ -5112,13 +5112,52 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       template = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} is confirmed! We look forward to welcoming you aboard.";
     }
 
+    const price = parseFloat(b.total_price || b.amount || 0);
+    const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
+    const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
+
     const text = template
       .replace(/{customer_name}/g, b.customer_name || 'Guest')
       .replace(/{boat_name}/g, b.boat_name || 'our luxury yacht')
-      .replace(/{date}/g, b.booking_date || '');
+      .replace(/{date}/g, b.booking_date || '')
+      .replace(/{time}/g, b.start_time || '')
+      .replace(/{duration}/g, b.duration_hours ? b.duration_hours + ' hours' : '')
+      .replace(/{guests}/g, b.guest_count || '')
+      .replace(/{price}/g, '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2}))
+      .replace(/{deposit}/g, '$' + paid.toLocaleString(undefined, {minimumFractionDigits: 2}))
+      .replace(/{balance}/g, '$' + bal.toLocaleString(undefined, {minimumFractionDigits: 2}))
+      .replace(/{addons}/g, b.special_requests || 'None');
 
-    const cleanPhone = b.customer_phone.replace(/[^0-9]/g, '');
-    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+    const modal = document.getElementById('message-preview-modal');
+    const textArea = document.getElementById('preview-message-text');
+    const btnCopy = document.getElementById('btn-copy-message');
+    const btnSend = document.getElementById('btn-send-whatsapp');
+
+    if (modal && textArea) {
+      textArea.value = text;
+      modal.classList.remove('hidden');
+
+      // Clear old listeners
+      const newBtnCopy = btnCopy.cloneNode(true);
+      btnCopy.parentNode.replaceChild(newBtnCopy, btnCopy);
+      const newBtnSend = btnSend.cloneNode(true);
+      btnSend.parentNode.replaceChild(newBtnSend, btnSend);
+
+      newBtnCopy.addEventListener('click', () => {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Message copied to clipboard!', 'success');
+        });
+      });
+
+      newBtnSend.addEventListener('click', () => {
+        if (!b.customer_phone) {
+          showToast('No phone number recorded for this booking.', true);
+          return;
+        }
+        const cleanPhone = b.customer_phone.replace(/[^0-9]/g, '');
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+      });
+    }
   };
 
   window.deleteBooking = async (id, name) => {

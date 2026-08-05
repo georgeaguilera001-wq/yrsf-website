@@ -1290,7 +1290,9 @@
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Booking Confirmation Template</label>
                 <textarea id="setting-whatsapp-template" rows="4" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="Hi {customer_name}! Your charter aboard {boat_name} on {date} is confirmed!"></textarea>
-                <p class="text-xs text-on-surface-variant mt-1.5">Use variables: <code>{customer_name}</code>, <code>{boat_name}</code>, <code>{date}</code></p>
+                <p class="text-[11px] text-on-surface-variant mt-1.5 leading-relaxed">
+                  <strong>Available Variables:</strong> <code>{customer_name}</code>, <code>{boat_name}</code>, <code>{date}</code>, <code>{time}</code>, <code>{guests}</code>, <code>{duration}</code>, <code>{price}</code>, <code>{deposit}</code>, <code>{balance}</code>, <code>{addons}</code>
+                </p>
               </div>
             </div>
           </div>
@@ -2176,6 +2178,31 @@
       <span class="font-caption text-[10px] tracking-tight">MENU</span>
     </button>
   </nav>
+
+  <!-- Message Preview Modal -->
+  <div id="message-preview-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest text-on-surface rounded-2xl w-full max-w-lg shadow-xl border border-outline-variant animate-in zoom-in-95 duration-200">
+      <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+        <h3 class="font-headline text-headline-md font-bold text-on-surface">Preview Confirmation Message</h3>
+        <button type="button" onclick="document.getElementById('message-preview-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+      <div class="p-6">
+        <label class="block font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Message Content</label>
+        <textarea id="preview-message-text" rows="8" class="w-full px-4 py-3 bg-surface-container-low border border-outline-variant rounded-xl font-body text-body-md focus:ring-2 focus:ring-secondary text-on-surface resize-none" readonly></textarea>
+        <p class="text-xs text-on-surface-variant mt-2 italic">This message has been auto-generated from your Booking Confirmation Template settings.</p>
+      </div>
+      <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row gap-3 rounded-b-2xl justify-end">
+        <button id="btn-copy-message" class="px-5 py-2.5 bg-surface text-on-surface border border-outline-variant hover:bg-surface-container rounded-xl font-label text-sm font-bold flex items-center justify-center gap-2 transition-colors">
+          <span class="material-symbols-outlined text-[18px]">content_copy</span> Copy to Clipboard
+        </button>
+        <button id="btn-send-whatsapp" class="px-5 py-2.5 bg-green-600 text-white hover:bg-green-700 rounded-xl font-label text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm">
+          <span class="material-symbols-outlined text-[18px]">chat</span> Send via WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Mobile Full Menu Pop-up Modal (Compact & Scaled Down) -->
   <div id="mobile-menu-modal" class="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3.5 hidden animate-fade-in">
