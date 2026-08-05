@@ -3440,21 +3440,86 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (bookBalHidden) bookBalHidden.value = rem.toFixed(2);
     };
 
-    document.querySelectorAll('.addon-cb').forEach(cb => {
-      cb.addEventListener('change', () => {
-        let notes = document.getElementById('book-notes').value.trim();
-        const addonText = `[Addon: ${cb.value}]`;
-        if (cb.checked) {
-          if (!notes.includes(addonText)) notes = notes ? notes + '\n' + addonText : addonText;
-        } else {
-          notes = notes.replace(new RegExp(`\\n?\\s*${addonText.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}`, 'g'), '').trim();
+    // Global Add-ons Loader for the Modal
+    async function loadBookingAddons() {
+      const container = document.getElementById('dynamic-addons-container');
+      if (!container) return;
+      
+      try {
+        const activeAddons = await getAddons();
+        
+        if (activeAddons.length === 0) {
+          container.innerHTML = '<div class="text-[10px] text-on-surface-variant italic">No active add-ons available.</div>';
+          return;
         }
-        document.getElementById('book-notes').value = notes;
-      });
-    });
+
+        container.innerHTML = activeAddons.map(addon => `
+          <div class="dynamic-addon-row flex items-center justify-between p-2 rounded-xl bg-surface-container-lowest border border-outline-variant hover:border-secondary/50 transition-colors">
+            <label class="flex flex-1 items-center gap-2 cursor-pointer text-xs font-bold text-on-surface">
+              <input type="checkbox" data-name="${escapeHtml(addon.name)}" data-price="${addon.price_value || 0}" class="addon-cb text-secondary rounded focus:ring-secondary focus:ring-offset-0">
+              <div class="flex flex-col">
+                <span>${escapeHtml(addon.name)}</span>
+                <span class="text-[9px] text-on-surface-variant font-medium">${addon.price_text || (addon.price_value ? '$' + addon.price_value : 'Included')}</span>
+              </div>
+            </label>
+            <div class="flex items-center gap-1 opacity-50 transition-opacity" id="qty-wrapper-${addon.id}">
+              <button type="button" class="addon-qty-minus w-6 h-6 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">remove</span></button>
+              <input type="number" min="1" value="1" class="addon-qty w-8 text-center bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 p-0" readonly>
+              <button type="button" class="addon-qty-plus w-6 h-6 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">add</span></button>
+            </div>
+          </div>
+        `).join('');
+
+        // Add listeners for newly rendered addons
+        container.querySelectorAll('.dynamic-addon-row').forEach(row => {
+          const cb = row.querySelector('.addon-cb');
+          const minus = row.querySelector('.addon-qty-minus');
+          const plus = row.querySelector('.addon-qty-plus');
+          const qty = row.querySelector('.addon-qty');
+          const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50');
+
+          cb.addEventListener('change', () => {
+            if (cb.checked) {
+              wrapper.classList.remove('opacity-50');
+            } else {
+              wrapper.classList.add('opacity-50');
+              qty.value = 1;
+            }
+            updateDynamicPrice();
+          });
+
+          minus.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!cb.checked) return;
+            let val = parseInt(qty.value) || 1;
+            if (val > 1) {
+              qty.value = val - 1;
+              updateDynamicPrice();
+            }
+          });
+
+          plus.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!cb.checked) return;
+            let val = parseInt(qty.value) || 1;
+            qty.value = val + 1;
+            updateDynamicPrice();
+          });
+        });
+      } catch (err) {
+        console.error("Failed to load addons", err);
+        container.innerHTML = '<div class="text-[10px] text-red-600 italic">Error loading add-ons.</div>';
+      }
+    }
 
     if (bookPrice) bookPrice.addEventListener('input', updateBalanceCalc);
     if (bookDeposit) bookDeposit.addEventListener('input', updateBalanceCalc);
+
+    // Listeners for custom addon row
+    const customAddonPriceInput = document.getElementById('custom-addon-price');
+    const customAddonNameInput = document.getElementById('custom-addon-name');
+    if (customAddonPriceInput) customAddonPriceInput.addEventListener('input', updateDynamicPrice);
+    if (customAddonNameInput) customAddonNameInput.addEventListener('input', updateDynamicPrice);
 
     // Stripe Payment UI Logic
     const payMethodSelect = document.getElementById('book-pay-method');
