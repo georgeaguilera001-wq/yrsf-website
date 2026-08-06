@@ -330,6 +330,25 @@
             <p class="font-headline text-headline-lg text-on-surface" id="stat-faqs">-</p>
           </div>
         </div>
+        
+        <!-- Upcoming Reservations inside Dashboard -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm mb-lg">
+          <div class="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant">
+            <div>
+              <h2 class="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">event_upcoming</span> Upcoming Reservations
+              </h2>
+              <p class="text-xs text-on-surface-variant">Future charter bookings sorted by date</p>
+            </div>
+            <button class="bg-surface-container text-on-surface-variant px-3 py-1.5 rounded-lg font-label text-xs font-bold hover:bg-surface-container-high transition-all flex items-center gap-1.5 shrink-0" onclick="document.querySelector('[data-section=bookings]').click()">
+              View All
+            </button>
+          </div>
+          <div id="dashboard-upcoming-reservations" class="flex flex-col gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+            <div class="text-center py-md"><span class="admin-spinner"></span></div>
+          </div>
+        </div>
+
         <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
           <h3 class="font-headline text-headline-md text-on-surface mb-md">Quick Actions</h3>
           <div class="flex flex-wrap gap-3">

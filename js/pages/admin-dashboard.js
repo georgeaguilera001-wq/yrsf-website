@@ -3954,6 +3954,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         renderManifestTable();
         renderCalendar();
+        if (typeof renderDashboardUpcomingReservations === 'function') renderDashboardUpcomingReservations();
       } catch (err) {
         console.error('Error loading bookings:', err);
         if (!bookingsCache || bookingsCache.length === 0) {
@@ -3976,9 +3977,77 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  window.renderDashboardUpcomingReservations = () => {
+    const container = document.getElementById('dashboard-upcoming-reservations');
+    if (!container) return;
+    
+    if (!bookingsCache || bookingsCache.length === 0) {
+      container.innerHTML = `<div class="text-center py-6 text-on-surface-variant font-label text-sm">No upcoming reservations.</div>`;
+      return;
+    }
+
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    // Filter to future or today's bookings, not cancelled
+    const upcoming = bookingsCache.filter(b => {
+      if (b.status === 'cancelled') return false;
+      if (b.booking_date < todayStr) return false;
+      return true;
+    }).sort((a, b) => {
+      // Sort by date then time
+      if (a.booking_date !== b.booking_date) return a.booking_date.localeCompare(b.booking_date);
+      return (a.start_time || '').localeCompare(b.start_time || '');
+    });
+
+    if (upcoming.length === 0) {
+      container.innerHTML = `<div class="text-center py-6 text-on-surface-variant font-label text-sm">No upcoming reservations.</div>`;
+      return;
+    }
+
+    // Limit to top 10 to avoid overflowing dashboard
+    const displayList = upcoming.slice(0, 10);
+
+    container.innerHTML = displayList.map(b => {
+      const isToday = b.booking_date === todayStr;
+      const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+      
+      let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800">Confirmed</span>`;
+      if (b.status === 'completed') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container text-on-surface-variant">Completed</span>`;
+      if (b.status === 'inquiry') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">Quote</span>`;
+
+      return `
+        <div class="flex items-center justify-between p-3 rounded-xl border border-outline-variant hover:border-secondary/50 transition-colors bg-white group cursor-pointer" onclick="document.querySelector('[data-section=bookings]').click(); setTimeout(() => window.editBooking('${b.id}'), 200)">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-surface-container flex flex-col items-center justify-center shrink-0 border border-outline-variant/60 ${isToday ? 'border-red-400 bg-red-50 text-red-700' : 'text-on-surface'}">
+              <span class="text-[9px] font-bold uppercase tracking-wider">${new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { month: 'short' })}</span>
+              <span class="text-sm font-black leading-none">${new Date(b.booking_date + 'T00:00:00').getDate()}</span>
+            </div>
+            <div>
+              <p class="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                ${isToday ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block" title="Departing Today"></span>' : ''}
+                ${escapeHtml(b.customer_name)}
+              </p>
+              <p class="text-xs text-on-surface-variant font-medium flex items-center gap-2 mt-0.5">
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">directions_boat</span> ${escapeHtml(b.boat_name || 'Custom Charter')}</span>
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> ${escapeHtml(b.start_time)} (${b.duration_hours}h)</span>
+              </p>
+            </div>
+          </div>
+          <div class="flex flex-col items-end gap-1">
+            ${statusBadge}
+            <span class="text-xs font-bold text-on-surface font-mono">$${parseFloat(b.total_price || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  };
+
   function renderManifestTable() {
     const tbody = document.getElementById('manifest-table-body');
     if (!tbody) return;
+
+    if (typeof renderDashboardUpcomingReservations === 'function') renderDashboardUpcomingReservations();
 
     const query = (document.getElementById('manifest-search')?.value || '').toLowerCase().trim();
     const now = new Date();
