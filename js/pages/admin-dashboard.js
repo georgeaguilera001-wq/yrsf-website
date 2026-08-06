@@ -3143,9 +3143,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.querySelectorAll('.dynamic-addon-row').forEach(row => {
         const cb = row.querySelector('.addon-cb');
         const qtyInput = row.querySelector('.addon-qty');
+        const priceInput = row.querySelector('.addon-price-input');
         if (cb && cb.checked && qtyInput) {
-          const qty = parseInt(qtyInput.value) || 1;
-          const price = parseFloat(cb.dataset.price) || 0;
+          const qty = parseInt(qtyInput.value, 10) || 1;
+          const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
           addonsTotal += (price * qty);
         }
       });
@@ -3580,7 +3581,10 @@ document.addEventListener('DOMContentLoaded', async () => {
               <input type="checkbox" data-name="${escapeHtml(addon.name)}" data-price="${addon.price_value || 0}" class="addon-cb text-secondary rounded focus:ring-secondary focus:ring-offset-0">
               <div class="flex flex-col">
                 <span>${escapeHtml(addon.name)}</span>
-                <span class="text-[9px] text-on-surface-variant font-medium">${addon.price_text || (addon.price_value ? '$' + addon.price_value : 'Included')}</span>
+                <div class="flex items-center gap-1 mt-0.5">
+                  <span class="text-[9px] text-on-surface-variant font-medium">$</span>
+                  <input type="number" step="0.01" value="${addon.price_value || 0}" class="addon-price-input w-16 px-1 py-0 bg-white border border-outline-variant rounded text-[10px] font-bold text-on-surface focus:ring-1 focus:ring-secondary focus:outline-none" onclick="event.stopPropagation()">
+                </div>
               </div>
             </label>
             <div class="flex items-center gap-1 opacity-50 transition-opacity" id="qty-wrapper-${addon.id}">
@@ -3597,7 +3601,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           const minus = row.querySelector('.addon-qty-minus');
           const plus = row.querySelector('.addon-qty-plus');
           const qty = row.querySelector('.addon-qty');
+          const priceInput = row.querySelector('.addon-price-input');
           const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50');
+
+          if (priceInput) {
+            priceInput.addEventListener('input', () => {
+              if (cb.checked) updateDynamicPrice();
+            });
+            priceInput.addEventListener('change', () => {
+              if (cb.checked) updateDynamicPrice();
+            });
+          }
 
           cb.addEventListener('change', () => {
             if (cb.checked) {
@@ -3807,9 +3821,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.dynamic-addon-row').forEach(row => {
           const cb = row.querySelector('.addon-cb');
           const qty = row.querySelector('.addon-qty');
+          const priceInput = row.querySelector('.addon-price-input');
           if (cb && cb.checked) {
-            const qtyVal = parseInt(qty.value) || 1;
-            const price = parseFloat(cb.dataset.price) || 0;
+            const qtyVal = parseInt(qty.value, 10) || 1;
+            const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
             const priceStr = price > 0 ? ` ($${(price * qtyVal).toFixed(2)})` : '';
             selectedAddons.push(`[Addon: ${qtyVal}x ${cb.dataset.name}${priceStr}]`);
           }
@@ -4005,6 +4020,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">🟢 Confirmed</span>`;
       if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold">✓ Completed</span>`;
       if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">🔴 Cancelled</span>`;
+      if (b.status === 'inquiry') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">📝 Quote / Draft</span>`;
 
       const tot = parseFloat(b.total_price || 0);
       const dep = parseFloat(b.deposit_amount || 0);
