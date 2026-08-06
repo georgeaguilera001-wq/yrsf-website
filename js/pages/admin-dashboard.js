@@ -3672,115 +3672,77 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Stripe Payment UI Logic
     const payMethodSelect = document.getElementById('book-pay-method');
     const stripePortal = document.getElementById('stripe-portal-container');
-    const stripeBtn = document.getElementById('stripe-charge-btn');
+    const genLinkBtn = document.getElementById('generate-stripe-link-btn');
+    const copyLinkBtn = document.getElementById('copy-stripe-link-btn');
+    const linkResultContainer = document.getElementById('stripe-link-result-container');
+    const linkInput = document.getElementById('stripe-generated-link');
+    const linkError = document.getElementById('stripe-link-error');
     
-    let stripe = null;
-    let cardElement = null;
-
     if (payMethodSelect && stripePortal) {
       payMethodSelect.addEventListener('change', () => {
         if (payMethodSelect.value === 'stripe') {
           stripePortal.classList.remove('hidden');
           setTimeout(() => stripePortal.classList.add('animate-fade-in'), 10);
-          
-          if (!stripe) {
-            stripe = Stripe('pk_test_51U17UdROaRIm1Sl3Aew8SrkfR7HJaNALA6YOHkkRKUweLP5ONcjtqYdLj0aiPtYlobWqlEGZOgm8u6L4LSuk2p1G001yqlYgrH');
-            const elements = stripe.elements();
-            cardElement = elements.create('card', {
-              style: {
-                base: {
-                  iconColor: '#4f46e5',
-                  color: '#1f2937',
-                  fontWeight: '500',
-                  fontFamily: 'monospace, Roboto, Open Sans, Segoe UI, sans-serif',
-                  fontSize: '14px',
-                  fontSmoothing: 'antialiased',
-                  '::placeholder': { color: '#9ca3af' },
-                },
-                invalid: { iconColor: '#ef4444', color: '#ef4444' },
-              },
-            });
-            cardElement.mount('#payment-element');
-            cardElement.on('change', (event) => {
-              const displayError = document.getElementById('payment-message');
-              if (event.error) {
-                displayError.textContent = event.error.message;
-                displayError.classList.remove('hidden');
-              } else {
-                displayError.textContent = '';
-                displayError.classList.add('hidden');
-              }
-            });
-          }
         } else {
           stripePortal.classList.add('hidden');
+          linkResultContainer?.classList.add('hidden');
+          if (linkError) linkError.classList.add('hidden');
         }
       });
     }
 
-    if (stripeBtn) {
-      stripeBtn.addEventListener('click', async () => {
-        if (!stripe || !cardElement) return;
-        
-        const price = document.getElementById('book-price')?.value;
-        if (!price || parseFloat(price) <= 0) {
-          showToast('Total price must be greater than 0', true);
+    if (genLinkBtn) {
+      genLinkBtn.addEventListener('click', async () => {
+        const bookingId = document.getElementById('booking-id')?.value;
+        if (!bookingId) {
+          showToast('Please save the booking first before generating a link.', true);
           return;
         }
 
-        const originalHtml = stripeBtn.innerHTML;
-        stripeBtn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white"></span> Processing...';
-        stripeBtn.disabled = true;
+        const paymentType = document.getElementById('stripe-payment-type')?.value || 'full';
+        
+        const originalHtml = genLinkBtn.innerHTML;
+        genLinkBtn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white"></span>';
+        genLinkBtn.disabled = true;
+        linkResultContainer?.classList.add('hidden');
+        if (linkError) linkError.classList.add('hidden');
         
         try {
-          // 1. Ask backend for PaymentIntent client secret
-          const res = await fetch('https://yrsf-website.onrender.com/create-payment-intent', {
+          const res = await fetch('/api/create-checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              amount: Math.round(parseFloat(price) * 100), // convert to cents
-              customer_name: document.getElementById('book-cust-name')?.value || '',
-              customer_phone: document.getElementById('book-cust-phone')?.value || '',
-              boat_name: document.getElementById('book-boat-select')?.options[document.getElementById('book-boat-select').selectedIndex]?.text.split(' (')[0] || ''
-            })
+            body: JSON.stringify({ booking_id: bookingId, payment_type: paymentType })
           });
           
-          if (!res.ok) throw new Error('Failed to initialize payment');
-          const { clientSecret } = await res.json();
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to generate link');
           
-          // 2. Confirm the card payment with Stripe
-          const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-            payment_method: {
-              card: cardElement,
-              billing_details: {
-                name: document.getElementById('book-cust-name')?.value || 'Guest',
-              },
-            }
-          });
-          
-          if (error) {
-            document.getElementById('payment-message').textContent = error.message;
-            document.getElementById('payment-message').classList.remove('hidden');
-            stripeBtn.innerHTML = originalHtml;
-            stripeBtn.disabled = false;
-          } else if (paymentIntent.status === 'succeeded') {
-            stripeBtn.innerHTML = '<span class="material-symbols-outlined text-sm">check_circle</span> Charge Successful';
-            stripeBtn.classList.replace('bg-indigo-600', 'bg-green-600');
-            stripeBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-green-700');
-            showToast('Stripe payment processed successfully!', 'success');
-            
-            const depositEl = document.getElementById('book-deposit');
-            if (depositEl && price) {
-              depositEl.value = price;
-              if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
-            }
-            document.getElementById('book-status').value = 'completed';
+          if (linkInput && linkResultContainer) {
+            linkInput.value = data.url;
+            linkResultContainer.classList.remove('hidden');
           }
         } catch(err) {
-          showToast('Error processing payment: ' + err.message, true);
-          stripeBtn.innerHTML = originalHtml;
-          stripeBtn.disabled = false;
+          showToast('Error generating link: ' + err.message, true);
+          if (linkError) {
+            linkError.textContent = err.message;
+            linkError.classList.remove('hidden');
+          }
+        } finally {
+          genLinkBtn.innerHTML = originalHtml;
+          genLinkBtn.disabled = false;
         }
+      });
+    }
+
+    if (copyLinkBtn && linkInput) {
+      copyLinkBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(linkInput.value).then(() => {
+          showToast('Payment link copied to clipboard!', 'success');
+          copyLinkBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">check</span>';
+          setTimeout(() => {
+            copyLinkBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">content_copy</span>';
+          }, 2000);
+        });
       });
     }
 

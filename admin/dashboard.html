@@ -2015,23 +2015,32 @@
           <div id="stripe-portal-container" class="hidden mt-3 p-4 rounded-xl bg-white border border-indigo-200 shadow-sm relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
             <div class="flex items-center justify-between mb-3">
-              <span class="font-bold text-indigo-900 text-xs flex items-center gap-1"><span class="material-symbols-outlined text-sm">lock</span> Secure Stripe Terminal</span>
+              <span class="font-bold text-indigo-900 text-xs flex items-center gap-1"><span class="material-symbols-outlined text-sm">link</span> Generate Payment Link</span>
               <div class="flex gap-1">
-                <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-100">VISA</span>
-                <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-100">MC</span>
-                <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-100">AMEX</span>
+                <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-100">STRIPE</span>
               </div>
             </div>
             
-            <!-- Mount Point for Stripe Elements -->
-            <div id="payment-element" class="mb-4">
-              <!-- Elements will create form elements here -->
+            <div class="flex flex-col gap-3">
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <select id="stripe-payment-type" class="px-2 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-bold focus:ring-2 focus:ring-indigo-500 flex-1">
+                  <option value="deposit">Charge Deposit Amount</option>
+                  <option value="balance">Charge Remaining Balance</option>
+                  <option value="full">Charge Full Amount</option>
+                </select>
+                <button type="button" id="generate-stripe-link-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-3 rounded-lg shadow transition-colors flex items-center justify-center gap-1 shrink-0">
+                  <span class="material-symbols-outlined text-sm">magic_button</span> Generate Link
+                </button>
+              </div>
+              
+              <div id="stripe-link-result-container" class="hidden flex items-center gap-2">
+                <input type="text" id="stripe-generated-link" readonly class="w-full px-2 py-2 bg-green-50 border border-green-200 rounded-lg text-[10px] sm:text-xs text-green-900 font-mono focus:outline-none"/>
+                <button type="button" id="copy-stripe-link-btn" class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg shadow transition-colors flex items-center justify-center shrink-0" title="Copy Link">
+                  <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                </button>
+              </div>
+              <p id="stripe-link-error" class="hidden text-[10px] text-red-600 font-bold"></p>
             </div>
-            <div id="payment-message" class="hidden text-xs text-red-600 font-bold mb-3"></div>
-
-            <button type="button" id="stripe-charge-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-lg shadow transition-colors flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined text-sm">payment</span> Process Charge
-            </button>
           </div> <!-- Close stripe-portal-container -->
 
         <div>
