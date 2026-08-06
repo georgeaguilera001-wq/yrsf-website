@@ -1861,8 +1861,8 @@
           <div id="book-boat-options-list" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto hidden divide-y divide-surface-container"></div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="col-span-2 sm:col-span-1">
             <label class="block font-label text-xs font-bold text-on-surface mb-1">Departure Date *</label>
             <input type="date" id="book-date" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
           </div>
@@ -1887,6 +1887,13 @@
             <select id="book-duration" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
               <option value="">-- Select Yacht First --</option>
             </select>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">End Time</label>
+            <div class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-xs font-bold text-on-surface-variant flex items-center justify-between">
+              <span id="book-end-time-display">--:--</span>
+              <span class="material-symbols-outlined text-[16px] text-on-surface-variant/60">schedule</span>
+            </div>
           </div>
         </div>
 

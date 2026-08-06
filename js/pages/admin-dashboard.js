@@ -3184,9 +3184,61 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     };
 
+    window.updateEndTime = () => {
+      const startTimeVal = document.getElementById('book-time')?.value;
+      const durationVal = document.getElementById('book-duration')?.value;
+      const endDisplay = document.getElementById('book-end-time-display');
+      
+      if (!endDisplay) return;
+      if (!startTimeVal || !durationVal) {
+        endDisplay.textContent = '--:--';
+        return;
+      }
+
+      const match = startTimeVal.match(/(\d{2}):(\d{2})\s*(AM|PM)/i);
+      if (match) {
+        let h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const ap = match[3].toUpperCase();
+        
+        if (ap === 'PM' && h !== 12) h += 12;
+        if (ap === 'AM' && h === 12) h = 0;
+        
+        const durHrs = parseInt(durationVal, 10) || 0;
+        let endH = h + durHrs;
+        
+        let isNextDay = false;
+        if (endH >= 24) {
+          endH -= 24;
+          isNextDay = true;
+        }
+        
+        let endAp = 'AM';
+        if (endH >= 12) {
+          endAp = 'PM';
+          if (endH > 12) endH -= 12;
+        } else if (endH === 0) {
+          endH = 12;
+        }
+        
+        const mStr = m.toString().padStart(2, '0');
+        const hStr = endH.toString().padStart(2, '0');
+        endDisplay.textContent = `${hStr}:${mStr} ${endAp}${isNextDay ? ' (+1)' : ''}`;
+      } else {
+        endDisplay.textContent = '--:--';
+      }
+    };
+
     const bookDurationEl = document.getElementById('book-duration');
+    const bookTimeEl = document.getElementById('book-time');
     if (bookDurationEl) {
-      bookDurationEl.addEventListener('change', updateDynamicPrice);
+      bookDurationEl.addEventListener('change', () => {
+        updateDynamicPrice();
+        window.updateEndTime();
+      });
+    }
+    if (bookTimeEl) {
+      bookTimeEl.addEventListener('change', window.updateEndTime);
     }
 
     window.selectBoatOption = (id, name) => {
@@ -3219,6 +3271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       updateDynamicPrice();
+      window.updateEndTime();
     };
 
     window.renderBoatDropdownOptions = (filter = '') => {
@@ -5078,6 +5131,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     document.getElementById('book-notes').value = b.special_requests || '';
 
     if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+    if (typeof window.updateEndTime === 'function') window.updateEndTime();
     document.getElementById('booking-modal')?.classList.remove('hidden');
   };
 
