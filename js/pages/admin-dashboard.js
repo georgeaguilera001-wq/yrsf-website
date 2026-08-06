@@ -5160,8 +5160,9 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
     if (modal && textArea) {
       textArea.value = text;
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      // Use style.display because Tailwind's 'hidden' class uses display:none !important
+      // which cannot be overridden by adding a 'flex' class.
+      modal.style.display = 'flex';
 
       // Clear old listeners
       const newBtnCopy = btnCopy.cloneNode(true);
