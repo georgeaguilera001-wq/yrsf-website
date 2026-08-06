@@ -12,6 +12,12 @@
   transition: transform 0.3s ease;
 }
 
+@media (min-width: 1024px) {
+  .admin-main {
+    margin-left: 264px;
+  }
+}
+
 @media (max-width: 1023px) {
   .admin-sidebar {
     transform: translateX(-100%);
