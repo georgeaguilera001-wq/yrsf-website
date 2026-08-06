@@ -3537,6 +3537,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         modal.classList.remove('hidden');
       });
       [closeBtn, cancelBtn].forEach(btn => btn?.addEventListener('click', () => modal.classList.add('hidden')));
+      
+      const saveDraftBtn = document.getElementById('save-draft-btn');
+      if (saveDraftBtn && form) {
+        saveDraftBtn.addEventListener('click', () => {
+          const statusEl = document.getElementById('book-status');
+          if (statusEl) statusEl.value = 'inquiry';
+          if (form.requestSubmit) {
+            form.requestSubmit();
+          } else {
+            form.submit();
+          }
+        });
+      }
     }
 
     const bookPrice = document.getElementById('book-price');
