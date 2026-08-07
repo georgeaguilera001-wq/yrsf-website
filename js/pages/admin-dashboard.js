@@ -173,6 +173,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!loaded.revenue) { await initRevenueSection(); loaded.revenue = true; }
         else { await initRevenueSection(); }
         break;
+      case 'inquiries':
+        if (!loaded.inquiries) { await initInquiriesSection(); loaded.inquiries = true; }
+        else { await initInquiriesSection(); }
+        break;
       case 'crm':
         if (!loaded.crm) { await initCRMSection(); loaded.crm = true; }
         else { await initCRMSection(); }
@@ -3538,7 +3542,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       [closeBtn, cancelBtn].forEach(btn => btn?.addEventListener('click', () => modal.classList.add('hidden')));
       
-      const saveDraftBtn = document.getElementById('save-draft-btn');
       if (saveDraftBtn && form) {
         saveDraftBtn.addEventListener('click', () => {
           const statusEl = document.getElementById('book-status');
@@ -3547,6 +3550,111 @@ document.addEventListener('DOMContentLoaded', async () => {
             form.requestSubmit();
           } else {
             form.submit();
+          }
+        });
+      }
+
+      const statusEl = document.getElementById('book-status');
+      if (statusEl) {
+        statusEl.addEventListener('change', () => {
+          const leadContainer = document.getElementById('lead-status-container');
+          const pdfBtn = document.getElementById('generate-pdf-quote-btn');
+          if (statusEl.value === 'inquiry') {
+            if (leadContainer) leadContainer.classList.remove('hidden');
+            if (pdfBtn) pdfBtn.classList.remove('hidden');
+          } else {
+            if (leadContainer) leadContainer.classList.add('hidden');
+            if (pdfBtn) pdfBtn.classList.add('hidden');
+          }
+        });
+      }
+
+      const pdfBtn = document.getElementById('generate-pdf-quote-btn');
+      if (pdfBtn) {
+        pdfBtn.addEventListener('click', () => {
+          // Populate the hidden template
+          const custName = document.getElementById('book-cust-name').value || 'Guest';
+          const custEmail = document.getElementById('book-cust-email').value || '';
+          const custPhone = document.getElementById('book-cust-phone').value || '';
+          const boatName = document.getElementById('book-boat-select')?.options[document.getElementById('book-boat-select').selectedIndex]?.text || 'TBD';
+          const date = document.getElementById('book-date').value || 'TBD';
+          const time = document.getElementById('book-time').value || 'TBD';
+          const duration = document.getElementById('book-duration').value || '4';
+          const guests = document.getElementById('book-guests').value || '1';
+          const total = document.getElementById('book-price').value || '0';
+
+          document.getElementById('pdf-date-issued').textContent = `Issued: ${new Date().toISOString().split('T')[0]}`;
+          document.getElementById('pdf-cust-name').textContent = custName;
+          document.getElementById('pdf-cust-contact').textContent = `${custPhone} ${custEmail ? '| ' + custEmail : ''}`;
+          document.getElementById('pdf-boat-name').textContent = boatName;
+          document.getElementById('pdf-charter-date').textContent = `${date} at ${time}`;
+          document.getElementById('pdf-duration').textContent = `${duration} Hours • ${guests} Guests`;
+          document.getElementById('pdf-total-price').textContent = `$${parseFloat(total).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
+          // Line Items
+          const tbody = document.getElementById('pdf-line-items');
+          if (tbody) {
+            let itemsHtml = `
+              <tr>
+                <td class="py-3 px-4 text-sm text-gray-800">${duration}-Hour Yacht Charter (${boatName})</td>
+                <td class="py-3 px-4 text-sm text-gray-800 text-right">Included</td>
+              </tr>
+            `;
+            
+            document.querySelectorAll('.dynamic-addon-row').forEach(row => {
+              const cb = row.querySelector('.addon-cb');
+              const qty = row.querySelector('.addon-qty');
+              const priceInput = row.querySelector('.addon-price-input');
+              if (cb && cb.checked) {
+                const qtyVal = parseInt(qty.value, 10) || 1;
+                const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
+                if (price > 0) {
+                  itemsHtml += `
+                    <tr>
+                      <td class="py-3 px-4 text-sm text-gray-800">${cb.dataset.name} (x${qtyVal})</td>
+                      <td class="py-3 px-4 text-sm text-gray-800 text-right">$${(price * qtyVal).toFixed(2)}</td>
+                    </tr>
+                  `;
+                }
+              }
+            });
+
+            const customName = document.getElementById('custom-addon-name')?.value.trim();
+            const customPrice = parseFloat(document.getElementById('custom-addon-price')?.value) || 0;
+            if (customName && customPrice > 0) {
+              itemsHtml += `
+                <tr>
+                  <td class="py-3 px-4 text-sm text-gray-800">Custom: ${customName}</td>
+                  <td class="py-3 px-4 text-sm text-gray-800 text-right">$${customPrice.toFixed(2)}</td>
+                </tr>
+              `;
+            }
+
+            tbody.innerHTML = itemsHtml;
+          }
+
+          const element = document.getElementById('pdf-quote-template');
+          element.classList.remove('hidden');
+          
+          const opt = {
+            margin:       0,
+            filename:     `YRSF_Quote_${custName.replace(/\s+/g, '_')}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+          };
+
+          // Try to show toast if available
+          if (typeof showToast === 'function') showToast('Generating PDF Quote...', 'success');
+
+          // Ensure html2pdf is loaded
+          if (typeof html2pdf !== 'undefined') {
+            html2pdf().set(opt).from(element).save().then(() => {
+              element.classList.add('hidden');
+            });
+          } else {
+            console.error('html2pdf is not loaded');
+            element.classList.add('hidden');
           }
         });
       }
@@ -3820,8 +3928,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Nullify if empty
         special_requests = special_requests || null;
+        
+        const lead_status = document.getElementById('book-lead-status')?.value || 'new';
 
-        const payload = { boat_id, boat_name, booking_date, start_time, duration_hours, customer_name, customer_phone, customer_email, guest_count, total_price, deposit_amount, remaining_balance, payment_method, status, special_requests, updated_at: new Date().toISOString() };
+        const payload = { boat_id, boat_name, booking_date, start_time, duration_hours, customer_name, customer_phone, customer_email, guest_count, total_price, deposit_amount, remaining_balance, payment_method, status, special_requests, lead_status, updated_at: new Date().toISOString() };
 
         try {
           if (id) {
@@ -3964,9 +4074,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
 
-    // Filter to future or today's bookings, not cancelled
+    // Filter to future or today's bookings, not cancelled, not inquiries
     const upcoming = bookingsCache.filter(b => {
-      if (b.status === 'cancelled') return false;
+      if (b.status === 'cancelled' || b.status === 'inquiry') return false;
       if (b.booking_date < todayStr) return false;
       return true;
     }).sort((a, b) => {
@@ -4033,6 +4143,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const weekOutStr = weekOut.toISOString().split('T')[0];
 
     const filtered = bookingsCache.filter(b => {
+      if (b.status === 'inquiry') return false;
       // Date Filter
       if (currentManifestFilter === 'today' && b.booking_date !== todayStr) return false;
       if (currentManifestFilter === 'tomorrow' && b.booking_date !== tomorrowStr) return false;
@@ -4700,6 +4811,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const externalByDate = {};
     
     (bookingsCache || []).forEach(b => {
+      if (b.status === 'inquiry') return;
       if (selectedBoatId !== 'all' && b.boat_id !== selectedBoatId) return;
       if (!bookingsByDate[b.booking_date]) bookingsByDate[b.booking_date] = [];
       bookingsByDate[b.booking_date].push(b);
@@ -5190,6 +5302,22 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     document.getElementById('book-status').value = b.status || 'confirmed';
     document.getElementById('book-notes').value = b.special_requests || '';
 
+    const leadStatusEl = document.getElementById('book-lead-status');
+    if (leadStatusEl) leadStatusEl.value = b.lead_status || 'new';
+
+    const leadContainer = document.getElementById('lead-status-container');
+    if (leadContainer) {
+      if (b.status === 'inquiry') leadContainer.classList.remove('hidden');
+      else leadContainer.classList.add('hidden');
+    }
+
+    // Handle PDF quote button visibility (optional but good UI)
+    const pdfBtn = document.getElementById('generate-pdf-quote-btn');
+    if (pdfBtn) {
+      if (b.status === 'inquiry') pdfBtn.classList.remove('hidden');
+      else pdfBtn.classList.add('hidden');
+    }
+
     if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
     if (typeof window.updateEndTime === 'function') window.updateEndTime();
     document.getElementById('booking-modal')?.classList.remove('hidden');
@@ -5472,6 +5600,79 @@ Write ONLY the summary sentence(s), no extra explanation.`;
         });
       }
     }
+  };
+
+  // ─── 1.5 Sales & Inquiries Section (Kanban) ────────────────────────────
+  window.initInquiriesSection = async function() {
+    const colNew = document.getElementById('kanban-col-new');
+    const colContacted = document.getElementById('kanban-col-contacted');
+    const colQuoteSent = document.getElementById('kanban-col-quote_sent');
+    if (!colNew) return;
+
+    // Optional: Add button listener if not already added
+    const addInqBtn = document.getElementById('add-inquiry-btn');
+    if (addInqBtn && !addInqBtn.hasAttribute('data-bound')) {
+      addInqBtn.setAttribute('data-bound', 'true');
+      addInqBtn.addEventListener('click', () => {
+        const form = document.getElementById('book-form');
+        if (form) form.reset();
+        document.getElementById('booking-id').value = '';
+        document.getElementById('book-status').value = 'inquiry';
+        document.getElementById('booking-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      });
+    }
+
+    const { data: leads, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('status', 'inquiry')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching leads:', error);
+      return;
+    }
+
+    const newLeads = [];
+    const contactedLeads = [];
+    const quotedLeads = [];
+
+    (leads || []).forEach(lead => {
+      const stage = lead.lead_status || 'new';
+      if (stage === 'new') newLeads.push(lead);
+      else if (stage === 'contacted') contactedLeads.push(lead);
+      else quotedLeads.push(lead);
+    });
+
+    document.getElementById('count-col-new').textContent = newLeads.length;
+    document.getElementById('count-col-contacted').textContent = contactedLeads.length;
+    document.getElementById('count-col-quote_sent').textContent = quotedLeads.length;
+
+    const renderCard = (b) => {
+      const dateStr = b.booking_date ? new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], {month:'short', day:'numeric'}) : 'TBD';
+      return `
+        <div class="bg-white p-3 rounded-xl border border-outline-variant shadow-sm hover:shadow hover:border-secondary/50 cursor-pointer transition-all flex flex-col gap-2" onclick="window.editBooking('${b.id}')">
+          <div class="flex justify-between items-start">
+            <h4 class="font-bold text-sm text-on-surface truncate pr-2">${escapeHtml(b.customer_name || 'Unknown Lead')}</h4>
+            <span class="text-xs font-mono font-bold text-secondary bg-secondary-container/50 px-1.5 py-0.5 rounded">${dateStr}</span>
+          </div>
+          <p class="text-[11px] text-on-surface-variant flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]">directions_boat</span> ${escapeHtml(b.boat_name || 'TBD')}
+          </p>
+          <div class="flex items-center justify-between mt-1 pt-2 border-t border-outline-variant/50">
+            <span class="text-[10px] font-bold text-on-surface-variant flex items-center gap-1">
+               ${b.lead_source === 'web' ? '<span class="material-symbols-outlined text-[12px] text-blue-500">language</span> Web' : '<span class="material-symbols-outlined text-[12px] text-gray-500">edit_document</span> Manual'}
+            </span>
+            <span class="text-[11px] font-bold text-green-700">$${parseFloat(b.total_price || 0).toLocaleString()}</span>
+          </div>
+        </div>
+      `;
+    };
+
+    colNew.innerHTML = newLeads.length ? newLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No new leads.</p>';
+    colContacted.innerHTML = contactedLeads.length ? contactedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No contacted leads.</p>';
+    colQuoteSent.innerHTML = quotedLeads.length ? quotedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No quotes sent.</p>';
   };
 
   // ─── 2. Customer CRM Section ─────────────────────────────────────────────
