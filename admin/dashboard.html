@@ -151,15 +151,7 @@
             </button>
           </div>
         </li>
-        <li draggable="true" data-nav-id="inquiries">
-          <div class="flex items-center gap-1 group">
-            <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
-            <button class="admin-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container" data-section="inquiries">
-              <span class="material-symbols-outlined">assignment_ind</span>
-              <span class="font-label text-label-md">Sales &amp; Inquiries</span>
-            </button>
-          </div>
-        </li>
+
         <li draggable="true" data-nav-id="crm">
           <div class="flex items-center gap-1 group">
             <span class="drag-handle material-symbols-outlined text-[16px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
@@ -1612,68 +1604,106 @@
         </div>
       </section>
 
-      <!-- Sales & Inquiries Section -->
-      <section id="section-inquiries" class="admin-section hidden flex flex-col gap-8 h-full">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h1 class="font-headline text-headline-lg text-on-surface font-bold flex items-center gap-2">
-              <span class="material-symbols-outlined text-secondary">assignment_ind</span> Sales &amp; Inquiries
-            </h1>
-            <p class="font-body text-body-md text-on-surface-variant">Manage web leads, active quotes, and pipeline</p>
+      <!-- Customer Profile Modal -->
+      <div id="customer-profile-modal" class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 hidden animate-fade-in">
+        <div class="bg-surface border border-outline-variant rounded-3xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+          
+          <!-- Header -->
+          <div class="p-6 bg-surface-container-lowest border-b border-outline-variant flex items-start justify-between shrink-0">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-full bg-secondary-container text-secondary flex items-center justify-center font-display text-2xl font-bold uppercase" id="cp-avatar">
+                C
+              </div>
+              <div>
+                <h2 class="font-headline text-2xl font-bold text-on-surface flex items-center gap-2" id="cp-name">Customer Name</h2>
+                <div class="flex flex-wrap items-center gap-4 mt-1 font-body text-sm text-on-surface-variant">
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span> <span id="cp-phone">...</span></span>
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">mail</span> <span id="cp-email">...</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="cp-whatsapp-btn" class="bg-green-600 text-white px-4 py-2 rounded-xl font-label text-sm font-bold flex items-center gap-2 hover:bg-green-700 transition-colors">
+                WhatsApp
+              </button>
+              <button onclick="document.getElementById('customer-profile-modal').classList.add('hidden')" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
           </div>
-          <div class="flex items-center gap-3">
-            <button id="add-inquiry-btn" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2 shadow-sm">
-              <span class="material-symbols-outlined text-[18px]">add</span> New Quote / Lead
-            </button>
+
+          <!-- Quick Stats Banner -->
+          <div class="grid grid-cols-3 divide-x divide-outline-variant/50 border-b border-outline-variant bg-surface-container shrink-0">
+            <div class="p-4 text-center">
+              <div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Lifetime Value</div>
+              <div class="font-headline text-xl font-black text-green-700" id="cp-ltv">$0</div>
+            </div>
+            <div class="p-4 text-center">
+              <div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Total Charters</div>
+              <div class="font-headline text-xl font-black text-secondary" id="cp-bookings">0</div>
+            </div>
+            <div class="p-4 text-center">
+              <div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Last Visit</div>
+              <div class="font-headline text-xl font-black text-on-surface" id="cp-last-visit">Never</div>
+            </div>
+          </div>
+
+          <!-- Content Body -->
+          <div class="flex-1 overflow-y-auto p-6 bg-surface">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+              
+              <!-- Left Col: History & Quotes -->
+              <div class="lg:col-span-2 flex flex-col gap-6">
+                <!-- Charter History -->
+                <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden flex flex-col">
+                  <div class="p-4 border-b border-outline-variant flex items-center justify-between bg-surface-container">
+                    <h3 class="font-label text-label-lg font-bold flex items-center gap-2"><span class="material-symbols-outlined">history</span> Charter History</h3>
+                  </div>
+                  <div class="p-0 overflow-x-auto max-h-[300px] overflow-y-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead class="bg-surface-container/50 sticky top-0 border-b border-outline-variant">
+                        <tr>
+                          <th class="p-3 text-xs font-bold text-on-surface-variant">Date</th>
+                          <th class="p-3 text-xs font-bold text-on-surface-variant">Yacht</th>
+                          <th class="p-3 text-xs font-bold text-on-surface-variant text-right">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody id="cp-history-list" class="divide-y divide-outline-variant/30">
+                        <!-- Populated by JS -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Quotes & Inquiries -->
+                <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden flex flex-col flex-1">
+                  <div class="p-4 border-b border-outline-variant flex items-center justify-between bg-surface-container">
+                    <h3 class="font-label text-label-lg font-bold flex items-center gap-2"><span class="material-symbols-outlined">request_quote</span> Quotes & Inquiries</h3>
+                    <button id="cp-draft-quote-btn" class="bg-secondary text-on-secondary px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:opacity-90">
+                      <span class="material-symbols-outlined text-[16px]">add</span> Draft Quote
+                    </button>
+                  </div>
+                  <div class="p-4 flex-1 overflow-y-auto flex flex-col gap-3" id="cp-quotes-list">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Col: Internal Notes & Tags -->
+              <div class="flex flex-col gap-6">
+                <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 flex flex-col flex-1">
+                  <h3 class="font-label text-label-lg font-bold mb-3 flex items-center gap-2"><span class="material-symbols-outlined">sticky_note_2</span> Internal Notes</h3>
+                  <textarea id="cp-notes" class="w-full flex-1 border border-outline-variant rounded-xl p-3 text-sm font-body focus:ring-secondary resize-none bg-surface-container/30" placeholder="Add preferences, VIP details, or anything to remember for their next charter..."></textarea>
+                  <div class="mt-3 text-right">
+                    <button id="cp-save-notes-btn" class="bg-surface-container-high hover:bg-surface-variant text-on-surface px-4 py-2 rounded-xl text-xs font-bold transition-colors">Save Notes</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
-
-        <!-- Kanban Board Layout -->
-        <div class="flex-1 min-h-[500px] overflow-x-auto pb-4">
-          <div class="flex gap-4 h-full min-w-[900px]">
-            
-            <!-- Column 1: New Web Requests -->
-            <div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col">
-              <div class="p-4 border-b border-outline-variant bg-surface-container/50 rounded-t-2xl flex items-center justify-between">
-                <h3 class="font-label text-label-lg font-bold flex items-center gap-2 text-on-surface">
-                  <span class="w-3 h-3 rounded-full bg-blue-500"></span> New Web Requests
-                </h3>
-                <span id="count-col-new" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold">0</span>
-              </div>
-              <div id="kanban-col-new" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 min-h-[150px]" data-stage="new">
-                <!-- Cards will be injected here -->
-              </div>
-            </div>
-
-            <!-- Column 2: Contacted / Drafting Quote -->
-            <div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col">
-              <div class="p-4 border-b border-outline-variant bg-surface-container/50 rounded-t-2xl flex items-center justify-between">
-                <h3 class="font-label text-label-lg font-bold flex items-center gap-2 text-on-surface">
-                  <span class="w-3 h-3 rounded-full bg-orange-400"></span> Contacted / Draft
-                </h3>
-                <span id="count-col-contacted" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold">0</span>
-              </div>
-              <div id="kanban-col-contacted" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 min-h-[150px]" data-stage="contacted">
-                <!-- Cards will be injected here -->
-              </div>
-            </div>
-
-            <!-- Column 3: Quote Sent -->
-            <div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col">
-              <div class="p-4 border-b border-outline-variant bg-surface-container/50 rounded-t-2xl flex items-center justify-between">
-                <h3 class="font-label text-label-lg font-bold flex items-center gap-2 text-on-surface">
-                  <span class="w-3 h-3 rounded-full bg-purple-500"></span> Quote Sent
-                </h3>
-                <span id="count-col-quote_sent" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold">0</span>
-              </div>
-              <div id="kanban-col-quote_sent" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 min-h-[150px]" data-stage="quote_sent">
-                <!-- Cards will be injected here -->
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
+      </div>
 
       <!-- Customer CRM Section (Directory) -->
       <section id="section-crm" class="admin-section hidden flex flex-col gap-8">

@@ -5681,51 +5681,128 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const tbody = document.getElementById('crm-table-body');
     if (!tbody) return;
 
-    const { data: bookings } = await supabase.from('bookings').select('*');
+    // Fetch bookings to aggregate customers
+    const { data: bookings } = await window.supabase.from('bookings').select('*').order('created_at', { ascending: false });
     const allBookings = bookings || [];
 
     const customers = {};
     allBookings.forEach(b => {
-      const key = b.customer_phone || b.customer_email || b.customer_name || 'Unknown';
+      const key = b.customer_email || b.customer_phone || b.customer_name;
+      if (!key) return;
       if (!customers[key]) {
         customers[key] = {
+          id: key, // Using email/phone as virtual ID until they migrate to customers table
           name: b.customer_name || 'Guest Customer',
           phone: b.customer_phone || '-',
           email: b.customer_email || '-',
           bookings: 0,
           totalSpent: 0,
-          lastDate: b.charter_date || b.date || '-'
+          lastDate: b.charter_date || b.date || '-',
+          history: [],
+          quotes: []
         };
       }
-      customers[key].bookings += 1;
-      customers[key].totalSpent += parseFloat(b.total_price || b.amount || 0);
-      if (b.charter_date > customers[key].lastDate) customers[key].lastDate = b.charter_date;
+      
+      const amount = parseFloat(b.total_price || b.amount || 0);
+      const isQuote = b.status === 'inquiry' || b.lead_status === 'Draft Quote';
+      
+      if (isQuote) {
+        customers[key].quotes.push(b);
+      } else {
+        customers[key].bookings += 1;
+        customers[key].totalSpent += amount;
+        customers[key].history.push(b);
+        if (new Date(b.charter_date || b.date) > new Date(customers[key].lastDate)) {
+          customers[key].lastDate = b.charter_date || b.date;
+        }
+      }
     });
 
     const list = Object.values(customers);
+    window._cachedCustomers = list; // Save for modal
+
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No customers recorded yet. Bookings will automatically populate this CRM list.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No customers recorded yet.</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = list.map(c => `
-      <tr class="border-b border-outline-variant hover:bg-surface-container-low">
-        <td class="px-4 py-3 font-bold text-on-surface text-sm">${c.name}</td>
+    tbody.innerHTML = list.map((c, idx) => `
+      <tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer" onclick="openCustomerProfile(${idx})">
+        <td class="px-4 py-3 font-bold text-on-surface text-sm flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-secondary-container text-secondary flex items-center justify-center font-bold text-xs">${c.name.charAt(0).toUpperCase()}</div>
+          ${c.name}
+        </td>
         <td class="px-4 py-3 text-on-surface-variant text-sm">${c.phone}</td>
         <td class="px-4 py-3 text-right font-bold text-secondary text-sm">${c.bookings}</td>
         <td class="px-4 py-3 text-right font-bold text-green-700 text-sm">$${c.totalSpent.toLocaleString()}</td>
         <td class="px-4 py-3 text-on-surface-variant text-sm">${c.lastDate}</td>
         <td class="px-4 py-3 text-center">
-          <button onclick="sendWhatsAppCRM('${c.phone}', '${c.name}')" class="px-2.5 py-1 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700">WhatsApp</button>
+          <button onclick="event.stopPropagation(); sendWhatsAppCRM('${c.phone}', '${c.name}')" class="px-2.5 py-1 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700">WhatsApp</button>
         </td>
       </tr>
     `).join('');
   };
 
+  window.openCustomerProfile = function(idx) {
+    const c = window._cachedCustomers[idx];
+    if (!c) return;
+
+    document.getElementById('cp-name').textContent = c.name;
+    document.getElementById('cp-phone').textContent = c.phone;
+    document.getElementById('cp-email').textContent = c.email;
+    document.getElementById('cp-avatar').textContent = c.name.charAt(0).toUpperCase();
+    
+    document.getElementById('cp-ltv').textContent = '$' + c.totalSpent.toLocaleString();
+    document.getElementById('cp-bookings').textContent = c.bookings;
+    document.getElementById('cp-last-visit').textContent = c.lastDate;
+
+    // Render History
+    const historyList = document.getElementById('cp-history-list');
+    historyList.innerHTML = c.history.length === 0 ? `<tr><td colspan="3" class="text-center p-4 text-xs text-on-surface-variant">No confirmed charters yet.</td></tr>` : 
+      c.history.map(b => `
+        <tr class="hover:bg-surface-container-low">
+          <td class="p-3 text-sm text-on-surface">${b.charter_date || b.date}</td>
+          <td class="p-3 text-sm font-bold text-secondary">${b.boat_name || 'Yacht'}</td>
+          <td class="p-3 text-sm font-bold text-green-700 text-right">$${parseFloat(b.total_price || b.amount || 0).toLocaleString()}</td>
+        </tr>
+      `).join('');
+
+    // Render Quotes
+    const quotesList = document.getElementById('cp-quotes-list');
+    quotesList.innerHTML = c.quotes.length === 0 ? `<p class="text-xs text-center text-on-surface-variant p-4">No quotes or inquiries.</p>` :
+      c.quotes.map(q => `
+        <div class="border border-outline-variant rounded-xl p-3 bg-surface text-sm">
+          <div class="flex items-center justify-between mb-1">
+            <span class="font-bold text-on-surface">${q.boat_name || 'Yacht Inquiry'}</span>
+            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full font-bold">${q.lead_status || 'Draft'}</span>
+          </div>
+          <div class="text-xs text-on-surface-variant mb-2">Requested Date: ${q.charter_date || 'TBD'}</div>
+          <div class="flex justify-end gap-2">
+            <button onclick="editBooking('${q.id}')" class="text-xs font-bold text-secondary hover:underline">Edit/Send Quote</button>
+          </div>
+        </div>
+      `).join('');
+
+    // Setup Draft Quote button
+    const draftBtn = document.getElementById('cp-draft-quote-btn');
+    draftBtn.onclick = () => {
+      document.getElementById('customer-profile-modal').classList.add('hidden');
+      document.getElementById('add-booking-btn').click();
+      setTimeout(() => {
+        document.getElementById('booking-customer-name').value = c.name;
+        document.getElementById('booking-customer-email').value = c.email !== '-' ? c.email : '';
+        document.getElementById('booking-customer-phone').value = c.phone !== '-' ? c.phone : '';
+        document.getElementById('booking-status').value = 'inquiry';
+      }, 100);
+    };
+
+    document.getElementById('customer-profile-modal').classList.remove('hidden');
+  };
+
   window.sendWhatsAppCRM = function(phone, name) {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const msg = encodeURIComponent(`Hi ${name}! Thanks for yachting with Yacht Rentals of South Florida. Would you like to plan another charter experience soon?`);
-    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+    const msg = encodeURIComponent(\`Hi \${name}! Thanks for yachting with Yacht Rentals of South Florida. Would you like to plan another charter experience soon?\`);
+    window.open(\`https://wa.me/\${cleanPhone}?text=\${msg}\`, '_blank');
   };
 
   // ─── 5. Promos & Discounts Section ───────────────────────────────────────
