@@ -5521,12 +5521,17 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
   };
 
-  window.deleteBooking = async (id, name) => {
+  window.deleteBooking = async (id, name, closePanel = false) => {
     if (!confirm(`Are you sure you want to delete charter booking for "${name}"?`)) return;
     const { error } = await supabase.from('bookings').delete().eq('id', id);
     if (error) { showToast('Error deleting booking: ' + error.message, true); return; }
     showToast('Charter booking removed.');
     loadBookings();
+    if (window.initCRMSection) window.initCRMSection();
+    if (closePanel) {
+      const p = document.getElementById('customer-profile-panel');
+      if (p) p.classList.add('translate-x-full');
+    }
   };
 
   // ─── Top Notification Bell Logic ──────────────────────────────────────────
@@ -5844,12 +5849,17 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
     // Render History
     const historyList = document.getElementById('cp-history-list');
-    historyList.innerHTML = c.history.length === 0 ? `<tr><td colspan="3" class="text-center p-4 text-xs text-on-surface-variant">No confirmed charters yet.</td></tr>` : 
+    historyList.innerHTML = c.history.length === 0 ? `<tr><td colspan="4" class="text-center p-4 text-xs text-on-surface-variant">No confirmed charters yet.</td></tr>` : 
       c.history.map(b => `
-        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors" onclick="editBooking('${b.id}')">
-          <td class="p-3 text-sm text-on-surface">${b.booking_date || b.charter_date || b.date}</td>
-          <td class="p-3 text-sm font-bold text-secondary">${b.boat_name || 'Yacht'}</td>
-          <td class="p-3 text-sm font-bold text-green-700 text-right">$${parseFloat(b.total_price || b.amount || 0).toLocaleString()}</td>
+        <tr class="hover:bg-surface-container-low transition-colors group">
+          <td class="p-3 text-sm text-on-surface cursor-pointer" onclick="editBooking('${b.id}')">${b.booking_date || b.charter_date || b.date}</td>
+          <td class="p-3 text-sm font-bold text-secondary cursor-pointer" onclick="editBooking('${b.id}')">${b.boat_name || 'Yacht'}</td>
+          <td class="p-3 text-sm font-bold text-green-700 text-right cursor-pointer" onclick="editBooking('${b.id}')">$${parseFloat(b.total_price || b.amount || 0).toLocaleString()}</td>
+          <td class="p-3 text-right">
+             <button onclick="event.stopPropagation(); deleteBooking('${b.id}', '${escapeHtml(b.customer_name || 'Customer')}', true)" class="opacity-0 group-hover:opacity-100 p-1 text-on-surface-variant hover:text-red-600 transition-all rounded hover:bg-red-50" title="Remove Charter">
+               <span class="material-symbols-outlined text-[16px]">delete</span>
+             </button>
+          </td>
         </tr>
       `).join('');
 
