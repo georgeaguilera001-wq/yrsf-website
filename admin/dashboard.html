@@ -67,7 +67,7 @@
       <p class="font-caption text-caption text-on-surface-variant font-medium pl-1">Admin Portal</p>
     </div>
 
-    <nav class="flex-1 p-sm overflow-y-auto">
+    <nav class="flex-1 p-3 overflow-y-auto">
       <ul class="flex flex-col gap-1">
         <li draggable="true" data-nav-id="dashboard">
           <div class="flex items-center gap-1 group">
@@ -190,7 +190,7 @@
       </ul>
     </nav>
 
-    <div class="p-md border-t border-outline-variant">
+    <div class="p-6 border-t border-outline-variant">
       <div class="flex items-center gap-3 mb-3">
         <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
           <span class="material-symbols-outlined text-on-secondary">person</span>
@@ -278,7 +278,7 @@
     <div class="p-4 sm:p-6 lg:p-8">
       <!-- Dashboard Section -->
       <section class="admin-section" id="section-dashboard">
-        <div class="flex items-center justify-between mb-md">
+        <div class="flex items-center justify-between mb-6">
           <h1 class="font-headline text-headline-lg text-on-surface">Dashboard</h1>
           <button class="bg-secondary text-on-secondary px-4 py-2 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm shrink-0" onclick="document.querySelector('[data-section=bookings]').click(); setTimeout(() => { const btn = document.getElementById('add-booking-btn'); if(btn) btn.click(); }, 150)">
             <span class="material-symbols-outlined text-[18px]">add_circle</span> <span class="hidden sm:inline">New Booking</span><span class="sm:hidden">New</span>
@@ -286,7 +286,7 @@
         </div>
 
         <!-- Live Customer Inquiries & Notification Center -->
-        <div id="admin-inquiries-banner" class="mb-lg bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+        <div id="admin-inquiries-banner" class="mb-8 bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-outline-variant">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center">
@@ -314,29 +314,29 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md mb-lg">
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
             <div class="flex items-center gap-3 mb-2">
               <span class="material-symbols-outlined text-secondary">directions_boat</span>
               <span class="font-label text-label-md text-on-surface-variant">Active Yachts</span>
             </div>
             <p class="font-headline text-headline-lg text-on-surface" id="stat-boats">-</p>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
             <div class="flex items-center gap-3 mb-2">
               <span class="material-symbols-outlined text-secondary">add_circle</span>
               <span class="font-label text-label-md text-on-surface-variant">Active Add-ons</span>
             </div>
             <p class="font-headline text-headline-lg text-on-surface" id="stat-addons">-</p>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
             <div class="flex items-center gap-3 mb-2">
               <span class="material-symbols-outlined text-secondary">star</span>
               <span class="font-label text-label-md text-on-surface-variant">Testimonials</span>
             </div>
             <p class="font-headline text-headline-lg text-on-surface" id="stat-testimonials">-</p>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
             <div class="flex items-center gap-3 mb-2">
               <span class="material-symbols-outlined text-secondary">quiz</span>
               <span class="font-label text-label-md text-on-surface-variant">FAQs</span>
@@ -346,7 +346,7 @@
         </div>
         
         <!-- Upcoming Reservations inside Dashboard -->
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm mb-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm mb-8">
           <div class="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant">
             <div>
               <h2 class="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
@@ -359,12 +359,12 @@
             </button>
           </div>
           <div id="dashboard-upcoming-reservations" class="flex flex-col gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-            <div class="text-center py-md"><span class="admin-spinner"></span></div>
+            <div class="text-center py-6"><span class="admin-spinner"></span></div>
           </div>
         </div>
 
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-          <h3 class="font-headline text-headline-md text-on-surface mb-md">Quick Actions</h3>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+          <h3 class="font-headline text-headline-md text-on-surface mb-6">Quick Actions</h3>
           <div class="flex flex-wrap gap-3">
             <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" onclick="document.querySelector('[data-section=fleet]').click()">
               <span class="material-symbols-outlined text-[18px]">add</span> New Yacht
@@ -379,7 +379,7 @@
         </div>
 
         <!-- Embedded Management Modules inside Dashboard (Reviews, Testimonials, FAQs) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-lg mt-lg">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-lg">
           <!-- Reviews Moderation Box -->
           <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex flex-col">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-outline-variant">
@@ -412,13 +412,13 @@
               </button>
             </div>
             <div id="testimonials-list" class="flex flex-col gap-3 max-h-[420px] overflow-y-auto flex-1">
-              <div class="text-center py-md"><span class="admin-spinner"></span></div>
+              <div class="text-center py-6"><span class="admin-spinner"></span></div>
             </div>
           </div>
         </div>
 
         <!-- FAQ Management Box inside Dashboard -->
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm mt-lg mb-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm mt-lg mb-8">
           <div class="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant">
             <div>
               <h2 class="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
@@ -431,7 +431,7 @@
             </button>
           </div>
           <div id="faqs-list" class="flex flex-col gap-3 max-h-[450px] overflow-y-auto">
-            <div class="text-center py-md"><span class="admin-spinner"></span></div>
+            <div class="text-center py-6"><span class="admin-spinner"></span></div>
           </div>
         </div>
       </section>
@@ -502,7 +502,7 @@
 
       <!-- Fleet Section -->
       <section class="admin-section hidden" id="section-fleet">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-md">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h1 class="font-headline text-headline-lg text-on-surface">Fleet &amp; Services</h1>
           <div>
             <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" id="add-boat-btn">
@@ -560,7 +560,7 @@
         </div>
 
         <!-- Filter / Sort Bar -->
-        <div class="flex flex-col md:flex-row gap-4 mb-md">
+        <div class="flex flex-col md:flex-row gap-4 mb-6">
           <div class="relative flex-1">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
             <input type="text" id="admin-fleet-search" class="admin-field w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary transition-all" placeholder="Search by name, manufacturer, or ID..."/>
@@ -586,13 +586,13 @@
             <table class="w-full">
               <thead class="bg-surface-container">
                 <tr>
-                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">Yacht</th>
-                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">Vessel ID</th>
-                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">Capacity</th>
-                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">Status</th>
-                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">Featured</th>
-                  <th class="text-left px-md py-3 font-label text-label-md text-on-surface-variant">iCal</th>
-                  <th class="text-right px-md py-3 font-label text-label-md text-on-surface-variant">Actions</th>
+                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">Yacht</th>
+                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">Vessel ID</th>
+                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">Capacity</th>
+                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">Status</th>
+                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">Featured</th>
+                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">iCal</th>
+                  <th class="text-right px-6 py-3 font-label text-label-md text-on-surface-variant">Actions</th>
                 </tr>
               </thead>
               <tbody id="fleet-table-body">
@@ -774,7 +774,7 @@
 
       <!-- Partner Submissions Section -->
       <section class="admin-section hidden" id="section-partners">
-        <div class="flex items-center justify-between mb-md">
+        <div class="flex items-center justify-between mb-6">
           <div>
             <h1 class="font-headline text-headline-lg text-on-surface">Partner &amp; Affiliate Fleet Portal</h1>
             <p class="font-body text-body-md text-on-surface-variant mt-1">Send secret unlisted onboarding links to external boat operators or submit their vessels directly from your dashboard.</p>
@@ -827,7 +827,7 @@
 
         <!-- ADD-ONS TAB -->
         <div id="fleet-tab-addons" class="hidden">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md" id="admin-addons-grid">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="admin-addons-grid">
             <div class="text-center py-xl col-span-full"><span class="admin-spinner"></span></div>
           </div>
         </div> <!-- End ADD-ONS TAB -->
@@ -1209,10 +1209,10 @@
 
       <!-- Content Section (FAQ + Testimonials) -->
       <section class="admin-section hidden" id="section-content">
-        <h1 class="font-headline text-headline-lg text-on-surface mb-md">Content Management</h1>
+        <h1 class="font-headline text-headline-lg text-on-surface mb-6">Content Management</h1>
         <!-- Blog Posts -->
-        <div class="mb-lg">
-          <div class="flex items-center justify-between mb-md">
+        <div class="mb-8">
+          <div class="flex items-center justify-between mb-6">
             <div>
               <h2 class="font-headline text-headline-md text-on-surface">Blog Posts (SEO)</h2>
               <p class="font-body text-caption text-on-surface-variant">Paste directly from ChatGPT using Markdown.</p>
@@ -1228,16 +1228,16 @@
             </div>
           </div>
           <div class="flex flex-col gap-3" id="blogs-list">
-            <div class="text-center py-md"><span class="admin-spinner"></span></div>
+            <div class="text-center py-6"><span class="admin-spinner"></span></div>
           </div>
         </div>
       </section>
 
       <!-- SEO Section -->
       <section class="admin-section hidden" id="section-seo">
-        <h1 class="font-headline text-headline-lg text-on-surface mb-md">SEO Settings</h1>
-        <form id="seo-form" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-          <div class="flex flex-col gap-md">
+        <h1 class="font-headline text-headline-lg text-on-surface mb-6">SEO Settings</h1>
+        <form id="seo-form" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+          <div class="flex flex-col gap-6">
             <div>
               <label class="block font-label text-label-md text-on-surface-variant mb-2">Default Page Title</label>
               <input type="text" id="seo-title" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
@@ -1255,12 +1255,12 @@
 
       <!-- Settings Section (WhatsApp, Business Info) -->
       <section class="admin-section hidden" id="section-settings">
-        <h1 class="font-headline text-headline-lg text-on-surface mb-md">General Settings</h1>
-        <form id="settings-form" class="flex flex-col gap-md">
+        <h1 class="font-headline text-headline-lg text-on-surface mb-6">General Settings</h1>
+        <form id="settings-form" class="flex flex-col gap-6">
           <!-- Branding -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-            <h3 class="font-headline text-headline-md text-on-surface mb-md">Branding (Logos)</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+            <h3 class="font-headline text-headline-md text-on-surface mb-6">Branding (Logos)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Desktop Logo URL (e.g., https://...)</label>
                 <div class="flex gap-2">
@@ -1284,9 +1284,9 @@
             </div>
           </div>
           <!-- Business Info -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-            <h3 class="font-headline text-headline-md text-on-surface mb-md">Business Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+            <h3 class="font-headline text-headline-md text-on-surface mb-6">Business Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Business Name</label>
                 <input type="text" id="setting-business-name" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
@@ -1298,9 +1298,9 @@
             </div>
           </div>
           <!-- Inquiry Alerts / Notifications Config -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-            <h3 class="font-headline text-headline-md text-on-surface mb-md">Inquiry Notification Alerts</h3>
-            <div class="flex flex-col gap-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+            <h3 class="font-headline text-headline-md text-on-surface mb-6">Inquiry Notification Alerts</h3>
+            <div class="flex flex-col gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Notification Recipient Email</label>
                 <input type="email" id="setting-admin-notification-email" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="georgeaguilera001@gmail.com"/>
@@ -1309,9 +1309,9 @@
             </div>
           </div>
           <!-- WhatsApp Config -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-            <h3 class="font-headline text-headline-md text-on-surface mb-md">WhatsApp Integration</h3>
-            <div class="flex flex-col gap-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+            <h3 class="font-headline text-headline-md text-on-surface mb-6">WhatsApp Integration</h3>
+            <div class="flex flex-col gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">WhatsApp Number (include country code)</label>
                 <input type="tel" id="setting-whatsapp-number" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="13059902192"/>
@@ -1353,9 +1353,9 @@
             </div>
           </div>
           <!-- Hero Content -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-            <h3 class="font-headline text-headline-md text-on-surface mb-md">Homepage Hero</h3>
-            <div class="flex flex-col gap-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+            <h3 class="font-headline text-headline-md text-on-surface mb-6">Homepage Hero</h3>
+            <div class="flex flex-col gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Background Image URL (or upload)</label>
                 <div class="flex gap-2">
@@ -1381,9 +1381,9 @@
             </div>
           </div>
           <!-- Expert Section Content -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-            <h3 class="font-headline text-headline-md text-on-surface mb-md">Expert Section</h3>
-            <div class="flex flex-col gap-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+            <h3 class="font-headline text-headline-md text-on-surface mb-6">Expert Section</h3>
+            <div class="flex flex-col gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Tagline</label>
                 <input type="text" id="setting-expert-tagline" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="Personalized Service"/>
@@ -1396,7 +1396,7 @@
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Description</label>
                 <textarea id="setting-expert-description" rows="3" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"></textarea>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label class="block font-label text-label-md text-on-surface-variant mb-2">Bullet Point 1</label>
                   <input type="text" id="setting-expert-bullet-1" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
@@ -1406,7 +1406,7 @@
                   <input type="text" id="setting-expert-bullet-2" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
                 </div>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label class="block font-label text-label-md text-on-surface-variant mb-2">Expert Image 1 (Left)</label>
                   <div class="flex gap-2">
@@ -1431,9 +1431,9 @@
             </div>
           </div>
           <!-- Instagram Content -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-            <h3 class="font-headline text-headline-md text-on-surface mb-md">Instagram Live Feed</h3>
-            <div class="flex flex-col gap-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+            <h3 class="font-headline text-headline-md text-on-surface mb-6">Instagram Live Feed</h3>
+            <div class="flex flex-col gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Instagram Embed Code (3rd-party widget)</label>
                 <p class="text-xs text-on-surface-variant mb-2">Use a free service like <a href="https://elfsight.com/instagram-feed-instashow/" target="_blank" class="text-secondary underline">Elfsight</a> or <a href="https://lightwidget.com/" target="_blank" class="text-secondary underline">LightWidget</a> to generate a live feed widget, then paste the HTML/Script code here.</p>
@@ -1442,9 +1442,9 @@
             </div>
           </div>
           <!-- Monetization Content -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-            <h3 class="font-headline text-headline-md text-on-surface mb-md">Monetization & Ads</h3>
-            <div class="flex flex-col gap-md">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+            <h3 class="font-headline text-headline-md text-on-surface mb-6">Monetization & Ads</h3>
+            <div class="flex flex-col gap-6">
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" id="setting-adsense-enabled" class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary">
                 <span class="font-label text-label-md text-on-surface">Enable Google AdSense (Auto Ads) on Blog Posts</span>
@@ -1614,7 +1614,7 @@
       </section>
 
       <!-- Sales & Inquiries Section -->
-      <section id="section-inquiries" class="admin-section hidden flex flex-col gap-lg h-full">
+      <section id="section-inquiries" class="admin-section hidden flex flex-col gap-8 h-full">
         <div class="flex items-center justify-between mb-4">
           <div>
             <h1 class="font-headline text-headline-lg text-on-surface font-bold flex items-center gap-2">
@@ -1677,7 +1677,7 @@
       </section>
 
       <!-- Customer CRM Section (Directory) -->
-      <section id="section-crm" class="admin-section hidden flex flex-col gap-lg">
+      <section id="section-crm" class="admin-section hidden flex flex-col gap-8">
         <div class="flex items-center justify-between mb-4">
           <div>
             <h1 class="font-headline text-headline-lg text-on-surface font-bold">Customer Directory</h1>
@@ -1706,7 +1706,7 @@
           </table>
         </div>
       <!-- Promos & Discounts Section -->
-      <section id="section-promos" class="admin-section hidden flex flex-col gap-lg">
+      <section id="section-promos" class="admin-section hidden flex flex-col gap-8">
         <div class="flex items-center justify-between mb-4">
           <div>
             <h1 class="font-headline text-headline-lg text-on-surface font-bold">Promos &amp; Discounts</h1>
