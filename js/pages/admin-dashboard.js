@@ -3542,6 +3542,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       [closeBtn, cancelBtn].forEach(btn => btn?.addEventListener('click', () => modal.classList.add('hidden')));
       
+      const saveDraftBtn = document.getElementById('save-draft-btn');
       if (saveDraftBtn && form) {
         saveDraftBtn.addEventListener('click', () => {
           const statusEl = document.getElementById('book-status');
