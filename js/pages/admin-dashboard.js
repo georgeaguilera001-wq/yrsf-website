@@ -471,6 +471,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('stat-addons').textContent = addons.count || 0;
       document.getElementById('stat-testimonials').textContent = testimonials.count || 0;
       document.getElementById('stat-faqs').textContent = faqs.count || 0;
+
+      // Load bookings for the Upcoming Reservations widget
+      await loadBookings();
+
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }
@@ -4022,8 +4026,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   let isFetchingBookings = false;
   async function loadBookings(forceRefresh = false) {
     const tbody = document.getElementById('manifest-table-body');
-    if (!tbody) return;
-
+    // Note: tbody may be absent when called from the dashboard view — that's OK,
+    // renderManifestTable() is a no-op when tbody is null.
     if (!fleetCache || fleetCache.length === 0) loadFleet();
 
     const doFetch = async () => {
@@ -4139,10 +4143,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   function renderManifestTable() {
+    // Always update the dashboard upcoming widget regardless of active section
+    if (typeof renderDashboardUpcomingReservations === 'function') renderDashboardUpcomingReservations();
+
     const tbody = document.getElementById('manifest-table-body');
     if (!tbody) return;
-
-    if (typeof renderDashboardUpcomingReservations === 'function') renderDashboardUpcomingReservations();
 
     const query = (document.getElementById('manifest-search')?.value || '').toLowerCase().trim();
     const now = new Date();
