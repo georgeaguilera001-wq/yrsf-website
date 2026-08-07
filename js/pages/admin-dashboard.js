@@ -4250,6 +4250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </button>
           </td>
         </tr>
+      `;
     }).join('');
 
     const cardsGrid = document.getElementById('manifest-cards-grid');
