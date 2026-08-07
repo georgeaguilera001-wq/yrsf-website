@@ -5371,11 +5371,23 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       else leadContainer.classList.add('hidden');
     }
 
-    // Handle PDF quote button visibility (optional but good UI)
     const pdfBtn = document.getElementById('generate-pdf-quote-btn');
     if (pdfBtn) {
       if (b.status === 'inquiry') pdfBtn.classList.remove('hidden');
       else pdfBtn.classList.add('hidden');
+    }
+    
+    const delBtn = document.getElementById('delete-booking-btn');
+    if (delBtn) {
+      if (b.status === 'inquiry' || b.lead_status === 'Draft Quote') {
+        delBtn.classList.remove('hidden');
+        delBtn.onclick = () => {
+          document.getElementById('booking-modal').classList.add('hidden');
+          window.deleteBooking(b.id, b.customer_name);
+        };
+      } else {
+        delBtn.classList.add('hidden');
+      }
     }
 
     if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
