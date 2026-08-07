@@ -5766,11 +5766,18 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
     const customers = {};
     allBookings.forEach(b => {
-      const key = b.customer_email || b.customer_phone || b.customer_name;
+      const rawPhone = b.customer_phone || '';
+      const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+      const cleanEmail = (b.customer_email || '').toLowerCase().trim();
+      const cleanName = (b.customer_name || 'Guest Customer').toLowerCase().trim();
+      
+      let key = cleanPhone.length >= 7 ? `phone_${cleanPhone}` 
+              : (cleanEmail ? `email_${cleanEmail}` : `name_${cleanName}`);
+
       if (!key) return;
       if (!customers[key]) {
         customers[key] = {
-          id: key, // Using email/phone as virtual ID until they migrate to customers table
+          id: key, // Using normalized key as virtual ID
           name: b.customer_name || 'Guest Customer',
           phone: b.customer_phone || '-',
           email: b.customer_email || '-',
