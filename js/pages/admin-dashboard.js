@@ -5761,7 +5761,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const historyList = document.getElementById('cp-history-list');
     historyList.innerHTML = c.history.length === 0 ? `<tr><td colspan="3" class="text-center p-4 text-xs text-on-surface-variant">No confirmed charters yet.</td></tr>` : 
       c.history.map(b => `
-        <tr class="hover:bg-surface-container-low">
+        <tr class="hover:bg-surface-container-low cursor-pointer transition-colors" onclick="editBooking('${b.id}')">
           <td class="p-3 text-sm text-on-surface">${b.booking_date || b.charter_date || b.date}</td>
           <td class="p-3 text-sm font-bold text-secondary">${b.boat_name || 'Yacht'}</td>
           <td class="p-3 text-sm font-bold text-green-700 text-right">$${parseFloat(b.total_price || b.amount || 0).toLocaleString()}</td>
