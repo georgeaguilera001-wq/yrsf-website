@@ -5801,8 +5801,8 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
   window.sendWhatsAppCRM = function(phone, name) {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const msg = encodeURIComponent(\`Hi \${name}! Thanks for yachting with Yacht Rentals of South Florida. Would you like to plan another charter experience soon?\`);
-    window.open(\`https://wa.me/\${cleanPhone}?text=\${msg}\`, '_blank');
+    const msg = encodeURIComponent(`Hi ${name}! Thanks for yachting with Yacht Rentals of South Florida. Would you like to plan another charter experience soon?`);
+    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
   };
 
   // ─── 5. Promos & Discounts Section ───────────────────────────────────────
