@@ -275,9 +275,12 @@
     <div class="px-4 lg:px-8 py-6 lg:py-8">
       <!-- Dashboard Section -->
       <section class="admin-section" id="section-dashboard">
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="font-headline text-headline-lg text-on-surface">Dashboard</h1>
-          <button class="bg-secondary text-on-secondary px-4 py-2 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm shrink-0" onclick="document.querySelector('[data-section=bookings]').click(); setTimeout(() => { const btn = document.getElementById('add-booking-btn'); if(btn) btn.click(); }, 150)">
+        <div class="flex items-start justify-between mb-6 gap-4">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface font-bold" id="dashboard-greeting">Hello 👋</h1>
+            <p id="dashboard-quote" class="font-body text-body-sm text-on-surface-variant mt-1 italic max-w-lg"></p>
+          </div>
+          <button class="bg-secondary text-on-secondary px-4 py-2 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm shrink-0 mt-1" onclick="document.querySelector('[data-section=bookings]').click(); setTimeout(() => { const btn = document.getElementById('add-booking-btn'); if(btn) btn.click(); }, 150)">
             <span class="material-symbols-outlined text-[18px]">add_circle</span> <span class="hidden sm:inline">New Booking</span><span class="sm:hidden">New</span>
           </button>
         </div>
@@ -2355,7 +2358,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260807_fix_draft_quote"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260807_greeting_quote"></script>
   <script>
     // ── Sidebar Drag-and-Drop Reordering ─────────────────────────────────────
     // ── Dynamic Sidebar Menu Editor ──────────────────────────────────────────

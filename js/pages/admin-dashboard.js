@@ -460,6 +460,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await initInquiriesMonitor();
 
+      // ── Greeting ──────────────────────────────────────────────────────────
+      const greetingEl = document.getElementById('dashboard-greeting');
+      const quoteEl    = document.getElementById('dashboard-quote');
+
+      if (greetingEl) {
+        // Try full name from metadata, fall back to the part before @ in email
+        const fullName = user?.user_metadata?.full_name
+          || user?.user_metadata?.name
+          || (user?.email ? user.email.split('@')[0].replace(/[._]/g, ' ') : null);
+
+        const firstName = fullName
+          ? fullName.trim().split(' ')[0]
+          : 'Captain';
+
+        // Time-of-day greeting
+        const hr = new Date().getHours();
+        const timeGreet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+
+        greetingEl.textContent = `${timeGreet}, ${firstName} 👋`;
+      }
+
+      if (quoteEl) {
+        const quotes = [
+          '"The pessimist complains about the wind; the optimist expects it to change; the realist adjusts the sails." — William Arthur Ward',
+          '"A smooth sea never made a skilled sailor — or a top-performing sales team."',
+          '"Every charter you close is a memory someone will keep for a lifetime. Make it count."',
+          '"The ocean doesn\'t care about your quota. Your hustle does."',
+          '"Ships don\'t sink because of the water around them. They sink because of the water that gets inside. Stay focused."',
+          '"Success in sales is like sailing — reading the wind, adjusting your approach, and never giving up on the destination."',
+          '"The best salespeople, like the best sailors, know when to push forward and when to tack."',
+          '"You miss 100% of the charters you don\'t pitch. Get on the phone."',
+          '"Luxury is not a product — it\'s a feeling. Sell the feeling, and the booking takes care of itself."',
+          '"Every great voyage begins with someone saying yes. Go find your yes today."',
+        ];
+        quoteEl.textContent = quotes[Math.floor(Math.random() * quotes.length)];
+      }
+
       const [boats, addons, testimonials, faqs] = await Promise.all([
         supabase.from('boats').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('addons').select('id', { count: 'exact', head: true }).eq('status', 'active'),
