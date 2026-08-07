@@ -4191,6 +4191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dep = parseFloat(b.deposit_amount || 0);
       const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, tot - dep);
 
+      return `
         <tr class="hover:bg-surface-container-low/50 transition-colors ${isToday ? 'bg-amber-50/50' : ''}">
           <td class="p-2 whitespace-nowrap">
             <p class="font-bold text-on-surface text-sm flex items-center gap-1.5">
