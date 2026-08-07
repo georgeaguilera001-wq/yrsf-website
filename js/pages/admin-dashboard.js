@@ -5953,23 +5953,41 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
     // Setup Draft Quote button
     const draftBtn = document.getElementById('cp-draft-quote-btn');
-    draftBtn.onclick = () => {
-      document.getElementById('customer-profile-modal').classList.add('hidden');
-      document.getElementById('add-booking-btn').click();
-      setTimeout(() => {
-        const nameEl = document.getElementById('book-cust-name');
-        if (nameEl) nameEl.value = c.name;
-        const emailEl = document.getElementById('book-cust-email');
-        if (emailEl) emailEl.value = c.email !== '-' ? c.email : '';
-        const phoneEl = document.getElementById('book-cust-phone');
-        if (phoneEl) phoneEl.value = c.phone !== '-' ? c.phone : '';
+    if (draftBtn) {
+      draftBtn.onclick = () => {
+        // Close the customer profile modal
+        document.getElementById('customer-profile-modal').classList.add('hidden');
+
+        // Directly open and populate the booking modal (same modal used by add-booking-btn)
+        const form = document.getElementById('book-form');
+        if (form) form.reset();
+
+        const bookingIdEl = document.getElementById('booking-id');
+        if (bookingIdEl) bookingIdEl.value = '';
+
+        // Set status to inquiry first so the status-dependent fields render correctly
         const statusEl = document.getElementById('book-status');
         if (statusEl) {
           statusEl.value = 'inquiry';
           statusEl.dispatchEvent(new Event('change'));
         }
-      }, 100);
-    };
+
+        // Populate customer fields
+        setTimeout(() => {
+          const nameEl = document.getElementById('book-cust-name');
+          if (nameEl) nameEl.value = c.name || '';
+          const emailEl = document.getElementById('book-cust-email');
+          if (emailEl) emailEl.value = c.email !== '-' ? c.email : '';
+          const phoneEl = document.getElementById('book-cust-phone');
+          if (phoneEl) phoneEl.value = c.phone !== '-' ? c.phone : '';
+        }, 50);
+
+        // Open the modal
+        const modal = document.getElementById('booking-modal');
+        if (modal) modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      };
+    }
 
     // Wire refresh button (once)
     const refreshBtn = document.getElementById('cp-refresh-btn');
