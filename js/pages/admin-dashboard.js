@@ -5698,7 +5698,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
           email: b.customer_email || '-',
           bookings: 0,
           totalSpent: 0,
-          lastDate: b.charter_date || b.date || '-',
+          lastDate: b.booking_date || b.charter_date || b.date || '-',
           history: [],
           quotes: []
         };
@@ -5713,8 +5713,8 @@ Write ONLY the summary sentence(s), no extra explanation.`;
         customers[key].bookings += 1;
         customers[key].totalSpent += amount;
         customers[key].history.push(b);
-        if (new Date(b.charter_date || b.date) > new Date(customers[key].lastDate)) {
-          customers[key].lastDate = b.charter_date || b.date;
+        if (new Date(b.booking_date || b.charter_date || b.date) > new Date(customers[key].lastDate)) {
+          customers[key].lastDate = b.booking_date || b.charter_date || b.date;
         }
       }
     });
@@ -5762,7 +5762,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     historyList.innerHTML = c.history.length === 0 ? `<tr><td colspan="3" class="text-center p-4 text-xs text-on-surface-variant">No confirmed charters yet.</td></tr>` : 
       c.history.map(b => `
         <tr class="hover:bg-surface-container-low">
-          <td class="p-3 text-sm text-on-surface">${b.charter_date || b.date}</td>
+          <td class="p-3 text-sm text-on-surface">${b.booking_date || b.charter_date || b.date}</td>
           <td class="p-3 text-sm font-bold text-secondary">${b.boat_name || 'Yacht'}</td>
           <td class="p-3 text-sm font-bold text-green-700 text-right">$${parseFloat(b.total_price || b.amount || 0).toLocaleString()}</td>
         </tr>
@@ -5777,7 +5777,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
             <span class="font-bold text-on-surface">${q.boat_name || 'Yacht Inquiry'}</span>
             <span class="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full font-bold">${q.lead_status || 'Draft'}</span>
           </div>
-          <div class="text-xs text-on-surface-variant mb-2">Requested Date: ${q.charter_date || 'TBD'}</div>
+          <div class="text-xs text-on-surface-variant mb-2">Requested Date: ${q.booking_date || q.charter_date || 'TBD'}</div>
           <div class="flex justify-end gap-2">
             <button onclick="editBooking('${q.id}')" class="text-xs font-bold text-secondary hover:underline">Edit/Send Quote</button>
           </div>
@@ -5832,7 +5832,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
             <span class="text-xs font-bold text-secondary bg-secondary-container px-2 py-0.5 rounded-md">${l.boat_name || 'Yacht'}</span>
           </div>
           <div class="flex justify-between items-center text-xs text-on-surface-variant">
-            <span>Date: ${l.charter_date || 'TBD'}</span>
+            <span>Date: ${l.booking_date || l.charter_date || 'TBD'}</span>
             <span class="font-bold text-green-700">$${parseFloat(l.total_price || 0).toLocaleString()}</span>
           </div>
         </div>
