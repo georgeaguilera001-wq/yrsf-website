@@ -67,8 +67,8 @@
       <p class="font-caption text-caption text-on-surface-variant font-medium pl-1">Admin Portal</p>
     </div>
 
-    <nav class="flex-1 p-2 overflow-y-auto">
-      <ul class="flex flex-col gap-0.5">
+    <nav class="flex-1 p-2 overflow-y-auto" id="admin-nav-container">
+      <ul class="flex flex-col gap-0.5" id="admin-nav-list">
         <li draggable="true" data-nav-id="dashboard">
           <div class="flex items-center gap-1 group">
             <span class="drag-handle material-symbols-outlined text-[14px] text-on-surface-variant opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing px-1 select-none transition-opacity" title="Drag to reorder">drag_indicator</span>
@@ -182,6 +182,11 @@
       </ul>
     </nav>
 
+    <div class="px-2 pb-2">
+      <button id="toggle-menu-edit-btn" class="w-full flex items-center justify-center gap-1 px-3 py-1 bg-surface-container-low hover:bg-surface-container-high rounded text-[10px] font-bold text-on-surface-variant transition-colors border border-outline-variant/30">
+        <span class="material-symbols-outlined text-[14px]">edit</span> <span id="menu-edit-btn-text">Edit Menu</span>
+      </button>
+    </div>
     <div class="p-4 border-t border-outline-variant">
       <div class="flex items-center gap-2 mb-2">
         <div class="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
@@ -2346,78 +2351,194 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260807_compact_manifest_fix2"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260807_sidebar_editor"></script>
   <script>
     // ── Sidebar Drag-and-Drop Reordering ─────────────────────────────────────
+    // ── Dynamic Sidebar Menu Editor ──────────────────────────────────────────
     (function() {
-      const NAV_ORDER_KEY = 'yrsf_admin_nav_order';
-      const navList = document.querySelector('#admin-sidebar nav ul');
-      if (!navList) return;
+      const NAV_CONFIG_KEY = 'yrsf_admin_nav_config';
+      const navList = document.getElementById('admin-nav-list');
+      const toggleBtn = document.getElementById('toggle-menu-edit-btn');
+      const toggleBtnText = document.getElementById('menu-edit-btn-text');
+      if (!navList || !toggleBtn) return;
 
-      // Restore saved order from localStorage
-      function restoreNavOrder() {
-        const saved = localStorage.getItem(NAV_ORDER_KEY);
-        if (!saved) return;
-        try {
-          const order = JSON.parse(saved);
-          order.forEach(id => {
-            const li = navList.querySelector(`li[data-nav-id="${id}"]`);
-            if (li) navList.appendChild(li);
-          });
-        } catch(e) {}
+      let isEditMode = false;
+      let activeSectionId = 'dashboard';
+      
+      // Default initial structure
+      let navConfig = [
+        { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', level: 0 },
+        { id: 'bookings', icon: 'calendar_month', label: 'Bookings & Manifest', level: 0 },
+        { id: 'staff', icon: 'badge', label: 'Staff & Timeclock', level: 0 },
+        { id: 'social', icon: 'cell_tower', label: 'Social & Content Hub', level: 0, bold: true },
+        { id: 'content', icon: 'description', label: 'CMS Pages & Content', level: 0 },
+        { id: 'fleet', icon: 'directions_boat', label: 'Fleet & Services', level: 0 },
+        { id: 'seo', icon: 'travel_explore', label: 'SEO Settings', level: 0 },
+        { id: 'settings', icon: 'settings', label: 'Site Config & Concierge', level: 0 },
+        { id: 'revenue', icon: 'insights', label: 'Revenue & Analytics', level: 0 },
+        { id: 'crm', icon: 'groups', label: 'Customer Directory', level: 0 },
+        { id: 'partners', icon: 'handshake', label: 'Partner Portal', level: 0 },
+        { id: 'promos', icon: 'local_offer', label: 'Promos & Discounts', level: 0 }
+      ];
+
+      function loadConfig() {
+        const saved = localStorage.getItem(NAV_CONFIG_KEY);
+        if (saved) {
+          try {
+            navConfig = JSON.parse(saved);
+          } catch(e) {}
+        }
       }
 
-      // Save current order to localStorage
-      function saveNavOrder() {
-        const order = Array.from(navList.querySelectorAll('li[data-nav-id]')).map(li => li.dataset.navId);
-        localStorage.setItem(NAV_ORDER_KEY, JSON.stringify(order));
+      function saveConfig() {
+        // Build config from DOM state (preserves live edits to inputs before save)
+        const items = Array.from(navList.children);
+        navConfig = items.map(li => {
+          const id = li.dataset.navId;
+          const level = parseInt(li.dataset.level || '0');
+          const input = li.querySelector('.nav-label-input');
+          const labelSpan = li.querySelector('.nav-label-text');
+          const label = input ? input.value : (labelSpan ? labelSpan.textContent : '');
+          const icon = li.dataset.icon || 'star';
+          const bold = li.dataset.bold === 'true';
+          return { id, icon, label, level, bold };
+        });
+        localStorage.setItem(NAV_CONFIG_KEY, JSON.stringify(navConfig));
       }
 
-      restoreNavOrder();
+      function renderNav() {
+        navList.innerHTML = navConfig.map((item, index) => {
+          const isSub = item.level > 0;
+          return `
+            <li draggable="${isEditMode ? 'true' : 'false'}" data-nav-id="${item.id}" data-level="${item.level}" data-icon="${item.icon}" data-bold="${item.bold ? 'true' : 'false'}" class="relative transition-all">
+              <div class="flex items-center gap-1 group w-full">
+                <span class="drag-handle material-symbols-outlined text-[14px] text-on-surface-variant cursor-grab active:cursor-grabbing px-1 select-none transition-opacity ${isEditMode ? 'opacity-100' : 'opacity-0 hidden'}" title="Drag to reorder">drag_indicator</span>
+                
+                <button class="admin-nav-btn flex-1 flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container ${isSub ? 'ml-6 border-l-2 border-outline-variant/30 bg-surface-container-lowest' : ''}" data-section="${item.id}" onclick="event.stopPropagation(); window.sidebarNavClick('${item.id}');">
+                  <span class="material-symbols-outlined ${item.bold && !isSub ? 'text-secondary' : ''} text-[16px]">${item.icon}</span>
+                  ${isEditMode ? 
+                    `<input type="text" class="nav-label-input w-full bg-transparent border-b border-secondary/50 text-[11px] font-label font-bold text-on-surface focus:outline-none" value="${item.label}" onclick="event.stopPropagation()">` 
+                    : 
+                    `<span class="nav-label-text font-label text-[11px] ${item.bold ? 'font-bold' : ''}">${escapeHtml(item.label)}</span>`
+                  }
+                </button>
+
+                ${isEditMode ? `
+                  <div class="flex items-center gap-0.5 ml-1 bg-surface-container px-1 py-0.5 rounded shadow-sm border border-outline-variant/50">
+                    <button type="button" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-secondary-container rounded indent-btn" title="Make Sub-menu" onclick="event.stopPropagation(); window.setNavLevel('${item.id}', 1)">
+                      <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                    </button>
+                    <button type="button" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-secondary-container rounded outdent-btn" title="Make Main Menu" onclick="event.stopPropagation(); window.setNavLevel('${item.id}', 0)">
+                      <span class="material-symbols-outlined text-[14px]">chevron_left</span>
+                    </button>
+                  </div>
+                ` : ''}
+              </div>
+            </li>
+          `;
+        }).join('');
+        
+        bindDragEvents();
+        // Restore active selection style
+        if (!isEditMode && typeof window.showAdminSection === 'function') {
+           window.showAdminSection(getActiveSection());
+        }
+      }
+
+      function escapeHtml(str) {
+        return (str || '').replace(/[&<>"']/g, function(m) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+      }
+
+      window.setNavLevel = function(id, level) {
+        saveConfig(); // Capture any text edits first
+        const item = navConfig.find(x => x.id === id);
+        if (item) item.level = level;
+        renderNav();
+      };
+
+      toggleBtn.addEventListener('click', () => {
+        isEditMode = !isEditMode;
+        if (!isEditMode) {
+          saveConfig();
+          toggleBtn.classList.replace('bg-green-100', 'bg-surface-container-low');
+          toggleBtn.classList.replace('text-green-800', 'text-on-surface-variant');
+          toggleBtn.classList.replace('border-green-300', 'border-outline-variant/30');
+          toggleBtnText.textContent = 'Edit Menu';
+        } else {
+          toggleBtn.classList.replace('bg-surface-container-low', 'bg-green-100');
+          toggleBtn.classList.replace('text-on-surface-variant', 'text-green-800');
+          toggleBtn.classList.replace('border-outline-variant/30', 'border-green-300');
+          toggleBtnText.textContent = 'Save Menu';
+        }
+        renderNav();
+      });
 
       let dragSrc = null;
-
-      navList.querySelectorAll('li[data-nav-id]').forEach(li => {
-        li.addEventListener('dragstart', (e) => {
-          dragSrc = li;
-          li.style.opacity = '0.4';
-          e.dataTransfer.effectAllowed = 'move';
-        });
-
-        li.addEventListener('dragend', () => {
-          li.style.opacity = '1';
-          navList.querySelectorAll('li[data-nav-id]').forEach(el => el.classList.remove('drag-over'));
-          saveNavOrder();
-        });
-
-        li.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-          if (li !== dragSrc) {
+      function bindDragEvents() {
+        if (!isEditMode) return;
+        navList.querySelectorAll('li[data-nav-id]').forEach(li => {
+          li.addEventListener('dragstart', (e) => {
+            dragSrc = li;
+            li.style.opacity = '0.4';
+            e.dataTransfer.effectAllowed = 'move';
+          });
+          li.addEventListener('dragend', () => {
+            li.style.opacity = '1';
             navList.querySelectorAll('li[data-nav-id]').forEach(el => el.classList.remove('drag-over'));
-            li.classList.add('drag-over');
-          }
-          return false;
-        });
-
-        li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
-
-        li.addEventListener('drop', (e) => {
-          e.stopPropagation();
-          if (dragSrc !== li) {
-            // Swap positions
-            const srcIdx = Array.from(navList.children).indexOf(dragSrc);
-            const tgtIdx = Array.from(navList.children).indexOf(li);
-            if (srcIdx < tgtIdx) {
-              navList.insertBefore(dragSrc, li.nextSibling);
-            } else {
-              navList.insertBefore(dragSrc, li);
+            saveConfig();
+            renderNav(); // Re-render to ensure DOM matches state
+          });
+          li.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (li !== dragSrc) {
+              navList.querySelectorAll('li[data-nav-id]').forEach(el => el.classList.remove('drag-over'));
+              li.classList.add('drag-over');
             }
-            saveNavOrder();
-          }
-          li.classList.remove('drag-over');
-          return false;
+            return false;
+          });
+          li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
+          li.addEventListener('drop', (e) => {
+            e.stopPropagation();
+            if (dragSrc !== li) {
+              const srcIdx = Array.from(navList.children).indexOf(dragSrc);
+              const tgtIdx = Array.from(navList.children).indexOf(li);
+              if (srcIdx < tgtIdx) {
+                navList.insertBefore(dragSrc, li.nextSibling);
+              } else {
+                navList.insertBefore(dragSrc, li);
+              }
+            }
+            li.classList.remove('drag-over');
+            return false;
+          });
         });
+      }
+
+      // Active section tracking
+      function getActiveSection() {
+        const active = document.querySelector('main > section:not(.hidden)');
+        return active ? active.id.replace('section-', '') : 'dashboard';
+      }
+
+      window.sidebarNavClick = function(id) {
+        if (!isEditMode && typeof window.showAdminSection === 'function') {
+          window.showAdminSection(id);
+        }
+      };
+
+      loadConfig();
+      renderNav();
+
+      // Hook into DOMContentLoaded to apply active state once JS loads
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          if (!isEditMode && typeof window.showAdminSection === 'function') {
+            window.showAdminSection(getActiveSection());
+          }
+        }, 200);
       });
     })();
   </script>

@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function showSection(sectionId) {
     sections.forEach(s => s.classList.add('hidden'));
-    navButtons.forEach(b => {
+    document.querySelectorAll('.admin-nav-btn').forEach(b => {
       b.classList.remove('bg-secondary-container', 'text-on-secondary-container');
       b.classList.add('text-on-surface-variant', 'hover:bg-surface-container');
     });
