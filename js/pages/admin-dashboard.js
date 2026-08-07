@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadAdminAddons();
         break;
       case 'bookings':
-        if (!loaded.bookings) { initBookingsSection(); loaded.bookings = true; }
+        if (!loaded.bookings) { window.initBookingsSection(); loaded.bookings = true; }
         else { loadBookings(); }
         break;
       case 'partners':
@@ -3032,7 +3032,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   let calCurrentDate = new Date();
   let calendarSourceFilter = 'all';
 
-  function initBookingsSection() {
+  let isBookingsInit = false;
+  window.initBookingsSection = function() {
+    if (isBookingsInit) return;
+    isBookingsInit = true;
     // ── Pre-warm fleet cache so the boat dropdown is instant on first tap ──
     if (!fleetCache || fleetCache.length === 0) {
       loadFleet().then(() => {
@@ -5284,6 +5287,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   };
 
   window.editBooking = async (id) => {
+    if (typeof window.initBookingsSection === 'function') window.initBookingsSection();
     if (!fleetCache || fleetCache.length === 0) await loadFleet();
     let b = bookingsCache.find(x => x.id === id);
     if (!b) {
