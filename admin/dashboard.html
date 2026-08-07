@@ -1631,6 +1631,9 @@
               <button id="cp-whatsapp-btn" class="bg-green-600 text-white px-4 py-2 rounded-xl font-label text-sm font-bold flex items-center gap-2 hover:bg-green-700 transition-colors">
                 WhatsApp
               </button>
+              <button id="cp-refresh-btn" title="Refresh customer data" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                <span class="material-symbols-outlined">refresh</span>
+              </button>
               <button onclick="document.getElementById('customer-profile-modal').classList.add('hidden')" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors">
                 <span class="material-symbols-outlined">close</span>
               </button>
@@ -2352,7 +2355,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260807_crm_sort_search"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260807_crm_refresh_btn"></script>
   <script>
     // ── Sidebar Drag-and-Drop Reordering ─────────────────────────────────────
     // ── Dynamic Sidebar Menu Editor ──────────────────────────────────────────
@@ -2573,6 +2576,7 @@
       background: var(--md-sys-color-secondary-container, #EADDFF);
     }
     li[data-nav-id] { transition: opacity 0.15s; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 
   <!-- Quick Create Action Modal (Centered in middle of screen) -->

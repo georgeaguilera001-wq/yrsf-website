@@ -5903,6 +5903,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   window.openCustomerProfile = function(idx) {
     const c = window._cachedCustomers[idx];
     if (!c) return;
+    window._openCustomerIdx = idx; // Track for refresh
 
     document.getElementById('cp-name').textContent = c.name;
     document.getElementById('cp-phone').textContent = c.phone;
@@ -5964,6 +5965,26 @@ Write ONLY the summary sentence(s), no extra explanation.`;
         }
       }, 100);
     };
+
+    // Wire refresh button (once)
+    const refreshBtn = document.getElementById('cp-refresh-btn');
+    if (refreshBtn && !refreshBtn.hasAttribute('data-bound')) {
+      refreshBtn.setAttribute('data-bound', 'true');
+      refreshBtn.addEventListener('click', async () => {
+        const icon = refreshBtn.querySelector('.material-symbols-outlined');
+        if (icon) icon.style.animation = 'spin 0.8s linear infinite';
+        refreshBtn.disabled = true;
+        await window.initCRMSection();
+        if (icon) icon.style.animation = '';
+        refreshBtn.disabled = false;
+        // Reopen with updated data
+        const savedIdx = window._openCustomerIdx;
+        if (savedIdx !== undefined && window._cachedCustomers[savedIdx]) {
+          window.openCustomerProfile(savedIdx);
+        }
+        showToast('Customer data refreshed.');
+      });
+    }
 
     document.getElementById('customer-profile-modal').classList.remove('hidden');
   };
