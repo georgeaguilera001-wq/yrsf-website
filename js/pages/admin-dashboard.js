@@ -3536,7 +3536,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!fleetCache || fleetCache.length === 0) await loadFleet();
         
         // Load Add-ons dynamically
-        await loadBookingAddons();
+        await window.loadBookingAddons();
         window.selectBoatOption('', '');
         window.renderBoatDropdownOptions('');
         modal.classList.remove('hidden');
@@ -3686,9 +3686,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // Global Add-ons Loader for the Modal
-    async function loadBookingAddons() {
+    window.loadBookingAddons = async function() {
       const container = document.getElementById('dynamic-addons-container');
       if (!container) return;
+      if (container.children.length > 0 && !container.innerHTML.includes('Loading add-ons...')) return;
       
       try {
         const activeAddons = await getAddons();
@@ -5306,7 +5307,60 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const depEl = document.getElementById('book-deposit'); if (depEl) depEl.value = b.deposit_amount || 0;
     const payEl = document.getElementById('book-pay-method'); if (payEl) payEl.value = b.payment_method || '';
     document.getElementById('book-status').value = b.status || 'confirmed';
-    document.getElementById('book-notes').value = b.special_requests || '';
+    
+    // Parse Add-ons from special_requests
+    await window.loadBookingAddons();
+    let notes = b.special_requests || '';
+    
+    // Reset all add-on checkboxes and custom inputs
+    document.querySelectorAll('#dynamic-addons-container .dynamic-addon-row').forEach(row => {
+      const cb = row.querySelector('.addon-cb');
+      const qty = row.querySelector('.addon-qty');
+      const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50, .flex.items-center.gap-1.opacity-100');
+      if (cb) cb.checked = false;
+      if (qty) qty.value = 1;
+      if (wrapper) wrapper.classList.replace('opacity-100', 'opacity-50');
+    });
+    const cNameEl = document.getElementById('custom-addon-name');
+    const cPriceEl = document.getElementById('custom-addon-price');
+    if (cNameEl) cNameEl.value = '';
+    if (cPriceEl) cPriceEl.value = '';
+
+    if (notes) {
+      const lines = notes.split('\\n');
+      const remainingNotes = [];
+      lines.forEach(line => {
+        const match = line.match(/^\[Addon: (\\d+)x (.*?)(?: \\(\\$([0-9.]+)\\))?\]$/);
+        const customMatch = line.match(/^\[Custom Addon: (.*?)(?: \\(\\$([0-9.]+)\\))?\]$/);
+        
+        if (match) {
+          const qty = match[1];
+          const name = match[2];
+          const cb = document.querySelector(`.addon-cb[data-name="${name.replace(/"/g, '\\\\\"')}"]`);
+          if (cb) {
+             cb.checked = true;
+             const row = cb.closest('.dynamic-addon-row');
+             if (row) {
+                const qtyInput = row.querySelector('.addon-qty');
+                const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50, .flex.items-center.gap-1.opacity-100');
+                if (qtyInput) qtyInput.value = qty;
+                if (wrapper) wrapper.classList.replace('opacity-50', 'opacity-100');
+             }
+          }
+        } else if (customMatch) {
+          const name = customMatch[1];
+          const price = customMatch[2] || 0;
+          if (cNameEl) cNameEl.value = name;
+          if (cPriceEl) cPriceEl.value = price;
+        } else {
+          remainingNotes.push(line);
+        }
+      });
+      // Remove trailing empty lines and re-join
+      while(remainingNotes.length > 0 && remainingNotes[remainingNotes.length - 1].trim() === '') remainingNotes.pop();
+      notes = remainingNotes.join('\\n');
+    }
+    document.getElementById('book-notes').value = notes;
 
     const leadStatusEl = document.getElementById('book-lead-status');
     if (leadStatusEl) leadStatusEl.value = b.lead_status || 'new';
