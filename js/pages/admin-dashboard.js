@@ -5683,7 +5683,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     if (!tbody) return;
 
     // Fetch bookings to aggregate customers
-    const { data: bookings } = await window.supabase.from('bookings').select('*').order('created_at', { ascending: false });
+    const { data: bookings } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
     const allBookings = bookings || [];
 
     const customers = {};
@@ -5806,7 +5806,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const kanbanSent = document.getElementById('kanban-col-quote_sent');
     if (!kanbanNew || !kanbanContacted || !kanbanSent) return;
 
-    const { data: leads } = await window.supabase.from('bookings').select('*').in('status', ['inquiry']).order('created_at', { ascending: false });
+    const { data: leads } = await supabase.from('bookings').select('*').in('status', ['inquiry']).order('created_at', { ascending: false });
     const allLeads = leads || [];
 
     const newLeads = allLeads.filter(l => l.lead_status === 'New Web Request');
