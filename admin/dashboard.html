@@ -2351,7 +2351,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260807_sidebar_editor"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260807_sidebar_collapsible"></script>
   <script>
     // ── Sidebar Drag-and-Drop Reordering ─────────────────────────────────────
     // ── Dynamic Sidebar Menu Editor ──────────────────────────────────────────
@@ -2401,26 +2401,40 @@
           const label = input ? input.value : (labelSpan ? labelSpan.textContent : '');
           const icon = li.dataset.icon || 'star';
           const bold = li.dataset.bold === 'true';
-          return { id, icon, label, level, bold };
+          const collapsed = li.dataset.collapsed === 'true';
+          return { id, icon, label, level, bold, collapsed };
         });
         localStorage.setItem(NAV_CONFIG_KEY, JSON.stringify(navConfig));
       }
 
       function renderNav() {
+        let isHidingChildren = false;
+        
         navList.innerHTML = navConfig.map((item, index) => {
           const isSub = item.level > 0;
+          if (!isSub) {
+            isHidingChildren = !!item.collapsed;
+          }
+          const isHiddenSubmenu = isSub && isHidingChildren;
+          const hasChildren = index < navConfig.length - 1 && navConfig[index+1].level > 0 && !isSub;
+
           return `
-            <li draggable="${isEditMode ? 'true' : 'false'}" data-nav-id="${item.id}" data-level="${item.level}" data-icon="${item.icon}" data-bold="${item.bold ? 'true' : 'false'}" class="relative transition-all">
+            <li draggable="${isEditMode ? 'true' : 'false'}" data-nav-id="${item.id}" data-level="${item.level}" data-icon="${item.icon}" data-bold="${item.bold ? 'true' : 'false'}" data-collapsed="${item.collapsed ? 'true' : 'false'}" class="relative transition-all ${isHiddenSubmenu && !isEditMode ? 'hidden' : ''}">
               <div class="flex items-center gap-1 group w-full">
                 <span class="drag-handle material-symbols-outlined text-[14px] text-on-surface-variant cursor-grab active:cursor-grabbing px-1 select-none transition-opacity ${isEditMode ? 'opacity-100' : 'opacity-0 hidden'}" title="Drag to reorder">drag_indicator</span>
                 
                 <button class="admin-nav-btn flex-1 flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container ${isSub ? 'ml-6 border-l-2 border-outline-variant/30 bg-surface-container-lowest' : ''}" data-section="${item.id}" onclick="event.stopPropagation(); window.sidebarNavClick('${item.id}');">
                   <span class="material-symbols-outlined ${item.bold && !isSub ? 'text-secondary' : ''} text-[16px]">${item.icon}</span>
                   ${isEditMode ? 
-                    `<input type="text" class="nav-label-input w-full bg-transparent border-b border-secondary/50 text-[11px] font-label font-bold text-on-surface focus:outline-none" value="${item.label}" onclick="event.stopPropagation()">` 
+                    `<input type="text" class="nav-label-input w-full bg-transparent border-b border-secondary/50 text-[12px] font-label font-bold text-on-surface focus:outline-none" value="${item.label}" onclick="event.stopPropagation()">` 
                     : 
-                    `<span class="nav-label-text font-label text-[11px] ${item.bold ? 'font-bold' : ''}">${escapeHtml(item.label)}</span>`
+                    `<span class="nav-label-text font-label text-[12px] font-bold ${item.bold ? 'text-secondary' : ''}">${escapeHtml(item.label)}</span>`
                   }
+                  ${hasChildren && !isEditMode ? `
+                    <button class="ml-auto p-0.5 rounded hover:bg-surface-container-high transition-colors text-on-surface-variant flex items-center justify-center" onclick="event.stopPropagation(); window.toggleNavCollapse('${item.id}');">
+                      <span class="material-symbols-outlined text-[18px] transition-transform ${item.collapsed ? '-rotate-90' : ''}">expand_more</span>
+                    </button>
+                  ` : ''}
                 </button>
 
                 ${isEditMode ? `
@@ -2455,6 +2469,15 @@
         saveConfig(); // Capture any text edits first
         const item = navConfig.find(x => x.id === id);
         if (item) item.level = level;
+        renderNav();
+      };
+
+      window.toggleNavCollapse = function(id) {
+        saveConfig();
+        const item = navConfig.find(x => x.id === id);
+        if (item) {
+          item.collapsed = !item.collapsed;
+        }
         renderNav();
       };
 
