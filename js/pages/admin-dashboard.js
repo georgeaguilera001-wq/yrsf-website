@@ -4191,66 +4191,64 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dep = parseFloat(b.deposit_amount || 0);
       const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, tot - dep);
 
-      return `
         <tr class="hover:bg-surface-container-low/50 transition-colors ${isToday ? 'bg-amber-50/50' : ''}">
-          <td class="p-4 whitespace-nowrap">
-            <p class="font-bold text-on-surface text-base flex items-center gap-1.5">
-              ${isToday ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block" title="Departing Today"></span>' : ''}
+          <td class="p-2 whitespace-nowrap">
+            <p class="font-bold text-on-surface text-sm flex items-center gap-1.5">
+              ${isToday ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" title="Departing Today"></span>' : ''}
               ${b.start_time}
             </p>
-            <p class="text-xs font-mono text-on-surface-variant">${dateFormatted}</p>
+            <p class="text-[10px] font-mono text-on-surface-variant">${dateFormatted}</p>
           </td>
-          <td class="p-4">
-            <p class="font-bold text-secondary text-base">${escapeHtml(b.boat_name || '')}</p>
-            <p class="text-[11px] text-on-surface-variant">${b.duration_hours} hr charter</p>
+          <td class="p-2">
+            <p class="font-bold text-secondary text-sm">${escapeHtml(b.boat_name || '')}</p>
+            <p class="text-[10px] text-on-surface-variant">${b.duration_hours} hr charter</p>
           </td>
-          <td class="p-4">
-            <p class="font-bold text-on-surface">${escapeHtml(b.customer_name || '')}</p>
-            <p class="text-xs font-mono text-secondary font-medium"><a href="tel:${b.customer_phone}">${escapeHtml(b.customer_phone || '')}</a></p>
-            ${b.customer_email ? `<p class="text-[11px] text-on-surface-variant truncate max-w-[150px]">${escapeHtml(b.customer_email)}</p>` : ''}
+          <td class="p-2">
+            <p class="font-bold text-on-surface text-sm">${escapeHtml(b.customer_name || '')}</p>
+            <p class="text-[10px] font-mono text-secondary font-medium"><a href="tel:${b.customer_phone}">${escapeHtml(b.customer_phone || '')}</a></p>
+            ${b.customer_email ? `<p class="text-[10px] text-on-surface-variant truncate max-w-[120px]">${escapeHtml(b.customer_email)}</p>` : ''}
           </td>
-          <td class="p-4 whitespace-nowrap">
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold text-xs">
-              <span class="material-symbols-outlined text-sm">group</span> ${b.guest_count} Guests
+          <td class="p-2 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-blue-100 bg-blue-50 text-blue-800 font-bold text-[10px]">
+              <span class="material-symbols-outlined text-[12px]">group</span> ${b.guest_count} Guests
             </span>
           </td>
-          <td class="p-4 whitespace-nowrap">
-            <div class="bg-surface-container-lowest p-2.5 rounded-xl border border-outline-variant/80 space-y-1 w-48 shadow-sm font-mono text-xs">
+          <td class="p-2 whitespace-nowrap">
+            <div class="bg-surface-container-lowest p-1.5 rounded-lg border border-outline-variant/80 space-y-0.5 w-40 shadow-sm font-mono text-[10px]">
               <div class="flex justify-between font-bold text-on-surface">
-                <span class="text-[11px] text-on-surface-variant font-sans">Total:</span>
+                <span class="text-[9px] text-on-surface-variant font-sans">Total:</span>
                 <span class="text-green-700">$${tot.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
-              <div class="flex justify-between text-blue-700 border-t border-outline-variant/30 pt-1">
-                <span class="text-[11px] text-on-surface-variant font-sans">Deposit Paid:</span>
+              <div class="flex justify-between text-blue-700 border-t border-outline-variant/30 pt-0.5">
+                <span class="text-[9px] text-on-surface-variant font-sans">Deposit:</span>
                 <span class="font-bold">-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
-              <div class="flex justify-between font-bold border-t border-outline-variant/40 pt-1 ${rem > 0.01 ? 'text-red-600 bg-red-50/80 px-1.5 py-0.5 rounded' : 'text-green-700 bg-green-50/80 px-1.5 py-0.5 rounded'}">
-                <span class="text-[11px] font-sans">${rem > 0.01 ? 'Balance Due:' : 'Status:'}</span>
-                <span>${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })} DUE` : `✓ FULLY PAID`}</span>
+              <div class="flex justify-between font-bold border-t border-outline-variant/40 pt-0.5 ${rem > 0.01 ? 'text-red-600 bg-red-50/80 px-1 py-0 rounded' : 'text-green-700 bg-green-50/80 px-1 py-0 rounded'}">
+                <span class="text-[9px] font-sans">${rem > 0.01 ? 'Bal Due:' : 'Status:'}</span>
+                <span>${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
               </div>
-              ${b.payment_method ? `<div class="text-[10px] text-on-surface-variant font-sans italic truncate pt-0.5">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
-              <div class="pt-1">${statusBadge}</div>
+              ${b.payment_method ? `<div class="text-[9px] text-on-surface-variant font-sans italic truncate pt-0.5">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
+              <div class="pt-0.5">${statusBadge.replace('px-2.5 py-1 text-xs', 'px-1.5 py-0.5 text-[10px]')}</div>
             </div>
           </td>
-          <td class="p-4 text-xs text-on-surface-variant max-w-xs">
-            <p class="line-clamp-2 italic">${b.special_requests ? escapeHtml(b.special_requests) : '<span class="text-on-surface-variant/50 not-italic">No special notes</span>'}</p>
+          <td class="p-2 text-[10px] text-on-surface-variant max-w-[150px]">
+            <p class="line-clamp-2 italic leading-tight">${b.special_requests ? escapeHtml(b.special_requests) : '<span class="text-on-surface-variant/50 not-italic">No special notes</span>'}</p>
           </td>
-          <td class="p-4 text-right whitespace-nowrap">
-            <button onclick="window.printBookingInvoice('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors" title="Generate PDF Invoice">
-              <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+          <td class="p-2 text-right whitespace-nowrap">
+            <button onclick="window.printBookingInvoice('${b.id}')" class="p-1 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Generate PDF Invoice">
+              <span class="material-symbols-outlined text-[14px]">receipt_long</span>
             </button>
-            <button onclick="window.openMessagePreview('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors ml-1" title="Send WhatsApp Confirmation">
-              <span class="material-symbols-outlined text-[18px]">chat</span>
+            <button onclick="window.openMessagePreview('${b.id}')" class="p-1 text-on-surface-variant hover:text-green-600 hover:bg-green-50 rounded transition-colors ml-0.5" title="Send WhatsApp Confirmation">
+              <span class="material-symbols-outlined text-[14px]">chat</span>
             </button>
-            <button onclick="window.editBooking('${b.id}')" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors ml-1" title="Edit Booking">
-              <span class="material-symbols-outlined text-[18px]">edit</span>
+            <button onclick="window.editBooking('${b.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-colors ml-0.5" title="Edit Booking">
+              <span class="material-symbols-outlined text-[14px]">edit</span>
             </button>
-            <button onclick="window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1" title="Cancel & Delete">
-              <span class="material-symbols-outlined text-[18px]">delete</span>
+            <button onclick="window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors ml-0.5" title="Cancel & Delete">
+              <span class="material-symbols-outlined text-[14px]">delete</span>
             </button>
           </td>
         </tr>
-      `;
     }).join('');
 
     const cardsGrid = document.getElementById('manifest-cards-grid');
@@ -4267,54 +4265,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, tot - dep);
 
         return `
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${isToday ? 'ring-2 ring-amber-400 bg-amber-50/20' : ''}">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${isToday ? 'ring-1 ring-amber-400 bg-amber-50/20' : ''}">
             <div>
-              <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-3">
+              <div class="flex items-center justify-between pb-1.5 border-b border-outline-variant mb-1.5">
                 <div>
-                  <span class="inline-flex items-center gap-1 text-xs font-bold font-mono px-2.5 py-1 rounded-lg bg-secondary-container text-on-secondary-container">
+                  <span class="inline-flex items-center gap-1 text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container">
                     🕒 ${b.start_time}
                   </span>
-                  <span class="text-xs font-mono text-on-surface-variant ml-2">${dateFormatted}</span>
+                  <span class="text-[10px] font-mono text-on-surface-variant ml-1">${dateFormatted}</span>
                 </div>
-                ${statusBadge}
+                ${statusBadge.replace('px-2.5 py-1 text-xs', 'px-1.5 py-0.5 text-[10px]')}
               </div>
-              <h4 class="font-headline text-lg font-bold text-secondary mb-1">${escapeHtml(b.boat_name || '')}</h4>
-              <p class="text-xs font-bold text-on-surface mb-3 flex items-center gap-2">
-                <span class="material-symbols-outlined text-sm text-on-surface-variant">person</span> ${escapeHtml(b.customer_name || '')}
-                <span class="text-on-surface-variant font-normal">(${b.guest_count} guests • ${b.duration_hours}h)</span>
+              <h4 class="font-headline text-sm font-bold text-secondary mb-0.5">${escapeHtml(b.boat_name || '')}</h4>
+              <p class="text-[11px] font-bold text-on-surface mb-1.5 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[12px] text-on-surface-variant">person</span> ${escapeHtml(b.customer_name || '')}
+                <span class="text-on-surface-variant font-normal">(${b.guest_count}g • ${b.duration_hours}h)</span>
               </p>
 
               <!-- Financial Breakdown Card -->
-              <div class="bg-amber-50/60 border border-amber-200/80 rounded-xl p-3.5 my-3 space-y-1.5 font-mono text-xs shadow-inner">
+              <div class="bg-amber-50/60 border border-amber-200/80 rounded-lg p-2 my-1.5 space-y-1 font-mono text-[10px] shadow-inner">
                 <div class="flex justify-between text-on-surface font-bold">
-                  <span class="font-sans text-xs text-on-surface-variant">Total Amount:</span>
-                  <span class="text-sm text-green-700">$${tot.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span class="font-sans text-[9px] text-on-surface-variant">Total:</span>
+                  <span class="text-[11px] text-green-700">$${tot.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div class="flex justify-between text-blue-700 border-t border-amber-200/50 pt-1.5">
-                  <span class="font-sans text-xs text-on-surface-variant">Deposit Paid:</span>
+                <div class="flex justify-between text-blue-700 border-t border-amber-200/50 pt-1">
+                  <span class="font-sans text-[9px] text-on-surface-variant">Deposit:</span>
                   <span class="font-bold">-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div class="flex justify-between border-t border-amber-200 pt-1.5 ${rem > 0.01 ? 'text-red-700 font-bold bg-red-100/60 p-1.5 rounded-lg' : 'text-green-800 font-bold bg-green-100/60 p-1.5 rounded-lg'}">
-                  <span class="font-sans text-xs">${rem > 0.01 ? 'Remaining Balance:' : 'Payment Status:'}</span>
-                  <span class="text-sm">${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })} DUE` : `✓ FULLY PAID`}</span>
+                <div class="flex justify-between border-t border-amber-200 pt-1 ${rem > 0.01 ? 'text-red-700 font-bold bg-red-100/60 px-1 rounded' : 'text-green-800 font-bold bg-green-100/60 px-1 rounded'}">
+                  <span class="font-sans text-[9px]">${rem > 0.01 ? 'Balance:' : 'Status:'}</span>
+                  <span class="text-[11px]">${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
                 </div>
-                ${b.payment_method ? `<div class="text-[11px] font-sans text-on-surface-variant italic pt-1 border-t border-amber-200/40">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
+                ${b.payment_method ? `<div class="text-[9px] font-sans text-on-surface-variant italic pt-0.5 border-t border-amber-200/40">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
               </div>
 
-              ${b.special_requests ? `<p class="text-xs text-on-surface-variant italic bg-surface-container-low p-2.5 rounded-xl mb-3">📝 "${escapeHtml(b.special_requests)}"</p>` : ''}
+              ${b.special_requests ? `<p class="text-[10px] leading-tight text-on-surface-variant italic bg-surface-container-low p-1.5 rounded-lg mb-1.5">📝 "${escapeHtml(b.special_requests)}"</p>` : ''}
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-3 border-t border-outline-variant mt-2">
-              <button onclick="event.stopPropagation(); window.printBookingInvoice('${b.id}')" class="px-2 py-1.5 bg-surface-container hover:bg-green-50 hover:text-green-700 rounded-lg font-label text-xs font-bold text-on-surface-variant flex items-center gap-1 transition-colors" title="Print Invoice">
-                <span class="material-symbols-outlined text-[16px]">receipt_long</span>
+            <div class="flex items-center justify-end gap-1 pt-1.5 border-t border-outline-variant mt-1">
+              <button onclick="event.stopPropagation(); window.printBookingInvoice('${b.id}')" class="p-1 bg-surface-container hover:bg-green-50 hover:text-green-700 rounded transition-colors" title="Print Invoice">
+                <span class="material-symbols-outlined text-[14px]">receipt_long</span>
               </button>
-              <button onclick="event.stopPropagation(); window.openMessagePreview('${b.id}')" class="px-2 py-1.5 bg-surface-container hover:bg-green-50 hover:text-green-600 rounded-lg font-label text-xs font-bold text-on-surface-variant flex items-center gap-1 transition-colors" title="Send Confirmation Message">
-                <span class="material-symbols-outlined text-[16px]">chat</span>
+              <button onclick="event.stopPropagation(); window.openMessagePreview('${b.id}')" class="p-1 bg-surface-container hover:bg-green-50 hover:text-green-600 rounded transition-colors" title="Send Confirmation Message">
+                <span class="material-symbols-outlined text-[14px]">chat</span>
               </button>
-              <button onclick="event.stopPropagation(); window.editBooking('${b.id}')" class="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high rounded-lg font-label text-xs font-bold text-on-surface flex items-center gap-1 transition-colors">
-                <span class="material-symbols-outlined text-[16px]">edit</span> Edit Details
+              <button onclick="event.stopPropagation(); window.editBooking('${b.id}')" class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-[10px] font-bold text-on-surface flex items-center gap-0.5 transition-colors">
+                <span class="material-symbols-outlined text-[12px]">edit</span> Edit
               </button>
-              <button onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="px-2.5 py-1.5 text-error hover:bg-error-container rounded-lg font-label text-xs font-bold transition-colors">
+              <button onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="px-2 py-1 text-error hover:bg-error-container rounded text-[10px] font-bold transition-colors">
                 Cancel
               </button>
             </div>
