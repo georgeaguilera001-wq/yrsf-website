@@ -5790,10 +5790,17 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       document.getElementById('customer-profile-modal').classList.add('hidden');
       document.getElementById('add-booking-btn').click();
       setTimeout(() => {
-        document.getElementById('booking-customer-name').value = c.name;
-        document.getElementById('booking-customer-email').value = c.email !== '-' ? c.email : '';
-        document.getElementById('booking-customer-phone').value = c.phone !== '-' ? c.phone : '';
-        document.getElementById('booking-status').value = 'inquiry';
+        const nameEl = document.getElementById('book-cust-name');
+        if (nameEl) nameEl.value = c.name;
+        const emailEl = document.getElementById('book-cust-email');
+        if (emailEl) emailEl.value = c.email !== '-' ? c.email : '';
+        const phoneEl = document.getElementById('book-cust-phone');
+        if (phoneEl) phoneEl.value = c.phone !== '-' ? c.phone : '';
+        const statusEl = document.getElementById('book-status');
+        if (statusEl) {
+          statusEl.value = 'inquiry';
+          statusEl.dispatchEvent(new Event('change'));
+        }
       }, 100);
     };
 
