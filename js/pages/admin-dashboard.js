@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .eq('status', 'inquiry')
             .order('created_at', { ascending: false });
 
-          if (!error && inquiries) list = inquiries;
+          if (!error && inquiries) list = inquiries.filter(i => !i.lead_status || i.lead_status === 'new');
         } catch (dbErr) {}
 
         // Combine with localStorage queue (guarantees inquiries show even if DB schema/RLS constraint hindered save)
@@ -3550,7 +3550,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (saveDraftBtn && form) {
         saveDraftBtn.addEventListener('click', () => {
           const statusEl = document.getElementById('book-status');
+          const leadStatusEl = document.getElementById('book-lead-status');
           if (statusEl) statusEl.value = 'inquiry';
+          if (leadStatusEl && (!leadStatusEl.value || leadStatusEl.value === 'new')) {
+            leadStatusEl.value = 'Draft Quote';
+          }
           if (form.requestSubmit) {
             form.requestSubmit();
           } else {
