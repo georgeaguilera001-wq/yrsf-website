@@ -5694,19 +5694,6 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const colQuoteSent = document.getElementById('kanban-col-quote_sent');
     if (!colNew) return;
 
-    // Optional: Add button listener if not already added
-    const addInqBtn = document.getElementById('add-inquiry-btn');
-    if (addInqBtn && !addInqBtn.hasAttribute('data-bound')) {
-      addInqBtn.setAttribute('data-bound', 'true');
-      addInqBtn.addEventListener('click', () => {
-        const form = document.getElementById('book-form');
-        if (form) form.reset();
-        document.getElementById('booking-id').value = '';
-        document.getElementById('book-status').value = 'inquiry';
-        document.getElementById('booking-modal').classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-      });
-    }
 
     const { data: leads, error } = await supabase
       .from('bookings')
@@ -5812,26 +5799,105 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const list = Object.values(customers);
     window._cachedCustomers = list; // Save for modal
 
-    if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No customers recorded yet.</td></tr>`;
-      return;
+    // ── Render helper ────────────────────────────────────────────────────────
+    function renderCRMTable(data) {
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No customers found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = data.map((c, idx) => {
+        // idx into the full cached list so openCustomerProfile always works
+        const fullIdx = window._cachedCustomers.indexOf(c);
+        return `
+          <tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer" onclick="openCustomerProfile(${fullIdx})">
+            <td class="px-4 py-3 font-bold text-on-surface text-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-secondary-container text-secondary flex items-center justify-center font-bold text-xs">${c.name.charAt(0).toUpperCase()}</div>
+                ${c.name}
+              </div>
+            </td>
+            <td class="px-4 py-3 text-on-surface-variant text-sm">${c.phone}</td>
+            <td class="px-4 py-3 text-right font-bold text-secondary text-sm">${c.bookings}</td>
+            <td class="px-4 py-3 text-right font-bold text-green-700 text-sm">$${c.totalSpent.toLocaleString()}</td>
+            <td class="px-4 py-3 text-on-surface-variant text-sm">${c.lastDate}</td>
+            <td class="px-4 py-3 text-center">
+              <button onclick="event.stopPropagation(); sendWhatsAppCRM('${c.phone}', '${c.name}')" class="px-2.5 py-1 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700">WhatsApp</button>
+            </td>
+          </tr>`;
+      }).join('');
     }
 
-    tbody.innerHTML = list.map((c, idx) => `
-      <tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer" onclick="openCustomerProfile(${idx})">
-        <td class="px-4 py-3 font-bold text-on-surface text-sm flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-secondary-container text-secondary flex items-center justify-center font-bold text-xs">${c.name.charAt(0).toUpperCase()}</div>
-          ${c.name}
-        </td>
-        <td class="px-4 py-3 text-on-surface-variant text-sm">${c.phone}</td>
-        <td class="px-4 py-3 text-right font-bold text-secondary text-sm">${c.bookings}</td>
-        <td class="px-4 py-3 text-right font-bold text-green-700 text-sm">$${c.totalSpent.toLocaleString()}</td>
-        <td class="px-4 py-3 text-on-surface-variant text-sm">${c.lastDate}</td>
-        <td class="px-4 py-3 text-center">
-          <button onclick="event.stopPropagation(); sendWhatsAppCRM('${c.phone}', '${c.name}')" class="px-2.5 py-1 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700">WhatsApp</button>
-        </td>
-      </tr>
-    `).join('');
+    // ── Sort & Search state ───────────────────────────────────────────────────
+    let currentSort = 'spent';
+    let currentSearch = '';
+
+    function applyFilters() {
+      let data = [...window._cachedCustomers];
+
+      // Search filter
+      if (currentSearch.trim()) {
+        const q = currentSearch.toLowerCase();
+        data = data.filter(c =>
+          c.name.toLowerCase().includes(q) ||
+          c.phone.includes(q) ||
+          c.email.toLowerCase().includes(q)
+        );
+      }
+
+      // Sort
+      if (currentSort === 'spent') data.sort((a, b) => b.totalSpent - a.totalSpent);
+      else if (currentSort === 'bookings') data.sort((a, b) => b.bookings - a.bookings);
+      else if (currentSort === 'recent') data.sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
+
+      renderCRMTable(data);
+    }
+
+    // ── Wire Sort buttons (once) ──────────────────────────────────────────────
+    const sortContainer = document.getElementById('crm-sort-btns');
+    if (sortContainer && !sortContainer.hasAttribute('data-bound')) {
+      sortContainer.setAttribute('data-bound', 'true');
+      sortContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-crm-sort]');
+        if (!btn) return;
+        currentSort = btn.dataset.crmSort;
+        // Update button styles
+        sortContainer.querySelectorAll('[data-crm-sort]').forEach(b => {
+          b.className = 'px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors';
+        });
+        btn.className = 'px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold';
+        applyFilters();
+      });
+    }
+
+    // ── Wire Search input (once) ──────────────────────────────────────────────
+    const searchInput = document.getElementById('crm-search');
+    if (searchInput && !searchInput.hasAttribute('data-bound')) {
+      searchInput.setAttribute('data-bound', 'true');
+      searchInput.addEventListener('input', (e) => {
+        currentSearch = e.target.value;
+        applyFilters();
+      });
+    }
+
+    // ── Wire New Quote / Lead button (once) ───────────────────────────────────
+    const addInqBtn = document.getElementById('add-inquiry-btn');
+    if (addInqBtn && !addInqBtn.hasAttribute('data-bound')) {
+      addInqBtn.setAttribute('data-bound', 'true');
+      addInqBtn.addEventListener('click', () => {
+        const form = document.getElementById('book-form');
+        if (form) form.reset();
+        const bookingId = document.getElementById('booking-id');
+        if (bookingId) bookingId.value = '';
+        const statusEl = document.getElementById('book-status');
+        if (statusEl) { statusEl.value = 'inquiry'; statusEl.dispatchEvent(new Event('change')); }
+        const modal = document.getElementById('booking-modal');
+        if (modal) modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      });
+    }
+
+    // Initial render sorted by most spent
+    applyFilters();
   };
 
   window.openCustomerProfile = function(idx) {
