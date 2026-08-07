@@ -5284,7 +5284,11 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
   window.editBooking = async (id) => {
     if (!fleetCache || fleetCache.length === 0) await loadFleet();
-    const b = bookingsCache.find(x => x.id === id);
+    let b = bookingsCache.find(x => x.id === id);
+    if (!b) {
+      const { data } = await supabase.from('bookings').select('*').eq('id', id).single();
+      b = data;
+    }
     if (!b) return;
 
     document.getElementById('booking-modal-title').textContent = 'Edit Charter Booking';
