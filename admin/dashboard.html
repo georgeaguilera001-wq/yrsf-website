@@ -1705,19 +1705,41 @@
         </div>
       </div>
 
-      <!-- Customer CRM Section (Directory) -->
-      <section id="section-crm" class="admin-section hidden flex flex-col gap-8">
-        <div class="flex items-center justify-between mb-4">
+      <!-- Customer CRM Section (Directory & Pipeline) -->
+      <section id="section-crm" class="admin-section hidden flex flex-col gap-6">
+        <div class="flex items-center justify-between mb-2">
           <div>
             <h1 class="font-headline text-headline-lg text-on-surface font-bold">Customer Directory</h1>
-            <p class="font-body text-body-md text-on-surface-variant">Manage customer relationships and charter history</p>
+            <p class="font-body text-body-md text-on-surface-variant">Manage customer relationships, charter history, and sales pipeline</p>
           </div>
-          <input type="text" id="crm-search" placeholder="Search customers..." class="border border-outline-variant rounded-lg px-4 py-2 text-sm w-64 bg-surface-container-lowest"/>
+          <div class="flex items-center gap-3">
+            <button id="add-inquiry-btn" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">add</span> New Quote / Lead
+            </button>
+          </div>
         </div>
-        <div class="flex gap-2 flex-wrap mb-4" id="crm-sort-btns">
-          <button data-crm-sort="spent" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold">Most Spent</button>
-          <button data-crm-sort="bookings" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Most Bookings</button>
-          <button data-crm-sort="recent" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Most Recent</button>
+
+        <!-- CRM Tabs -->
+        <div class="flex border-b border-outline-variant mb-2 gap-6">
+          <button type="button" onclick="document.getElementById('crm-view-directory').classList.remove('hidden'); document.getElementById('crm-view-pipeline').classList.add('hidden'); this.classList.add('border-secondary','text-secondary'); this.classList.remove('border-transparent','text-on-surface-variant'); this.nextElementSibling.classList.add('border-transparent','text-on-surface-variant'); this.nextElementSibling.classList.remove('border-secondary','text-secondary');" class="pb-3 border-b-2 border-secondary font-label text-label-lg text-secondary font-bold flex items-center gap-2 cursor-pointer transition-all">
+            <span class="material-symbols-outlined text-[18px]">group</span> Directory
+          </button>
+          <button type="button" onclick="document.getElementById('crm-view-pipeline').classList.remove('hidden'); document.getElementById('crm-view-directory').classList.add('hidden'); this.classList.add('border-secondary','text-secondary'); this.classList.remove('border-transparent','text-on-surface-variant'); this.previousElementSibling.classList.add('border-transparent','text-on-surface-variant'); this.previousElementSibling.classList.remove('border-secondary','text-secondary');" class="pb-3 border-b-2 border-transparent font-label text-label-lg text-on-surface-variant hover:text-on-surface flex items-center gap-2 cursor-pointer transition-all">
+            <span class="material-symbols-outlined text-[18px]">view_kanban</span> Sales Pipeline
+          </button>
+        </div>
+
+        <!-- DIRECTORY VIEW -->
+        <div id="crm-view-directory" class="flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex gap-2 flex-wrap" id="crm-sort-btns">
+              <button data-crm-sort="spent" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold">Most Spent</button>
+              <button data-crm-sort="bookings" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Most Bookings</button>
+              <button data-crm-sort="recent" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Most Recent</button>
+            </div>
+            <input type="text" id="crm-search" placeholder="Search customers..." class="border border-outline-variant rounded-lg px-4 py-2 text-sm w-64 bg-surface-container-lowest"/>
+          </div>
+
         </div>
         <div id="crm-table-container" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
           <table class="w-full">
@@ -1734,6 +1756,56 @@
             <tbody id="crm-table-body"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">Loading CRM...</td></tr></tbody>
           </table>
         </div>
+        </div>
+
+        <!-- PIPELINE VIEW (Kanban) -->
+        <div id="crm-view-pipeline" class="hidden flex-col gap-4">
+          <div class="flex-1 min-h-[500px] overflow-x-auto pb-4">
+            <div class="flex gap-4 h-full min-w-[900px]">
+              
+              <!-- Column 1: New Web Requests -->
+              <div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col">
+                <div class="p-4 border-b border-outline-variant bg-surface-container/50 rounded-t-2xl flex items-center justify-between">
+                  <h3 class="font-label text-label-lg font-bold flex items-center gap-2 text-on-surface">
+                    <span class="w-3 h-3 rounded-full bg-blue-500"></span> New Web Requests
+                  </h3>
+                  <span id="count-col-new" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold">0</span>
+                </div>
+                <div id="kanban-col-new" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 min-h-[150px]" data-stage="new">
+                  <!-- Cards will be injected here -->
+                </div>
+              </div>
+
+              <!-- Column 2: Contacted / Drafting Quote -->
+              <div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col">
+                <div class="p-4 border-b border-outline-variant bg-surface-container/50 rounded-t-2xl flex items-center justify-between">
+                  <h3 class="font-label text-label-lg font-bold flex items-center gap-2 text-on-surface">
+                    <span class="w-3 h-3 rounded-full bg-orange-400"></span> Contacted / Draft
+                  </h3>
+                  <span id="count-col-contacted" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold">0</span>
+                </div>
+                <div id="kanban-col-contacted" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 min-h-[150px]" data-stage="contacted">
+                  <!-- Cards will be injected here -->
+                </div>
+              </div>
+
+              <!-- Column 3: Quote Sent -->
+              <div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col">
+                <div class="p-4 border-b border-outline-variant bg-surface-container/50 rounded-t-2xl flex items-center justify-between">
+                  <h3 class="font-label text-label-lg font-bold flex items-center gap-2 text-on-surface">
+                    <span class="w-3 h-3 rounded-full bg-purple-500"></span> Quote Sent
+                  </h3>
+                  <span id="count-col-quote_sent" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold">0</span>
+                </div>
+                <div id="kanban-col-quote_sent" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 min-h-[150px]" data-stage="quote_sent">
+                  <!-- Cards will be injected here -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
       </section>
 
       <!-- Promos & Discounts Section -->
