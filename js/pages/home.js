@@ -5,7 +5,7 @@
 import { initNavbar } from '../components/navbar.js';
 import { initFooter } from '../components/footer.js';
 import { initToastContainer } from '../components/toast.js';
-import { getFeaturedBoats } from '../services/boats.js';
+import { getFeaturedBoats, getBoatCount } from '../services/boats.js';
 import { getAllSettings } from '../services/settings.js';
 import { renderBoatCard, initBoatCards } from '../components/boat-card.js';
 import { initLazyLoading } from '../utils/lazy-load.js';
@@ -148,7 +148,19 @@ async function initHomePage() {
     }
   })();
 
-  await Promise.all([loadSettingsPromise, loadBoatsPromise]);
+  const loadBoatCountPromise = (async () => {
+    try {
+      const count = await getBoatCount();
+      const countEl = document.getElementById('dynamic-fleet-size');
+      if (countEl) {
+        countEl.textContent = `${count} Boats`;
+      }
+    } catch (err) {
+      console.warn('Could not load boat count', err);
+    }
+  })();
+
+  await Promise.all([loadSettingsPromise, loadBoatsPromise, loadBoatCountPromise]);
 
   // 3. Initialize lazy loading for all images immediately
   initLazyLoading();
