@@ -707,7 +707,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
             </div>
           </td>
-          <td class="px-3 py-3 font-caption text-caption text-on-surface-variant whitespace-nowrap">${escapeHtml(boat.vessel_id || '-')}</td>
           <td class="px-3 py-3 font-caption text-caption text-on-surface-variant whitespace-nowrap">${boat.capacity || '-'} guests</td>
           <td class="px-3 py-3 whitespace-nowrap">
             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-caption ${
