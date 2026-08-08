@@ -38,7 +38,15 @@ async function initCatalogPage() {
   
   if (showFavorites) {
     const header = document.querySelector('header');
-    if (header) header.classList.add('hidden');
+    if (header) {
+      const h1 = header.querySelector('h1');
+      const span = header.querySelector('span');
+      const p = header.querySelector('p');
+      
+      if (h1) h1.textContent = 'Your Favorites';
+      if (span) span.classList.add('hidden');
+      if (p) p.classList.add('hidden');
+    }
   }
 
   // Restore search from URL
