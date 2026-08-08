@@ -100,7 +100,7 @@ export function renderBoatCard(boat, options = {}) {
       </a>
       <div class="p-2.5 flex-grow flex flex-col">
         <div class="flex justify-between items-center mb-1 gap-2">
-          <h3 class="font-headline font-bold text-[12.5px] sm:text-[14.5px] text-on-surface leading-tight truncate" title="${name}">${name}</h3>
+          <h3 class="font-headline font-bold text-[11.5px] sm:text-[14.5px] text-on-surface leading-tight truncate" title="${name}">${name}</h3>
           <button class="favorite-btn p-1 ${favorited ? 'active' : ''} shrink-0" data-boat-id="${boat.id}" aria-label="Toggle favorite">
             <span class="material-symbols-outlined text-[16px]">favorite</span>
           </button>
