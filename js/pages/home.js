@@ -46,8 +46,24 @@ async function initHomePage() {
     try {
       const settings = await getAllSettings();
       if (settings.hero_bg_image?.value) {
-        const heroImg = document.getElementById('hero-bg-img');
-        if (heroImg && heroImg.src !== settings.hero_bg_image.value) heroImg.src = settings.hero_bg_image.value;
+        const url = settings.hero_bg_image.value;
+        const isVid = url.match(/\.(mp4|mov|webm)$/i) || url.includes('video/');
+        const videoEl = document.getElementById('hero-bg-video');
+        const imgEl = document.getElementById('hero-bg-img');
+        
+        if (isVid) {
+          if (videoEl) {
+            videoEl.src = url;
+            videoEl.classList.remove('hidden');
+          }
+          if (imgEl) imgEl.classList.add('hidden');
+        } else {
+          if (imgEl) {
+            imgEl.src = url;
+            imgEl.classList.remove('hidden');
+          }
+          if (videoEl) videoEl.classList.add('hidden');
+        }
       }
       if (settings.hero_tagline?.value) {
         const el = document.getElementById('hero-tagline');
