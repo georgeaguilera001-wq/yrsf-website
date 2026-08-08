@@ -46,23 +46,63 @@ async function initHomePage() {
     try {
       const settings = await getAllSettings();
       if (settings.hero_bg_image?.value) {
-        const url = settings.hero_bg_image.value;
-        const isVid = url.match(/\.(mp4|mov|webm)$/i) || url.includes('video/');
+        const urls = settings.hero_bg_image.value.split(',').map(s => s.trim()).filter(Boolean);
         const videoEl = document.getElementById('hero-bg-video');
         const imgEl = document.getElementById('hero-bg-img');
+        const bgContainer = imgEl ? imgEl.parentElement : null;
         
-        if (isVid) {
-          if (videoEl) {
-            videoEl.src = url;
-            videoEl.classList.remove('hidden');
+        if (urls.length > 1) {
+          // Slideshow mode
+          if (videoEl) videoEl.style.setProperty('display', 'none', 'important');
+          if (imgEl) imgEl.style.setProperty('display', 'none', 'important');
+          
+          let slideContainer = document.getElementById('hero-slides');
+          if (!slideContainer && bgContainer) {
+            slideContainer = document.createElement('div');
+            slideContainer.id = 'hero-slides';
+            slideContainer.className = 'absolute inset-0 z-0';
+            bgContainer.insertBefore(slideContainer, videoEl);
+            
+            urls.forEach((url, idx) => {
+              const slide = document.createElement('div');
+              slide.className = `absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-[1500ms] ${idx === 0 ? 'opacity-100' : 'opacity-0'}`;
+              slide.style.backgroundImage = `url('${url}')`;
+              slideContainer.appendChild(slide);
+            });
+            
+            let currentSlide = 0;
+            const slides = slideContainer.children;
+            if (window.heroSlideInterval) clearInterval(window.heroSlideInterval);
+            window.heroSlideInterval = setInterval(() => {
+              slides[currentSlide].classList.remove('opacity-100');
+              slides[currentSlide].classList.add('opacity-0');
+              currentSlide = (currentSlide + 1) % slides.length;
+              slides[currentSlide].classList.remove('opacity-0');
+              slides[currentSlide].classList.add('opacity-100');
+            }, 4500); // Change slide every 4.5 seconds
           }
-          if (imgEl) imgEl.classList.add('hidden');
         } else {
-          if (imgEl) {
-            imgEl.src = url;
-            imgEl.classList.remove('hidden');
+          // Single image or video
+          if (window.heroSlideInterval) clearInterval(window.heroSlideInterval);
+          const slideContainer = document.getElementById('hero-slides');
+          if (slideContainer) slideContainer.remove();
+          
+          const url = urls[0] || '';
+          const isVid = url.match(/\.(mp4|mov|webm)$/i) || url.includes('video/');
+          
+          if (isVid) {
+            if (videoEl) {
+              videoEl.src = url;
+              videoEl.style.setProperty('display', 'block', 'important');
+            }
+            if (imgEl) imgEl.style.setProperty('display', 'none', 'important');
+          } else {
+            if (imgEl) {
+              imgEl.src = url;
+              imgEl.style.setProperty('display', 'block', 'important');
+            }
+            if (videoEl) videoEl.style.setProperty('display', 'none', 'important');
           }
-          if (videoEl) videoEl.classList.add('hidden');
         }
       }
       if (settings.hero_tagline?.value) {
