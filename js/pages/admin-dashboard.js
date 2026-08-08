@@ -37,6 +37,72 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.location.href = '/admin/index.html';
   });
 
+  // ─── Admin Profile ────────────────────────────────────
+  window.openAdminProfileModal = () => {
+    const modal = document.getElementById('admin-profile-modal');
+    const nameInput = document.getElementById('admin-profile-name');
+    const pwdInput = document.getElementById('admin-profile-password');
+    
+    // Set current name
+    const fullName = user?.user_metadata?.full_name || user?.user_metadata?.name || '';
+    if (nameInput) nameInput.value = fullName;
+    if (pwdInput) pwdInput.value = '';
+    
+    modal.classList.remove('hidden');
+  };
+
+  document.getElementById('admin-profile-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const nameInput = document.getElementById('admin-profile-name').value.trim();
+    const pwdInput = document.getElementById('admin-profile-password').value;
+    
+    const originalText = btn.textContent;
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    try {
+      const updates = {};
+      
+      if (nameInput) {
+        updates.data = { full_name: nameInput, name: nameInput };
+      }
+      
+      if (pwdInput) {
+        updates.password = pwdInput;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase.auth.updateUser(updates);
+        if (error) throw error;
+        
+        // Update local user object
+        if (updates.data) {
+          user.user_metadata = { ...user.user_metadata, ...updates.data };
+          
+          // Re-render greeting block
+          const greetingEl = document.getElementById('dashboard-greeting');
+          if (greetingEl) {
+            const firstName = nameInput.split(' ')[0] || 'Captain';
+            const hr = new Date().getHours();
+            const timeGreet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+            greetingEl.textContent = `${timeGreet}, ${firstName} 👋`;
+          }
+        }
+        
+        showToast('Profile updated successfully', 'success');
+        document.getElementById('admin-profile-modal').classList.add('hidden');
+      } else {
+        document.getElementById('admin-profile-modal').classList.add('hidden');
+      }
+    } catch (err) {
+      showToast(err.message || 'Error updating profile', 'error');
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
+
   // ─── Sidebar Navigation ─────────────────────────────
   const navButtons = document.querySelectorAll('.admin-nav-btn');
   const sections = document.querySelectorAll('.admin-section');
