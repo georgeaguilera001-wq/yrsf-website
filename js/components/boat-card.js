@@ -80,6 +80,15 @@ export function renderBoatCard(boat, options = {}) {
       const isVideo = imgUrl && typeof imgUrl === 'string' && (/\.(mp4|mov|webm|ogg)$/i.test(imgUrl) || imgUrl.includes('video/'));
       let imagesHtml = '';
       
+      // Prepare and limit images for the carousel
+      let images = boat.boat_images && boat.boat_images.length > 0 ? boat.boat_images : [{ url: imgUrl, alt_text: imgAlt }];
+      images.sort((a, b) => {
+        if (a.is_primary && !b.is_primary) return -1;
+        if (!a.is_primary && b.is_primary) return 1;
+        return (a.sort_order || 0) - (b.sort_order || 0);
+      });
+      images = images.slice(0, 20); // Limit to 20 images max on the card
+      
       if (isVideo) {
         imagesHtml = `
           <a href="/boat.html?slug=${slug}" class="w-full h-full shrink-0 snap-center relative block">
@@ -90,14 +99,6 @@ export function renderBoatCard(boat, options = {}) {
           </a>
         `;
       } else {
-        const images = boat.boat_images && boat.boat_images.length > 0 ? boat.boat_images : [{ url: imgUrl, alt_text: imgAlt }];
-        // Sort so primary is first
-        images.sort((a, b) => {
-          if (a.is_primary && !b.is_primary) return -1;
-          if (!a.is_primary && b.is_primary) return 1;
-          return (a.sort_order || 0) - (b.sort_order || 0);
-        });
-        
         imagesHtml = images.map((img, index) => `
           <a href="/boat.html?slug=${slug}" class="w-full h-full shrink-0 snap-center relative block">
             <img
@@ -112,9 +113,9 @@ export function renderBoatCard(boat, options = {}) {
         `).join('');
       }
 
-      const dotsCount = (!isVideo && boat.boat_images && boat.boat_images.length > 1) ? boat.boat_images.length : 0;
+      const dotsCount = (!isVideo && images.length > 1) ? images.length : 0;
       const dotsHtml = dotsCount > 0 ? `
-        <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+        <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none flex-wrap px-4">
           ${Array(dotsCount).fill(0).map((_, i) => `<div class="w-1.5 h-1.5 rounded-full bg-white/60 drop-shadow-md ${i===0?'!bg-white scale-110':''}"></div>`).join('')}
         </div>
       ` : '';
