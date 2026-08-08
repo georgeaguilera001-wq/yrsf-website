@@ -122,11 +122,19 @@ export function renderBoatCard(boat, options = {}) {
       return `
     <div class="group @container bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden card-hover flex flex-col flex-grow w-full relative" data-boat-id="${boat.id}" data-prices="${escapeHtml(JSON.stringify(boat.boat_prices || []))}">
       <div class="relative w-full aspect-[16/8.5] overflow-hidden group/carousel">
-        <div class="flex w-full h-full overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div class="flex w-full h-full overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" id="carousel-${boat.id}">
           ${imagesHtml}
         </div>
         ${boat.is_featured ? '<div class="absolute top-2 left-2 bg-secondary text-on-secondary px-2 py-0.5 rounded-full text-[9px] font-bold shadow-sm z-10 pointer-events-none">FEATURED</div>' : ''}
         ${dotsHtml}
+        ${dotsCount > 0 ? `
+        <button class="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hidden md:flex z-20" onclick="event.preventDefault(); document.getElementById('carousel-${boat.id}').scrollBy({left: -document.getElementById('carousel-${boat.id}').clientWidth, behavior: 'smooth'})">
+          <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+        </button>
+        <button class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hidden md:flex z-20" onclick="event.preventDefault(); document.getElementById('carousel-${boat.id}').scrollBy({left: document.getElementById('carousel-${boat.id}').clientWidth, behavior: 'smooth'})">
+          <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+        </button>
+        ` : ''}
       </div>
       <div class="p-2.5 flex-grow flex flex-col">
         <div class="flex justify-between items-center mb-1 gap-2">
