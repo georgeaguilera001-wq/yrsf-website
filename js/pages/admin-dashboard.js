@@ -2402,40 +2402,54 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Handle File Uploads to Bucket
-  function handleBucketUpload(inputId, targetId) {
+  function handleBucketUpload(inputId, targetId, append = false) {
     const input = document.getElementById(inputId);
     const target = document.getElementById(targetId);
     if (!input || !target) return;
     
     input.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        if (file.size > 5 * 1024 * 1024) { // 5MB limit
-          showToast('Image is too large. Please upload an image under 5MB.', 'error');
-          return;
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+      
+      showToast(`Uploading ${files.length} file(s)...`, 'info');
+      let uploadedUrls = [];
+      
+      for (const file of files) {
+        if (file.size > 15 * 1024 * 1024) { // 15MB limit to allow videos
+          showToast(`File ${file.name} is too large (>15MB). Skipping.`, 'error');
+          continue;
         }
-        showToast('Uploading image...', 'info');
         try {
           const fileExt = file.name.split('.').pop();
           const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
           const filePath = `settings/${fileName}`;
 
           const { data, error } = await supabase.storage.from('images').upload(filePath, file, { cacheControl: '3600', upsert: false });
-          if (error) throw new Error(`Upload Failed: ${error.message}`);
+          if (error) throw new Error(error.message);
           
           const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
-          target.value = publicUrl;
-          showToast('Upload successful!', 'success');
+          uploadedUrls.push(publicUrl);
         } catch (err) {
-          showToast(err.message, 'error');
+          showToast(`Upload failed for ${file.name}: ${err.message}`, 'error');
         }
       }
+      
+      if (uploadedUrls.length > 0) {
+        if (append && target.value.trim().length > 0) {
+          target.value = target.value.trim() + (target.value.trim().endsWith(',') ? ' ' : ', ') + uploadedUrls.join(', ');
+        } else {
+          target.value = uploadedUrls.join(', ');
+        }
+        showToast('Upload successful!', 'success');
+      }
+      
+      input.value = ''; // Reset input
     });
   }
 
   handleBucketUpload('upload-logo-desktop', 'setting-logo-desktop');
   handleBucketUpload('upload-logo-mobile', 'setting-logo-mobile');
-  handleBucketUpload('upload-hero-bg-image', 'setting-hero-bg-image');
+  handleBucketUpload('upload-hero-bg-image', 'setting-hero-bg-image', true);
   handleBucketUpload('upload-expert-image-1', 'setting-expert-image-1');
   handleBucketUpload('upload-expert-image-2', 'setting-expert-image-2');
 
