@@ -40,7 +40,7 @@ export function renderNavbar(activePage = '') {
     <header class="fixed top-0 left-0 w-full z-50 glass-nav border-b border-outline-variant transition-shadow" id="main-nav">
       <nav class="flex justify-between items-center w-full px-lg py-4 max-w-container-max mx-auto">
         <a href="/index.html" id="nav-logo" class="flex items-center">
-          <img src="/img/logo-wide.png" alt="Yacht Rentals of South Florida" class="h-10 sm:h-12 w-auto object-contain"/>
+          <img src="/img/logo-wide.png" alt="Yacht Rentals of South Florida" class="h-[52px] sm:h-14 w-auto object-contain"/>
         </a>
         
         <div class="hidden md:flex items-center gap-md font-label-md text-label-md">
@@ -139,11 +139,11 @@ export function initNavbar(activePage = '') {
         let html = '';
         if (desktopLogo && mobileLogo && desktopLogo !== mobileLogo) {
           html = `
-            <img src="${desktopLogo}" alt="YRSF Logo" class="h-10 hidden md:block w-auto object-contain" />
-            <img src="${mobileLogo}" alt="YRSF Logo" class="h-10 block md:hidden w-auto object-contain" />
+            <img src="${desktopLogo}" alt="YRSF Logo" class="h-14 hidden md:block w-auto object-contain" />
+            <img src="${mobileLogo}" alt="YRSF Logo" class="h-[52px] block md:hidden w-auto object-contain" />
           `;
         } else {
-          html = `<img src="${desktopLogo || mobileLogo}" alt="YRSF Logo" class="h-10 w-auto object-contain" />`;
+          html = `<img src="${desktopLogo || mobileLogo}" alt="YRSF Logo" class="h-[52px] md:h-14 w-auto object-contain" />`;
         }
         logoContainer.innerHTML = html;
       }
