@@ -62,6 +62,22 @@ async function initHomePage() {
         if (el) el.textContent = settings.hero_description.value;
       }
 
+      // Instagram Embed Settings
+      if (settings.instagram_embed_code?.value) {
+        const container = document.getElementById('instagram-showcase-container');
+        if (container) {
+          container.innerHTML = settings.instagram_embed_code.value;
+          // Re-evaluate script tags so widgets like Elfsight load correctly
+          const scripts = container.querySelectorAll('script');
+          scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+            newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+          });
+        }
+      }
+
       // Expert Settings
       if (settings.expert_tagline?.value) {
         const el = document.getElementById('expert-tagline');
