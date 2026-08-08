@@ -28,9 +28,17 @@ async function initCatalogPage() {
   const shareSmsBtn = document.getElementById('share-sms-btn');
   const shareGroupBtn = document.getElementById('share-group-btn');
 
+  // Check if showing favorites only
+  const showFavorites = getUrlParam('favorites') === 'true';
+
   // Render filter bar
   if (filterContainer) {
-    filterContainer.innerHTML = renderFilterBar();
+    filterContainer.innerHTML = renderFilterBar(showFavorites);
+  }
+  
+  if (showFavorites) {
+    const header = document.querySelector('header');
+    if (header) header.classList.add('hidden');
   }
 
   // Restore search from URL
@@ -39,9 +47,6 @@ async function initCatalogPage() {
     const searchInput = document.getElementById('search-input');
     if (searchInput) searchInput.value = urlSearch;
   }
-
-  // Check if showing favorites only
-  const showFavorites = getUrlParam('favorites') === 'true';
 
   /** Progressive Grid Render: inserts boat cards batch by batch so mobile rendering never freezes or blocks */
   function renderProgressiveGrid(boats) {

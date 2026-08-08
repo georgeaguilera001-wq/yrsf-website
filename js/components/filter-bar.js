@@ -6,7 +6,23 @@
 import { debounce } from '../utils/dom.js';
 
 /** Render the filter bar HTML */
-export function renderFilterBar() {
+export function renderFilterBar(showFavorites = false) {
+  if (showFavorites) {
+    return `
+      <div class="flex flex-wrap items-center gap-4 mb-md">
+        <div class="relative flex-1 min-w-[200px]">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant">search</span>
+          <input
+            type="text"
+            id="search-input"
+            class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-secondary focus:border-secondary transition-all font-body-md"
+            placeholder="Search saved yachts..."
+          />
+        </div>
+      </div>
+    `;
+  }
+
   return `
     <div class="flex flex-wrap items-center gap-4 mb-md">
       <div class="relative flex-1 min-w-[200px]">
