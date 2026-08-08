@@ -78,26 +78,56 @@ export function renderBoatCard(boat, options = {}) {
   const pricesHtml = info.html;
 
       const isVideo = imgUrl && typeof imgUrl === 'string' && (/\.(mp4|mov|webm|ogg)$/i.test(imgUrl) || imgUrl.includes('video/'));
+      let imagesHtml = '';
+      
+      if (isVideo) {
+        imagesHtml = `
+          <a href="/boat.html?slug=${slug}" class="w-full h-full shrink-0 snap-center relative block">
+            <video src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" muted playsinline loop></video>
+            <div class="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none group-hover:bg-black/30 transition-colors">
+              <span class="material-symbols-outlined text-white text-3xl drop-shadow-md">play_circle</span>
+            </div>
+          </a>
+        `;
+      } else {
+        const images = boat.boat_images && boat.boat_images.length > 0 ? boat.boat_images : [{ url: imgUrl, alt_text: imgAlt }];
+        // Sort so primary is first
+        images.sort((a, b) => {
+          if (a.is_primary && !b.is_primary) return -1;
+          if (!a.is_primary && b.is_primary) return 1;
+          return (a.sort_order || 0) - (b.sort_order || 0);
+        });
+        
+        imagesHtml = images.map((img, index) => `
+          <a href="/boat.html?slug=${slug}" class="w-full h-full shrink-0 snap-center relative block">
+            <img
+              class="${index === 0 ? 'lazy-image' : ''} w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${index === 0 ? 'loaded' : ''}"
+              src="${img.url}"
+              alt="${escapeHtml(img.alt_text || imgAlt)}"
+              ${index > 0 ? 'loading="lazy"' : ''}
+              decoding="async"
+              onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e293b/94a3b8?text=No+Photo';"
+            />
+          </a>
+        `).join('');
+      }
+
+      const dotsCount = (!isVideo && boat.boat_images && boat.boat_images.length > 1) ? boat.boat_images.length : 0;
+      const dotsHtml = dotsCount > 0 ? `
+        <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+          ${Array(dotsCount).fill(0).map((_, i) => `<div class="w-1.5 h-1.5 rounded-full bg-white/60 drop-shadow-md ${i===0?'!bg-white scale-110':''}"></div>`).join('')}
+        </div>
+      ` : '';
+
       return `
     <div class="group @container bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden card-hover flex flex-col flex-grow w-full relative" data-boat-id="${boat.id}" data-prices="${escapeHtml(JSON.stringify(boat.boat_prices || []))}">
-      <a href="/boat.html?slug=${slug}" class="block relative w-full aspect-[16/8.5] overflow-hidden">
-        ${isVideo ? `
-          <video src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" muted playsinline loop></video>
-          <div class="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none group-hover:bg-black/30 transition-colors">
-            <span class="material-symbols-outlined text-white text-3xl drop-shadow-md">play_circle</span>
-          </div>
-        ` : `
-          <img
-            class="lazy-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 loaded"
-            src="${imgUrl}"
-            alt="${imgAlt}"
-            loading="lazy"
-            decoding="async"
-            onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e293b/94a3b8?text=No+Photo';"
-          />
-        `}
-        ${boat.is_featured ? '<div class="absolute top-2 left-2 bg-secondary text-on-secondary px-2 py-0.5 rounded-full text-[9px] font-bold shadow-sm z-10">FEATURED</div>' : ''}
-      </a>
+      <div class="relative w-full aspect-[16/8.5] overflow-hidden group/carousel">
+        <div class="flex w-full h-full overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          ${imagesHtml}
+        </div>
+        ${boat.is_featured ? '<div class="absolute top-2 left-2 bg-secondary text-on-secondary px-2 py-0.5 rounded-full text-[9px] font-bold shadow-sm z-10 pointer-events-none">FEATURED</div>' : ''}
+        ${dotsHtml}
+      </div>
       <div class="p-2.5 flex-grow flex flex-col">
         <div class="flex justify-between items-center mb-1 gap-2">
           <h3 class="font-headline font-bold text-[17px] text-on-surface leading-tight truncate" title="${name}">${name}</h3>
