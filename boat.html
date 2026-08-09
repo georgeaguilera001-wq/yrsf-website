@@ -75,18 +75,18 @@
         <!-- Tabs -->
         <div class="border-b border-outline-variant mb-4 md:mb-md">
           <div class="flex gap-md overflow-x-auto hide-scrollbar" id="detail-tabs">
-            <button class="py-3 font-label-md text-label-md text-secondary border-b-2 border-secondary whitespace-nowrap" data-tab="overview">Overview</button>
-            <button class="py-3 font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors whitespace-nowrap" data-tab="specs">Specifications</button>
-            <button class="py-3 font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors whitespace-nowrap" data-tab="amenities">Amenities</button>
-            <button class="py-3 font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors whitespace-nowrap flex items-center gap-1.5" data-tab="availability">
+            <button class="py-3 font-label-md text-label-md text-secondary border-b-2 border-secondary whitespace-nowrap flex items-center gap-1.5" data-tab="availability">
               <span class="material-symbols-outlined text-[18px] text-green-600">calendar_month</span> Availability Schedule
             </button>
+            <button class="py-3 font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors whitespace-nowrap" data-tab="overview">Overview</button>
+            <button class="py-3 font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors whitespace-nowrap" data-tab="specs">Specifications</button>
+            <button class="py-3 font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors whitespace-nowrap" data-tab="amenities">Amenities</button>
           </div>
         </div>
 
         <!-- Tab Content -->
         <div id="tab-content">
-          <div id="tab-overview" class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          <div id="tab-overview" class="hidden font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
             <div class="space-y-3">
               <div class="h-4 w-full skeleton"></div>
               <div class="h-4 w-5/6 skeleton"></div>
@@ -95,7 +95,7 @@
           </div>
           <div id="tab-specs" class="hidden"></div>
           <div id="tab-amenities" class="hidden"></div>
-          <div id="tab-availability" class="hidden"></div>
+          <div id="tab-availability"></div>
         </div>
       </div>
 

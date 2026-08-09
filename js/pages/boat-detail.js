@@ -320,7 +320,7 @@ function populateBoatDetail(boat) {
 
       let daysHtml = '';
       for (let i = 0; i < firstDay; i++) {
-        daysHtml += `<div class="p-2 bg-surface-container-lowest/30 rounded-lg"></div>`;
+        daysHtml += `<div class="p-1 md:p-2 bg-surface-container-lowest/30 rounded-lg"></div>`;
       }
 
       for (let day = 1; day <= daysInMonth; day++) {
@@ -336,7 +336,7 @@ function populateBoatDetail(boat) {
         const isSelected = selectedDateStr === dateStr;
 
         let statusBadge = '';
-        let cellClasses = 'p-3 rounded-xl border flex flex-col justify-between min-h-[76px] transition-all ';
+        let cellClasses = 'p-1.5 md:p-2.5 rounded-lg md:rounded-xl border flex flex-col justify-between min-h-[56px] md:min-h-[70px] transition-all ';
 
         if (isPast) {
           cellClasses += 'bg-surface-container-lowest/50 border-outline-variant/40 opacity-40 cursor-not-allowed';
@@ -372,7 +372,7 @@ function populateBoatDetail(boat) {
       const selectedDayEvents = selectedDateStr ? (dailyEventsMap.get(selectedDateStr) || []) : [];
 
       availTab.innerHTML = `
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 md:p-6 shadow-sm">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-3 md:p-5 shadow-sm">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-outline-variant">
             <div>
               <h3 class="font-headline font-bold text-xl text-on-surface flex items-center gap-2">
@@ -407,12 +407,12 @@ function populateBoatDetail(boat) {
           `}
 
           <!-- Day Names -->
-          <div class="grid grid-cols-7 gap-2 mb-2">
-            ${dayNames.map(name => `<div class="text-center text-xs font-bold text-on-surface-variant py-1">${name}</div>`).join('')}
+          <div class="grid grid-cols-7 gap-1 md:gap-2 mb-1 md:mb-2">
+            ${dayNames.map(name => `<div class="text-center text-[10px] md:text-xs font-bold text-on-surface-variant py-1">${name}</div>`).join('')}
           </div>
 
           <!-- Calendar Grid -->
-          <div class="grid grid-cols-7 gap-2">
+          <div class="grid grid-cols-7 gap-1 md:gap-2">
             ${daysHtml}
           </div>
 
