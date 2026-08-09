@@ -26,9 +26,9 @@
 <body class="bg-surface text-on-surface">
   <div id="navbar-container"></div>
 
-  <main class="max-w-container-max mx-auto px-md md:px-lg py-md pt-[120px]">
+  <main class="max-w-container-max mx-auto px-4 md:px-md lg:px-lg py-4 md:py-md pt-[100px] md:pt-[120px]">
     <!-- Breadcrumbs -->
-    <nav class="flex items-center gap-2 mb-md text-on-surface-variant font-label-md text-label-md">
+    <nav class="flex items-center gap-2 mb-4 md:mb-md text-on-surface-variant font-label-md text-label-md">
       <a class="hover:text-secondary" href="/">Home</a>
       <span class="material-symbols-outlined text-[16px]">chevron_right</span>
       <a class="hover:text-secondary" href="/boats.html">Browse Boats</a>
@@ -37,7 +37,7 @@
     </nav>
 
     <!-- Image Gallery -->
-    <section class="mb-lg" id="gallery-section">
+    <section class="mb-6 md:mb-lg" id="gallery-section">
       <div id="image-gallery">
         <div class="h-64 md:h-96 skeleton rounded-xl"></div>
       </div>
@@ -47,7 +47,7 @@
     </section>
 
     <!-- Boat Info Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg mb-lg">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-lg mb-6 lg:mb-lg">
       <!-- Left Column: Details -->
       <div class="lg:col-span-2">
         <div class="flex items-start justify-between mb-md">
@@ -66,14 +66,14 @@
         </div>
 
         <!-- Quick Specs -->
-        <div class="flex flex-wrap gap-md mb-lg p-md bg-surface-container-low rounded-xl border border-outline-variant" id="quick-specs">
+        <div class="flex flex-wrap gap-4 md:gap-md mb-6 md:mb-lg p-4 md:p-md bg-surface-container-low rounded-xl border border-outline-variant" id="quick-specs">
           <div class="h-10 w-24 skeleton"></div>
           <div class="h-10 w-24 skeleton"></div>
           <div class="h-10 w-24 skeleton"></div>
         </div>
 
         <!-- Tabs -->
-        <div class="border-b border-outline-variant mb-md">
+        <div class="border-b border-outline-variant mb-4 md:mb-md">
           <div class="flex gap-md overflow-x-auto hide-scrollbar" id="detail-tabs">
             <button class="py-3 font-label-md text-label-md text-secondary border-b-2 border-secondary whitespace-nowrap" data-tab="overview">Overview</button>
             <button class="py-3 font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors whitespace-nowrap" data-tab="specs">Specifications</button>
