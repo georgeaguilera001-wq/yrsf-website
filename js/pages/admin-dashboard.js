@@ -4115,10 +4115,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function startAutoSync() {
       if (autoSyncTimer) clearInterval(autoSyncTimer);
       autoSyncTimer = setInterval(async () => {
-        // Only auto-sync if the Bookings & Manifest section is visible
+        // Sync unconditionally in the background every 5 minutes
+        await syncAllIcalFeeds(false);
+
+        // Only update UI if the Bookings & Manifest section is visible
         const calView = document.getElementById('booking-calendar-view');
         if (calView && !calView.classList.contains('hidden')) {
-          await syncAllIcalFeeds(false); // silent — no toast or alert
           renderCalendar();
           // Update last-synced badge
           const badge = document.getElementById('cal-last-synced-badge');
