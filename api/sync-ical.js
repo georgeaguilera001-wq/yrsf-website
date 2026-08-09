@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
 
 // Initialize Supabase Client
 // We use the service role key if available for admin privileges, otherwise anon key
@@ -7,7 +7,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABAS
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   // Allow GET and POST for cron jobs
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
