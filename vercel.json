@@ -50,11 +50,5 @@
         { "key": "Cache-Control", "value": "public, max-age=2592000" }
       ]
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/sync-ical",
-      "schedule": "0 * * * *"
-    }
   ]
 }
