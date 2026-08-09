@@ -203,7 +203,11 @@ function populateBoatDetail(boat) {
   // Overview
   const overviewTab = $('#tab-overview');
   if (overviewTab) {
-    overviewTab.innerHTML = boat.description || boat.short_description || '<p>No description available.</p>';
+    let desc = boat.description || boat.short_description || '<p>No description available.</p>';
+    if (desc && !/<[a-z][\s\S]*>/i.test(desc)) {
+      desc = desc.split(/\n\s*\n/).map(p => `<p class="mb-4">${p.replace(/\n/g, '<br>')}</p>`).join('');
+    }
+    overviewTab.innerHTML = desc;
   }
 
   // Specifications
