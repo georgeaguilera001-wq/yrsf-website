@@ -252,6 +252,10 @@ async function initHomePage() {
       if (countEl) {
         countEl.textContent = `${count} Boats`;
       }
+      const countDescEl = document.getElementById('dynamic-fleet-description-count');
+      if (countDescEl) {
+        countDescEl.textContent = `${count}`;
+      }
     } catch (err) {
       console.warn('Could not load boat count', err);
     }
