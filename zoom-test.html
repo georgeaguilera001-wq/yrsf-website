@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<style>
+  .box { border: 1px solid red; padding: 20px; background: #fee; margin-bottom: 20px; }
+  .zoom-50 { zoom: 0.5; }
+</style>
+</head>
+<body>
+  <div style="width: 800px; border: 2px solid black;">
+    <div class="box">
+      Normal: The quick brown fox jumps over the lazy dog.
+    </div>
+    <div class="box zoom-50">
+      Zoomed 50% (no width specified): The quick brown fox jumps over the lazy dog.
+    </div>
+    <div class="box zoom-50" style="width: 100%;">
+      Zoomed 50% (width 100%): The quick brown fox jumps over the lazy dog.
+    </div>
+  </div>
+</body>
+</html>
