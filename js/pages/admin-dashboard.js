@@ -5768,6 +5768,67 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       notifDropdown?.classList.add('hidden');
     }
   });
+
+  // Push Notification Subscription Logic
+  const enablePushBtn = document.getElementById('enable-push-btn');
+  if (enablePushBtn && 'serviceWorker' in navigator && 'PushManager' in window) {
+    // Check initial subscription status
+    navigator.serviceWorker.ready.then(async (registration) => {
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        enablePushBtn.textContent = 'Alerts Subscribed';
+        enablePushBtn.classList.remove('hover:underline', 'text-primary');
+        enablePushBtn.classList.add('text-green-600', 'cursor-default');
+        enablePushBtn.disabled = true;
+      }
+    });
+
+    enablePushBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        // VAPID Public Key generated for Web Push
+        const VAPID_PUBLIC_KEY = 'BGtkbcjrO12YMoDuq2sCQeHlu47uPx3SHTgFKZFYiBW8Qr0D9vgyZSZPdw6_4ZFEI9Snk1VEAj2qTYI1I1YxBXE';
+        
+        // Convert Base64URL to Uint8Array
+        const padding = '='.repeat((4 - VAPID_PUBLIC_KEY.length % 4) % 4);
+        const base64 = (VAPID_PUBLIC_KEY + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: outputArray
+        });
+
+        // Send to backend
+        const res = await fetch('/api/push-subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription })
+        });
+        if (res.ok) {
+          showToast('Background notifications enabled!', 'success');
+          enablePushBtn.textContent = 'Alerts Subscribed';
+          enablePushBtn.classList.remove('hover:underline', 'text-primary');
+          enablePushBtn.classList.add('text-green-600', 'cursor-default');
+          enablePushBtn.disabled = true;
+        } else {
+          throw new Error('Failed to save subscription');
+        }
+      } catch (error) {
+        console.error('Error subscribing to push:', error);
+        if (Notification.permission === 'denied') {
+          showToast('Notifications are blocked by your browser settings.', 'error');
+        } else {
+          showToast('Failed to enable background notifications.', 'error');
+        }
+      }
+    });
+  }
   updateNotificationUI();
 
   window.updateGlobalNotifications = (newNotifs) => {
