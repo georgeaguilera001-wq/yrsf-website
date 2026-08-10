@@ -161,21 +161,23 @@ export function renderBoatCard(boat, options = {}) {
         </div>
         ` : ''}
 
-        <div class="flex items-center justify-between gap-1.5 mt-auto pt-2 border-t border-outline-variant/60">
+        <div class="flex items-center justify-between gap-1 mt-auto pt-2 border-t border-outline-variant/60">
           <div class="min-w-0 flex-1 overflow-hidden">
             <div class="text-secondary font-bold text-sm leading-tight card-price-display truncate" title="${priceDisplay.replace(/"/g, '&quot;')}">${priceDisplay.replace('$', '')}</div>
           </div>
-          <div class="flex items-center gap-1 shrink-0">
+          <div class="flex items-center gap-0.5 shrink-0">
             ${hasPrices ? `
             <button class="pricing-toggle-btn p-1 bg-surface-container-lowest hover:bg-surface-container rounded-md border border-outline-variant transition-colors flex items-center justify-center shadow-2xs" aria-label="View Pricing Tiers" title="View pricing tiers">
               <span class="material-symbols-outlined text-[14px] text-on-surface-variant transition-transform duration-300">attach_money</span>
             </button>
             ` : ''}
             <button type="button" class="flex items-center justify-center bg-secondary/10 hover:bg-secondary/20 text-secondary px-2 py-1 rounded-md text-[11px] font-bold transition-colors card-inquire-btn" data-boat-id="${boat.id}" data-boat-name="${escapeHtml(name)}" title="Charter Inquiry">Inquire</button>
-            <button class="flex items-center justify-center bg-green-50 text-green-700 border border-green-200 p-1 rounded-md hover:bg-green-100 transition-colors whatsapp-btn" data-boat-name="${name}" aria-label="Contact on WhatsApp" title="WhatsApp Inquiry">
-              <span class="material-symbols-outlined text-[15px]">chat</span>
+            <button class="flex items-center justify-center bg-green-50 text-green-700 border border-green-200 p-1 rounded-md hover:bg-green-100 transition-colors whatsapp-btn" data-boat-name="${name}" aria-label="Contact on WhatsApp" title="WhatsApp">
+              <span class="material-symbols-outlined text-[14px]">chat</span>
             </button>
-            <a class="flex items-center justify-center bg-secondary text-on-secondary px-2.5 py-1 rounded-md text-[11px] font-bold hover:opacity-90 transition-colors shadow-2xs" href="/boat.html?slug=${slug}" title="View Details">Details</a>
+            <a class="flex items-center justify-center bg-secondary text-on-secondary p-1 rounded-md hover:opacity-90 transition-colors shadow-2xs" href="/boat.html?slug=${slug}" title="View Details">
+              <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </a>
           </div>
         </div>
         
