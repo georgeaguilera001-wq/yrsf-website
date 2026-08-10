@@ -4114,22 +4114,40 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function startAutoSync() {
       if (autoSyncTimer) clearInterval(autoSyncTimer);
-      autoSyncTimer = setInterval(async () => {
-        // Sync unconditionally in the background every 5 minutes
-        await syncAllIcalFeeds(false);
+      
+      const checkSyncHealth = async () => {
+        try {
+          const { data } = await supabase.from('site_settings').select('updated_at').eq('key', 'cached_ical_events').single();
+          if (data && data.updated_at) {
+            window.lastIcalSyncTime = new Date(data.updated_at);
+          }
+        } catch (e) {}
 
-        // Only update UI if the Bookings & Manifest section is visible
         const calView = document.getElementById('booking-calendar-view');
         if (calView && !calView.classList.contains('hidden')) {
-          renderCalendar();
-          // Update last-synced badge
           const badge = document.getElementById('cal-last-synced-badge');
-          if (badge) {
-            const now = new Date();
-            badge.textContent = `🔄 Last synced: ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+          if (badge && window.lastIcalSyncTime) {
+            const minutesSinceSync = (new Date() - window.lastIcalSyncTime) / 60000;
+            if (minutesSinceSync > 20) {
+              badge.className = 'text-[11px] font-extrabold text-red-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 bg-red-500/10 border border-red-500/20 rounded-2xl shadow-2xs';
+              badge.innerHTML = `<span class="material-symbols-outlined text-[14px]">error</span> Sync Failed (${Math.round(minutesSinceSync)}m ago)`;
+              
+              // Only show toast once every 5 minutes if it fails to avoid spam
+              if (!window.lastToastTime || (new Date() - window.lastToastTime) / 60000 > 5) {
+                showToast(`⚠️ Background calendar sync hasn't run in ${Math.round(minutesSinceSync)} minutes. Please check your cron job.`, 'error');
+                window.lastToastTime = new Date();
+              }
+            } else {
+              badge.className = 'text-[11px] font-extrabold text-emerald-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl shadow-2xs';
+              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Last synced: ${window.lastIcalSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+            }
           }
         }
-      }, AUTO_SYNC_INTERVAL_MS);
+      };
+
+      // Run health check every 5 minutes
+      autoSyncTimer = setInterval(checkSyncHealth, AUTO_SYNC_INTERVAL_MS);
+      setTimeout(checkSyncHealth, 2000); // Initial check after 2 seconds
     }
 
     startAutoSync();
@@ -4162,10 +4180,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         bookingsCache = data || [];
 
         try {
-          const { data: cachedSetting } = await supabase.from('site_settings').select('value').eq('key', 'cached_ical_events').single();
+          const { data: cachedSetting } = await supabase.from('site_settings').select('value, updated_at').eq('key', 'cached_ical_events').single();
           if (cachedSetting && cachedSetting.value && Array.isArray(cachedSetting.value) && cachedSetting.value.length > 0) {
             window.externalIcsEvents = deduplicateIcsEvents(cachedSetting.value);
             localStorage.setItem('yrsf_external_ics_events', JSON.stringify(window.externalIcsEvents));
+          }
+          if (cachedSetting && cachedSetting.updated_at) {
+            window.lastIcalSyncTime = new Date(cachedSetting.updated_at);
           }
         } catch (e) {}
 
