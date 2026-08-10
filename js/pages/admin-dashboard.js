@@ -1,4 +1,4 @@
-﻿/**
+/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
@@ -3607,21 +3607,21 @@ return; // Redirect in progress
       const realSel = document.getElementById('cal-boat-filter');
       const currentSelectedId = realSel ? realSel.value : '';
 
-              const allOptionHtml = \
-          <div class="p-2.5 rounded-xl hover:bg-surface-container/80 transition-all flex items-center justify-between cursor-pointer group cal-boat-option-item \" data-id="all" data-name="All Yachts">
-            <div class="flex items-center gap-3 min-w-0 flex-1">
-              <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-surface-container-high flex-shrink-0 border border-outline-variant/60 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform">
-                <span class="material-symbols-outlined text-on-surface-variant text-[24px]">directions_boat</span>
-                \
-              </div>
-              <div class="flex flex-col min-w-0 pr-2 text-left">
-                <span class="font-headline font-extrabold text-on-surface text-sm truncate group-hover:text-secondary transition-colors">All Yachts</span>
-                <span class="text-[11px] text-on-surface-variant font-medium">View entire fleet schedule</span>
-              </div>
+      const allOptionHtml = `
+        <div class="p-2.5 rounded-xl hover:bg-surface-container/80 transition-all flex items-center justify-between cursor-pointer group cal-boat-option-item ${currentSelectedId === 'all' || !currentSelectedId ? 'bg-secondary/10 ring-1 ring-secondary/40 shadow-sm' : ''}" data-id="all" data-name="All Yachts">
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-surface-container-high flex-shrink-0 border border-outline-variant/60 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform">
+              <span class="material-symbols-outlined text-on-surface-variant text-[24px]">directions_boat</span>
+              ${currentSelectedId === 'all' || !currentSelectedId ? `<div class="absolute inset-0 bg-secondary/20 flex items-center justify-center backdrop-blur-[1px]"><span class="material-symbols-outlined text-white text-base drop-shadow-md">check_circle</span></div>` : ''}
+            </div>
+            <div class="flex flex-col min-w-0 pr-2 text-left">
+              <span class="font-headline font-extrabold text-on-surface text-sm truncate group-hover:text-secondary transition-colors">All Yachts</span>
+              <span class="text-[11px] text-on-surface-variant font-medium">View entire fleet schedule</span>
             </div>
           </div>
-        \;
-        targetContainer.innerHTML = allOptionHtml + filtered.map(b => {
+        </div>
+      `;
+      targetContainer.innerHTML = allOptionHtml + filtered.map(b => {
         const isSelected = b.id === currentSelectedId;
         const imgUrl = b.primary_image_url || 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=200&q=80';
         const hasIcal = !!b.ical_feed_url;
@@ -4658,6 +4658,437 @@ return; // Redirect in progress
     const boatFilterEl = document.getElementById('cal-boat-filter');
     let selectedBoatId = boatFilterEl ? boatFilterEl.value : '';
     const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
+
+    if (selectedBoatId && selectedBoatId !== 'all') {
+      boatsWithIcal = boatsWithIcal.filter(b => b.id === selectedBoatId);
+    }
+
+    if (boatsWithIcal.length === 0) {
+      if (showNotification) alert('ℹ️ No active yachts matching your selection have an external iCal (.ics) feed saved yet!\n\nMake sure the selected yacht has an iCal feed URL saved under Fleet Management -> Edit Yacht.');
+      return;
+    }
+
+    const targetName = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : 'TimeTree (one by one)';
+    const syncBtn = document.getElementById('cal-sync-now-btn');
+    const calGrid = document.getElementById('cal-grid');
+    let originalBtnHtml = '';
+    let loaderEl = null;
+
+    if (showNotification && syncBtn) {
+      originalBtnHtml = syncBtn.innerHTML;
+      syncBtn.disabled = true;
+      syncBtn.classList.add('opacity-70');
+      syncBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">sync</span> Syncing ${boatsWithIcal.length === 1 ? 'Selected Yacht' : 'Yachts'}...`;
+    }
+
+    if (showNotification && calGrid) {
+      calGrid.style.position = 'relative';
+      loaderEl = document.createElement('div');
+      loaderEl.id = 'cal-sync-loader';
+      loaderEl.className = 'absolute inset-0 bg-white/70 z-30 flex items-center justify-center flex-col gap-2 backdrop-blur-[1px]';
+      loaderEl.innerHTML = `
+        <div class="w-10 h-10 border-[4px] border-secondary/20 border-t-secondary rounded-full animate-spin"></div>
+        <p class="text-xs font-bold text-secondary uppercase tracking-widest">Syncing ${targetName}...</p>
+      `;
+      calGrid.appendChild(loaderEl);
+    }
+    const targetLabel = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : `${boatsWithIcal.length} yacht(s)`;
+    if (showNotification) showToast(`Syncing calendar feed for ${targetLabel}...`, 'info');
+    
+    if (!window.externalIcsEvents) window.externalIcsEvents = [];
+    window.externalIcsEvents = deduplicateIcsEvents(window.externalIcsEvents);
+    let addedCount = 0;
+    let totalParsedCount = 0;
+    
+    const cutoffDateObj = new Date();
+    cutoffDateObj.setDate(1);
+    cutoffDateObj.setMonth(cutoffDateObj.getMonth() - 1);
+    cutoffDateObj.setHours(0, 0, 0, 0);
+    const cutoffDateStr = cutoffDateObj.toISOString().split('T')[0];
+
+    // Helper: Request deduplication + fast fetcher with 25s timeout to prevent rate-limiting when multiple boats share a feed
+    const inFlightFetches = new Map();
+    const fetchIcsFast = async (url) => {
+      if (inFlightFetches.has(url)) {
+        return await inFlightFetches.get(url);
+      }
+
+      const fetchPromise = (async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 45000);
+
+        const isValidContent = (txt) => {
+          if (!txt) return false;
+          const trimmed = txt.trim();
+          return trimmed.toUpperCase().includes('BEGIN:VEVENT') || trimmed.startsWith('[') || trimmed.startsWith('{');
+        };
+
+        const fetchDirect = async () => {
+          const res = await fetch(url, { signal: controller.signal });
+          if (res.ok) {
+            const text = await res.text();
+            if (isValidContent(text)) return text;
+          }
+          throw new Error('Direct failed');
+        };
+
+        const fetchSupabaseRpc = async () => {
+          const { data: rpcText, error: rpcErr } = await supabase.rpc('fetch_external_url', { target_url: url });
+          if (!rpcErr && isValidContent(rpcText)) return rpcText;
+          throw new Error('Supabase RPC failed');
+        };
+
+        const fetchAllOrigins = async () => {
+          const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: controller.signal });
+          if (res.ok) {
+            const json = await res.json();
+            if (json && isValidContent(json.contents)) return json.contents;
+          }
+          throw new Error('AllOrigins failed');
+        };
+
+        const fetchCodetabs = async () => {
+          const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, { signal: controller.signal });
+          if (res.ok) {
+            const text = await res.text();
+            if (isValidContent(text)) return text;
+          }
+          throw new Error('Codetabs failed');
+        };
+
+        try {
+          const result = await Promise.any([fetchDirect(), fetchSupabaseRpc(), fetchAllOrigins(), fetchCodetabs()]);
+          clearTimeout(timeout);
+          return result;
+        } catch (err) {
+          clearTimeout(timeout);
+          return null;
+        }
+      })();
+
+      inFlightFetches.set(url, fetchPromise);
+      return await fetchPromise;
+    };
+
+    // Process boats sequentially to eliminate burst rate limiting and share requests via inFlightFetches
+    for (const boat of boatsWithIcal) {
+      try {
+        let syncSucceeded = false;
+        const parsedEventsForBoat = [];
+        const rawUrls = (boat.ical_feed_url || '').split(/[\r\n,;]+/).map(u => u.trim()).filter(Boolean);
+
+        await Promise.all(rawUrls.map(async (url) => {
+          const expandCandidateUrls = (u) => {
+            u = u.trim().replace(/^(webcal|ical):\/\//i, 'https://');
+            if (u.includes('yrsf-timetree-bridge.onrender.com')) {
+              u = u.replace('yrsf-timetree-bridge.onrender.com', 'yrsf-website.onrender.com');
+            }
+            const list = [];
+            const cleanCode = u.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+            let extractedCode = cleanCode;
+            const ttMatch = u.match(/(?:public_calendars|calendars|calendar|c=)\/([a-zA-Z0-9_-]+)/i) || u.match(/[?&]c=([a-zA-Z0-9_-]+)/i);
+            if (ttMatch && ttMatch[1]) {
+              extractedCode = ttMatch[1];
+            }
+            if (/^[a-zA-Z0-9_-]{4,35}$/.test(extractedCode)) {
+              // 1. Primary YRSF Render Proxy Endpoint
+              list.push(`https://yrsf-website.onrender.com/timetree.ics?c=${extractedCode}`);
+              // 2. Fallback Render proxy endpoints
+              list.push(`https://renderon.com/${extractedCode}`);
+              list.push(`https://renderon.com/calendar/${extractedCode}`);
+              list.push(`https://renderon.com/ics/${extractedCode}`);
+              // 3. TimeTree public endpoints
+              list.push(`https://timetreeapp.com/public_calendars/${extractedCode}.ics`);
+              list.push(`https://timetreeapp.com/calendars/${extractedCode}.ics`);
+              list.push(`https://api.timetreeapp.com/v1/calendars/${extractedCode}/events.ics`);
+              list.push(`https://timetreeapp.com/public_calendars/${extractedCode}/events.ics`);
+            }
+            if (!u.startsWith('http://') && !u.startsWith('https://') && !/^[a-zA-Z0-9_-]{4,35}$/.test(u)) {
+              u = 'https://' + u;
+            }
+            if (u.startsWith('http://') || u.startsWith('https://')) {
+              list.push(u);
+            }
+            if ((u.includes('timetreeapp.com') || u.includes('render')) && !u.endsWith('.ics') && !u.includes('?')) {
+              const clean = u.replace(/\/$/, '');
+              list.push(clean + '.ics');
+              list.push(clean + '/events.ics');
+              list.push(clean + '/ics');
+            }
+            return Array.from(new Set(list));
+          };
+
+          const candidates = expandCandidateUrls(url);
+          let text = null;
+          
+          // Race all candidate endpoints simultaneously so if proxies or direct URLs work, it resolves as fast as possible
+          const results = await Promise.all(candidates.map(c => fetchIcsFast(c)));
+          text = results.find(t => t && (t.toUpperCase().includes('BEGIN:VEVENT') || t.trim().startsWith('[') || t.trim().startsWith('{')));
+          if (text) {
+            syncSucceeded = true;
+          }
+
+          if (!text) {
+            console.warn(`Could not fetch valid iCal data for ${boat.name} from any candidate URL of: ${url}`);
+            return;
+          }
+
+          // If Render backend proxy returned JSON
+          if (text.trim().startsWith('[') || text.trim().startsWith('{')) {
+            try {
+              const parsed = JSON.parse(text);
+              // Case 1: JSON wraps an .ics string (e.g. { "ics": "BEGIN:VCALENDAR..." })
+              if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+                let foundIcsStr = false;
+                for (const val of Object.values(parsed)) {
+                  if (typeof val === 'string' && val.includes('BEGIN:VEVENT')) {
+                    text = val; // Unwrap .ics string and fall through to iCal parser!
+                    foundIcsStr = true;
+                    break;
+                  }
+                }
+                if (foundIcsStr) {
+                  // Continue below to standard iCal parsing
+                } else {
+                  // Case 2: JSON wraps an array of event objects
+                  let evList = [];
+                  if (Array.isArray(parsed)) {
+                    evList = parsed;
+                  } else {
+                    for (const val of Object.values(parsed)) {
+                      if (Array.isArray(val)) {
+                        evList = val;
+                        break;
+                      }
+                    }
+                  }
+                  for (const ev of evList) {
+                    totalParsedCount++;
+                    const dt = ev.date || ev.startDate || ev.start_date || (ev.start ? String(ev.start).split('T')[0] : null) || ev.booking_date;
+                    if (!dt || dt < cutoffDateStr) continue;
+                    let tm = ev.time || ev.startTime || ev.start_time || 'All Day';
+                    if (ev.start && String(ev.start).includes('T')) {
+                      tm = String(ev.start).split('T')[1].substring(0, 5);
+                    }
+                    const cust = ev.summary || ev.title || ev.name || ev.customer || ev.customer_name || boat.ical_feed_label || 'External Booking';
+                    parsedEventsForBoat.push({
+                      id: 'ics_' + Math.random().toString(36).substr(2, 9),
+                      boat_id: boat.id,
+                      boat_name: boat.name,
+                      booking_date: dt,
+                      start_time: tm,
+                      status: 'external',
+                      customer_name: cust,
+                      source_label: boat.ical_feed_label || 'Render Sync'
+                    });
+                    addedCount++;
+                  }
+                  return;
+                }
+              } else if (Array.isArray(parsed)) {
+                for (const ev of parsed) {
+                  totalParsedCount++;
+                  const dt = ev.date || ev.startDate || ev.start_date || (ev.start ? String(ev.start).split('T')[0] : null) || ev.booking_date;
+                  if (!dt || dt < cutoffDateStr) continue;
+                  let tm = ev.time || ev.startTime || ev.start_time || 'All Day';
+                  if (ev.start && String(ev.start).includes('T')) {
+                    tm = String(ev.start).split('T')[1].substring(0, 5);
+                  }
+                  const cust = ev.summary || ev.title || ev.name || ev.customer || ev.customer_name || boat.ical_feed_label || 'External Booking';
+                  parsedEventsForBoat.push({
+                    id: 'ics_' + Math.random().toString(36).substr(2, 9),
+                    boat_id: boat.id,
+                    boat_name: boat.name,
+                    booking_date: dt,
+                    start_time: tm,
+                    status: 'external',
+                    customer_name: cust,
+                    source_label: boat.ical_feed_label || 'Render Sync'
+                  });
+                  addedCount++;
+                }
+                return;
+              }
+            } catch (e) {}
+          }
+
+          // Unfold folded lines (RFC 5545 line folding)
+          const cleanText = text.replace(/\r?\n[ \t]/g, '');
+          const blocks = cleanText.split('BEGIN:VEVENT');
+          for (let i = 1; i < blocks.length; i++) {
+            const b = blocks[i].split('END:VEVENT')[0];
+            const sumMatch = b.match(/SUMMARY[^\r\n:]*:(.*)/i);
+            const summaryText = sumMatch ? sumMatch[1].trim() : '';
+
+            let filterKeyword = '';
+            if (boat.ical_feed_label) {
+              const lblStr = boat.ical_feed_label.trim();
+              const lowerLbl = lblStr.toLowerCase();
+              if (lowerLbl.startsWith('filter:') || lowerLbl.startsWith('match:') || lowerLbl.startsWith('keyword:') || lowerLbl.startsWith('only:')) {
+                filterKeyword = lblStr.substring(lblStr.indexOf(':') + 1).trim().toLowerCase();
+              }
+            }
+
+            if (filterKeyword) {
+              const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+              const normSummary = normalize(summaryText);
+              const normKeyword = normalize(filterKeyword);
+              if (normKeyword && !normSummary.includes(normKeyword)) {
+                continue;
+              }
+            }
+            totalParsedCount++;
+
+            const formatIcsTime = (timeDigits) => {
+              if (!timeDigits || timeDigits.length < 4) return '';
+              let h = parseInt(timeDigits.substring(0, 2), 10);
+              const m = timeDigits.substring(2, 4);
+              const ampm = h >= 12 ? 'PM' : 'AM';
+              h = h % 12;
+              if (h === 0) h = 12;
+              return `${h}:${m} ${ampm}`;
+            };
+
+            const startMatch = b.match(/DTSTART[^\r\n:]*:(\d{8})(?:T(\d{4,6}))?/i) || b.match(/DTSTART[^\d]*(\d{8})(?:T(\d{4,6}))?/i);
+            const endMatch = b.match(/DTEND[^\r\n:]*:(\d{8})(?:T(\d{4,6}))?/i) || b.match(/DTEND[^\d]*(\d{8})(?:T(\d{4,6}))?/i);
+            if (startMatch && startMatch[1]) {
+              const dtStr = startMatch[1];
+              const startDateFormatted = `${dtStr.substring(0,4)}-${dtStr.substring(4,6)}-${dtStr.substring(6,8)}`;
+
+              let datesToPush = [startDateFormatted];
+              if (endMatch && endMatch[1]) {
+                const endDtStr = endMatch[1];
+                const endDateFormatted = `${endDtStr.substring(0,4)}-${endDtStr.substring(4,6)}-${endDtStr.substring(6,8)}`;
+                if (endDateFormatted > startDateFormatted) {
+                  let curDate = new Date(startDateFormatted + 'T12:00:00');
+                  const endDate = new Date(endDateFormatted + 'T12:00:00');
+                  datesToPush = [];
+                  let daysCount = 0;
+                  while (curDate <= endDate && daysCount < 14) {
+                    datesToPush.push(curDate.toISOString().split('T')[0]);
+                    curDate.setDate(curDate.getDate() + 1);
+                    daysCount++;
+                  }
+                  if (!startMatch[2] && datesToPush.length > 1) {
+                    datesToPush.pop();
+                  }
+                }
+              }
+
+              let startTimeFormatted = 'All Day';
+              let endTimeFormatted = '';
+              if (startMatch[2]) {
+                startTimeFormatted = formatIcsTime(startMatch[2]);
+                if (endMatch && endMatch[2]) {
+                  endTimeFormatted = formatIcsTime(endMatch[2]);
+                }
+              }
+              const displayTime = endTimeFormatted ? `${startTimeFormatted} - ${endTimeFormatted}` : startTimeFormatted;
+
+              for (const dateFormatted of datesToPush) {
+                if (dateFormatted < cutoffDateStr) continue;
+                const custName = summaryText || (boat.ical_feed_label || 'External Block');
+                
+               const isDup = parsedEventsForBoat.some(ex =>
+                  ex.booking_date === dateFormatted &&
+                  ex.start_time === displayTime &&
+                  ex.customer_name === custName
+                );
+                if (isDup) continue;
+
+                parsedEventsForBoat.push({
+                  id: 'ics_' + Math.random().toString(36).substr(2, 9),
+                  boat_id: boat.id,
+                  boat_name: boat.name,
+                  booking_date: dateFormatted,
+                  start_time: displayTime,
+                  status: 'external',
+                  customer_name: custName,
+                  source_label: filterKeyword ? 'TimeTree Sync' : (boat.ical_feed_label || 'External iCal')
+                });
+                addedCount++;
+              }
+            }
+          }
+        }));
+        if (syncSucceeded) {
+          window.externalIcsEvents = window.externalIcsEvents.filter(e => e.boat_id !== boat.id).concat(parsedEventsForBoat);
+        }
+      } catch (err) {
+        console.warn('Could not sync iCal for boat ' + boat.name, err);
+      }
+    }
+      
+    try {
+      window.externalIcsEvents = deduplicateIcsEvents(window.externalIcsEvents);
+      localStorage.setItem('yrsf_external_ics_events', JSON.stringify(window.externalIcsEvents));
+      await supabase.from('site_settings').upsert({
+        key: 'cached_ical_events',
+        value: window.externalIcsEvents,
+        updated_at: new Date().toISOString()
+      });
+    } catch (e) {}
+
+    if (showNotification) {
+      if (addedCount > 0) {
+        showToast(`✓ Synced ${addedCount} new calendar event(s) successfully!`, 'success');
+      } else if (totalParsedCount > 0) {
+        showToast(`✓ Calendar is already up to date!`, 'success');
+      } else {
+        const targetBoatName = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : 'selected yachts';
+        showToast(`⚠️ 0 events found for ${targetBoatName}. Make sure the TimeTree iCal secret link (.ics) is valid and set to public share.`, 'warning', 6000);
+      }
+    }
+    if (showNotification && syncBtn) {
+      syncBtn.disabled = false;
+      syncBtn.classList.remove('opacity-70');
+      syncBtn.innerHTML = originalBtnHtml;
+    }
+    if (showNotification && loaderEl && loaderEl.parentNode) {
+      loaderEl.parentNode.removeChild(loaderEl);
+    }
+    renderCalendar();
+  }
+
+  const timeStringToMinutes = (timeStr) => {
+    if (!timeStr || timeStr.toLowerCase().includes('all day')) return 0;
+    const firstPart = timeStr.split('-')[0].trim();
+    const match = firstPart.match(/(\d+):?(\d*)\s*(AM|PM)/i);
+    if (!match) return 9999;
+    let h = parseInt(match[1], 10);
+    const m = match[2] ? parseInt(match[2], 10) : 0;
+    const ampm = match[3].toUpperCase();
+    if (ampm === 'PM' && h !== 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    return h * 60 + m;
+  };
+
+  function renderCalendar() {
+    const grid = document.getElementById('cal-grid');
+    const title = document.getElementById('cal-month-title');
+    if (!grid || !title) return;
+
+    if (!window.externalIcsEvents || window.externalIcsEvents.length === 0) {
+      try {
+        const saved = localStorage.getItem('yrsf_external_ics_events');
+        if (saved) window.externalIcsEvents = JSON.parse(saved);
+      } catch (e) {}
+      if (!window.externalIcsEvents) window.externalIcsEvents = [];
+    }
+
+    const boatFilterEl = document.getElementById('cal-boat-filter');
+    let selectedBoatId = boatFilterEl ? boatFilterEl.value : '';
+    const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
+    const isMobileView = window.innerWidth < 1024;
+    if (!window._hasCalResizeListener) {
+      window.addEventListener('resize', () => {
+        if (document.getElementById('section-bookings') && !document.getElementById('section-bookings').classList.contains('hidden')) {
+          renderCalendar();
+        }
+      });
+      window._hasCalResizeListener = true;
+    }
+
 
 
     const year = calCurrentDate.getFullYear();
@@ -6237,9 +6668,5 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
 
 // CACHE BUSTER: 20260810124601
-
-
-
-
 
 
