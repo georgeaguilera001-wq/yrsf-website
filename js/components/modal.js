@@ -10,7 +10,7 @@ let currentModal = null;
  * @returns {Function} Close function
  */
 export function openModal(contentHtml, options = {}) {
-  const { maxWidth = '560px', onClose = null, closeOnOverlay = true } = options;
+  const { maxWidth = '560px', onClose = null, closeOnOverlay = true, noPadding = false } = options;
 
   // Close any existing modal
   closeModal();
@@ -18,7 +18,7 @@ export function openModal(contentHtml, options = {}) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
-    <div class="modal-content p-4 md:p-6" style="max-width: ${maxWidth}; width: calc(100% - 32px); margin: 16px;">
+    <div class="modal-content ${noPadding ? 'p-0 overflow-hidden' : 'p-4 md:p-6'}" style="max-width: ${maxWidth}; width: calc(100% - 32px); margin: 16px;">
       ${contentHtml}
     </div>
   `;

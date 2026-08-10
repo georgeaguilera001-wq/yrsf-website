@@ -7,6 +7,7 @@ import { isFavorite, toggleFavorite } from '../utils/favorites.js';
 import { contactOnWhatsApp } from '../utils/share.js';
 import { formatPrice, escapeHtml, placeholderSrc } from '../utils/dom.js';
 import { openInquiryModal } from './inquiry-modal.js';
+import { showBoatLocationMap } from './location-map-modal.js';
 
 function priceMatchesDay(p, dayCode) {
   const label = (p.duration_label || '').toLowerCase();
@@ -150,7 +151,7 @@ export function renderBoatCard(boat, options = {}) {
         <div class="flex flex-wrap items-center gap-2 text-[10px] text-on-surface-variant mb-2">
           ${boat.length_ft ? `<span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">straighten</span>${boat.length_ft}ft</span>` : ''}
           ${boat.capacity ? `<span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">group</span>${boat.capacity} guests</span>` : ''}
-          ${boat.location ? `<span class="flex items-center gap-0.5 truncate max-w-[110px]"><span class="material-symbols-outlined text-[12px]">location_on</span>${escapeHtml(boat.location)}</span>` : ''}
+          ${boat.location ? `<button class="flex items-center gap-0.5 truncate max-w-[110px] text-left hover:text-secondary transition-colors cursor-pointer" onclick="window.__showBoatLocationMap('${escapeHtml(boat.name)}', '${escapeHtml(boat.location)}')"><span class="material-symbols-outlined text-[12px]">location_on</span><span class="truncate">${escapeHtml(boat.location)}</span></button>` : ''}
         </div>
 
         ${hasPrices ? `
@@ -201,6 +202,9 @@ export function renderBoatCard(boat, options = {}) {
  */
 export function initBoatCards(container) {
   if (!container) return;
+
+  // Expose location map globally for inline onclick handlers
+  window.__showBoatLocationMap = (name, address) => showBoatLocationMap(name, address);
 
   // Favorite buttons
   container.querySelectorAll('.favorite-btn').forEach(btn => {
