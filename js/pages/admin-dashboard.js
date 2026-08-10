@@ -975,7 +975,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           </div>
           
-          <div class="flex justify-end gap-3 pt-md border-t border-outline-variant">
+          <div class="flex justify-end gap-3 pt-md border-t border-outline-variant sticky bottom-0 bg-white p-4 -mx-4 md:-mx-6 -mb-4 md:-mb-6 mt-6 rounded-b-2xl shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-20">
             <button type="button" class="px-6 py-2 border border-outline-variant rounded-lg font-label text-label-md hover:bg-surface-container transition-colors" id="cancel-boat-edit">Cancel</button>
             <button type="submit" class="bg-secondary text-on-secondary px-6 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
               <span class="material-symbols-outlined text-[18px]">save</span> ${isNew ? 'Create Yacht' : 'Save Changes'}
