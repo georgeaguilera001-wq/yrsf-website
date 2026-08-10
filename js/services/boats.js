@@ -155,7 +155,7 @@ export async function getFeaturedBoats(limit = 6) {
         boat_prices(price, duration_label)
       `)
       .eq('status', 'active')
-      .eq('is_featured', true)
+      .or('is_featured.eq.true,is_best_seller.eq.true')
       .order('sort_order', { ascending: true })
       .limit(limit);
 
