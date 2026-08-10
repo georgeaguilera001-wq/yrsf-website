@@ -56,6 +56,12 @@
       window.initialHeroSettings = s;
     } catch(e){}
 </script>
+  <script>
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  </script>
 </head>
 <body class="bg-background text-on-surface">
 <div id="navbar-container"></div>
