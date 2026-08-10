@@ -262,10 +262,22 @@ module.exports = async (req, res) => {
       }
     }
 
+    // Merge oldEvents and deduped to prevent wiping the cache if a boat feed fails to load temporarily
+    const mergedEvents = [...oldEvents];
+    const mergedKeys = new Set(mergedEvents.map(ev => `${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`));
+    
+    for (const ev of deduped) {
+      const key = `${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`;
+      if (!mergedKeys.has(key)) {
+        mergedEvents.push(ev);
+        mergedKeys.add(key);
+      }
+    }
+
     // Update site_settings
     const { error: cacheErr } = await supabase.from('site_settings').upsert({
       key: 'cached_ical_events',
-      value: deduped,
+      value: mergedEvents,
       updated_at: new Date().toISOString()
     });
     if (cacheErr) console.error('Failed to update cached_ical_events:', cacheErr);
