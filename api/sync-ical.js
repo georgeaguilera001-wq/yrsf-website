@@ -11,7 +11,6 @@ webpush.setVapidDetails(
 );
 
 // Initialize Supabase Client
-// We use the service role key if available for admin privileges, otherwise anon key
 const supabaseUrl = process.env.SUPABASE_URL || 'https://udacadmmeyvykiiptsvb.supabase.co';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkYWNhZG1tZXl2eWtpaXB0c3ZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MzY1MzAsImV4cCI6MjA5ODMxMjUzMH0.8cPpGjkEZ7WgChuwwovbK9rhjHRClnIElyygYABycR8';
 
@@ -24,8 +23,6 @@ module.exports = async (req, res) => {
   }
 
   try {
-    console.log('Starting iCal Background Sync...');
-
     // 1. Fetch active boats with iCal feeds
     const { data: fleetCache, error: fleetErr } = await supabase
       .from('boats')
@@ -41,7 +38,7 @@ module.exports = async (req, res) => {
     }
 
     let externalIcsEvents = [];
-    let addedCount = 0;
+    const successfulBoatIds = new Set();
     
     const cutoffDateObj = new Date();
     cutoffDateObj.setDate(1);
@@ -74,6 +71,7 @@ module.exports = async (req, res) => {
       inFlightFetches.set(url, fetchPromise);
       return await fetchPromise;
     };
+
     await Promise.all(boatsWithIcal.map(async (boat) => {
       try {
         const parsedEventsForBoat = [];
@@ -113,6 +111,8 @@ module.exports = async (req, res) => {
             continue;
           }
 
+          successfulBoatIds.add(boat.id);
+
           // Very simple iCal parser for Node
           const cleanText = text.replace(/\r?\n[ \t]/g, '');
           const blocks = cleanText.split('BEGIN:VEVENT');
@@ -121,6 +121,13 @@ module.exports = async (req, res) => {
             const b = blocks[i].split('END:VEVENT')[0];
             const sumMatch = b.match(/SUMMARY[^\r\n:]*:(.*)/i);
             const summaryText = sumMatch ? sumMatch[1].trim() : '';
+
+            // Extract stable identity fields
+            const uidMatch = b.match(/UID[^\r\n:]*:(.*)/i);
+            const uidStr = uidMatch ? uidMatch[1].trim() : '';
+            
+            const recMatch = b.match(/RECURRENCE-ID[^\r\n:]*:(.*)/i);
+            const recStr = recMatch ? recMatch[1].trim() : '';
             
             let filterKeyword = '';
             if (boat.ical_feed_label) {
@@ -163,17 +170,28 @@ module.exports = async (req, res) => {
               
               const custName = summaryText || (boat.ical_feed_label || 'External Block');
 
+              // Compose stable external_id
+              let external_id = uidStr;
+              if (recStr) {
+                external_id += '_' + recStr;
+              }
+              
+              // Fallback for providers that completely omit UID (very rare, but possible)
+              if (!external_id) {
+                external_id = `fb_${boat.id}_${startDateFormatted}_${startTimeFormatted}_${custName}`;
+              }
+
               parsedEventsForBoat.push({
                 id: 'ics_' + Math.random().toString(36).substr(2, 9),
                 boat_id: boat.id,
                 boat_name: boat.name,
+                external_id: external_id,
                 booking_date: startDateFormatted,
                 start_time: startTimeFormatted,
                 status: 'external',
                 customer_name: custName,
                 source_label: filterKeyword ? 'TimeTree Sync' : (boat.ical_feed_label || 'External iCal')
               });
-              addedCount++;
             }
           }
         }
@@ -183,33 +201,44 @@ module.exports = async (req, res) => {
       }
     }));
 
-    // Deduplicate exact matches
+    // Deduplicate exact matches using the stable external_id
     const deduped = [];
     const seen = new Set();
     for (const ev of externalIcsEvents) {
-      const key = `${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`;
+      const key = `${ev.boat_id}_${ev.external_id}`;
       if (!seen.has(key)) {
         seen.add(key);
         deduped.push(ev);
       }
     }
 
-    // Identify truly NEW reservations (only if we already had a cache, to avoid spamming on first run)
+    // Identify truly NEW reservations relative to the DB
     const { data: cachedSetting } = await supabase.from('site_settings').select('value').eq('key', 'cached_ical_events').single();
     const oldEvents = (cachedSetting && cachedSetting.value && Array.isArray(cachedSetting.value)) ? cachedSetting.value : [];
     
     let newNotificationsCreated = 0;
+    let existingEventsCount = 0;
+    const trulyNewEvents = [];
+    
+    const oldEventKeys = new Set();
+    oldEvents.forEach(ev => {
+      const extId = ev.external_id || `fb_${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`;
+      oldEventKeys.add(`${ev.boat_id}_${extId}`);
+    });
+
     if (oldEvents.length > 0) {
-      const oldEventKeys = new Set(oldEvents.map(ev => `${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`));
-      
       const { data: notifSetting } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
       let adminNotifications = (notifSetting && notifSetting.value && Array.isArray(notifSetting.value)) ? notifSetting.value : [];
       
-      // Find events in deduped that are NOT in oldEvents
-      const trulyNewEvents = deduped.filter(ev => {
-        const key = `${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`;
-        return !oldEventKeys.has(key);
-      });
+      // Determine what is new
+      for (const ev of deduped) {
+        const key = `${ev.boat_id}_${ev.external_id}`;
+        if (oldEventKeys.has(key)) {
+          existingEventsCount++;
+        } else {
+          trulyNewEvents.push(ev);
+        }
+      }
 
       for (const newEv of trulyNewEvents) {
         // Format date beautifully (e.g. "Aug 15")
@@ -251,28 +280,25 @@ module.exports = async (req, res) => {
             });
             
             const pushPromises = subscriptions.map(sub => 
-              webpush.sendNotification(sub, payload).catch(err => {
-                console.error('Push error to an endpoint:', err.statusCode);
-                // In a production app, we would remove 410 Gone subscriptions here
-              })
+              webpush.sendNotification(sub, payload).catch(err => {})
             );
             await Promise.all(pushPromises);
           }
         }
       }
+    } else {
+      // First sync ever - count as new but don't notify to prevent spam
+      trulyNewEvents.push(...deduped);
     }
 
-    // Merge oldEvents and deduped to prevent wiping the cache if a boat feed fails to load temporarily
-    const mergedEvents = [...oldEvents];
-    const mergedKeys = new Set(mergedEvents.map(ev => `${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`));
+    // Handle Cache Merging (Deletions strategy)
+    // Retain events for boats that were NOT synced this round (e.g., api failure, disconnected)
+    const retainedOldEvents = oldEvents.filter(ev => !successfulBoatIds.has(ev.boat_id));
+    const oldEventsForSuccessfulBoatsCount = oldEvents.length - retainedOldEvents.length;
     
-    for (const ev of deduped) {
-      const key = `${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`;
-      if (!mergedKeys.has(key)) {
-        mergedEvents.push(ev);
-        mergedKeys.add(key);
-      }
-    }
+    // Add all deduped events which represents the absolute state of successful feeds
+    const mergedEvents = [...retainedOldEvents, ...deduped];
+    const deletedEventsCount = Math.max(0, oldEventsForSuccessfulBoatsCount - existingEventsCount);
 
     // Update site_settings
     const { error: cacheErr } = await supabase.from('site_settings').upsert({
@@ -282,8 +308,22 @@ module.exports = async (req, res) => {
     });
     if (cacheErr) console.error('Failed to update cached_ical_events:', cacheErr);
 
-    console.log(`Successfully synced ${deduped.length} total events. Generated ${newNotificationsCreated} notifications.`);
-    return res.status(200).json({ success: true, eventsCount: deduped.length, newEvents: addedCount });
+    // Server-side Logging
+    console.log('\n--- Calendar Sync Started ---');
+    console.log(`Boats processed: ${successfulBoatIds.size} / ${boatsWithIcal.length}`);
+    console.log(`Events fetched: ${deduped.length}`);
+    console.log(`Existing events: ${existingEventsCount}`);
+    console.log(`New events: ${trulyNewEvents.length}`);
+    console.log(`Updated events: 0 (Handled implicitly via cache replacement)`);
+    console.log(`Deleted events: ${deletedEventsCount}`);
+    console.log(`Notifications sent: ${newNotificationsCreated}`);
+    if (trulyNewEvents.length > 0) {
+      console.log('\nNew events discovered:');
+      trulyNewEvents.forEach(ev => console.log(`- ${ev.customer_name} (external ID: ${ev.external_id})`));
+    }
+    console.log('-----------------------------\n');
+
+    return res.status(200).json({ success: true, eventsCount: deduped.length, newEvents: trulyNewEvents.length });
 
   } catch (error) {
     console.error('Auto-sync Error:', error);
