@@ -4236,6 +4236,42 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
               }
             }
+
+            // After reconciling the local store, check for unread notifications
+            // and show persistent toasts for those that haven't been dismissed
+            const unreadNotifs = localNotifs.filter(n => !n.read);
+            unreadNotifs.forEach(n => {
+              // Ensure we don't pop up the same toast if it's already on screen
+              if (!window.activePersistentToasts) window.activePersistentToasts = new Set();
+              if (!window.activePersistentToasts.has(n.id)) {
+                window.activePersistentToasts.add(n.id);
+                if (typeof showToast === 'function') {
+                  showToast(`<strong>${n.title}</strong><br/>${n.message}`, 'info', 0, {
+                    onDismiss: async () => {
+                      window.activePersistentToasts.delete(n.id);
+                      n.read = true;
+                      
+                      // 1. Update localStorage instantly
+                      localStorage.setItem('yrsf_admin_notifications', JSON.stringify(localNotifs));
+                      if (typeof window.updateGlobalNotifications === 'function') {
+                        window.updateGlobalNotifications(localNotifs);
+                      }
+
+                      // 2. Clear from backend so it doesn't pop up on other devices/refreshes
+                      try {
+                        const { data: dbData } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
+                        if (dbData && Array.isArray(dbData.value)) {
+                          const updatedList = dbData.value.map(dbN => dbN.id === n.id ? { ...dbN, read: true } : dbN);
+                          await supabase.from('site_settings').update({ value: updatedList }).eq('key', 'admin_notifications');
+                        }
+                      } catch (err) {
+                        console.error('Failed to mark notification as read in DB', err);
+                      }
+                    }
+                  });
+                }
+              }
+            });
             
             if (addedNew) {
               if (localNotifs.length > 50) localNotifs = localNotifs.slice(0, 50);
