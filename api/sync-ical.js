@@ -10,19 +10,39 @@ webpush.setVapidDetails(
   VAPID_PRIVATE_KEY
 );
 
-// Initialize Supabase Client
 const supabaseUrl = process.env.SUPABASE_URL || 'https://udacadmmeyvykiiptsvb.supabase.co';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkYWNhZG1tZXl2eWtpaXB0c3ZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MzY1MzAsImV4cCI6MjA5ODMxMjUzMH0.8cPpGjkEZ7WgChuwwovbK9rhjHRClnIElyygYABycR8';
-
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 module.exports = async (req, res) => {
-  // Allow GET and POST for cron jobs
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // --- GLOBAL EXECUTION MUTEX ---
+  const lockKey = 'ical_sync_execution_lock';
+  const lockTime = Date.now();
+  let lockAcquired = false;
+
   try {
+    const { error: lockErr } = await supabase.from('site_settings').insert({
+      key: lockKey,
+      value: { time: lockTime }
+    });
+
+    if (lockErr) {
+      // Lock already exists. Check if it's stale (> 60 seconds)
+      const { data: existingLock } = await supabase.from('site_settings').select('value').eq('key', lockKey).single();
+      if (existingLock && existingLock.value && (lockTime - existingLock.value.time) < 60000) {
+        console.log('Concurrent sync in progress. Aborting to prevent race conditions.');
+        return res.status(429).json({ message: 'Concurrent sync in progress. Aborted.' });
+      }
+      // Lock is stale. Overtake it safely.
+      await supabase.from('site_settings').update({ value: { time: lockTime } }).eq('key', lockKey);
+    }
+    
+    lockAcquired = true;
+
     // 1. Fetch active boats with iCal feeds
     const { data: fleetCache, error: fleetErr } = await supabase
       .from('boats')
@@ -32,7 +52,6 @@ module.exports = async (req, res) => {
     if (fleetErr) throw fleetErr;
 
     const boatsWithIcal = fleetCache.filter(b => b.ical_feed_url);
-    
     if (boatsWithIcal.length === 0) {
       return res.status(200).json({ message: 'No active yachts with iCal feeds found.' });
     }
@@ -58,7 +77,6 @@ module.exports = async (req, res) => {
           clearTimeout(timeout);
           if (fetchRes.ok) {
             const text = await fetchRes.text();
-            // Audit Fix #2: Valid empty calendars contain BEGIN:VCALENDAR but no VEVENT
             if (text && (text.toUpperCase().includes('BEGIN:VCALENDAR') || text.trim().startsWith('[') || text.trim().startsWith('{'))) {
               return text;
             }
@@ -105,7 +123,6 @@ module.exports = async (req, res) => {
 
           // Race candidates
           const results = await Promise.all(candidates.map(c => fetchIcsDirect(c)));
-          // Audit Fix #2: Allow BEGIN:VCALENDAR to mark fetch as successful
           text = results.find(t => t && (t.toUpperCase().includes('BEGIN:VCALENDAR') || t.trim().startsWith('[') || t.trim().startsWith('{')));
 
           if (!text) {
@@ -115,7 +132,7 @@ module.exports = async (req, res) => {
 
           successfulBoatIds.add(boat.id);
 
-          // Very simple iCal parser for Node
+          // Remove line folding
           const cleanText = text.replace(/\r?\n[ \t]/g, '');
           const blocks = cleanText.split('BEGIN:VEVENT');
           
@@ -178,7 +195,6 @@ module.exports = async (req, res) => {
                 external_id += '_' + recStr;
               }
               
-              // Fallback for providers that completely omit UID (very rare, but possible)
               if (!external_id) {
                 external_id = `fb_${boat.id}_${startDateFormatted}_${startTimeFormatted}_${custName}`;
               }
@@ -214,33 +230,46 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Identify truly NEW reservations relative to the DB
     const { data: cachedSetting } = await supabase.from('site_settings').select('value').eq('key', 'cached_ical_events').single();
     const oldEvents = (cachedSetting && cachedSetting.value && Array.isArray(cachedSetting.value)) ? cachedSetting.value : [];
     
     let newNotificationsCreated = 0;
     let existingEventsCount = 0;
+    let retriedEventsCount = 0;
+    
     const trulyNewEvents = [];
     const eventsToNotify = [];
     
-    const oldEventKeys = new Set();
+    const oldEventKeys = new Map();
     const boatsWithHistory = new Set();
     oldEvents.forEach(ev => {
       boatsWithHistory.add(ev.boat_id);
       const extId = ev.external_id || `fb_${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`;
-      oldEventKeys.add(`${ev.boat_id}_${extId}`);
+      oldEventKeys.set(`${ev.boat_id}_${extId}`, ev);
     });
 
-    // Determine what is new
+    // Determine what is new or needs a retry
     for (const ev of deduped) {
       const key = `${ev.boat_id}_${ev.external_id}`;
       if (oldEventKeys.has(key)) {
         existingEventsCount++;
+        const existingEv = oldEventKeys.get(key);
+        ev.notified = existingEv.notified !== false; // Persist notified state safely
+        
+        if (ev.notified === false && boatsWithHistory.has(ev.boat_id)) {
+          // Event exists, but previous notification failed. Queue for retry!
+          eventsToNotify.push(ev);
+          retriedEventsCount++;
+        }
       } else {
         trulyNewEvents.push(ev);
-        // Audit Fix #1: First-sync detection is scoped per-boat
+        ev.notified = false; // Intentionally set false until the notification block completes
+        
         if (boatsWithHistory.has(ev.boat_id)) {
           eventsToNotify.push(ev);
+        } else {
+          // First time sync for this boat. Silent import, bypass notifications permanently.
+          ev.notified = true; 
         }
       }
     }
@@ -253,75 +282,61 @@ module.exports = async (req, res) => {
       const subscriptions = (subSettings && subSettings.value && Array.isArray(subSettings.value)) ? subSettings.value : [];
       
       for (const newEv of eventsToNotify) {
-        // Audit Fix #3: Atomic lock for concurrent notifications
-        const lockKey = `notif_lock_${newEv.boat_id}_${newEv.external_id}`;
-        const { error: lockErr } = await supabase.from('site_settings').insert({
-          key: lockKey,
-          value: { time: new Date().toISOString() }
-        });
-        
-        if (lockErr) {
-          console.log(`Lock collision for ${lockKey}. Skipping duplicate notification.`);
-          continue; // Notification already handled by another concurrent process
-        }
-
-        // Format date beautifully (e.g. "Aug 15")
-        const dateObj = new Date(newEv.booking_date + 'T12:00:00');
-        const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        
-        adminNotifications.unshift({
-          id: 'notif_' + Math.random().toString(36).substr(2, 9),
-          title: 'New Reservation',
-          message: `A new reservation has been added to ${newEv.boat_name} on ${formattedDate}`,
-          time: new Date().toISOString(),
-          read: false
-        });
-        newNotificationsCreated++;
-
-        // Dispatch Web Push Notifications
-        if (subscriptions.length > 0) {
-          const payload = JSON.stringify({
-            title: 'New Reservation!',
-            body: `A new reservation has been added to ${newEv.boat_name} on ${formattedDate}`,
-            url: '/admin/dashboard.html'
+        try {
+          const dateObj = new Date(newEv.booking_date + 'T12:00:00');
+          const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          
+          adminNotifications.unshift({
+            id: 'notif_' + Math.random().toString(36).substr(2, 9),
+            title: 'New Reservation',
+            message: `A new reservation has been added to ${newEv.boat_name} on ${formattedDate}`,
+            time: new Date().toISOString(),
+            read: false
           });
           
-          const pushPromises = subscriptions.map(sub => 
-            webpush.sendNotification(sub, payload).catch(err => {})
-          );
-          await Promise.all(pushPromises);
+          if (subscriptions.length > 0) {
+            const payload = JSON.stringify({
+              title: 'New Reservation!',
+              body: `A new reservation has been added to ${newEv.boat_name} on ${formattedDate}`,
+              url: '/admin/dashboard.html'
+            });
+            const pushPromises = subscriptions.map(sub => 
+              webpush.sendNotification(sub, payload).catch(err => console.error('Push error:', err.statusCode))
+            );
+            await Promise.all(pushPromises);
+          }
+          
+          newNotificationsCreated++;
+          newEv.notified = true; // Safely mark as successfully notified!
+        } catch (err) {
+          console.error(`Notification pipeline failed for event ${newEv.external_id}:`, err);
+          newEv.notified = false; // Preserves flag for next sync to retry
         }
       }
 
       if (newNotificationsCreated > 0) {
-        // Keep max 50 notifications to prevent bloat
         if (adminNotifications.length > 50) adminNotifications = adminNotifications.slice(0, 50);
-        
-        const { error: notifErr } = await supabase.from('site_settings').upsert({
+        await supabase.from('site_settings').upsert({
           key: 'admin_notifications',
           value: adminNotifications,
           updated_at: new Date().toISOString()
         });
-        if (notifErr) console.error('Failed to update admin_notifications:', notifErr);
       }
     }
 
     // Handle Cache Merging (Deletions strategy)
-    // Retain events for boats that were NOT synced this round (e.g., api failure, disconnected)
     const retainedOldEvents = oldEvents.filter(ev => !successfulBoatIds.has(ev.boat_id));
     const oldEventsForSuccessfulBoatsCount = oldEvents.length - retainedOldEvents.length;
     
-    // Add all deduped events which represents the absolute state of successful feeds
+    // Add all deduped events (which now include correct `notified` flags)
     const mergedEvents = [...retainedOldEvents, ...deduped];
     const deletedEventsCount = Math.max(0, oldEventsForSuccessfulBoatsCount - existingEventsCount);
 
-    // Update site_settings
-    const { error: cacheErr } = await supabase.from('site_settings').upsert({
+    await supabase.from('site_settings').upsert({
       key: 'cached_ical_events',
       value: mergedEvents,
       updated_at: new Date().toISOString()
     });
-    if (cacheErr) console.error('Failed to update cached_ical_events:', cacheErr);
 
     // Server-side Logging
     console.log('\n--- Calendar Sync Started ---');
@@ -329,12 +344,12 @@ module.exports = async (req, res) => {
     console.log(`Events fetched: ${deduped.length}`);
     console.log(`Existing events: ${existingEventsCount}`);
     console.log(`New events: ${trulyNewEvents.length}`);
-    console.log(`Updated events: 0 (Handled implicitly via cache replacement)`);
+    console.log(`Retried notifications: ${retriedEventsCount}`);
     console.log(`Deleted events: ${deletedEventsCount}`);
-    console.log(`Notifications sent: ${newNotificationsCreated}`);
+    console.log(`Successful Notifications: ${newNotificationsCreated}`);
     if (eventsToNotify.length > 0) {
-      console.log('\nNew events discovered:');
-      eventsToNotify.forEach(ev => console.log(`- ${ev.customer_name} (external ID: ${ev.external_id})`));
+      console.log('\nEvents processed for notification:');
+      eventsToNotify.forEach(ev => console.log(`- ${ev.customer_name} (external ID: ${ev.external_id}) [Notified: ${ev.notified}]`));
     }
     console.log('-----------------------------\n');
 
@@ -343,5 +358,9 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error('Auto-sync Error:', error);
     return res.status(500).json({ error: error.message });
+  } finally {
+    if (lockAcquired) {
+      await supabase.from('site_settings').delete().eq('key', lockKey);
+    }
   }
 }
