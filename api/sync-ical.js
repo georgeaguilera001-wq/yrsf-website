@@ -31,9 +31,9 @@ module.exports = async (req, res) => {
     });
 
     if (lockErr) {
-      // Lock already exists. Check if it's stale (> 60 seconds)
+      // Lock already exists. Check if it's stale (> 5 minutes)
       const { data: existingLock } = await supabase.from('site_settings').select('value').eq('key', lockKey).single();
-      if (existingLock && existingLock.value && (lockTime - existingLock.value.time) < 60000) {
+      if (existingLock && existingLock.value && (lockTime - existingLock.value.time) < 300000) {
         console.log('Concurrent sync in progress. Aborting to prevent race conditions.');
         return res.status(429).json({ message: 'Concurrent sync in progress. Aborted.' });
       }
