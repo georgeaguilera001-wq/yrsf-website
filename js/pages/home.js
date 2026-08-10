@@ -217,21 +217,99 @@ async function initHomePage() {
 
   const loadBoatsPromise = (async () => {
     try {
-      const boats = await getFeaturedBoats(6);
-      if (grid && Array.isArray(boats)) {
-        if (boats.length > 0) {
-          grid.innerHTML = boats.map(boat => renderBoatCard(boat)).join('');
+      const boats = await getFeaturedBoats(24); // load more so filters have boats to work with
+      let allBoats = Array.isArray(boats) ? boats : [];
+
+      // Cache for SWR
+      try { localStorage.setItem('yrsf_featured_boats', JSON.stringify(allBoats.slice(0, 6))); } catch {}
+
+      const renderFiltered = () => {
+        if (!grid) return;
+
+        const sortVal = document.getElementById('home-sort-select')?.value || 'featured';
+        const maxPrice = parseInt(document.getElementById('home-price-range')?.value || '10000');
+        const sizeChecks = [
+          { id: 'home-size-under40', min: 0, max: 39 },
+          { id: 'home-size-40-60', min: 40, max: 60 },
+          { id: 'home-size-60-80', min: 61, max: 80 },
+          { id: 'home-size-100plus', min: 100, max: Infinity },
+        ];
+        const activeSizes = sizeChecks.filter(s => document.getElementById(s.id)?.checked);
+
+        let filtered = allBoats.filter(boat => {
+          // Price filter
+          const minPrice = boat.boat_prices?.length
+            ? Math.min(...boat.boat_prices.map(p => parseFloat(p.price || 0)))
+            : 0;
+          if (maxPrice < 10000 && minPrice > maxPrice) return false;
+
+          // Size filter (only if any checked)
+          if (activeSizes.length > 0) {
+            const len = boat.length_ft || 0;
+            if (!activeSizes.some(s => len >= s.min && len <= s.max)) return false;
+          }
+
+          return true;
+        });
+
+        // Sort
+        if (sortVal === 'price_asc') {
+          filtered.sort((a, b) => {
+            const aMin = a.boat_prices?.length ? Math.min(...a.boat_prices.map(p => parseFloat(p.price || 0))) : 0;
+            const bMin = b.boat_prices?.length ? Math.min(...b.boat_prices.map(p => parseFloat(p.price || 0))) : 0;
+            return aMin - bMin;
+          });
+        } else if (sortVal === 'price_desc') {
+          filtered.sort((a, b) => {
+            const aMin = a.boat_prices?.length ? Math.min(...a.boat_prices.map(p => parseFloat(p.price || 0))) : 0;
+            const bMin = b.boat_prices?.length ? Math.min(...b.boat_prices.map(p => parseFloat(p.price || 0))) : 0;
+            return bMin - aMin;
+          });
+        } else if (sortVal === 'size_desc') {
+          filtered.sort((a, b) => (b.length_ft || 0) - (a.length_ft || 0));
+        }
+
+        // Show max 6 cards on homepage
+        const toShow = filtered.slice(0, 6);
+
+        if (toShow.length > 0) {
+          grid.innerHTML = toShow.map(boat => renderBoatCard(boat)).join('');
           initBoatCards(grid);
           initLazyLoading();
-        } else if (!grid.querySelector('.boat-card')) {
+        } else {
           grid.innerHTML = `
             <div class="col-span-full text-center py-xl">
-              <span class="material-symbols-outlined text-[48px] text-outline-variant mb-4">sailing</span>
-              <p class="font-body-lg text-body-lg text-on-surface-variant">Our fleet is being updated. Check back soon!</p>
+              <span class="material-symbols-outlined text-[48px] text-outline-variant mb-4">search_off</span>
+              <p class="font-body-lg text-body-lg text-on-surface-variant">No boats match your filters. Try adjusting your selection.</p>
             </div>
           `;
         }
+      };
+
+      if (allBoats.length > 0) {
+        renderFiltered();
+      } else if (!grid?.querySelector('.boat-card')) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-xl">
+            <span class="material-symbols-outlined text-[48px] text-outline-variant mb-4">sailing</span>
+            <p class="font-body-lg text-body-lg text-on-surface-variant">Our fleet is being updated. Check back soon!</p>
+          </div>
+        `;
       }
+
+      // Wire up controls
+      document.getElementById('home-sort-select')?.addEventListener('change', renderFiltered);
+      document.getElementById('home-price-range')?.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        const label = document.getElementById('home-price-label');
+        if (label) label.textContent = val >= 10000 ? '$10,000+' : `$${val.toLocaleString()}`;
+        renderFiltered();
+      });
+      document.querySelectorAll('#home-size-under40, #home-size-40-60, #home-size-60-80, #home-size-100plus')
+        .forEach(el => el.addEventListener('change', renderFiltered));
+      document.querySelectorAll('.home-addon-check')
+        .forEach(el => el.addEventListener('change', renderFiltered));
+
     } catch (error) {
       console.error('Error loading featured boats:', error);
       if (grid && !grid.querySelector('.boat-card')) {
