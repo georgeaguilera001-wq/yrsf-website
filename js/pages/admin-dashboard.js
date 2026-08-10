@@ -4228,7 +4228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               const timeString = window.lastIcalSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               const dateString = window.lastIcalSyncTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
               badge.className = 'text-[11px] font-extrabold text-emerald-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl shadow-2xs';
-              badge.innerHTML = <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Auto-syncing &bull; Last:  + dateString +   + timeString;
+              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Auto-syncing &bull; Last: ${dateString} ${timeString}`;
             }
           }
         } catch (e) {}
