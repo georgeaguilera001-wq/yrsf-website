@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="light" lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -49,16 +49,11 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-    // Critical inline script to prevent FOUC for dynamic theme/branding
+    // Theme settings loaded here
     try {
       const s = JSON.parse(localStorage.getItem('yrsf_settings'));
-      if (s && s.hero_bg_image && s.hero_bg_image.value) {
-        const firstUrl = s.hero_bg_image.value.split(',')[0].trim();
-        const isVid = firstUrl.match(/\.(mp4|mov|webm)$/i) || firstUrl.includes('video/');
-        if (!isVid) {
-          document.write('<style>#hero-bg-img { display: block !important; content: url(' + firstUrl + '); } #hero-bg-video { display: none !important; }</style>');
-        }
-      }
+      // Used by inline script below
+      window.initialHeroSettings = s;
     } catch(e){}
 </script>
 </head>
@@ -72,6 +67,18 @@
 <video id="hero-bg-video" class="w-full h-full object-cover" autoplay loop muted playsinline poster="https://lh3.googleusercontent.com/aida-public/AB6AXuBqIjoMHtZEKlMGDicvmd77AkvUpTVFck9K9RKzshd08dW25kM-A-ave9FLIGovaRQc7ou8NqlwpBk1XIF1PXB0pgioKBQjyHvVFjj47Ut6115UWWvcSAQ4fkws1TfIj1E0PRzDQqdRJaQwiw9HPu6YAoi2xFI_la8bF2_2Hj7mG4Zd9w78R_Ydn9IoTuK1WmwFlYIOvEJrnFzXwg_WRglYz_Y9OsVKK-fO6UFjlBb8EPvax5zy3AOmnVnOpzEOr07EezkOirgItJs">
     <source src="https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-yacht-sailing-on-the-sea-12903-large.mp4" type="video/mp4">
 </video>
+<script>
+    if (window.initialHeroSettings && window.initialHeroSettings.hero_bg_image && window.initialHeroSettings.hero_bg_image.value) {
+      const firstUrl = window.initialHeroSettings.hero_bg_image.value.split(',')[0].trim();
+      const isVid = firstUrl.match(/\.(mp4|mov|webm)$/i) || firstUrl.includes('video/');
+      if (!isVid) {
+        document.getElementById('hero-bg-video').style.display = 'none';
+        const img = document.getElementById('hero-bg-img');
+        img.src = firstUrl;
+        img.style.display = 'block';
+      }
+    }
+</script>
 <div class="absolute inset-0 hero-gradient"></div>
 </div>
 <div class="relative z-10 max-w-container-max mx-auto px-lg w-full">
