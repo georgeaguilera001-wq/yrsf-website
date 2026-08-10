@@ -30,7 +30,7 @@ export async function getBoats({
       .select(`
         id, name, slug, short_description, manufacturer, model,
         length_ft, capacity, cabins, year, location, status,
-        is_featured, sort_order,
+        is_featured, is_best_seller, sort_order,
         boat_images(url, alt_text, is_primary),
         boat_prices(price, duration_label)
       `, { count: 'exact' })
@@ -150,7 +150,7 @@ export async function getFeaturedBoats(limit = 6) {
       .from('boats')
       .select(`
         id, name, slug, short_description, manufacturer,
-        length_ft, capacity, location, is_featured, sort_order,
+        length_ft, capacity, location, is_featured, is_best_seller, sort_order,
         boat_images(url, alt_text, is_primary),
         boat_prices(price, duration_label)
       `)
@@ -214,7 +214,7 @@ export async function getAllBoats() {
     .from('boats')
     .select(`
       id, name, slug, vessel_id, manufacturer, length_ft, capacity,
-      status, is_featured, sort_order, ical_feed_url, ical_feed_label,
+      status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
       boat_images(url, alt_text, is_primary),
       boat_prices(price, duration_label, duration_hours)
     `)
