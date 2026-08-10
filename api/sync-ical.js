@@ -184,6 +184,50 @@ module.exports = async (req, res) => {
       }
     }
 
+    // Identify truly NEW reservations (only if we already had a cache, to avoid spamming on first run)
+    const { data: cachedSetting } = await supabase.from('site_settings').select('value').eq('key', 'cached_ical_events').single();
+    const oldEvents = (cachedSetting && cachedSetting.value && Array.isArray(cachedSetting.value)) ? cachedSetting.value : [];
+    
+    let newNotificationsCreated = 0;
+    if (oldEvents.length > 0) {
+      const oldEventKeys = new Set(oldEvents.map(ev => `${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`));
+      
+      const { data: notifSetting } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
+      let adminNotifications = (notifSetting && notifSetting.value && Array.isArray(notifSetting.value)) ? notifSetting.value : [];
+      
+      // Find events in deduped that are NOT in oldEvents
+      const trulyNewEvents = deduped.filter(ev => {
+        const key = `${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`;
+        return !oldEventKeys.has(key);
+      });
+
+      for (const newEv of trulyNewEvents) {
+        // Format date beautifully (e.g. "Aug 15")
+        const dateObj = new Date(newEv.booking_date + 'T12:00:00');
+        const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        adminNotifications.unshift({
+          id: 'notif_' + Math.random().toString(36).substr(2, 9),
+          title: 'New Reservation',
+          message: `A new reservation has been added to ${newEv.boat_name} on ${formattedDate}`,
+          time: new Date().toISOString(),
+          read: false
+        });
+        newNotificationsCreated++;
+      }
+      
+      if (newNotificationsCreated > 0) {
+        // Keep max 50 notifications to prevent bloat
+        if (adminNotifications.length > 50) adminNotifications = adminNotifications.slice(0, 50);
+        
+        await supabase.from('site_settings').upsert({
+          key: 'admin_notifications',
+          value: adminNotifications,
+          updated_at: new Date().toISOString()
+        });
+      }
+    }
+
     // Update site_settings
     await supabase.from('site_settings').upsert({
       key: 'cached_ical_events',
@@ -191,7 +235,7 @@ module.exports = async (req, res) => {
       updated_at: new Date().toISOString()
     });
 
-    console.log(`Successfully synced ${deduped.length} total events.`);
+    console.log(`Successfully synced ${deduped.length} total events. Generated ${newNotificationsCreated} notifications.`);
     return res.status(200).json({ success: true, eventsCount: deduped.length, newEvents: addedCount });
 
   } catch (error) {

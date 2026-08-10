@@ -4121,6 +4121,35 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (data && data.updated_at) {
             window.lastIcalSyncTime = new Date(data.updated_at);
           }
+          
+          // Check for new notifications
+          const { data: notifData } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
+          if (notifData && notifData.value && Array.isArray(notifData.value)) {
+            let localNotifs = JSON.parse(localStorage.getItem('yrsf_admin_notifications') || '[]');
+            let addedNew = false;
+            
+            // Loop backwards so newest gets unshifted properly
+            for (let i = notifData.value.length - 1; i >= 0; i--) {
+              const n = notifData.value[i];
+              if (!localNotifs.find(ln => ln.id === n.id)) {
+                localNotifs.unshift(n);
+                addedNew = true;
+                
+                // Show desktop notification if permission granted
+                if ('Notification' in window && Notification.permission === 'granted') {
+                  new Notification(n.title, { body: n.message });
+                }
+              }
+            }
+            
+            if (addedNew) {
+              if (localNotifs.length > 50) localNotifs = localNotifs.slice(0, 50);
+              localStorage.setItem('yrsf_admin_notifications', JSON.stringify(localNotifs));
+              if (typeof window.updateGlobalNotifications === 'function') {
+                window.updateGlobalNotifications(localNotifs);
+              }
+            }
+          }
         } catch (e) {}
 
         const calView = document.getElementById('booking-calendar-view');
@@ -5729,6 +5758,11 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   }
   document.addEventListener('click', () => notifDropdown?.classList.add('hidden'));
   updateNotificationUI();
+
+  window.updateGlobalNotifications = (newNotifs) => {
+    notifications = newNotifs;
+    updateNotificationUI();
+  };
 
   // ─── 1. Revenue & Analytics Section ──────────────────────────────────────
   window.initRevenueSection = async function() {
