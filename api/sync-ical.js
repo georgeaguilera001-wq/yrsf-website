@@ -39,25 +39,32 @@ module.exports = async (req, res) => {
     cutoffDateObj.setHours(0, 0, 0, 0);
     const cutoffDateStr = cutoffDateObj.toISOString().split('T')[0];
 
+    const inFlightFetches = new Map();
     const fetchIcsDirect = async (url) => {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      try {
-        const fetchRes = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeout);
-        if (fetchRes.ok) {
-          const text = await fetchRes.text();
-          if (text && (text.toUpperCase().includes('BEGIN:VEVENT') || text.trim().startsWith('[') || text.trim().startsWith('{'))) {
-            return text;
+      if (inFlightFetches.has(url)) return await inFlightFetches.get(url);
+      
+      const fetchPromise = (async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        try {
+          const fetchRes = await fetch(url, { signal: controller.signal });
+          clearTimeout(timeout);
+          if (fetchRes.ok) {
+            const text = await fetchRes.text();
+            if (text && (text.toUpperCase().includes('BEGIN:VEVENT') || text.trim().startsWith('[') || text.trim().startsWith('{'))) {
+              return text;
+            }
           }
+        } catch (err) {
+          clearTimeout(timeout);
         }
-      } catch (err) {
-        clearTimeout(timeout);
-      }
-      return null;
+        return null;
+      })();
+      
+      inFlightFetches.set(url, fetchPromise);
+      return await fetchPromise;
     };
-
-    for (const boat of boatsWithIcal) {
+    await Promise.all(boatsWithIcal.map(async (boat) => {
       try {
         const parsedEventsForBoat = [];
         const rawUrls = (boat.ical_feed_url || '').split(/[\r\n,;]+/).map(u => u.trim()).filter(Boolean);
@@ -164,7 +171,7 @@ module.exports = async (req, res) => {
       } catch (err) {
         console.error('Error syncing boat ' + boat.name, err);
       }
-    }
+    }));
 
     // Deduplicate exact matches
     const deduped = [];
