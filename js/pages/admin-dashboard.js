@@ -4166,12 +4166,14 @@ document.addEventListener('DOMContentLoaded', async () => {
               
               // Only show toast once every 5 minutes if it fails to avoid spam
               if (!window.lastToastTime || (new Date() - window.lastToastTime) / 60000 > 5) {
-                showToast(`⚠️ Background calendar sync hasn't run in ${Math.round(minutesSinceSync)} minutes. Please check your cron job.`, 'error');
+                showToast(`Background calendar sync hasn't run in ${Math.round(minutesSinceSync)} minutes. Please check your cron job.`, 'error');
                 window.lastToastTime = new Date();
               }
             } else {
+              const timeString = window.lastIcalSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const dateString = window.lastIcalSyncTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
               badge.className = 'text-[11px] font-extrabold text-emerald-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl shadow-2xs';
-              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Last synced: ${window.lastIcalSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Auto-syncing &bull; Last: ${dateString} ${timeString}`;
             }
           }
         }
