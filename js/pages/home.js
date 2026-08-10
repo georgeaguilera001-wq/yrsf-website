@@ -111,7 +111,7 @@ async function initHomePage() {
       }
       if (settings.hero_title?.value) {
         const el = document.getElementById('hero-title');
-        if (el) el.textContent = settings.hero_title.value;
+        if (el) el.innerHTML = settings.hero_title.value + ' <span class="text-primary inline-block ml-1" style="font-family: \'Brush Script MT\', cursive; font-weight: normal; transform: scale(1.2) translateY(2px);">&hearts;</span>';
       }
       if (settings.hero_description?.value) {
         const el = document.getElementById('hero-description');
