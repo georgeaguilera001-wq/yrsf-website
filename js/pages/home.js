@@ -11,6 +11,47 @@ import { renderBoatCard, initBoatCards } from '../components/boat-card.js';
 import { initLazyLoading } from '../utils/lazy-load.js';
 import { renderSkeletons } from '../utils/dom.js';
 import { initMarinaMap } from '../components/map.js';
+import { openModal } from '../components/modal.js';
+
+window.showBookingProcess = (e) => {
+  if (e) e.preventDefault();
+  openModal(`
+    <div class="text-center p-2">
+      <div class="w-16 h-16 bg-surface-container rounded-full flex items-center justify-center text-primary mx-auto mb-4">
+        <span class="material-symbols-outlined text-[32px]">touch_app</span>
+      </div>
+      <h3 class="font-display-md text-headline-sm text-on-surface mb-6">How to Book Your Yacht</h3>
+      
+      <div class="space-y-6 text-left">
+        <div class="flex gap-4 items-start">
+          <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center flex-shrink-0 font-bold">1</div>
+          <div>
+            <h4 class="font-bold text-on-surface">Find Your Perfect Boat</h4>
+            <p class="text-sm text-on-surface-variant mt-1">Browse our fleet and select the vessel that fits your group and style.</p>
+          </div>
+        </div>
+        
+        <div class="flex gap-4 items-start">
+          <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center flex-shrink-0 font-bold">2</div>
+          <div>
+            <h4 class="font-bold text-on-surface">Submit 50% Deposit</h4>
+            <p class="text-sm text-on-surface-variant mt-1">Lock in your date and time by paying a secure 50% deposit online.</p>
+          </div>
+        </div>
+        
+        <div class="flex gap-4 items-start">
+          <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center flex-shrink-0 font-bold">3</div>
+          <div>
+            <h4 class="font-bold text-on-surface">Enjoy the Water</h4>
+            <p class="text-sm text-on-surface-variant mt-1">Show up at the marina, step aboard, and enjoy your amazing yacht day!</p>
+          </div>
+        </div>
+      </div>
+      
+      <button class="mt-8 w-full bg-secondary text-on-secondary py-3 rounded-lg font-bold hover:shadow-lg transition-all" onclick="document.querySelector('.modal-overlay')?.click()">Got it, let's go!</button>
+    </div>
+  `, { maxWidth: '450px' });
+};
 
 async function initHomePage() {
   // Initialize shared components immediately
