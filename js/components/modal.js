@@ -18,7 +18,7 @@ export function openModal(contentHtml, options = {}) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
-    <div class="modal-content p-md" style="max-width: ${maxWidth}; width: 100%;">
+    <div class="modal-content p-4 md:p-6" style="max-width: ${maxWidth}; width: calc(100% - 32px); margin: 16px;">
       ${contentHtml}
     </div>
   `;

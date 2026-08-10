@@ -27,8 +27,8 @@ export function openInquiryModal({ boatName = 'General Charter Inquiry', boatId 
   const isGen = isGeneral || !boatId || boatName === 'General Inquiry' || boatName === 'General Charter Inquiry';
 
   container.innerHTML = `
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative transform transition-all scale-95 duration-300 max-h-[90vh] overflow-y-auto">
-      <button type="button" id="inquiry-close-btn" class="absolute top-4 right-4 p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors flex items-center justify-center" aria-label="Close modal">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl max-w-md w-full p-4 md:p-6 shadow-2xl relative transform transition-all scale-95 duration-300 max-h-[90vh] overflow-y-auto">
+      <button type="button" id="inquiry-close-btn" class="absolute top-2 right-2 md:top-4 md:right-4 p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors flex items-center justify-center" aria-label="Close modal">
         <span class="material-symbols-outlined text-[20px]">close</span>
       </button>
 
