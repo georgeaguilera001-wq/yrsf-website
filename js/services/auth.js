@@ -59,5 +59,11 @@ export async function requireAuth(redirectUrl = '/admin/index.html') {
     throw new Error('Not authenticated');
   }
 
+  // Force password change if flagged and not already on the change password page
+  if (session.user?.user_metadata?.needs_password_change && !window.location.pathname.includes('change-password')) {
+    window.location.href = '/admin/change-password.html';
+    throw new Error('Password change required');
+  }
+
   return session.user;
 }

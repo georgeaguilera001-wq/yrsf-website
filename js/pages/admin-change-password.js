@@ -1,20 +1,26 @@
 /**
- * YRSF — Admin Login Page Logic
+ * YRSF — Change Password Page Logic
  */
 
-import { login, getSession } from '../services/auth.js';
+import { supabase } from '../config/supabase.js';
+import { getSession } from '../services/auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // If already logged in, redirect to dashboard
   const session = await getSession();
-  if (session) {
+  if (!session) {
+    window.location.href = '/admin/index.html';
+    return;
+  }
+
+  // Double check they actually need a password change
+  if (!session.user.user_metadata?.needs_password_change) {
     window.location.href = '/admin/dashboard.html';
     return;
   }
 
-  const form = document.getElementById('login-form');
-  const emailInput = document.getElementById('email');
+  const form = document.getElementById('login-form'); // ID reused from index.html
   const passwordInput = document.getElementById('password');
+  const confirmPasswordInput = document.getElementById('confirm_password');
   const loginBtn = document.getElementById('login-btn');
   const loginBtnText = document.getElementById('login-btn-text');
   const loginSpinner = document.getElementById('login-spinner');
@@ -36,36 +42,46 @@ document.addEventListener('DOMContentLoaded', async () => {
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const email = emailInput?.value?.trim();
     const password = passwordInput?.value;
+    const confirmPassword = confirmPasswordInput?.value;
 
-    if (!email || !password) {
-      showError('Please enter your email and password.');
+    if (!password || !confirmPassword) {
+      showError('Please enter a new password.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showError('Passwords do not match.');
+      return;
+    }
+
+    if (password.length < 6) {
+      showError('Password must be at least 6 characters.');
       return;
     }
 
     setLoading(true);
     hideError();
 
-    const { user, error } = await login(email, password);
+    // 1. Update the password
+    const { data, error } = await supabase.auth.updateUser({
+      password: password,
+      data: { needs_password_change: false } // Remove the flag
+    });
 
     if (error) {
       setLoading(false);
-      showError(error);
+      showError(error.message);
       return;
     }
 
-    // Success — redirect to dashboard or change password
-    if (user && user.user_metadata && user.user_metadata.needs_password_change) {
-      window.location.href = '/admin/change-password.html';
-    } else {
-      window.location.href = '/admin/dashboard.html';
-    }
+    // Success — redirect to dashboard
+    window.location.href = '/admin/dashboard.html';
   });
 
   function setLoading(loading) {
     if (loginBtn) loginBtn.disabled = loading;
-    if (loginBtnText) loginBtnText.textContent = loading ? 'Signing in...' : 'Sign In';
+    if (loginBtnText) loginBtnText.textContent = loading ? 'Saving...' : 'Save Password';
     if (loginSpinner) loginSpinner.classList.toggle('hidden', !loading);
   }
 

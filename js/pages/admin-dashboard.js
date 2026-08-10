@@ -2682,9 +2682,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (error) throw error;
             showToast('Employee updated successfully!');
           } else {
-            const { error } = await supabase.from('staff_users').insert([payload]);
-            if (error) throw error;
-            showToast('New employee added successfully!');
+            const res = await fetch('/api/create-user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const resData = await res.json();
+            if (!res.ok) throw new Error(resData.error || 'Failed to create user');
+            showToast('New employee added with temporary password (1234password)!');
           }
           staffModal.classList.add('hidden');
           loadStaffUsers();
@@ -6564,4 +6569,5 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   updateZapierStatusPill();
   loadQuoSettings();
 });
+
 
