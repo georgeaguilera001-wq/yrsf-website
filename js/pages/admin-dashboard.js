@@ -331,12 +331,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const refreshBtn = document.getElementById('refresh-inquiries-btn');
 
     if (notifBtn && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        notifBtn.classList.replace('border-outline-variant', 'border-green-600');
+        notifBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] text-green-600">check_circle</span> Alerts Active`;
+      }
+      
       notifBtn.onclick = async () => {
         const perm = await Notification.requestPermission();
         if (perm === 'granted') {
           showToast('Desktop alerts enabled for new inquiries!', 'success');
           notifBtn.classList.replace('border-outline-variant', 'border-green-600');
           notifBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] text-green-600">check_circle</span> Alerts Active`;
+        } else {
+          showToast('Desktop alerts permission denied.', 'error');
         }
       };
     }
