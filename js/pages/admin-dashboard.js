@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       master.addEventListener('change', (e) => {
         const mod = e.target.getAttribute('data-module');
         const isChecked = e.target.checked;
-        document.querySelectorAll(.perm-sub-check[data-module="\"]).forEach(sub => {
+        document.querySelectorAll(`.perm-sub-check[data-module="${mod}"]`).forEach(sub => {
           sub.checked = isChecked;
         });
       });
@@ -48,8 +48,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.perm-sub-check').forEach(sub => {
       sub.addEventListener('change', (e) => {
         const mod = e.target.getAttribute('data-module');
-        const master = document.getElementById(perm-\-access);
-        if (master & e.target.checked) {
+        const master = document.getElementById(`perm-${mod}-access`);
+        if (master && e.target.checked) {
           master.checked = true;
         }
       });
