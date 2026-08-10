@@ -866,7 +866,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <input type="text" id="edit-boat-slug" value="${escapeHtml(boat?.slug || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="auto-generated"/>
             </div>
           </div>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-md">
+          <div class="grid grid-cols-2 gap-md">
             <div>
               <label class="block font-label text-label-md text-on-surface-variant mb-2">Length (ft)</label>
               <input type="number" id="edit-boat-length" value="${boat?.length_ft || ''}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
@@ -875,21 +875,9 @@ document.addEventListener('DOMContentLoaded', async () => {
               <label class="block font-label text-label-md text-on-surface-variant mb-2">Capacity</label>
               <input type="number" id="edit-boat-capacity" value="${boat?.capacity || ''}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
             </div>
-            <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Year</label>
-              <input type="number" id="edit-boat-year" value="${boat?.year || ''}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
-            </div>
-            <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Cabins</label>
-              <input type="number" id="edit-boat-cabins" value="${boat?.cabins || ''}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
-            </div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
-            <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Manufacturer</label>
-              <input type="text" id="edit-boat-manufacturer" value="${escapeHtml(boat?.manufacturer || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
-            </div>
-            <div class="relative col-span-1 md:col-span-2">
+          <div class="grid grid-cols-1 gap-md">
+            <div class="relative col-span-1">
               <label class="block font-label text-label-md text-on-surface-variant mb-2">Exact Dock Address / Marina Location *</label>
               <div class="relative">
                 <input type="text" id="edit-boat-location" autocomplete="off" placeholder="Start typing address (e.g. 201 NW South River Dr, Miami)..." value="${escapeHtml(boat?.location || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary pr-10"/>
@@ -1675,9 +1663,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         slug: document.getElementById('edit-boat-slug').value.trim() || slugify(document.getElementById('edit-boat-name').value),
         length_ft: parseInt(document.getElementById('edit-boat-length').value) || null,
         capacity: parseInt(document.getElementById('edit-boat-capacity').value) || null,
-        year: parseInt(document.getElementById('edit-boat-year').value) || null,
-        cabins: parseInt(document.getElementById('edit-boat-cabins').value) || null,
-        manufacturer: document.getElementById('edit-boat-manufacturer').value.trim() || null,
+        year: document.getElementById('edit-boat-year') ? (parseInt(document.getElementById('edit-boat-year').value) || null) : (boat?.year || null),
+        cabins: document.getElementById('edit-boat-cabins') ? (parseInt(document.getElementById('edit-boat-cabins').value) || null) : (boat?.cabins || null),
+        manufacturer: document.getElementById('edit-boat-manufacturer') ? (document.getElementById('edit-boat-manufacturer').value.trim() || null) : (boat?.manufacturer || null),
         location: document.getElementById('edit-boat-location').value.trim() || null,
         short_description: document.getElementById('edit-boat-short-desc').value.trim() || null,
         description: document.getElementById('edit-boat-description').value.trim() || null,
