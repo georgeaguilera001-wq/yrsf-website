@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="light" lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -19,7 +19,7 @@
   <link rel="icon" href="https://yachtrentalsofsouthflorida.com/admin/logo.png?v=3" type="image/png"/>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/admin/sw.js?v=20260810124607', { scope: '/admin/' }).then(reg => {
+      navigator.serviceWorker.register('/admin/sw.js', { scope: '/admin/' }).then(reg => {
         reg.update();
       }).catch(e => console.warn('SW reg failed:', e));
       let refreshing = false;
@@ -3041,6 +3041,7 @@
   </div>
 </body>
 </html>
+
 
 
 
