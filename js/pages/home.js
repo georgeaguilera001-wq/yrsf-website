@@ -111,7 +111,7 @@ async function initHomePage() {
       }
       if (settings.hero_title?.value) {
         const el = document.getElementById('hero-title');
-        if (el) el.innerHTML = settings.hero_title.value + ' <span class="text-primary inline-block ml-1" style="font-family: \'Brush Script MT\', cursive; font-weight: normal; transform: scale(1.2) translateY(2px);">&hearts;</span>';
+        if (el) el.innerHTML = settings.hero_title.value + ' <img src="/images/cursive-heart.png" alt="Heart" class="inline-block w-[1.5em] h-auto align-middle ml-1 -mt-2 pointer-events-none select-none">';
       }
       if (settings.hero_description?.value) {
         const el = document.getElementById('hero-description');
