@@ -2717,15 +2717,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const permissions = {};
         Object.keys(MODULE_SUBPERMS).forEach(mod => {
-          const masterEl = document.getElementById(`perm-${mod}-access`);
-          const access = masterEl ? masterEl.checked : false;
-          
-          const subObj = { access };
-          (MODULE_SUBPERMS[mod] || []).forEach(sub => {
-            const subEl = document.getElementById(`perm-${mod}-${sub}`);
-            subObj[sub] = subEl ? subEl.checked : access;
+          const masterEl = document.getElementById('perm-' + mod + '-access');
+          const hasAccess = masterEl ? masterEl.checked : false;
+          const subObj = { access: hasAccess };
+          const actions = MODULE_SUBPERMS[mod] || [];
+          actions.forEach(act => {
+            const el = document.getElementById(`perm-${mod}-${act}`);
+            if (el) subObj[act] = el.checked;
           });
-          
           permissions[mod] = subObj;
         });
 
@@ -2734,27 +2733,29 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (id) {
             const { error } = await supabase.from('staff_users').update(payload).eq('id', id);
             if (error) throw error;
-
-            // Optional password update
-            const newPassword = document.getElementById('staff-new-password')?.value;
-            if (newPassword && newPassword.length >= 6) {
-              const { error: pwdErr } = await supabase.rpc('admin_update_user_password', {
-                target_email: email,
-                new_password: newPassword
+            
+            const newPwd = document.getElementById('staff-new-password')?.value;
+            if (newPwd) {
+              const res = await fetch('/api/update-user-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, password: newPwd })
               });
-              if (pwdErr) {
-                console.warn('Password RPC error:', pwdErr);
-                showToast('Staff info saved, but password update failed: ' + pwdErr.message, true);
-              } else {
-                showToast('Staff info & password updated successfully!');
-              }
+              const resData = await res.json();
+              if (!res.ok) throw new Error(resData.error || 'Failed to update login password');
+              showToast('Employee details and login password updated!');
             } else {
-              showToast('Staff member updated!');
+              showToast('Employee updated successfully!');
             }
           } else {
-            const { error } = await supabase.from('staff_users').insert(payload);
-            if (error) throw error;
-            showToast('New staff member added!');
+            const res = await fetch('/api/create-user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const resData = await res.json();
+            if (!res.ok) throw new Error(resData.error || 'Failed to create user');
+            showToast('New employee added with temporary password (1234password)!');
           }
           staffModal.classList.add('hidden');
           loadStaffUsers();
@@ -2764,17 +2765,223 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
+    // Commission Sales Portal setup
+    const openCommBtn = document.getElementById('open-commission-btn');
+    const commModal = document.getElementById('commission-modal');
+    const closeCommBtn = document.getElementById('close-commission-modal');
+    const cancelCommBtn = document.getElementById('cancel-comm-btn');
+    const commStaffSelect = document.getElementById('comm-staff-select');
+    const commBoatSelect = document.getElementById('comm-boat-select');
+    const commDate = document.getElementById('comm-date');
+    const commPrice = document.getElementById('comm-price');
+    const commRate = document.getElementById('comm-rate');
+    const commAmount = document.getElementById('comm-amount');
+    const commNotes = document.getElementById('comm-notes');
+    const commForm = document.getElementById('commission-form');
+
+    function calcCommission() {
+      const p = parseFloat(commPrice?.value || 0);
+      const r = parseFloat(commRate?.value || 0);
+      if (commAmount) commAmount.value = ((p * r) / 100).toFixed(2);
+    }
+
+    if (commPrice && commRate) {
+      commPrice.addEventListener('input', calcCommission);
+      commRate.addEventListener('input', calcCommission);
+    }
+
+    if (commStaffSelect) {
+      commStaffSelect.addEventListener('change', () => {
+        const sid = commStaffSelect.value;
+        const user = staffUsersCache.find(u => u.id === sid);
+        if (user && commRate) {
+          commRate.value = user.commission_rate || 10;
+          calcCommission();
+        }
+      });
+    }
+
+    if (openCommBtn && commModal) {
+      openCommBtn.addEventListener('click', async () => {
+        await loadStaffUsers();
+        commModal.classList.remove('hidden');
+        if (commDate) commDate.value = new Date().toISOString().split('T')[0];
+        if (commPrice) commPrice.value = '';
+        if (commRate) commRate.value = '10';
+        if (commAmount) commAmount.value = '0.00';
+        if (commNotes) commNotes.value = '';
+
+        if (commStaffSelect) {
+          commStaffSelect.innerHTML = '<option value="">-- Select Sales Concierge --</option>' +
+            staffUsersCache.map(u => `<option value="${u.id}">${u.name} (${u.role || 'Staff'})</option>`).join('');
+        }
+        if (commBoatSelect) {
+          if (!fleetCache || fleetCache.length === 0) await loadFleet();
+          const boats = [...(fleetCache || [])].sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
+          commBoatSelect.innerHTML = '<option value="">-- Select Boat --</option>' +
+            boats.map(b => `<option value="${b.id}" data-name="${b.name}">${b.name}</option>`).join('');
+        }
+      });
+      [closeCommBtn, cancelCommBtn].forEach(btn => btn?.addEventListener('click', () => commModal.classList.add('hidden')));
+    }
+
+    if (commForm) {
+      commForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const staff_id = commStaffSelect.value;
+        if (!staff_id) { showToast('Please select a sales concierge', true); return; }
+        const boat_id = commBoatSelect.value || null;
+        const boat_name = commBoatSelect.options[commBoatSelect.selectedIndex]?.text || 'General Charter';
+        const charter_date = commDate.value;
+        const charter_price = parseFloat(commPrice.value) || 0;
+        const commission_rate = parseFloat(commRate.value) || 0;
+        const commission_amount = parseFloat(commAmount.value) || 0;
+        const client_notes = commNotes.value.trim();
+
+        try {
+          const { error } = await supabase.from('staff_commissions').insert([{
+            staff_id, boat_id, boat_name, charter_date, charter_price, commission_rate, commission_amount, client_notes
+          }]);
+          if (error) throw error;
+          showToast(`💰 Commission logged! Earned $${commission_amount.toFixed(2)}`, 'success');
+          commModal.classList.add('hidden');
+          loadCommissions();
+        } catch (err) {
+          showToast('Error logging commission: ' + err.message, true);
+        }
+      });
+    }
+
+    // Timeclock Portal setup
+    const openClockBtn = document.getElementById('open-timeclock-btn');
+    const clockModal = document.getElementById('timeclock-modal');
+    const closeClockBtn = document.getElementById('close-timeclock-modal');
+    const staffSelect = document.getElementById('timeclock-staff-select');
+    const notesInput = document.getElementById('timeclock-notes');
+    const statusBox = document.getElementById('timeclock-status-box');
+    const btnIn = document.getElementById('btn-clock-in');
+    const btnOut = document.getElementById('btn-clock-out');
+
+    if (openClockBtn && clockModal) {
+      openClockBtn.addEventListener('click', async () => {
+        await loadStaffUsers();
+        clockModal.classList.remove('hidden');
+        notesInput.value = '';
+        statusBox.classList.add('hidden');
+        btnIn.classList.remove('hidden');
+        btnOut.classList.add('hidden');
+      });
+      closeClockBtn?.addEventListener('click', () => clockModal.classList.add('hidden'));
+    }
+
+    let activeTimecardId = null;
+
+    if (staffSelect) {
+      staffSelect.addEventListener('change', async () => {
+        const staffId = staffSelect.value;
+        if (!staffId) {
+          statusBox.classList.add('hidden');
+          btnIn.classList.remove('hidden');
+          btnOut.classList.add('hidden');
+          return;
+        }
+
+        const { data: openCard } = await supabase
+          .from('staff_timecards')
+          .select('*')
+          .eq('staff_id', staffId)
+          .is('clock_out', null)
+          .order('clock_in', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (openCard) {
+          activeTimecardId = openCard.id;
+          const inTime = new Date(openCard.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          statusBox.innerHTML = `🟢 <b>Currently Clocked In</b> since ${inTime}<br/><span class="text-[11px] font-normal">Notes: ${openCard.notes || 'None'}</span>`;
+          statusBox.className = 'p-3 rounded-xl bg-green-50 border border-green-200 text-center text-xs font-bold text-green-800';
+          statusBox.classList.remove('hidden');
+          btnIn.classList.add('hidden');
+          btnOut.classList.remove('hidden');
+          notesInput.value = openCard.notes || '';
+        } else {
+          activeTimecardId = null;
+          statusBox.innerHTML = `⚪ <b>Currently Off Duty</b>`;
+          statusBox.className = 'p-3 rounded-xl bg-surface-container text-center text-xs font-bold text-on-surface-variant';
+          statusBox.classList.remove('hidden');
+          btnIn.classList.remove('hidden');
+          btnOut.classList.add('hidden');
+          notesInput.value = '';
+        }
+      });
+    }
+
+    if (btnIn) {
+      btnIn.addEventListener('click', async () => {
+        const staffId = staffSelect.value;
+        if (!staffId) { showToast('Please select your name first!', true); return; }
+        const notes = notesInput.value.trim();
+
+        const { error } = await supabase.from('staff_timecards').insert([{ staff_id: staffId, clock_in: new Date().toISOString(), notes }]);
+        if (error) { showToast('Error clocking in: ' + error.message, true); return; }
+
+        showToast('✓ Clocked in successfully! Have a great shift!');
+        clockModal.classList.add('hidden');
+        loadStaffUsers();
+        loadTimecards();
+      });
+    }
+
+    if (btnOut) {
+      btnOut.addEventListener('click', async () => {
+        if (!activeTimecardId) return;
+        const now = new Date();
+        const { data: card } = await supabase.from('staff_timecards').select('clock_in').eq('id', activeTimecardId).single();
+        let durationHours = 0;
+        if (card) {
+          const inDate = new Date(card.clock_in);
+          durationHours = parseFloat(((now - inDate) / (1000 * 60 * 60)).toFixed(2));
+        }
+
+        const notes = notesInput.value.trim();
+        const { error } = await supabase.from('staff_timecards').update({ clock_out: now.toISOString(), duration_hours: durationHours, notes }).eq('id', activeTimecardId);
+        if (error) { showToast('Error clocking out: ' + error.message, true); return; }
+
+        showToast(`✓ Clocked out! Shift logged: ${durationHours} hours.`);
+        clockModal.classList.add('hidden');
+        loadStaffUsers();
+        loadTimecards();
+      });
+    }
+
+    const refreshTimecardsBtn = document.getElementById('refresh-timecards-btn');
+    refreshTimecardsBtn?.addEventListener('click', loadTimecards);
+
+    loadStaffUsers();
+    loadTimecards();
+  }
+
   async function loadStaffUsers() {
     const tbody = document.getElementById('staff-table-body');
+    const select = document.getElementById('timeclock-staff-select');
     if (!tbody) return;
-    try {
-      const { data, error } = await supabase.from('staff_users').select('*').order('created_at', { ascending: true });
-      if (error) throw error;
-      staffUsersCache = data || [];
 
-      // Fetch active clocks
-      const { data: activeLogs } = await supabase.from('staff_timecards').select('staff_id').is('clock_out', null);
-      const activeStaffIds = new Set((activeLogs || []).map(l => l.staff_id));
+    try {
+      const { data: users, error } = await supabase.from('staff_users').select('*').order('name', { ascending: true });
+      if (error) throw error;
+      staffUsersCache = users || [];
+
+      // Check active clock-ins
+      const { data: openCards } = await supabase.from('staff_timecards').select('staff_id, clock_in, notes').is('clock_out', null);
+      const activeStaffIds = new Set((openCards || []).map(c => c.staff_id));
+
+      const statWorking = document.getElementById('stat-staff-working');
+      if (statWorking) statWorking.textContent = `${activeStaffIds.size} Staff`;
+
+      if (select) {
+        select.innerHTML = '<option value="">-- Choose Your Name --</option>' + 
+          staffUsersCache.map(u => `<option value="${u.id}">${u.name} (${u.role})</option>`).join('');
+      }
 
       if (staffUsersCache.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-on-surface-variant">No staff employees added yet. Click "Add New Staff" above!</td></tr>`;
@@ -2784,10 +2991,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       tbody.innerHTML = staffUsersCache.map(user => {
         const isWorking = activeStaffIds.has(user.id);
         const perms = user.permissions || {};
-        
         let grantedMods = 0;
         let totalSubGranted = 0;
-
         Object.keys(MODULE_SUBPERMS).forEach(mod => {
           const m = perms[mod];
           const hasAccess = typeof m === 'boolean' ? m : (m?.access ?? false);
@@ -2800,7 +3005,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           }
         });
-
         const permBadges = user.role === 'admin'
           ? '<span class="bg-primary text-on-primary px-2 py-0.5 rounded text-xs font-bold">Full Access</span>'
           : `<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs font-medium">${grantedMods} Modules (${totalSubGranted} Actions)</span>`;
@@ -2808,13 +3012,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `
           <tr class="hover:bg-surface-container-low/50 transition-colors">
             <td class="p-4">
-              <p class="font-bold text-on-surface">${escapeHtml(user.name)}</p>
-              <p class="text-xs text-on-surface-variant">${escapeHtml(user.email)}</p>
+              <p class="font-bold text-on-surface">${user.name}</p>
+              <p class="text-xs text-on-surface-variant">${user.email}</p>
             </td>
             <td class="p-4">
-              <span class="font-medium text-on-surface">${escapeHtml(user.role)}</span>
+              <span class="font-medium text-on-surface">${user.role}</span>
               ${user.pay_type === 'commission'
-                ? `<p class="text-xs font-mono text-amber-700 font-bold">${user.commission_rate || 0}% Comm.</p>`
+                ? `<p class="text-xs font-mono text-amber-700 font-bold">🤝 ${user.commission_rate || 0}% Comm.</p>`
                 : user.pay_type === 'both'
                 ? `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(user.hourly_rate || 0).toFixed(2)}/hr + <span class="text-amber-700">${user.commission_rate || 0}% Comm.</span></p>`
                 : `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(user.hourly_rate || 0).toFixed(2)}/hr</p>`}
@@ -2988,20 +3192,3471 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const perms = user.permissions || {};
-        let grantedMods = 0;
-        let totalSubGranted = 0;
-        Object.keys(MODULE_SUBPERMS).forEach(mod => {
-          const m = perms[mod];
-          const hasAccess = typeof m === 'boolean' ? m : (m?.access ?? false);
-          if (hasAccess) {
-            grantedMods++;
-            if (typeof m === 'object' && m !== null) {
-              totalSubGranted += Object.keys(m).filter(k => k !== 'access' && m[k]).length;
-            } else {
-              totalSubGranted += (MODULE_SUBPERMS[mod] || []).length;
-            }
+    Object.keys(MODULE_SUBPERMS).forEach(mod => {
+      const m = perms[mod];
+      const hasAccess = typeof m === 'boolean' ? m : (m?.access ?? false);
+      const masterEl = document.getElementById('perm-' + mod + '-access');
+      if (masterEl) masterEl.checked = hasAccess;
+      
+      const actions = MODULE_SUBPERMS[mod] || [];
+      actions.forEach(act => {
+        const el = document.getElementById(`perm-${mod}-${act}`);
+        if (el) {
+          el.checked = (typeof m === 'object' && m !== null) ? !!m[act] : hasAccess;
+        }
+      });
+    });
+
+    document.getElementById('staff-modal').classList.remove('hidden');
+  };
+
+  window.deleteStaffUser = async (id, name) => {
+    if (!confirm(`Are you sure you want to delete employee "${name}"? This will also remove their shift records and commission logs.`)) return;
+    const { error } = await supabase.from('staff_users').delete().eq('id', id);
+    if (error) { showToast('Error deleting staff: ' + error.message, true); return; }
+    showToast('Employee deleted.');
+    loadStaffUsers();
+  };
+
+
+  window.deleteTimecard = async (id) => {
+    if (!confirm('Are you sure you want to delete this shift timecard?')) return;
+    const { error } = await supabase.from('staff_timecards').delete().eq('id', id);
+    if (error) { showToast('Error deleting shift: ' + error.message, true); return; }
+    showToast('Shift timecard deleted.');
+    loadTimecards();
+    loadStaffUsers();
+  };
+
+  window.deleteCommission = async (id) => {
+    if (!confirm('Are you sure you want to delete this commission record?')) return;
+    const { error } = await supabase.from('staff_commissions').delete().eq('id', id);
+    if (error) { showToast('Error deleting commission: ' + error.message, true); return; }
+    showToast('Commission record deleted.');
+    loadCommissions();
+  };
+
+  const refreshCommissionsBtn = document.getElementById('refresh-commissions-btn');
+  refreshCommissionsBtn?.addEventListener('click', loadCommissions);
+
+  // ─── Charter Bookings & Daily Manifest System ─────────
+  // settingsCache is declared at the top of DOMContentLoaded
+  let bookingsCache = [];
+  let currentManifestFilter = 'today';
+  let currentManifestDate = new Date().toISOString().split('T')[0];
+  let calCurrentDate = new Date();
+  let calendarSourceFilter = 'all';
+
+  let isBookingsInit = false;
+  window.initBookingsSection = function() {
+    if (isBookingsInit) return;
+    isBookingsInit = true;
+    // ── Pre-warm fleet cache so the boat dropdown is instant on first tap ──
+    if (!fleetCache || fleetCache.length === 0) {
+      loadFleet().then(() => {
+        // Silently pre-render dropdown options after data arrives
+        if (typeof window.renderCalBoatDropdownOptions === 'function') {
+          window.renderCalBoatDropdownOptions('');
+        }
+      });
+    }
+
+    const tabManifest = document.getElementById('tab-btn-manifest');
+    const tabCal = document.getElementById('tab-btn-calendar');
+    const viewManifest = document.getElementById('view-manifest');
+    const viewCal = document.getElementById('view-calendar');
+
+    if (tabManifest && tabCal && viewManifest && viewCal) {
+      tabManifest.addEventListener('click', () => {
+        tabManifest.className = 'pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2';
+        tabCal.className = 'pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors';
+        viewManifest.classList.remove('hidden');
+        viewCal.classList.add('hidden');
+      });
+      tabCal.addEventListener('click', () => {
+        tabCal.className = 'pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2';
+        tabManifest.className = 'pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors';
+        viewCal.classList.remove('hidden');
+        viewManifest.classList.add('hidden');
+        renderCalendar();
+      });
+    }
+
+    const btnSourceAll = document.getElementById('cal-source-all-btn');
+    const btnSourceInternal = document.getElementById('cal-source-internal-btn');
+    if (btnSourceAll && btnSourceInternal) {
+      btnSourceAll.addEventListener('click', () => {
+        calendarSourceFilter = 'all';
+        btnSourceAll.className = 'px-3.5 py-1.5 rounded-lg bg-white text-on-surface text-xs font-bold shadow-sm transition-all flex items-center gap-1.5';
+        btnSourceInternal.className = 'px-3.5 py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface text-xs font-bold transition-all flex items-center gap-1.5';
+        renderCalendar();
+      });
+      btnSourceInternal.addEventListener('click', () => {
+        calendarSourceFilter = 'internal';
+        btnSourceInternal.className = 'px-3.5 py-1.5 rounded-lg bg-white text-on-surface text-xs font-bold shadow-sm transition-all flex items-center gap-1.5';
+        btnSourceAll.className = 'px-3.5 py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface text-xs font-bold transition-all flex items-center gap-1.5';
+        renderCalendar();
+      });
+    }
+
+    // Filter pills
+    const pillAll = document.getElementById('filter-book-all');
+    const pillToday = document.getElementById('filter-book-today');
+    const pillTomorrow = document.getElementById('filter-book-tomorrow');
+    const pillWeek = document.getElementById('filter-book-week');
+    const datePicker = document.getElementById('manifest-date-picker');
+    const searchInput = document.getElementById('manifest-search');
+
+    function updateFilterPills(activeId) {
+      [pillAll, pillToday, pillTomorrow, pillWeek].forEach(btn => {
+        if (!btn) return;
+        if (btn.id === activeId) {
+          btn.className = 'px-3.5 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold transition-all shadow-sm';
+        } else {
+          btn.className = 'px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all';
+        }
+      });
+    }
+
+    if (pillAll) pillAll.addEventListener('click', () => { currentManifestFilter = 'all'; updateFilterPills('filter-book-all'); renderManifestTable(); });
+    if (pillToday) pillToday.addEventListener('click', () => { currentManifestFilter = 'today'; updateFilterPills('filter-book-today'); renderManifestTable(); });
+    if (pillTomorrow) pillTomorrow.addEventListener('click', () => { currentManifestFilter = 'tomorrow'; updateFilterPills('filter-book-tomorrow'); renderManifestTable(); });
+    if (pillWeek) pillWeek.addEventListener('click', () => { currentManifestFilter = 'week'; updateFilterPills('filter-book-week'); renderManifestTable(); });
+
+    if (datePicker) {
+      datePicker.value = currentManifestDate;
+      datePicker.addEventListener('change', () => {
+        currentManifestDate = datePicker.value;
+        currentManifestFilter = 'date';
+        updateFilterPills('');
+        renderManifestTable();
+      });
+    }
+    if (searchInput) searchInput.addEventListener('input', renderManifestTable);
+
+    // Searchable Boat Dropdown Events
+    const boatSearchInput = document.getElementById('book-boat-search-input');
+    const boatToggle = document.getElementById('book-boat-dropdown-toggle');
+    const boatOptionsList = document.getElementById('book-boat-options-list');
+    const boatSearchContainer = document.getElementById('book-boat-search-container');
+
+    const updateDynamicPrice = () => {
+      const boatId = document.getElementById('book-boat-select')?.value;
+      const duration = document.getElementById('book-duration')?.value;
+      const priceInput = document.getElementById('book-price');
+      if (!priceInput) return;
+      
+      let basePrice = 0;
+      let boatMatch = false;
+
+      // 1. Get Base Boat Price
+      if (boatId && duration) {
+        const boat = (fleetCache || []).find(b => b.id === boatId);
+        if (boat && boat.boat_prices) {
+          const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
+          if (matchingPrice && matchingPrice.price) {
+            basePrice = parseFloat(matchingPrice.price) || 0;
+            boatMatch = true;
+          }
+        }
+      }
+
+      // 2. Sum Dynamic Add-ons
+      let addonsTotal = 0;
+      document.querySelectorAll('.dynamic-addon-row').forEach(row => {
+        const cb = row.querySelector('.addon-cb');
+        const qtyInput = row.querySelector('.addon-qty');
+        const priceInput = row.querySelector('.addon-price-input');
+        if (cb && cb.checked && qtyInput) {
+          const qty = parseInt(qtyInput.value, 10) || 1;
+          const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
+          addonsTotal += (price * qty);
+        }
+      });
+
+      // 3. Add Custom Add-on
+      const customPriceInput = document.getElementById('custom-addon-price');
+      const customNameInput = document.getElementById('custom-addon-name');
+      let customTotal = 0;
+      if (customPriceInput && customPriceInput.value && customNameInput && customNameInput.value.trim() !== '') {
+        customTotal = parseFloat(customPriceInput.value) || 0;
+      }
+
+      // Update Total
+      if (boatMatch || addonsTotal > 0 || customTotal > 0) {
+        const subtotal = basePrice + addonsTotal + customTotal;
+        const tax = subtotal * 0.07;
+        const newTotal = subtotal + tax;
+        priceInput.value = newTotal.toFixed(2);
+        
+        // Pre-fill deposit to 50%
+        const depositEl = document.getElementById('book-deposit');
+        if (depositEl) {
+          depositEl.value = (newTotal * 0.5).toFixed(2);
+        }
+        
+        if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+        
+        // Animation
+        priceInput.classList.add('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
+        if (depositEl) depositEl.classList.add('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
+        
+        setTimeout(() => {
+          priceInput.classList.remove('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
+          if (depositEl) depositEl.classList.remove('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
+        }, 1000);
+      }
+    };
+
+    window.updateEndTime = () => {
+      const startTimeVal = document.getElementById('book-time')?.value;
+      const durationVal = document.getElementById('book-duration')?.value;
+      const endDisplay = document.getElementById('book-end-time-display');
+      
+      if (!endDisplay) return;
+      if (!startTimeVal || !durationVal) {
+        endDisplay.textContent = '--:--';
+        return;
+      }
+
+      const match = startTimeVal.match(/(\d{2}):(\d{2})\s*(AM|PM)/i);
+      if (match) {
+        let h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const ap = match[3].toUpperCase();
+        
+        if (ap === 'PM' && h !== 12) h += 12;
+        if (ap === 'AM' && h === 12) h = 0;
+        
+        const durHrs = parseInt(durationVal, 10) || 0;
+        let endH = h + durHrs;
+        
+        let isNextDay = false;
+        if (endH >= 24) {
+          endH -= 24;
+          isNextDay = true;
+        }
+        
+        let endAp = 'AM';
+        if (endH >= 12) {
+          endAp = 'PM';
+          if (endH > 12) endH -= 12;
+        } else if (endH === 0) {
+          endH = 12;
+        }
+        
+        const mStr = m.toString().padStart(2, '0');
+        const hStr = endH.toString().padStart(2, '0');
+        endDisplay.textContent = `${hStr}:${mStr} ${endAp}${isNextDay ? ' (+1)' : ''}`;
+      } else {
+        endDisplay.textContent = '--:--';
+      }
+    };
+
+    const bookDurationEl = document.getElementById('book-duration');
+    const bookTimeEl = document.getElementById('book-time');
+    if (bookDurationEl) {
+      bookDurationEl.addEventListener('change', () => {
+        updateDynamicPrice();
+        window.updateEndTime();
+      });
+    }
+    if (bookTimeEl) {
+      bookTimeEl.addEventListener('change', window.updateEndTime);
+    }
+
+    window.selectBoatOption = (id, name) => {
+      const searchIn = document.getElementById('book-boat-search-input');
+      const realSel = document.getElementById('book-boat-select');
+      const listEl = document.getElementById('book-boat-options-list');
+      if (searchIn) searchIn.value = name || '';
+      if (realSel) {
+        realSel.innerHTML = `<option value="${id || ''}" data-name="${name || ''}" selected>${name || '-- Select Yacht --'}</option>`;
+        realSel.value = id || '';
+      }
+      if (listEl) listEl.classList.add('hidden');
+      
+      // Update Duration options dynamically
+      const durationEl = document.getElementById('book-duration');
+      if (durationEl) {
+        if (!id) {
+          durationEl.innerHTML = '<option value="">-- Select Yacht First --</option>';
+        } else {
+          const boat = (fleetCache || []).find(b => b.id === id);
+          if (boat && boat.boat_prices && boat.boat_prices.length > 0) {
+            const sortedPrices = [...boat.boat_prices].sort((a, b) => a.duration_hours - b.duration_hours);
+            durationEl.innerHTML = sortedPrices.map(p => 
+              `<option value="${p.duration_hours}">${escapeHtml(p.duration_label)} - $${parseFloat(p.price).toLocaleString()}</option>`
+            ).join('');
+          } else {
+            durationEl.innerHTML = '<option value="4">4 Hours (Default) - Custom Pricing</option>';
+          }
+        }
+      }
+
+      updateDynamicPrice();
+      window.updateEndTime();
+    };
+
+    window.renderBoatDropdownOptions = (filter = '') => {
+      const listEl = document.getElementById('book-boat-options-list');
+      if (!listEl) return;
+      const boats = fleetCache || [];
+      const filtered = boats
+        .filter(b => (b.name || '').toLowerCase().includes(filter.toLowerCase()) || (b.capacity && String(b.capacity).includes(filter)))
+        .sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="p-3 text-center text-xs text-on-surface-variant font-label">No yachts matching "${escapeHtml(filter)}"</div>`;
+        return;
+      }
+      listEl.innerHTML = filtered.map(b => `
+        <div class="p-3 hover:bg-secondary-container/40 cursor-pointer flex items-center justify-between transition-colors boat-option-item" data-id="${b.id}" data-name="${escapeHtml(b.name)}">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm text-secondary">directions_boat</span>
+            <span class="font-bold text-on-surface text-sm">${escapeHtml(b.name)}</span>
+          </div>
+          <span class="text-[11px] font-mono bg-surface-container px-2 py-0.5 rounded text-on-surface-variant font-bold">${b.capacity || 12} max</span>
+        </div>
+      `).join('');
+
+      listEl.querySelectorAll('.boat-option-item').forEach(item => {
+        item.addEventListener('click', () => {
+          window.selectBoatOption(item.dataset.id, item.dataset.name);
+        });
+      });
+    };
+
+    if (boatSearchInput) {
+      boatSearchInput.addEventListener('input', () => {
+        window.renderBoatDropdownOptions(boatSearchInput.value);
+        boatOptionsList?.classList.remove('hidden');
+        if (!boatSearchInput.value.trim()) {
+          const realSel = document.getElementById('book-boat-select');
+          if (realSel) realSel.value = '';
+        }
+      });
+      boatSearchInput.addEventListener('focus', async () => {
+        if (!fleetCache || fleetCache.length === 0) await loadFleet();
+        window.renderBoatDropdownOptions(boatSearchInput.value);
+        boatOptionsList?.classList.remove('hidden');
+      });
+    }
+
+    if (boatToggle) {
+      boatToggle.addEventListener('click', async () => {
+        if (!fleetCache || fleetCache.length === 0) await loadFleet();
+        window.renderBoatDropdownOptions(boatSearchInput?.value || '');
+        boatOptionsList?.classList.toggle('hidden');
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (boatSearchContainer && !boatSearchContainer.contains(e.target)) {
+        boatOptionsList?.classList.add('hidden');
+      }
+    });
+
+    // Calendar Searchable Boat Dropdown Events
+    const calBoatSearchInput = document.getElementById('cal-boat-search-input');
+    const calBoatToggle = document.getElementById('cal-boat-dropdown-toggle');
+    const calBoatOptionsList = document.getElementById('cal-boat-options-list');
+    const calBoatSearchContainer = document.getElementById('cal-boat-search-container');
+    const calBoatTrigger = document.getElementById('cal-boat-trigger');
+
+    window.selectCalBoatOption = (id, name) => {
+      const searchIn = document.getElementById('cal-boat-search-input');
+      const labelEl = document.getElementById('cal-boat-label');
+      const realSel = document.getElementById('cal-boat-filter');
+      const listEl = document.getElementById('cal-boat-options-list');
+      const toggleIcon = document.getElementById('cal-boat-dropdown-toggle');
+      const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
+      const targetId = id || (activeBoats[0]?.id || '');
+      const targetName = name || (activeBoats[0]?.name || '');
+      
+      if (labelEl) labelEl.textContent = targetName;
+      if (searchIn) searchIn.value = '';
+      
+      if (realSel) {
+        let opt = realSel.querySelector(`option[value="${targetId}"]`);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = targetId;
+          realSel.appendChild(opt);
+        }
+        realSel.value = targetId;
+      }
+      if (listEl) listEl.classList.add('hidden');
+      if (toggleIcon) toggleIcon.classList.remove('rotate-180');
+      renderCalendar();
+    };
+
+    window.renderCalBoatDropdownOptions = (filter = '') => {
+      const gridEl = document.getElementById('cal-boat-options-grid');
+      const listEl = document.getElementById('cal-boat-options-list');
+      const targetContainer = gridEl || listEl;
+      const countEl = document.getElementById('cal-boat-options-count');
+      if (!targetContainer) return;
+      
+      const boats = fleetCache || [];
+      const cleanFilter = filter.replace('Select Yacht...', '').trim();
+      const filtered = boats
+        .filter(b => (b.name || '').toLowerCase().includes(cleanFilter.toLowerCase()) || (b.capacity && String(b.capacity).includes(cleanFilter)))
+        .sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
+      
+      if (countEl) {
+        countEl.textContent = `${filtered.length} ${filtered.length === 1 ? 'Yacht' : 'Yachts'}`;
+      }
+
+      if (filtered.length === 0) {
+        targetContainer.innerHTML = `
+          <div class="p-6 text-center text-on-surface-variant flex flex-col items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-3xl text-outline">search_off</span>
+            <p class="text-xs font-bold text-on-surface">No yachts matching "${escapeHtml(cleanFilter)}"</p>
+            <p class="text-[11px] text-on-surface-variant/70">Try searching by name or guest capacity</p>
+          </div>
+        `;
+        return;
+      }
+
+      const realSel = document.getElementById('cal-boat-filter');
+      const currentSelectedId = realSel ? realSel.value : '';
+
+      targetContainer.innerHTML = filtered.map(b => {
+        const isSelected = b.id === currentSelectedId;
+        const imgUrl = b.primary_image_url || 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=200&q=80';
+        const hasIcal = !!b.ical_feed_url;
+        
+        return `
+          <div class="p-2.5 rounded-xl hover:bg-surface-container/80 transition-all flex items-center justify-between cursor-pointer group cal-boat-option-item ${isSelected ? 'bg-secondary/10 ring-1 ring-secondary/40 shadow-sm' : ''}" data-id="${b.id}" data-name="${escapeHtml(b.name)}">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-surface-container flex-shrink-0 border border-outline-variant/60 shadow-sm group-hover:scale-105 transition-transform">
+                <img src="${imgUrl}" loading="lazy" alt="${escapeHtml(b.name)}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=200&q=80'"/>
+                ${isSelected ? `<div class="absolute inset-0 bg-secondary/20 flex items-center justify-center backdrop-blur-[1px]"><span class="material-symbols-outlined text-white text-base drop-shadow-md">check_circle</span></div>` : ''}
+              </div>
+              <div class="flex flex-col min-w-0 pr-2 text-left">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-headline font-extrabold text-on-surface text-xs truncate group-hover:text-secondary transition-colors">${escapeHtml(b.name)}</span>
+                  ${hasIcal ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-bold shrink-0" title="iCal Sync Active"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span> iCal</span>` : `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[9px] font-bold shrink-0" title="Manual Only">Manual</span>`}
+                </div>
+                <div class="flex items-center gap-2 text-[11px] text-on-surface-variant font-medium mt-0.5">
+                  <span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[13px] text-secondary">straighten</span> ${b.length_ft || '55'}ft</span>
+                  <span>•</span>
+                  <span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[13px] text-secondary">group</span> ${b.capacity || 12} guests</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex-shrink-0 flex items-center pl-1">
+              <span class="material-symbols-outlined text-sm ${isSelected ? 'text-secondary font-bold' : 'text-outline group-hover:text-on-surface group-hover:translate-x-0.5'} transition-all">${isSelected ? 'check' : 'chevron_right'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      targetContainer.querySelectorAll('.cal-boat-option-item').forEach(item => {
+        item.addEventListener('click', () => {
+          window.selectCalBoatOption(item.dataset.id, item.dataset.name);
+        });
+      });
+    };
+
+    if (calBoatSearchInput) {
+      calBoatSearchInput.addEventListener('input', () => {
+        window.renderCalBoatDropdownOptions(calBoatSearchInput.value);
+        calBoatOptionsList?.classList.remove('hidden');
+        if (calBoatToggle) calBoatToggle.classList.add('rotate-180');
+        if (!calBoatSearchInput.value.trim()) {
+          const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
+          const realSel = document.getElementById('cal-boat-filter');
+          if (realSel && activeBoats.length > 0) realSel.value = activeBoats[0].id;
+          renderCalendar();
+        }
+      });
+      calBoatSearchInput.addEventListener('focus', () => {
+        // Render immediately from whatever is already cached — no await
+        window.renderCalBoatDropdownOptions(calBoatSearchInput.value === 'Select Yacht...' ? '' : calBoatSearchInput.value);
+        calBoatOptionsList?.classList.remove('hidden');
+        if (calBoatToggle) calBoatToggle.classList.add('rotate-180');
+        // If cache is empty, load in the background and re-render silently
+        if (!fleetCache || fleetCache.length === 0) {
+          loadFleet().then(() => window.renderCalBoatDropdownOptions(''));
+        }
+      });
+    }
+
+    if (calBoatTrigger) {
+      calBoatTrigger.addEventListener('click', (e) => {
+        if (e.target === calBoatSearchInput) return;
+        // Render instantly from cache — no await
+        window.renderCalBoatDropdownOptions(calBoatSearchInput?.value === 'Select Yacht...' ? '' : (calBoatSearchInput?.value || ''));
+        const isHidden = calBoatOptionsList?.classList.contains('hidden');
+        if (isHidden) {
+          calBoatOptionsList?.classList.remove('hidden');
+          if (calBoatToggle) calBoatToggle.classList.add('rotate-180');
+          calBoatSearchInput?.focus();
+        } else {
+          calBoatOptionsList?.classList.add('hidden');
+          if (calBoatToggle) calBoatToggle.classList.remove('rotate-180');
+        }
+        // Background refresh if cache is stale
+        if (!fleetCache || fleetCache.length === 0) {
+          loadFleet().then(() => window.renderCalBoatDropdownOptions(''));
+        }
+      });
+    } else if (calBoatToggle) {
+      calBoatToggle.addEventListener('click', () => {
+        // Render instantly from cache — no await
+        window.renderCalBoatDropdownOptions(calBoatSearchInput?.value === 'Select Yacht...' ? '' : (calBoatSearchInput?.value || ''));
+        calBoatOptionsList?.classList.toggle('hidden');
+        calBoatToggle?.classList.toggle('rotate-180');
+        if (!fleetCache || fleetCache.length === 0) {
+          loadFleet().then(() => window.renderCalBoatDropdownOptions(''));
+        }
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (calBoatSearchContainer && !calBoatSearchContainer.contains(e.target)) {
+        calBoatOptionsList?.classList.add('hidden');
+        if (calBoatToggle) calBoatToggle.classList.remove('rotate-180');
+      }
+    });
+
+    // Modal Events
+    const addBtn = document.getElementById('add-booking-btn');
+    const modal = document.getElementById('booking-modal');
+    const closeBtn = document.getElementById('close-booking-modal');
+    const cancelBtn = document.getElementById('cancel-booking-btn');
+    const boatSelect = document.getElementById('book-boat-select');
+    const form = document.getElementById('booking-form');
+
+    if (addBtn && modal) {
+      addBtn.addEventListener('click', async () => {
+        document.getElementById('booking-modal-title').textContent = 'Schedule Charter Booking';
+        document.getElementById('booking-id').value = '';
+        document.getElementById('book-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('book-time').value = '10:00 AM';
+        document.getElementById('book-duration').value = '4';
+        document.getElementById('book-cust-name').value = '';
+        document.getElementById('book-cust-phone').value = '';
+        document.getElementById('book-cust-email').value = '';
+        document.getElementById('book-guests').value = '8';
+        document.getElementById('book-price').value = '';
+        const depEl = document.getElementById('book-deposit'); if (depEl) depEl.value = '0';
+        const payEl = document.getElementById('book-pay-method'); if (payEl) payEl.value = '';
+        document.getElementById('book-status').value = 'confirmed';
+        document.getElementById('book-notes').value = '';
+        
+        // Reset Custom Addon
+        if (document.getElementById('custom-addon-name')) document.getElementById('custom-addon-name').value = '';
+        if (document.getElementById('custom-addon-price')) document.getElementById('custom-addon-price').value = '';
+
+        if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+        if (!fleetCache || fleetCache.length === 0) await loadFleet();
+        
+        // Load Add-ons dynamically
+        await window.loadBookingAddons();
+        window.selectBoatOption('', '');
+        window.renderBoatDropdownOptions('');
+        modal.classList.remove('hidden');
+      });
+      [closeBtn, cancelBtn].forEach(btn => btn?.addEventListener('click', () => modal.classList.add('hidden')));
+      
+      const saveDraftBtn = document.getElementById('save-draft-btn');
+      if (saveDraftBtn && form) {
+        saveDraftBtn.addEventListener('click', () => {
+          const statusEl = document.getElementById('book-status');
+          const leadStatusEl = document.getElementById('book-lead-status');
+          if (statusEl) statusEl.value = 'inquiry';
+          if (leadStatusEl && (!leadStatusEl.value || leadStatusEl.value === 'new')) {
+            leadStatusEl.value = 'Draft Quote';
+          }
+          if (form.requestSubmit) {
+            form.requestSubmit();
+          } else {
+            form.submit();
           }
         });
-        const permBadges = user.role === 'admin'
-          ? '<span class="bg-primary text-on-primary px-2 py-0.5 rounded text-xs font-bold">Full Access</span>'
-          : `<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs font-medium">${grantedMods} Modules (${totalSubGranted} Actions)</span>`;
+      }
+
+      const statusEl = document.getElementById('book-status');
+      if (statusEl) {
+        statusEl.addEventListener('change', () => {
+          const leadContainer = document.getElementById('lead-status-container');
+          const pdfBtn = document.getElementById('generate-pdf-quote-btn');
+          if (statusEl.value === 'inquiry') {
+            if (leadContainer) leadContainer.classList.remove('hidden');
+            if (pdfBtn) pdfBtn.classList.remove('hidden');
+          } else {
+            if (leadContainer) leadContainer.classList.add('hidden');
+            if (pdfBtn) pdfBtn.classList.add('hidden');
+          }
+        });
+      }
+
+      const pdfBtn = document.getElementById('generate-pdf-quote-btn');
+      if (pdfBtn) {
+        pdfBtn.addEventListener('click', () => {
+          // Populate the hidden template
+          const custName = document.getElementById('book-cust-name').value || 'Guest';
+          const custEmail = document.getElementById('book-cust-email').value || '';
+          const custPhone = document.getElementById('book-cust-phone').value || '';
+          const boatName = document.getElementById('book-boat-select')?.options[document.getElementById('book-boat-select').selectedIndex]?.text || 'TBD';
+          const date = document.getElementById('book-date').value || 'TBD';
+          const time = document.getElementById('book-time').value || 'TBD';
+          const duration = document.getElementById('book-duration').value || '4';
+          const guests = document.getElementById('book-guests').value || '1';
+          const total = document.getElementById('book-price').value || '0';
+
+          document.getElementById('pdf-date-issued').textContent = `Issued: ${new Date().toISOString().split('T')[0]}`;
+          document.getElementById('pdf-cust-name').textContent = custName;
+          document.getElementById('pdf-cust-contact').textContent = `${custPhone} ${custEmail ? '| ' + custEmail : ''}`;
+          document.getElementById('pdf-boat-name').textContent = boatName;
+          document.getElementById('pdf-charter-date').textContent = `${date} at ${time}`;
+          document.getElementById('pdf-duration').textContent = `${duration} Hours • ${guests} Guests`;
+          document.getElementById('pdf-total-price').textContent = `$${parseFloat(total).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
+          // Line Items
+          const tbody = document.getElementById('pdf-line-items');
+          if (tbody) {
+            let itemsHtml = `
+              <tr>
+                <td class="py-3 px-4 text-sm text-gray-800">${duration}-Hour Yacht Charter (${boatName})</td>
+                <td class="py-3 px-4 text-sm text-gray-800 text-right">Included</td>
+              </tr>
+            `;
+            
+            document.querySelectorAll('.dynamic-addon-row').forEach(row => {
+              const cb = row.querySelector('.addon-cb');
+              const qty = row.querySelector('.addon-qty');
+              const priceInput = row.querySelector('.addon-price-input');
+              if (cb && cb.checked) {
+                const qtyVal = parseInt(qty.value, 10) || 1;
+                const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
+                if (price > 0) {
+                  itemsHtml += `
+                    <tr>
+                      <td class="py-3 px-4 text-sm text-gray-800">${cb.dataset.name} (x${qtyVal})</td>
+                      <td class="py-3 px-4 text-sm text-gray-800 text-right">$${(price * qtyVal).toFixed(2)}</td>
+                    </tr>
+                  `;
+                }
+              }
+            });
+
+            const customName = document.getElementById('custom-addon-name')?.value.trim();
+            const customPrice = parseFloat(document.getElementById('custom-addon-price')?.value) || 0;
+            if (customName && customPrice > 0) {
+              itemsHtml += `
+                <tr>
+                  <td class="py-3 px-4 text-sm text-gray-800">Custom: ${customName}</td>
+                  <td class="py-3 px-4 text-sm text-gray-800 text-right">$${customPrice.toFixed(2)}</td>
+                </tr>
+              `;
+            }
+
+            tbody.innerHTML = itemsHtml;
+          }
+
+          const element = document.getElementById('pdf-quote-template');
+          element.classList.remove('hidden');
+          
+          const opt = {
+            margin:       0,
+            filename:     `YRSF_Quote_${custName.replace(/\s+/g, '_')}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+          };
+
+          // Try to show toast if available
+          if (typeof showToast === 'function') showToast('Generating PDF Quote...', 'success');
+
+          // Ensure html2pdf is loaded
+          if (typeof html2pdf !== 'undefined') {
+            html2pdf().set(opt).from(element).save().then(() => {
+              element.classList.add('hidden');
+            });
+          } else {
+            console.error('html2pdf is not loaded');
+            element.classList.add('hidden');
+          }
+        });
+      }
+    }
+
+    const bookPrice = document.getElementById('book-price');
+    const bookDeposit = document.getElementById('book-deposit');
+    const bookBalDisplay = document.getElementById('book-balance-display');
+    const bookBalHidden = document.getElementById('book-balance');
+
+    const updateBalanceCalc = () => {
+      const tot = parseFloat(bookPrice?.value) || 0;
+      const dep = parseFloat(bookDeposit?.value) || 0;
+      const rem = Math.max(0, tot - dep);
+      if (bookBalDisplay) {
+        bookBalDisplay.value = `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+        if (rem === 0 && tot > 0) {
+          bookBalDisplay.classList.remove('text-red-600');
+          bookBalDisplay.classList.add('text-green-600');
+          bookBalDisplay.value = '✓ PAID IN FULL ($0.00)';
+        } else {
+          bookBalDisplay.classList.add('text-red-600');
+          bookBalDisplay.classList.remove('text-green-600');
+        }
+      }
+      if (bookBalHidden) bookBalHidden.value = rem.toFixed(2);
+    };
+
+    // Global Add-ons Loader for the Modal
+    window.loadBookingAddons = async function() {
+      const container = document.getElementById('dynamic-addons-container');
+      if (!container) return;
+      if (container.children.length > 0 && !container.innerHTML.includes('Loading add-ons...')) return;
+      
+      try {
+        const activeAddons = await getAddons();
+        
+        if (activeAddons.length === 0) {
+          container.innerHTML = '<div class="text-[10px] text-on-surface-variant italic">No active add-ons available.</div>';
+          return;
+        }
+
+        container.innerHTML = activeAddons.map(addon => `
+          <div class="dynamic-addon-row flex items-center justify-between p-2 rounded-xl bg-surface-container-lowest border border-outline-variant hover:border-secondary/50 transition-colors">
+            <label class="flex flex-1 items-center gap-2 cursor-pointer text-xs font-bold text-on-surface">
+              <input type="checkbox" data-name="${escapeHtml(addon.name)}" data-price="${addon.price_value || 0}" class="addon-cb text-secondary rounded focus:ring-secondary focus:ring-offset-0">
+              <div class="flex flex-col">
+                <span>${escapeHtml(addon.name)}</span>
+                <div class="flex items-center gap-1 mt-0.5">
+                  <span class="text-[9px] text-on-surface-variant font-medium">$</span>
+                  <input type="number" step="0.01" value="${addon.price_value || 0}" class="addon-price-input w-16 px-1 py-0 bg-white border border-outline-variant rounded text-[10px] font-bold text-on-surface focus:ring-1 focus:ring-secondary focus:outline-none" onclick="event.stopPropagation()">
+                </div>
+              </div>
+            </label>
+            <div class="flex items-center gap-1 opacity-50 transition-opacity" id="qty-wrapper-${addon.id}">
+              <button type="button" class="addon-qty-minus w-6 h-6 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">remove</span></button>
+              <input type="number" min="1" value="1" class="addon-qty w-8 text-center bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 p-0" readonly>
+              <button type="button" class="addon-qty-plus w-6 h-6 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">add</span></button>
+            </div>
+          </div>
+        `).join('');
+
+        // Add listeners for newly rendered addons
+        container.querySelectorAll('.dynamic-addon-row').forEach(row => {
+          const cb = row.querySelector('.addon-cb');
+          const minus = row.querySelector('.addon-qty-minus');
+          const plus = row.querySelector('.addon-qty-plus');
+          const qty = row.querySelector('.addon-qty');
+          const priceInput = row.querySelector('.addon-price-input');
+          const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50');
+
+          if (priceInput) {
+            priceInput.addEventListener('input', () => {
+              if (cb.checked) updateDynamicPrice();
+            });
+            priceInput.addEventListener('change', () => {
+              if (cb.checked) updateDynamicPrice();
+            });
+          }
+
+          cb.addEventListener('change', () => {
+            if (cb.checked) {
+              wrapper.classList.remove('opacity-50');
+            } else {
+              wrapper.classList.add('opacity-50');
+              qty.value = 1;
+            }
+            updateDynamicPrice();
+          });
+
+          minus.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!cb.checked) return;
+            let val = parseInt(qty.value) || 1;
+            if (val > 1) {
+              qty.value = val - 1;
+              updateDynamicPrice();
+            }
+          });
+
+          plus.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!cb.checked) return;
+            let val = parseInt(qty.value) || 1;
+            qty.value = val + 1;
+            updateDynamicPrice();
+          });
+        });
+      } catch (err) {
+        console.error("Failed to load addons", err);
+        container.innerHTML = '<div class="text-[10px] text-red-600 italic">Error loading add-ons.</div>';
+      }
+    }
+
+    if (bookPrice) bookPrice.addEventListener('input', updateBalanceCalc);
+    if (bookDeposit) bookDeposit.addEventListener('input', updateBalanceCalc);
+
+    // Listeners for custom addon row
+    const customAddonPriceInput = document.getElementById('custom-addon-price');
+    const customAddonNameInput = document.getElementById('custom-addon-name');
+    if (customAddonPriceInput) customAddonPriceInput.addEventListener('input', updateDynamicPrice);
+    if (customAddonNameInput) customAddonNameInput.addEventListener('input', updateDynamicPrice);
+
+    // Stripe Payment UI Logic
+    const payMethodSelect = document.getElementById('book-pay-method');
+    const stripePortal = document.getElementById('stripe-portal-container');
+    const genLinkBtn = document.getElementById('generate-stripe-link-btn');
+    const copyLinkBtn = document.getElementById('copy-stripe-link-btn');
+    const linkResultContainer = document.getElementById('stripe-link-result-container');
+    const linkInput = document.getElementById('stripe-generated-link');
+    const linkError = document.getElementById('stripe-link-error');
+    
+    if (payMethodSelect && stripePortal) {
+      payMethodSelect.addEventListener('change', () => {
+        if (payMethodSelect.value === 'stripe') {
+          stripePortal.classList.remove('hidden');
+          setTimeout(() => stripePortal.classList.add('animate-fade-in'), 10);
+        } else {
+          stripePortal.classList.add('hidden');
+          linkResultContainer?.classList.add('hidden');
+          if (linkError) linkError.classList.add('hidden');
+        }
+      });
+    }
+
+    if (genLinkBtn) {
+      genLinkBtn.addEventListener('click', async () => {
+        const bookingId = document.getElementById('booking-id')?.value;
+        if (!bookingId) {
+          showToast('Please save the booking first before generating a link.', true);
+          return;
+        }
+
+        const paymentType = document.getElementById('stripe-payment-type')?.value || 'full';
+        
+        const originalHtml = genLinkBtn.innerHTML;
+        genLinkBtn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white"></span>';
+        genLinkBtn.disabled = true;
+        linkResultContainer?.classList.add('hidden');
+        if (linkError) linkError.classList.add('hidden');
+        
+        try {
+          const res = await fetch('/api/create-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: bookingId, payment_type: paymentType })
+          });
+          
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to generate link');
+          
+          if (linkInput && linkResultContainer) {
+            linkInput.value = data.url;
+            linkResultContainer.classList.remove('hidden');
+          }
+        } catch(err) {
+          showToast('Error generating link: ' + err.message, true);
+          if (linkError) {
+            linkError.textContent = err.message;
+            linkError.classList.remove('hidden');
+          }
+        } finally {
+          genLinkBtn.innerHTML = originalHtml;
+          genLinkBtn.disabled = false;
+        }
+      });
+    }
+
+    if (copyLinkBtn && linkInput) {
+      copyLinkBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(linkInput.value).then(() => {
+          showToast('Payment link copied to clipboard!', 'success');
+          copyLinkBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">check</span>';
+          setTimeout(() => {
+            copyLinkBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">content_copy</span>';
+          }, 2000);
+        });
+      });
+    }
+
+    // View switcher (Table vs Cards)
+    const btnTable = document.getElementById('view-mode-table');
+    const btnCards = document.getElementById('view-mode-cards');
+    const tableWrap = document.getElementById('manifest-table-wrapper');
+    const cardsGrid = document.getElementById('manifest-cards-grid');
+
+    if (btnTable && btnCards && tableWrap && cardsGrid) {
+      btnTable.addEventListener('click', () => {
+        tableWrap.classList.remove('hidden');
+        cardsGrid.classList.add('hidden');
+        btnTable.classList.add('bg-white', 'shadow-sm', 'text-on-surface');
+        btnTable.classList.remove('text-on-surface-variant');
+        btnCards.classList.remove('bg-white', 'shadow-sm', 'text-on-surface');
+        btnCards.classList.add('text-on-surface-variant');
+      });
+      btnCards.addEventListener('click', () => {
+        tableWrap.classList.add('hidden');
+        cardsGrid.classList.remove('hidden');
+        btnCards.classList.add('bg-white', 'shadow-sm', 'text-on-surface');
+        btnCards.classList.remove('text-on-surface-variant');
+        btnTable.classList.remove('bg-white', 'shadow-sm', 'text-on-surface');
+        btnTable.classList.add('text-on-surface-variant');
+      });
+    }
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('booking-id').value;
+        const boat_id = boatSelect.value || null;
+        const boat_name = boatSelect.options[boatSelect.selectedIndex]?.getAttribute('data-name') || boatSelect.options[boatSelect.selectedIndex]?.text.split(' (')[0] || 'Custom Charter';
+        const booking_date = document.getElementById('book-date').value;
+        const start_time = document.getElementById('book-time').value;
+        const duration_hours = parseInt(document.getElementById('book-duration').value) || 4;
+        const customer_name = document.getElementById('book-cust-name').value.trim();
+        const customer_phone = document.getElementById('book-cust-phone').value.trim();
+        const customer_email = document.getElementById('book-cust-email').value.trim() || null;
+        const guest_count = parseInt(document.getElementById('book-guests').value) || 1;
+        const total_price = parseFloat(document.getElementById('book-price').value) || 0;
+        const deposit_amount = parseFloat(document.getElementById('book-deposit')?.value) || 0;
+        const remaining_balance = Math.max(0, total_price - deposit_amount);
+        const payment_method = document.getElementById('book-pay-method')?.value.trim() || null;
+        const status = document.getElementById('book-status').value;
+        let special_requests = document.getElementById('book-notes').value.trim() || '';
+
+        // Build dynamically checked Add-ons string
+        const selectedAddons = [];
+        document.querySelectorAll('.dynamic-addon-row').forEach(row => {
+          const cb = row.querySelector('.addon-cb');
+          const qty = row.querySelector('.addon-qty');
+          const priceInput = row.querySelector('.addon-price-input');
+          if (cb && cb.checked) {
+            const qtyVal = parseInt(qty.value, 10) || 1;
+            const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
+            const priceStr = price > 0 ? ` ($${(price * qtyVal).toFixed(2)})` : '';
+            selectedAddons.push(`[Addon: ${qtyVal}x ${cb.dataset.name}${priceStr}]`);
+          }
+        });
+
+        // Add Custom Add-on if present
+        const customName = document.getElementById('custom-addon-name')?.value.trim();
+        const customPrice = parseFloat(document.getElementById('custom-addon-price')?.value) || 0;
+        if (customName) {
+          const priceStr = customPrice > 0 ? ` ($${customPrice.toFixed(2)})` : '';
+          selectedAddons.push(`[Custom Addon: ${customName}${priceStr}]`);
+        }
+
+        // Prepend to notes
+        if (selectedAddons.length > 0) {
+          special_requests = selectedAddons.join('\\n') + (special_requests ? '\\n\\n' + special_requests : '');
+        }
+
+        // Nullify if empty
+        special_requests = special_requests || null;
+        
+        const lead_status = document.getElementById('book-lead-status')?.value || 'new';
+
+        const payload = { boat_id, boat_name, booking_date, start_time, duration_hours, customer_name, customer_phone, customer_email, guest_count, total_price, deposit_amount, remaining_balance, payment_method, status, special_requests, lead_status, updated_at: new Date().toISOString() };
+
+        try {
+          if (id) {
+            const { error } = await supabase.from('bookings').update(payload).eq('id', id);
+            if (error) throw error;
+            showToast('Charter booking updated successfully!');
+          } else {
+            const { error } = await supabase.from('bookings').insert([{ ...payload, created_at: new Date().toISOString() }]);
+            if (error) throw error;
+            showToast('🛥️ New charter scheduled & manifest updated!', 'success');
+            
+            // Webhook Dispatch for Confirmation Messages
+            try {
+              const settings = await getAllSettings();
+              const webhookUrl = settings.zapier_webhook_url?.value;
+              if (webhookUrl) {
+                fetch(webhookUrl, {
+                  method: 'POST',
+                  mode: 'no-cors',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ event: 'new_booking', data: payload })
+                });
+              }
+            } catch(e) {}
+          }
+          modal.classList.add('hidden');
+          loadBookings();
+        } catch (err) {
+          showToast('Error saving booking: ' + err.message, true);
+        }
+      });
+    }
+
+    // Calendar Navigation & Filtering
+    const calPrev = document.getElementById('cal-prev-btn');
+    const calNext = document.getElementById('cal-next-btn');
+    const calToday = document.getElementById('cal-today-btn');
+    const calFilter = document.getElementById('cal-boat-filter');
+    const calSyncBtn = document.getElementById('cal-sync-now-btn');
+
+    if (calPrev) calPrev.addEventListener('click', () => { calCurrentDate.setMonth(calCurrentDate.getMonth() - 1); renderCalendar(); });
+    if (calNext) calNext.addEventListener('click', () => { calCurrentDate.setMonth(calCurrentDate.getMonth() + 1); renderCalendar(); });
+    if (calToday) calToday.addEventListener('click', () => { calCurrentDate = new Date(); renderCalendar(); });
+    if (calFilter) calFilter.addEventListener('change', () => { renderCalendar(); });
+    if (calSyncBtn) calSyncBtn.addEventListener('click', () => { syncAllIcalFeeds(true); });
+
+    // Auto-sync every 5 minutes silently (no notification toast)
+    const AUTO_SYNC_INTERVAL_MS = 1 * 60 * 1000; // 1 minute
+    let autoSyncTimer = null;
+
+    function startAutoSync() {
+      if (autoSyncTimer) clearInterval(autoSyncTimer);
+      
+      const checkSyncHealth = async () => {
+        try {
+          const { data } = await supabase.from('site_settings').select('updated_at').eq('key', 'cached_ical_events').single();
+          if (data && data.updated_at) {
+            window.lastIcalSyncTime = new Date(data.updated_at);
+          }
+          
+          // Check for new notifications
+          const { data: notifData } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
+          if (notifData && notifData.value && Array.isArray(notifData.value)) {
+            let localNotifs = JSON.parse(localStorage.getItem('yrsf_admin_notifications') || '[]');
+            let addedNew = false;
+            
+            // Loop backwards so newest gets unshifted properly
+            for (let i = notifData.value.length - 1; i >= 0; i--) {
+              const n = notifData.value[i];
+              if (!localNotifs.find(ln => ln.id === n.id)) {
+                localNotifs.unshift(n);
+                addedNew = true;
+                
+                // Show desktop notification if permission granted
+                if ('Notification' in window && Notification.permission === 'granted') {
+                  new Notification(n.title, { body: n.message });
+                }
+              }
+            }
+            
+            if (addedNew) {
+              if (localNotifs.length > 50) localNotifs = localNotifs.slice(0, 50);
+              localStorage.setItem('yrsf_admin_notifications', JSON.stringify(localNotifs));
+              if (typeof window.updateGlobalNotifications === 'function') {
+                window.updateGlobalNotifications(localNotifs);
+              }
+            }
+          }
+        } catch (e) {}
+
+        const calView = document.getElementById('booking-calendar-view');
+        if (calView && !calView.classList.contains('hidden')) {
+          const badge = document.getElementById('cal-last-synced-badge');
+          if (badge && window.lastIcalSyncTime) {
+            const minutesSinceSync = (new Date() - window.lastIcalSyncTime) / 60000;
+            if (minutesSinceSync > 20) {
+              badge.className = 'text-[11px] font-extrabold text-red-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 bg-red-500/10 border border-red-500/20 rounded-2xl shadow-2xs';
+              badge.innerHTML = `<span class="material-symbols-outlined text-[14px]">error</span> Sync Failed (${Math.round(minutesSinceSync)}m ago)`;
+              
+              // Only show toast once every 5 minutes if it fails to avoid spam
+              if (!window.lastToastTime || (new Date() - window.lastToastTime) / 60000 > 5) {
+                showToast(`Background calendar sync hasn't run in ${Math.round(minutesSinceSync)} minutes. Please check your cron job.`, 'error');
+                window.lastToastTime = new Date();
+              }
+            } else {
+              const timeString = window.lastIcalSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const dateString = window.lastIcalSyncTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
+              badge.className = 'text-[11px] font-extrabold text-emerald-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl shadow-2xs';
+              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Auto-syncing &bull; Last: ${dateString} ${timeString}`;
+            }
+          }
+        }
+      };
+
+      // Run health check every 5 minutes
+      autoSyncTimer = setInterval(checkSyncHealth, AUTO_SYNC_INTERVAL_MS);
+      setTimeout(checkSyncHealth, 2000); // Initial check after 2 seconds
+    }
+
+    startAutoSync();
+
+    // Show the auto-sync badge immediately
+    const initBadge = document.getElementById('cal-last-synced-badge');
+    if (initBadge) initBadge.classList.remove('hidden');
+
+    loadBookings();
+  }
+
+  let isFetchingBookings = false;
+  async function loadBookings(forceRefresh = false) {
+    const tbody = document.getElementById('manifest-table-body');
+    // Note: tbody may be absent when called from the dashboard view — that's OK,
+    // renderManifestTable() is a no-op when tbody is null.
+    if (!fleetCache || fleetCache.length === 0) loadFleet();
+
+    const doFetch = async () => {
+      if (isFetchingBookings) return;
+      isFetchingBookings = true;
+      try {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .order('booking_date', { ascending: true })
+          .order('start_time', { ascending: true });
+
+        if (error) throw error;
+        bookingsCache = data || [];
+
+        try {
+          const { data: cachedSetting } = await supabase.from('site_settings').select('value, updated_at').eq('key', 'cached_ical_events').single();
+          if (cachedSetting && cachedSetting.value && Array.isArray(cachedSetting.value) && cachedSetting.value.length > 0) {
+            window.externalIcsEvents = deduplicateIcsEvents(cachedSetting.value);
+            localStorage.setItem('yrsf_external_ics_events', JSON.stringify(window.externalIcsEvents));
+          }
+          if (cachedSetting && cachedSetting.updated_at) {
+            window.lastIcalSyncTime = new Date(cachedSetting.updated_at);
+            
+            // Immediately update badge if calendar view is active
+            const badge = document.getElementById('cal-last-synced-badge');
+            if (badge) {
+              const timeString = window.lastIcalSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const dateString = window.lastIcalSyncTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
+              badge.className = 'text-[11px] font-extrabold text-emerald-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl shadow-2xs';
+              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Auto-syncing &bull; Last: ${dateString} ${timeString}`;
+            }
+          }
+        } catch (e) {}
+
+        renderManifestTable();
+        renderCalendar();
+        if (typeof renderDashboardUpcomingReservations === 'function') renderDashboardUpcomingReservations();
+      } catch (err) {
+        console.error('Error loading bookings:', err);
+        if (!bookingsCache || bookingsCache.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-600">Error loading charter manifest: ${err.message}. Make sure to run the bookings migration SQL!</td></tr>`;
+        }
+      } finally {
+        isFetchingBookings = false;
+      }
+    };
+
+    if (bookingsCache && bookingsCache.length > 0 && !forceRefresh) {
+      renderManifestTable();
+      renderCalendar();
+      doFetch(); // background fetch (stale-while-revalidate)
+    } else {
+      if (!bookingsCache || bookingsCache.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8"><span class="admin-spinner"></span></td></tr>`;
+      }
+      await doFetch();
+    }
+  }
+
+  window.renderDashboardUpcomingReservations = () => {
+    const container = document.getElementById('dashboard-upcoming-reservations');
+    if (!container) return;
+    
+    if (!bookingsCache || bookingsCache.length === 0) {
+      container.innerHTML = `<div class="text-center py-6 text-on-surface-variant font-label text-sm">No upcoming reservations.</div>`;
+      return;
+    }
+
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    // Filter to future or today's bookings, not cancelled, not inquiries
+    const upcoming = bookingsCache.filter(b => {
+      if (b.status === 'cancelled' || b.status === 'inquiry') return false;
+      if (b.booking_date < todayStr) return false;
+      return true;
+    }).sort((a, b) => {
+      // Sort by date then time
+      if (a.booking_date !== b.booking_date) return a.booking_date.localeCompare(b.booking_date);
+      return (a.start_time || '').localeCompare(b.start_time || '');
+    });
+
+    if (upcoming.length === 0) {
+      container.innerHTML = `<div class="text-center py-6 text-on-surface-variant font-label text-sm">No upcoming reservations.</div>`;
+      return;
+    }
+
+    // Limit to top 10 to avoid overflowing dashboard
+    const displayList = upcoming.slice(0, 10);
+
+    container.innerHTML = displayList.map(b => {
+      const isToday = b.booking_date === todayStr;
+      const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+      
+      let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800">Confirmed</span>`;
+      if (b.status === 'completed') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container text-on-surface-variant">Completed</span>`;
+      if (b.status === 'inquiry') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">Quote</span>`;
+
+      return `
+        <div class="flex items-center justify-between p-3 rounded-xl border border-outline-variant hover:border-secondary/50 transition-colors bg-white group cursor-pointer" onclick="document.querySelector('[data-section=bookings]').click(); setTimeout(() => window.editBooking('${b.id}'), 200)">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-surface-container flex flex-col items-center justify-center shrink-0 border border-outline-variant/60 ${isToday ? 'border-red-400 bg-red-50 text-red-700' : 'text-on-surface'}">
+              <span class="text-[9px] font-bold uppercase tracking-wider">${new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { month: 'short' })}</span>
+              <span class="text-sm font-black leading-none">${new Date(b.booking_date + 'T00:00:00').getDate()}</span>
+            </div>
+            <div>
+              <p class="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                ${isToday ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block" title="Departing Today"></span>' : ''}
+                ${escapeHtml(b.customer_name)}
+              </p>
+              <p class="text-xs text-on-surface-variant font-medium flex items-center gap-2 mt-0.5">
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">directions_boat</span> ${escapeHtml(b.boat_name || 'Custom Charter')}</span>
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> ${escapeHtml(b.start_time)} (${b.duration_hours}h)</span>
+              </p>
+            </div>
+          </div>
+          <div class="flex flex-col items-end gap-1">
+            ${statusBadge}
+            <span class="text-xs font-bold text-on-surface font-mono">$${parseFloat(b.total_price || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  };
+
+  function renderManifestTable() {
+    // Always update the dashboard upcoming widget regardless of active section
+    if (typeof renderDashboardUpcomingReservations === 'function') renderDashboardUpcomingReservations();
+
+    const tbody = document.getElementById('manifest-table-body');
+    if (!tbody) return;
+
+    const query = (document.getElementById('manifest-search')?.value || '').toLowerCase().trim();
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const weekOut = new Date(now); weekOut.setDate(weekOut.getDate() + 7);
+    const weekOutStr = weekOut.toISOString().split('T')[0];
+
+    const filtered = bookingsCache.filter(b => {
+      if (b.status === 'inquiry') return false;
+      // Date Filter
+      if (currentManifestFilter === 'today' && b.booking_date !== todayStr) return false;
+      if (currentManifestFilter === 'tomorrow' && b.booking_date !== tomorrowStr) return false;
+      if (currentManifestFilter === 'week' && (b.booking_date < todayStr || b.booking_date > weekOutStr)) return false;
+      if (currentManifestFilter === 'date' && b.booking_date !== currentManifestDate) return false;
+      if (currentManifestFilter === 'all' && b.booking_date < todayStr && b.status !== 'confirmed') return false; // Hide past completed in all
+
+      // Search Filter
+      if (query) {
+        const matchName = (b.customer_name || '').toLowerCase().includes(query);
+        const matchPhone = (b.customer_phone || '').toLowerCase().includes(query);
+        const matchBoat = (b.boat_name || '').toLowerCase().includes(query);
+        if (!matchName && !matchPhone && !matchBoat) return false;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      const cardsGrid = document.getElementById('manifest-cards-grid');
+      if (cardsGrid) cardsGrid.innerHTML = `<div class="col-span-3 text-center py-10 text-on-surface-variant font-label text-sm bg-surface-container-lowest rounded-2xl border border-outline-variant">No charter departures found matching this filter.</div>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-on-surface-variant font-label text-sm">No charter departures found matching this filter. Click "Create New Booking" above to schedule!</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(b => {
+      const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+      const isToday = b.booking_date === todayStr;
+      
+      let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">🟢 Confirmed</span>`;
+      if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold">✓ Completed</span>`;
+      if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">🔴 Cancelled</span>`;
+      if (b.status === 'inquiry') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">📝 Quote / Draft</span>`;
+
+      const tot = parseFloat(b.total_price || 0);
+      const dep = parseFloat(b.deposit_amount || 0);
+      const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, tot - dep);
+
+      return `
+        <tr class="hover:bg-surface-container-low/50 transition-colors ${isToday ? 'bg-amber-50/50' : ''}">
+          <td class="p-2 whitespace-nowrap">
+            <p class="font-bold text-on-surface text-sm flex items-center gap-1.5">
+              ${isToday ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" title="Departing Today"></span>' : ''}
+              ${b.start_time}
+            </p>
+            <p class="text-[10px] font-mono text-on-surface-variant">${dateFormatted}</p>
+          </td>
+          <td class="p-2">
+            <p class="font-bold text-secondary text-sm">${escapeHtml(b.boat_name || '')}</p>
+            <p class="text-[10px] text-on-surface-variant">${b.duration_hours} hr charter</p>
+          </td>
+          <td class="p-2">
+            <p class="font-bold text-on-surface text-sm">${escapeHtml(b.customer_name || '')}</p>
+            <p class="text-[10px] font-mono text-secondary font-medium"><a href="tel:${b.customer_phone}">${escapeHtml(b.customer_phone || '')}</a></p>
+            ${b.customer_email ? `<p class="text-[10px] text-on-surface-variant truncate max-w-[120px]">${escapeHtml(b.customer_email)}</p>` : ''}
+          </td>
+          <td class="p-2 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-blue-100 bg-blue-50 text-blue-800 font-bold text-[10px]">
+              <span class="material-symbols-outlined text-[12px]">group</span> ${b.guest_count} Guests
+            </span>
+          </td>
+          <td class="p-2 whitespace-nowrap">
+            <div class="bg-surface-container-lowest p-1.5 rounded-lg border border-outline-variant/80 space-y-0.5 w-40 shadow-sm font-mono text-[10px]">
+              <div class="flex justify-between font-bold text-on-surface">
+                <span class="text-[9px] text-on-surface-variant font-sans">Total:</span>
+                <span class="text-green-700">$${tot.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div class="flex justify-between text-blue-700 border-t border-outline-variant/30 pt-0.5">
+                <span class="text-[9px] text-on-surface-variant font-sans">Deposit:</span>
+                <span class="font-bold">-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div class="flex justify-between font-bold border-t border-outline-variant/40 pt-0.5 ${rem > 0.01 ? 'text-red-600 bg-red-50/80 px-1 py-0 rounded' : 'text-green-700 bg-green-50/80 px-1 py-0 rounded'}">
+                <span class="text-[9px] font-sans">${rem > 0.01 ? 'Bal Due:' : 'Status:'}</span>
+                <span>${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
+              </div>
+              ${b.payment_method ? `<div class="text-[9px] text-on-surface-variant font-sans italic truncate pt-0.5">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
+              <div class="pt-0.5">${statusBadge.replace('px-2.5 py-1 text-xs', 'px-1.5 py-0.5 text-[10px]')}</div>
+            </div>
+          </td>
+          <td class="p-2 text-[10px] text-on-surface-variant max-w-[150px]">
+            <p class="line-clamp-2 italic leading-tight">${b.special_requests ? escapeHtml(b.special_requests) : '<span class="text-on-surface-variant/50 not-italic">No special notes</span>'}</p>
+          </td>
+          <td class="p-2 text-right whitespace-nowrap">
+            <button onclick="window.printBookingInvoice('${b.id}')" class="p-1 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Generate PDF Invoice">
+              <span class="material-symbols-outlined text-[14px]">receipt_long</span>
+            </button>
+            <button onclick="window.openMessagePreview('${b.id}')" class="p-1 text-on-surface-variant hover:text-green-600 hover:bg-green-50 rounded transition-colors ml-0.5" title="Send WhatsApp Confirmation">
+              <span class="material-symbols-outlined text-[14px]">chat</span>
+            </button>
+            <button onclick="window.editBooking('${b.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-colors ml-0.5" title="Edit Booking">
+              <span class="material-symbols-outlined text-[14px]">edit</span>
+            </button>
+            <button onclick="window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors ml-0.5" title="Cancel & Delete">
+              <span class="material-symbols-outlined text-[14px]">delete</span>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const cardsGrid = document.getElementById('manifest-cards-grid');
+    if (cardsGrid) {
+      cardsGrid.innerHTML = filtered.map(b => {
+        const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+        const isToday = b.booking_date === todayStr;
+        let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">🟢 Confirmed</span>`;
+        if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold">✓ Completed</span>`;
+        if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">🔴 Cancelled</span>`;
+
+        const tot = parseFloat(b.total_price || 0);
+        const dep = parseFloat(b.deposit_amount || 0);
+        const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, tot - dep);
+
+        return `
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${isToday ? 'ring-1 ring-amber-400 bg-amber-50/20' : ''}">
+            <div>
+              <div class="flex items-center justify-between pb-1.5 border-b border-outline-variant mb-1.5">
+                <div>
+                  <span class="inline-flex items-center gap-1 text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container">
+                    🕒 ${b.start_time}
+                  </span>
+                  <span class="text-[10px] font-mono text-on-surface-variant ml-1">${dateFormatted}</span>
+                </div>
+                ${statusBadge.replace('px-2.5 py-1 text-xs', 'px-1.5 py-0.5 text-[10px]')}
+              </div>
+              <h4 class="font-headline text-sm font-bold text-secondary mb-0.5">${escapeHtml(b.boat_name || '')}</h4>
+              <p class="text-[11px] font-bold text-on-surface mb-1.5 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[12px] text-on-surface-variant">person</span> ${escapeHtml(b.customer_name || '')}
+                <span class="text-on-surface-variant font-normal">(${b.guest_count}g • ${b.duration_hours}h)</span>
+              </p>
+
+              <!-- Financial Breakdown Card -->
+              <div class="bg-amber-50/60 border border-amber-200/80 rounded-lg p-2 my-1.5 space-y-1 font-mono text-[10px] shadow-inner">
+                <div class="flex justify-between text-on-surface font-bold">
+                  <span class="font-sans text-[9px] text-on-surface-variant">Total:</span>
+                  <span class="text-[11px] text-green-700">$${tot.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div class="flex justify-between text-blue-700 border-t border-amber-200/50 pt-1">
+                  <span class="font-sans text-[9px] text-on-surface-variant">Deposit:</span>
+                  <span class="font-bold">-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div class="flex justify-between border-t border-amber-200 pt-1 ${rem > 0.01 ? 'text-red-700 font-bold bg-red-100/60 px-1 rounded' : 'text-green-800 font-bold bg-green-100/60 px-1 rounded'}">
+                  <span class="font-sans text-[9px]">${rem > 0.01 ? 'Balance:' : 'Status:'}</span>
+                  <span class="text-[11px]">${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
+                </div>
+                ${b.payment_method ? `<div class="text-[9px] font-sans text-on-surface-variant italic pt-0.5 border-t border-amber-200/40">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
+              </div>
+
+              ${b.special_requests ? `<p class="text-[10px] leading-tight text-on-surface-variant italic bg-surface-container-low p-1.5 rounded-lg mb-1.5">📝 "${escapeHtml(b.special_requests)}"</p>` : ''}
+            </div>
+
+            <div class="flex items-center justify-end gap-1 pt-1.5 border-t border-outline-variant mt-1">
+              <button onclick="event.stopPropagation(); window.printBookingInvoice('${b.id}')" class="p-1 bg-surface-container hover:bg-green-50 hover:text-green-700 rounded transition-colors" title="Print Invoice">
+                <span class="material-symbols-outlined text-[14px]">receipt_long</span>
+              </button>
+              <button onclick="event.stopPropagation(); window.openMessagePreview('${b.id}')" class="p-1 bg-surface-container hover:bg-green-50 hover:text-green-600 rounded transition-colors" title="Send Confirmation Message">
+                <span class="material-symbols-outlined text-[14px]">chat</span>
+              </button>
+              <button onclick="event.stopPropagation(); window.editBooking('${b.id}')" class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-[10px] font-bold text-on-surface flex items-center gap-0.5 transition-colors">
+                <span class="material-symbols-outlined text-[12px]">edit</span> Edit
+              </button>
+              <button onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="px-2 py-1 text-error hover:bg-error-container rounded text-[10px] font-bold transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // Deduplicates an array of iCal events by boat_id + date + time + name key
+  function deduplicateIcsEvents(events) {
+    const seen = new Set();
+    return (events || []).filter(ev => {
+      const key = `${ev.boat_id}|${ev.booking_date}|${ev.start_time}|${ev.customer_name}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  async function syncAllIcalFeeds(showNotification = true) {
+    await loadFleet(true); // Always force a fresh reload from Supabase DB!
+    let boatsWithIcal = fleetCache.filter(b => b.ical_feed_url && b.status === 'active');
+
+    // Since entire fleet option is removed, always default to the first active yacht if none is selected
+    const boatFilterEl = document.getElementById('cal-boat-filter');
+    let selectedBoatId = boatFilterEl ? boatFilterEl.value : '';
+    const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
+    if (!selectedBoatId || selectedBoatId === 'all') {
+      if (activeBoats.length > 0) {
+        selectedBoatId = activeBoats[0].id;
+        if (boatFilterEl) {
+          let opt = boatFilterEl.querySelector(`option[value="${selectedBoatId}"]`);
+          if (!opt) {
+            opt = document.createElement('option');
+            opt.value = selectedBoatId;
+            boatFilterEl.appendChild(opt);
+          }
+          boatFilterEl.value = selectedBoatId;
+        }
+        const calBoatSearchInput = document.getElementById('cal-boat-search-input');
+        if (calBoatSearchInput) calBoatSearchInput.value = activeBoats[0].name;
+      }
+    }
+    if (selectedBoatId && selectedBoatId !== 'all') {
+      boatsWithIcal = boatsWithIcal.filter(b => b.id === selectedBoatId);
+    }
+
+    if (boatsWithIcal.length === 0) {
+      if (showNotification) alert('ℹ️ No active yachts matching your selection have an external iCal (.ics) feed saved yet!\n\nMake sure the selected yacht has an iCal feed URL saved under Fleet Management -> Edit Yacht.');
+      return;
+    }
+
+    const targetName = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : 'TimeTree (one by one)';
+    const syncBtn = document.getElementById('cal-sync-now-btn');
+    const calGrid = document.getElementById('cal-grid');
+    let originalBtnHtml = '';
+    let loaderEl = null;
+
+    if (showNotification && syncBtn) {
+      originalBtnHtml = syncBtn.innerHTML;
+      syncBtn.disabled = true;
+      syncBtn.classList.add('opacity-70');
+      syncBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">sync</span> Syncing ${boatsWithIcal.length === 1 ? 'Selected Yacht' : 'Yachts'}...`;
+    }
+
+    if (showNotification && calGrid) {
+      calGrid.style.position = 'relative';
+      loaderEl = document.createElement('div');
+      loaderEl.id = 'cal-sync-loader';
+      loaderEl.className = 'absolute inset-0 bg-white/70 z-30 flex items-center justify-center flex-col gap-2 backdrop-blur-[1px]';
+      loaderEl.innerHTML = `
+        <div class="w-10 h-10 border-[4px] border-secondary/20 border-t-secondary rounded-full animate-spin"></div>
+        <p class="text-xs font-bold text-secondary uppercase tracking-widest">Syncing ${targetName}...</p>
+      `;
+      calGrid.appendChild(loaderEl);
+    }
+    const targetLabel = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : `${boatsWithIcal.length} yacht(s)`;
+    if (showNotification) showToast(`Syncing calendar feed for ${targetLabel}...`, 'info');
+    
+    if (!window.externalIcsEvents) window.externalIcsEvents = [];
+    window.externalIcsEvents = deduplicateIcsEvents(window.externalIcsEvents);
+    let addedCount = 0;
+    let totalParsedCount = 0;
+    
+    const cutoffDateObj = new Date();
+    cutoffDateObj.setDate(1);
+    cutoffDateObj.setMonth(cutoffDateObj.getMonth() - 1);
+    cutoffDateObj.setHours(0, 0, 0, 0);
+    const cutoffDateStr = cutoffDateObj.toISOString().split('T')[0];
+
+    // Helper: Request deduplication + fast fetcher with 25s timeout to prevent rate-limiting when multiple boats share a feed
+    const inFlightFetches = new Map();
+    const fetchIcsFast = async (url) => {
+      if (inFlightFetches.has(url)) {
+        return await inFlightFetches.get(url);
+      }
+
+      const fetchPromise = (async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 45000);
+
+        const isValidContent = (txt) => {
+          if (!txt) return false;
+          const trimmed = txt.trim();
+          return trimmed.toUpperCase().includes('BEGIN:VEVENT') || trimmed.startsWith('[') || trimmed.startsWith('{');
+        };
+
+        const fetchDirect = async () => {
+          const res = await fetch(url, { signal: controller.signal });
+          if (res.ok) {
+            const text = await res.text();
+            if (isValidContent(text)) return text;
+          }
+          throw new Error('Direct failed');
+        };
+
+        const fetchSupabaseRpc = async () => {
+          const { data: rpcText, error: rpcErr } = await supabase.rpc('fetch_external_url', { target_url: url });
+          if (!rpcErr && isValidContent(rpcText)) return rpcText;
+          throw new Error('Supabase RPC failed');
+        };
+
+        const fetchAllOrigins = async () => {
+          const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: controller.signal });
+          if (res.ok) {
+            const json = await res.json();
+            if (json && isValidContent(json.contents)) return json.contents;
+          }
+          throw new Error('AllOrigins failed');
+        };
+
+        const fetchCodetabs = async () => {
+          const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, { signal: controller.signal });
+          if (res.ok) {
+            const text = await res.text();
+            if (isValidContent(text)) return text;
+          }
+          throw new Error('Codetabs failed');
+        };
+
+        try {
+          const result = await Promise.any([fetchDirect(), fetchSupabaseRpc(), fetchAllOrigins(), fetchCodetabs()]);
+          clearTimeout(timeout);
+          return result;
+        } catch (err) {
+          clearTimeout(timeout);
+          return null;
+        }
+      })();
+
+      inFlightFetches.set(url, fetchPromise);
+      return await fetchPromise;
+    };
+
+    // Process boats sequentially to eliminate burst rate limiting and share requests via inFlightFetches
+    for (const boat of boatsWithIcal) {
+      try {
+        let syncSucceeded = false;
+        const parsedEventsForBoat = [];
+        const rawUrls = (boat.ical_feed_url || '').split(/[\r\n,;]+/).map(u => u.trim()).filter(Boolean);
+
+        await Promise.all(rawUrls.map(async (url) => {
+          const expandCandidateUrls = (u) => {
+            u = u.trim().replace(/^(webcal|ical):\/\//i, 'https://');
+            if (u.includes('yrsf-timetree-bridge.onrender.com')) {
+              u = u.replace('yrsf-timetree-bridge.onrender.com', 'yrsf-website.onrender.com');
+            }
+            const list = [];
+            const cleanCode = u.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+            let extractedCode = cleanCode;
+            const ttMatch = u.match(/(?:public_calendars|calendars|calendar|c=)\/([a-zA-Z0-9_-]+)/i) || u.match(/[?&]c=([a-zA-Z0-9_-]+)/i);
+            if (ttMatch && ttMatch[1]) {
+              extractedCode = ttMatch[1];
+            }
+            if (/^[a-zA-Z0-9_-]{4,35}$/.test(extractedCode)) {
+              // 1. Primary YRSF Render Proxy Endpoint
+              list.push(`https://yrsf-website.onrender.com/timetree.ics?c=${extractedCode}`);
+              // 2. Fallback Render proxy endpoints
+              list.push(`https://renderon.com/${extractedCode}`);
+              list.push(`https://renderon.com/calendar/${extractedCode}`);
+              list.push(`https://renderon.com/ics/${extractedCode}`);
+              // 3. TimeTree public endpoints
+              list.push(`https://timetreeapp.com/public_calendars/${extractedCode}.ics`);
+              list.push(`https://timetreeapp.com/calendars/${extractedCode}.ics`);
+              list.push(`https://api.timetreeapp.com/v1/calendars/${extractedCode}/events.ics`);
+              list.push(`https://timetreeapp.com/public_calendars/${extractedCode}/events.ics`);
+            }
+            if (!u.startsWith('http://') && !u.startsWith('https://') && !/^[a-zA-Z0-9_-]{4,35}$/.test(u)) {
+              u = 'https://' + u;
+            }
+            if (u.startsWith('http://') || u.startsWith('https://')) {
+              list.push(u);
+            }
+            if ((u.includes('timetreeapp.com') || u.includes('render')) && !u.endsWith('.ics') && !u.includes('?')) {
+              const clean = u.replace(/\/$/, '');
+              list.push(clean + '.ics');
+              list.push(clean + '/events.ics');
+              list.push(clean + '/ics');
+            }
+            return Array.from(new Set(list));
+          };
+
+          const candidates = expandCandidateUrls(url);
+          let text = null;
+          
+          // Race all candidate endpoints simultaneously so if proxies or direct URLs work, it resolves as fast as possible
+          const results = await Promise.all(candidates.map(c => fetchIcsFast(c)));
+          text = results.find(t => t && (t.toUpperCase().includes('BEGIN:VEVENT') || t.trim().startsWith('[') || t.trim().startsWith('{')));
+          if (text) {
+            syncSucceeded = true;
+          }
+
+          if (!text) {
+            console.warn(`Could not fetch valid iCal data for ${boat.name} from any candidate URL of: ${url}`);
+            return;
+          }
+
+          // If Render backend proxy returned JSON
+          if (text.trim().startsWith('[') || text.trim().startsWith('{')) {
+            try {
+              const parsed = JSON.parse(text);
+              // Case 1: JSON wraps an .ics string (e.g. { "ics": "BEGIN:VCALENDAR..." })
+              if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+                let foundIcsStr = false;
+                for (const val of Object.values(parsed)) {
+                  if (typeof val === 'string' && val.includes('BEGIN:VEVENT')) {
+                    text = val; // Unwrap .ics string and fall through to iCal parser!
+                    foundIcsStr = true;
+                    break;
+                  }
+                }
+                if (foundIcsStr) {
+                  // Continue below to standard iCal parsing
+                } else {
+                  // Case 2: JSON wraps an array of event objects
+                  let evList = [];
+                  if (Array.isArray(parsed)) {
+                    evList = parsed;
+                  } else {
+                    for (const val of Object.values(parsed)) {
+                      if (Array.isArray(val)) {
+                        evList = val;
+                        break;
+                      }
+                    }
+                  }
+                  for (const ev of evList) {
+                    totalParsedCount++;
+                    const dt = ev.date || ev.startDate || ev.start_date || (ev.start ? String(ev.start).split('T')[0] : null) || ev.booking_date;
+                    if (!dt || dt < cutoffDateStr) continue;
+                    let tm = ev.time || ev.startTime || ev.start_time || 'All Day';
+                    if (ev.start && String(ev.start).includes('T')) {
+                      tm = String(ev.start).split('T')[1].substring(0, 5);
+                    }
+                    const cust = ev.summary || ev.title || ev.name || ev.customer || ev.customer_name || boat.ical_feed_label || 'External Booking';
+                    parsedEventsForBoat.push({
+                      id: 'ics_' + Math.random().toString(36).substr(2, 9),
+                      boat_id: boat.id,
+                      boat_name: boat.name,
+                      booking_date: dt,
+                      start_time: tm,
+                      status: 'external',
+                      customer_name: cust,
+                      source_label: boat.ical_feed_label || 'Render Sync'
+                    });
+                    addedCount++;
+                  }
+                  return;
+                }
+              } else if (Array.isArray(parsed)) {
+                for (const ev of parsed) {
+                  totalParsedCount++;
+                  const dt = ev.date || ev.startDate || ev.start_date || (ev.start ? String(ev.start).split('T')[0] : null) || ev.booking_date;
+                  if (!dt || dt < cutoffDateStr) continue;
+                  let tm = ev.time || ev.startTime || ev.start_time || 'All Day';
+                  if (ev.start && String(ev.start).includes('T')) {
+                    tm = String(ev.start).split('T')[1].substring(0, 5);
+                  }
+                  const cust = ev.summary || ev.title || ev.name || ev.customer || ev.customer_name || boat.ical_feed_label || 'External Booking';
+                  parsedEventsForBoat.push({
+                    id: 'ics_' + Math.random().toString(36).substr(2, 9),
+                    boat_id: boat.id,
+                    boat_name: boat.name,
+                    booking_date: dt,
+                    start_time: tm,
+                    status: 'external',
+                    customer_name: cust,
+                    source_label: boat.ical_feed_label || 'Render Sync'
+                  });
+                  addedCount++;
+                }
+                return;
+              }
+            } catch (e) {}
+          }
+
+          // Unfold folded lines (RFC 5545 line folding)
+          const cleanText = text.replace(/\r?\n[ \t]/g, '');
+          const blocks = cleanText.split('BEGIN:VEVENT');
+          for (let i = 1; i < blocks.length; i++) {
+            const b = blocks[i].split('END:VEVENT')[0];
+            const sumMatch = b.match(/SUMMARY[^\r\n:]*:(.*)/i);
+            const summaryText = sumMatch ? sumMatch[1].trim() : '';
+
+            let filterKeyword = '';
+            if (boat.ical_feed_label) {
+              const lblStr = boat.ical_feed_label.trim();
+              const lowerLbl = lblStr.toLowerCase();
+              if (lowerLbl.startsWith('filter:') || lowerLbl.startsWith('match:') || lowerLbl.startsWith('keyword:') || lowerLbl.startsWith('only:')) {
+                filterKeyword = lblStr.substring(lblStr.indexOf(':') + 1).trim().toLowerCase();
+              }
+            }
+
+            if (filterKeyword) {
+              const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+              const normSummary = normalize(summaryText);
+              const normKeyword = normalize(filterKeyword);
+              if (normKeyword && !normSummary.includes(normKeyword)) {
+                continue;
+              }
+            }
+            totalParsedCount++;
+
+            const formatIcsTime = (timeDigits) => {
+              if (!timeDigits || timeDigits.length < 4) return '';
+              let h = parseInt(timeDigits.substring(0, 2), 10);
+              const m = timeDigits.substring(2, 4);
+              const ampm = h >= 12 ? 'PM' : 'AM';
+              h = h % 12;
+              if (h === 0) h = 12;
+              return `${h}:${m} ${ampm}`;
+            };
+
+            const startMatch = b.match(/DTSTART[^\r\n:]*:(\d{8})(?:T(\d{4,6}))?/i) || b.match(/DTSTART[^\d]*(\d{8})(?:T(\d{4,6}))?/i);
+            const endMatch = b.match(/DTEND[^\r\n:]*:(\d{8})(?:T(\d{4,6}))?/i) || b.match(/DTEND[^\d]*(\d{8})(?:T(\d{4,6}))?/i);
+            if (startMatch && startMatch[1]) {
+              const dtStr = startMatch[1];
+              const startDateFormatted = `${dtStr.substring(0,4)}-${dtStr.substring(4,6)}-${dtStr.substring(6,8)}`;
+
+              let datesToPush = [startDateFormatted];
+              if (endMatch && endMatch[1]) {
+                const endDtStr = endMatch[1];
+                const endDateFormatted = `${endDtStr.substring(0,4)}-${endDtStr.substring(4,6)}-${endDtStr.substring(6,8)}`;
+                if (endDateFormatted > startDateFormatted) {
+                  let curDate = new Date(startDateFormatted + 'T12:00:00');
+                  const endDate = new Date(endDateFormatted + 'T12:00:00');
+                  datesToPush = [];
+                  let daysCount = 0;
+                  while (curDate <= endDate && daysCount < 14) {
+                    datesToPush.push(curDate.toISOString().split('T')[0]);
+                    curDate.setDate(curDate.getDate() + 1);
+                    daysCount++;
+                  }
+                  if (!startMatch[2] && datesToPush.length > 1) {
+                    datesToPush.pop();
+                  }
+                }
+              }
+
+              let startTimeFormatted = 'All Day';
+              let endTimeFormatted = '';
+              if (startMatch[2]) {
+                startTimeFormatted = formatIcsTime(startMatch[2]);
+                if (endMatch && endMatch[2]) {
+                  endTimeFormatted = formatIcsTime(endMatch[2]);
+                }
+              }
+              const displayTime = endTimeFormatted ? `${startTimeFormatted} - ${endTimeFormatted}` : startTimeFormatted;
+
+              for (const dateFormatted of datesToPush) {
+                if (dateFormatted < cutoffDateStr) continue;
+                const custName = summaryText || (boat.ical_feed_label || 'External Block');
+                
+               const isDup = parsedEventsForBoat.some(ex =>
+                  ex.booking_date === dateFormatted &&
+                  ex.start_time === displayTime &&
+                  ex.customer_name === custName
+                );
+                if (isDup) continue;
+
+                parsedEventsForBoat.push({
+                  id: 'ics_' + Math.random().toString(36).substr(2, 9),
+                  boat_id: boat.id,
+                  boat_name: boat.name,
+                  booking_date: dateFormatted,
+                  start_time: displayTime,
+                  status: 'external',
+                  customer_name: custName,
+                  source_label: filterKeyword ? 'TimeTree Sync' : (boat.ical_feed_label || 'External iCal')
+                });
+                addedCount++;
+              }
+            }
+          }
+        }));
+        if (syncSucceeded) {
+          window.externalIcsEvents = window.externalIcsEvents.filter(e => e.boat_id !== boat.id).concat(parsedEventsForBoat);
+        }
+      } catch (err) {
+        console.warn('Could not sync iCal for boat ' + boat.name, err);
+      }
+    }
+      
+    try {
+      window.externalIcsEvents = deduplicateIcsEvents(window.externalIcsEvents);
+      localStorage.setItem('yrsf_external_ics_events', JSON.stringify(window.externalIcsEvents));
+      await supabase.from('site_settings').upsert({
+        key: 'cached_ical_events',
+        value: window.externalIcsEvents,
+        updated_at: new Date().toISOString()
+      });
+    } catch (e) {}
+
+    if (showNotification) {
+      if (addedCount > 0) {
+        showToast(`✓ Synced ${addedCount} new calendar event(s) successfully!`, 'success');
+      } else if (totalParsedCount > 0) {
+        showToast(`✓ Calendar is already up to date!`, 'success');
+      } else {
+        const targetBoatName = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : 'selected yachts';
+        showToast(`⚠️ 0 events found for ${targetBoatName}. Make sure the TimeTree iCal secret link (.ics) is valid and set to public share.`, 'warning', 6000);
+      }
+    }
+    if (showNotification && syncBtn) {
+      syncBtn.disabled = false;
+      syncBtn.classList.remove('opacity-70');
+      syncBtn.innerHTML = originalBtnHtml;
+    }
+    if (showNotification && loaderEl && loaderEl.parentNode) {
+      loaderEl.parentNode.removeChild(loaderEl);
+    }
+    renderCalendar();
+  }
+
+  const timeStringToMinutes = (timeStr) => {
+    if (!timeStr || timeStr.toLowerCase().includes('all day')) return 0;
+    const firstPart = timeStr.split('-')[0].trim();
+    const match = firstPart.match(/(\d+):?(\d*)\s*(AM|PM)/i);
+    if (!match) return 9999;
+    let h = parseInt(match[1], 10);
+    const m = match[2] ? parseInt(match[2], 10) : 0;
+    const ampm = match[3].toUpperCase();
+    if (ampm === 'PM' && h !== 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    return h * 60 + m;
+  };
+
+  function renderCalendar() {
+    const grid = document.getElementById('cal-grid');
+    const title = document.getElementById('cal-month-title');
+    if (!grid || !title) return;
+
+    if (!window.externalIcsEvents || window.externalIcsEvents.length === 0) {
+      try {
+        const saved = localStorage.getItem('yrsf_external_ics_events');
+        if (saved) window.externalIcsEvents = JSON.parse(saved);
+      } catch (e) {}
+      if (!window.externalIcsEvents) window.externalIcsEvents = [];
+    }
+
+    const boatFilterEl = document.getElementById('cal-boat-filter');
+    let selectedBoatId = boatFilterEl ? boatFilterEl.value : '';
+    const activeBoats = (fleetCache || []).filter(b => b.status === 'active');
+    const isMobileView = window.innerWidth < 1024;
+    if (!window._hasCalResizeListener) {
+      window.addEventListener('resize', () => {
+        if (document.getElementById('section-bookings') && !document.getElementById('section-bookings').classList.contains('hidden')) {
+          renderCalendar();
+        }
+      });
+      window._hasCalResizeListener = true;
+    }
+
+    if (!selectedBoatId || selectedBoatId === 'all') {
+      if (activeBoats.length > 0) {
+        selectedBoatId = activeBoats[0].id;
+        if (boatFilterEl) {
+          let opt = boatFilterEl.querySelector(`option[value="${selectedBoatId}"]`);
+          if (!opt) {
+            opt = document.createElement('option');
+            opt.value = selectedBoatId;
+            boatFilterEl.appendChild(opt);
+          }
+          boatFilterEl.value = selectedBoatId;
+        }
+        const calBoatSearchInput = document.getElementById('cal-boat-search-input');
+        if (calBoatSearchInput && (calBoatSearchInput.value === 'Select Yacht...' || !calBoatSearchInput.value)) {
+          calBoatSearchInput.value = activeBoats[0].name;
+        }
+      }
+    }
+
+    const year = calCurrentDate.getFullYear();
+    const month = calCurrentDate.getMonth();
+    title.textContent = calCurrentDate.toLocaleDateString([], { month: 'long', year: 'numeric' });
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // O(N) Hash Map Optimization for Calendar Rendering
+    const bookingsByDate = {};
+    const externalByDate = {};
+    
+    (bookingsCache || []).forEach(b => {
+      if (b.status === 'inquiry') return;
+      if (selectedBoatId !== 'all' && b.boat_id !== selectedBoatId) return;
+      if (!bookingsByDate[b.booking_date]) bookingsByDate[b.booking_date] = [];
+      bookingsByDate[b.booking_date].push(b);
+    });
+    
+    if (calendarSourceFilter !== 'internal') {
+      (window.externalIcsEvents || []).forEach(e => {
+        if (selectedBoatId !== 'all' && e.boat_id !== selectedBoatId) return;
+        if (!externalByDate[e.booking_date]) externalByDate[e.booking_date] = [];
+        externalByDate[e.booking_date].push(e);
+      });
+    }
+
+    let cellsHtml = '';
+
+    for (let i = 0; i < firstDayIndex; i++) {
+      if (isMobileView) {
+        cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl aspect-square w-full opacity-40" style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important;"></div>`;
+      } else {
+        cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl lg:rounded-2xl aspect-square lg:aspect-auto lg:min-h-[96px] p-1 lg:p-2 opacity-40"></div>`;
+      }
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isToday = dateStr === todayStr;
+      
+      const dayBookings = bookingsByDate[dateStr] || [];
+      const dayExternal = externalByDate[dateStr] || [];
+
+      const allEvents = [...dayBookings, ...dayExternal].sort((a, b) => {
+        return timeStringToMinutes(a.start_time) - timeStringToMinutes(b.start_time);
+      });
+
+      const isPast = dateStr < todayStr;
+      const hasEvents = allEvents.length > 0;
+
+      const tileBg = isToday 
+        ? 'bg-gradient-to-br from-secondary/5 via-white to-white border-2 border-secondary shadow-md ring-2 sm:ring-4 ring-secondary/10' 
+        : hasEvents
+          ? 'bg-green-100/90 border-2 border-green-400 shadow-sm hover:bg-green-200 text-green-950'
+          : isPast
+            ? 'bg-surface-container-low/50 hover:bg-surface-container-lowest border border-outline-variant/40 hover:border-outline-variant/80 shadow-2xs opacity-70 hover:opacity-95'
+            : 'bg-white hover:bg-surface-container-lowest/90 border border-outline-variant/70 hover:border-secondary/50 shadow-xs hover:shadow-md';
+
+      const dayNumBg = isToday 
+        ? 'bg-secondary text-white shadow-sm' 
+        : hasEvents
+          ? 'bg-green-600 text-white shadow-sm ring-2 ring-green-300 group-hover/cell:bg-green-700'
+          : isPast
+            ? 'bg-surface-container-high/50 text-on-surface-variant/70 group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary'
+            : 'bg-surface-container text-on-surface group-hover/cell:bg-secondary/10 group-hover/cell:text-secondary';
+
+      if (isMobileView) {
+        cellsHtml += `
+          <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl aspect-square w-full p-1 flex items-center justify-center transition-all duration-200 cursor-pointer group/cell relative overflow-hidden min-w-0" style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important; display: flex !important; align-items: center !important; justify-content: center !important; overflow: hidden !important;">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl font-label text-sm font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
+              ${day}
+            </span>
+          </div>
+        `;
+      } else {
+        const diffDays = Math.round((new Date(dateStr) - new Date(todayStr)) / (1000 * 60 * 60 * 24));
+        let weatherBadge = '';
+        if (diffDays >= 0 && diffDays <= 6) {
+          const icons = ['☀️ 85°', '⛅ 82°', '☀️ 86°', '🌤 84°', '🌧 80°', '☀️ 85°', '⛅ 83°'];
+          weatherBadge = `<span class="hidden lg:flex text-[10px] bg-amber-500/10 text-amber-800 border border-amber-500/20 px-1.5 py-0.5 rounded font-extrabold items-center gap-1 shadow-2xs" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
+        } else if (diffDays > 6 && diffDays <= 14) {
+          weatherBadge = `<span class="hidden lg:inline-block text-[10px] text-on-surface-variant/60 font-medium" title="Long range forecast">⛅</span>`;
+        }
+
+        const badgesHtml = allEvents.map(b => {
+          if (b.status === 'external') {
+            return `
+              <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="px-1.5 py-1 rounded-lg border border-blue-200/80 bg-gradient-to-r from-blue-50 to-indigo-50/70 hover:from-blue-100 hover:to-indigo-100 text-blue-900 shadow-2xs hover:shadow-sm transition-all mb-1 group/badge cursor-pointer flex items-center justify-between gap-1 min-w-0 overflow-hidden leading-none" title="[${escapeHtml(b.source_label)}] ${escapeHtml(b.customer_name)}">
+                <div class="flex items-center gap-1 min-w-0 flex-1">
+                  <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-600 flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
+                  <span class="font-mono text-[9px] font-extrabold text-blue-700 bg-blue-100/90 px-1 py-0.5 rounded shrink-0">${escapeHtml(b.start_time.split(' - ')[0] || b.start_time)}</span>
+                  <span class="font-bold text-[10px] text-on-surface truncate">${escapeHtml(b.customer_name || 'Charter Booking')}</span>
+                </div>
+                <span class="text-[8px] font-extrabold text-blue-600 bg-blue-200/50 px-1 py-0.5 rounded shrink-0 flex items-center gap-0.5"><span class="material-symbols-outlined text-[9px]">event</span> iCal</span>
+              </div>
+            `;
+          }
+
+          let bgClass = 'bg-gradient-to-r from-secondary/10 to-secondary/5 border-secondary/30 text-secondary hover:bg-secondary/15';
+          let dotColor = 'bg-secondary';
+          let statusBadge = 'bg-secondary/10 text-secondary border border-secondary/20';
+          let statusText = 'Confirmed';
+          if (b.status === 'completed') {
+            bgClass = 'bg-surface-container border-outline-variant text-on-surface-variant hover:bg-surface-container-high';
+            dotColor = 'bg-on-surface-variant';
+            statusBadge = 'bg-surface-container-high text-on-surface-variant border border-outline-variant';
+            statusText = 'Completed';
+          } else if (b.status === 'cancelled') {
+            bgClass = 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100/80 opacity-75';
+            dotColor = 'bg-red-600';
+            statusBadge = 'bg-red-100 text-red-800 border border-red-200';
+            statusText = 'Cancelled';
+          }
+
+          return `
+            <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="px-1.5 py-1 rounded-lg border text-[10px] font-bold transition-all mb-1 shadow-2xs hover:shadow-sm cursor-pointer flex items-center justify-between gap-1 min-w-0 overflow-hidden leading-none group/badge ${bgClass}" title="${b.start_time} - ${b.boat_name} (${b.customer_name})">
+              <div class="flex items-center gap-1 min-w-0 flex-1">
+                <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${dotColor} flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
+                <span class="font-mono text-[9px] font-extrabold bg-white/90 px-1 py-0.5 rounded shrink-0 shadow-2xs text-on-surface">${b.start_time.split(' ')[0]}</span>
+                <span class="font-bold text-[10px] truncate">${escapeHtml(b.customer_name || b.boat_name)}</span>
+              </div>
+              <span class="text-[8px] uppercase tracking-wider font-extrabold px-1 py-0.5 rounded shrink-0 ${statusBadge}">${statusText}</span>
+            </div>
+          `;
+        }).join('');
+
+        cellsHtml += `
+          <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl lg:rounded-2xl aspect-square lg:aspect-auto lg:min-h-[96px] p-1 lg:p-2 flex flex-col items-center justify-center lg:items-stretch lg:justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
+            <div class="min-w-0 flex-1 flex flex-col items-center justify-center lg:items-stretch lg:justify-between w-full">
+              <div class="flex items-center justify-between gap-1 min-w-0 w-full">
+                <div class="flex items-center justify-center lg:justify-start gap-1 min-w-0 w-full lg:w-auto">
+                  <span class="inline-flex items-center justify-center w-8 h-8 lg:w-6 lg:h-6 rounded-xl font-label text-sm lg:text-xs font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
+                    ${day}
+                  </span>
+                  ${isToday ? `<span class="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary text-white font-black text-[8px] uppercase tracking-wider shadow-2xs shrink-0">Today</span>` : ''}
+                </div>
+                <div class="hidden lg:flex items-center gap-1 shrink-0 ml-auto">
+                  ${weatherBadge}
+                  ${allEvents.length > 0 ? `<span class="hidden lg:inline-flex text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 shadow-2xs shrink-0">${allEvents.length}</span>` : ''}
+                </div>
+              </div>
+              
+              <!-- Desktop Detailed Event Badges (Compact Single Line) - Strictly 1024px+ (lg:) -->
+              <div class="hidden lg:block space-y-1 overflow-y-auto max-h-[56px] pr-0.5 scrollbar-thin min-w-0 mt-1">
+                ${badgesHtml || `<div class="pt-2 text-center opacity-0 group-hover/cell:opacity-100 transition-opacity"><span class="text-[9px] font-bold text-on-surface-variant/60 flex items-center justify-center gap-0.5"><span class="material-symbols-outlined text-[11px]">add_circle</span> Add Booking</span></div>`}
+              </div>
+            </div>
+            ${allEvents.length === 0 ? `<div class="hidden lg:block mt-auto text-right opacity-30 group-hover/cell:opacity-60 transition-opacity shrink-0"><span class="text-[9px] font-mono font-bold text-on-surface-variant/60">No events</span></div>` : ''}
+          </div>
+        `;
+      }
+    }
+
+    grid.innerHTML = cellsHtml;
+  }
+
+  // ─── Availability Engine ────────────────────────────────────────────────────
+  const CHARTER_START_MINS = 10 * 60;       // 10:00 AM in minutes
+  const CHARTER_END_MINS   = (24 + 2) * 60; // 2:00 AM next day in minutes (26:00)
+
+  function timeStrToMins(str) {
+    if (!str || str === 'All Day') return null;
+    const clean = str.replace(/\s*(AM|PM)\s*/gi, m => m.trim()).trim();
+    const m = clean.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!m) return null;
+    let h = parseInt(m[1]); const min = parseInt(m[2]); const ap = m[3].toUpperCase();
+    if (ap === 'PM' && h !== 12) h += 12;
+    if (ap === 'AM' && h === 12) h = 0;
+    let total = h * 60 + min;
+    // Times between 12:00AM and 2:00AM are "next day" — add 24hrs
+    if (total < 3 * 60) total += 24 * 60;
+    return total;
+  }
+
+  function minsToTimeStr(mins) {
+    const normalMins = mins % (24 * 60);
+    const h24 = Math.floor(normalMins / 60);
+    const m = normalMins % 60;
+    const suffix = h24 >= 12 ? 'PM' : 'AM';
+    const h12 = h24 % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${suffix}`;
+  }
+
+  function calcBoatAvailability(dateStr, boatId) {
+    // Collect all blocked intervals for this boat on this date
+    const bookings = (bookingsCache || []).filter(b => b.booking_date === dateStr && (!boatId || boatId === 'all' || b.boat_id === boatId));
+    const external = (window.externalIcsEvents || []).filter(e => e.booking_date === dateStr && (!boatId || boatId === 'all' || e.boat_id === boatId));
+
+    const blocked = [];
+    [...bookings, ...external].forEach(ev => {
+      const startMins = timeStrToMins(ev.start_time?.split(' - ')[0]);
+      if (startMins === null) return;
+      const durHrs = ev.duration_hours || 4;
+      // For external events try to parse end from "X:XX AM - Y:YY PM"
+      let endMins;
+      if (ev.start_time && ev.start_time.includes(' - ')) {
+        endMins = timeStrToMins(ev.start_time.split(' - ')[1]);
+      }
+      if (!endMins) endMins = startMins + durHrs * 60;
+      blocked.push({ startMins, endMins, label: ev.customer_name || ev.boat_name, boat: ev.boat_name });
+    });
+
+    // Sort & merge overlapping blocks
+    blocked.sort((a, b) => a.startMins - b.startMins);
+    const merged = [];
+    for (const blk of blocked) {
+      if (merged.length && blk.startMins <= merged[merged.length - 1].endMins) {
+        merged[merged.length - 1].endMins = Math.max(merged[merged.length - 1].endMins, blk.endMins);
+      } else {
+        merged.push({ ...blk });
+      }
+    }
+
+    // Calculate free windows within 10AM–2AM
+    const freeWindows = [];
+    let cursor = CHARTER_START_MINS;
+    for (const blk of merged) {
+      const s = Math.max(blk.startMins, CHARTER_START_MINS);
+      const e = Math.min(blk.endMins, CHARTER_END_MINS);
+      if (s > cursor) {
+        freeWindows.push({ startMins: cursor, endMins: s });
+      }
+      cursor = Math.max(cursor, e);
+    }
+    if (cursor < CHARTER_END_MINS) {
+      freeWindows.push({ startMins: cursor, endMins: CHARTER_END_MINS });
+    }
+
+    const totalBlockedMins = merged.reduce((acc, b) => {
+      const s = Math.max(b.startMins, CHARTER_START_MINS);
+      const e = Math.min(b.endMins, CHARTER_END_MINS);
+      return acc + Math.max(0, e - s);
+    }, 0);
+
+    return {
+      freeWindows,
+      blockedBlocks: merged,
+      totalFreeHrs: Math.round(freeWindows.reduce((a, w) => a + (w.endMins - w.startMins), 0) / 60 * 10) / 10,
+      totalBlockedHrs: Math.round(totalBlockedMins / 60 * 10) / 10,
+    };
+  }
+
+  async function getGeminiAvailabilitySummary(dateStr, boatName, availability) {
+    try {
+      const { data: setting } = await supabase.from('site_settings').select('value').eq('key', 'gemini_api_key').single();
+      const apiKey = setting?.value?.key || setting?.value;
+      if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') return null;
+
+      const windows = availability.freeWindows.map(w =>
+        `${minsToTimeStr(w.startMins)} – ${minsToTimeStr(w.endMins)} (${Math.round((w.endMins - w.startMins) / 60 * 10) / 10} hrs)`
+      ).join(', ');
+
+      const prompt = `You are a yacht charter scheduling assistant for a luxury yacht charter company in South Florida called YRSF (Yacht Rentals of South Florida). 
+
+Given the following schedule data, write a SHORT 1-2 sentence natural language availability summary that sounds professional and sales-focused. Highlight the best available window for a booking. 
+
+Date: ${dateStr}
+Boat: ${boatName || 'Fleet'}
+Operating Hours: 10:00 AM – 2:00 AM
+Total Free Hours Today: ${availability.totalFreeHrs} hrs
+Available Windows: ${windows || 'Fully booked'}
+Blocked Hours: ${availability.totalBlockedHrs} hrs
+
+Write ONLY the summary sentence(s), no extra explanation.`;
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ─── Day Events Modal ────────────────────────────────────────────────────────
+  window.showDayEventsModal = async (dateStr) => {
+    const modal = document.getElementById('day-events-modal');
+    const contentEl = document.getElementById('day-events-modal-content');
+    const titleEl = document.getElementById('day-events-modal-title');
+    const addBtn = document.getElementById('day-events-add-booking-btn');
+    const closeBtn = document.getElementById('close-day-events-modal');
+    const closeBtn2 = document.getElementById('day-events-close-btn');
+
+    if (!modal || !contentEl) return;
+
+    const parts = dateStr.split('-');
+    const dateObj = new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
+    const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    if (titleEl) titleEl.textContent = `📅 Schedule for ${formattedDate}`;
+
+    const boatFilterEl = document.getElementById('cal-boat-filter');
+    const selectedBoatId = boatFilterEl ? boatFilterEl.value : 'all';
+    const selectedBoat = fleetCache?.find(b => b.id === selectedBoatId);
+
+    let dayBookings = (bookingsCache || []).filter(b => b.booking_date === dateStr);
+    let dayExternal = calendarSourceFilter === 'internal' ? [] : (window.externalIcsEvents || []).filter(e => e.booking_date === dateStr);
+
+    if (selectedBoatId && selectedBoatId !== 'all') {
+      dayBookings = dayBookings.filter(b => b.boat_id === selectedBoatId);
+      dayExternal = dayExternal.filter(e => e.boat_id === selectedBoatId);
+    }
+
+    const allEvents = [...dayBookings, ...dayExternal].sort((a, b) => {
+      return timeStringToMinutes(a.start_time) - timeStringToMinutes(b.start_time);
+    });
+
+    // ── Render events list ──
+    if (allEvents.length === 0) {
+      contentEl.innerHTML = `
+        <div class="text-center py-8 bg-surface-container-lowest rounded-2xl border border-outline-variant">
+          <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">event_busy</span>
+          <p class="font-bold text-sm text-on-surface">No events scheduled for this day</p>
+          <p class="text-xs text-on-surface-variant mt-1">Click "Add Booking for This Day" below to schedule one.</p>
+        </div>
+      `;
+    } else {
+      contentEl.innerHTML = allEvents.map(ev => {
+        if (ev.status === 'external') {
+          return `
+            <div class="p-4 bg-blue-50/70 border border-blue-200 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded-md bg-blue-600 text-white font-label text-[10px] font-bold uppercase tracking-wider">🔵 ${escapeHtml(ev.source_label || 'TimeTree Sync')}</span>
+                  <span class="font-bold text-xs text-blue-900">${escapeHtml(ev.boat_name)}</span>
+                </div>
+                <h4 class="font-headline font-bold text-sm text-blue-950">${escapeHtml(ev.customer_name)}</h4>
+                <p class="text-xs text-blue-800 flex items-center gap-1.5 font-semibold">
+                  <span class="material-symbols-outlined text-sm">schedule</span> ${escapeHtml(ev.start_time)}
+                </p>
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-secondary transition-all">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded-md bg-secondary text-on-secondary font-label text-[10px] font-bold uppercase tracking-wider">⛵ Charter Booking</span>
+                  <span class="font-bold text-xs text-on-surface">${escapeHtml(ev.boat_name)}</span>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${ev.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-surface-container text-on-surface-variant'}">${ev.status.toUpperCase()}</span>
+                </div>
+                <h4 class="font-headline font-bold text-sm text-on-surface">${escapeHtml(ev.customer_name)} ${ev.customer_phone ? `(${escapeHtml(ev.customer_phone)})` : ''}</h4>
+                <p class="text-xs text-on-surface-variant flex items-center gap-1.5 font-semibold">
+                  <span class="material-symbols-outlined text-sm">schedule</span> ${escapeHtml(ev.start_time)} (${ev.duration_hours || 4} hrs) • Guests: ${ev.guest_count || 1}
+                </p>
+              </div>
+              <button onclick="document.getElementById('day-events-modal').classList.add('hidden'); window.editBooking('${ev.id}')" class="px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface transition-colors shrink-0 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">edit</span> Edit / View details
+              </button>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    // ── Availability Panel ──
+    const avail = calcBoatAvailability(dateStr, selectedBoatId === 'all' ? null : selectedBoatId);
+    const boatLabel = selectedBoat?.name || (selectedBoatId === 'all' ? 'All Boats' : 'Selected Boat');
+
+    const windowsHtml = avail.freeWindows.length === 0
+      ? `<div class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">🔴 Fully Booked — No windows available today.</div>`
+      : avail.freeWindows.map(w => {
+          const hrs = Math.round((w.endMins - w.startMins) / 60 * 10) / 10;
+          const color = hrs >= 6 ? 'bg-green-50 border-green-300 text-green-800' : hrs >= 3 ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-orange-50 border-orange-300 text-orange-800';
+          return `<div class="flex items-center justify-between ${color} border rounded-xl px-3 py-2 text-xs font-bold">
+            <span>✅ ${minsToTimeStr(w.startMins)} – ${minsToTimeStr(w.endMins)}</span>
+            <span class="opacity-80 font-mono">${hrs} hrs free</span>
+          </div>`;
+        }).join('');
+
+    const availPanel = document.createElement('div');
+    availPanel.id = 'avail-panel';
+    availPanel.className = 'mt-4 border border-outline-variant rounded-2xl overflow-hidden';
+    availPanel.innerHTML = `
+      <button id="avail-panel-toggle" aria-expanded="false"
+        class="w-full bg-gradient-to-r from-secondary/10 to-secondary/5 px-4 py-3 border-b border-outline-variant flex items-center gap-2 text-left hover:from-secondary/15 hover:to-secondary/10 transition-colors">
+        <span class="material-symbols-outlined text-secondary text-lg shrink-0">auto_awesome</span>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-headline font-bold text-sm text-on-surface">Availability Analysis — ${escapeHtml(boatLabel)}</h4>
+          <p class="text-[11px] text-on-surface-variant">Operating hours: 10:00 AM – 2:00 AM • ${avail.totalFreeHrs} hrs free today</p>
+        </div>
+        <span class="ml-2 text-[11px] font-bold px-2 py-1 rounded-full shrink-0 ${avail.totalFreeHrs > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}">${avail.totalFreeHrs > 0 ? `${avail.totalFreeHrs} hrs open` : 'Fully Booked'}</span>
+        <span id="avail-chevron" class="material-symbols-outlined text-on-surface-variant text-lg ml-1 shrink-0 transition-transform duration-200" style="transform: rotate(-90deg)">expand_more</span>
+      </button>
+      <div id="avail-panel-body" class="hidden">
+        <div class="p-4 space-y-2">
+          ${windowsHtml}
+        </div>
+        <div id="ai-summary-panel" class="px-4 pb-4">
+          <div class="bg-gradient-to-r from-violet-50 to-purple-50 border border-purple-200 rounded-xl p-3 flex items-start gap-2">
+            <span class="material-symbols-outlined text-purple-600 text-lg mt-0.5">psychology</span>
+            <div class="flex-1">
+              <p class="text-[11px] font-bold text-purple-800 mb-1">AI Availability Summary</p>
+              <p id="ai-summary-text" class="text-xs text-purple-900 italic">
+                <span class="animate-pulse">✨ Generating smart summary...</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    contentEl.after(availPanel);
+    modal.classList.remove('hidden');
+
+    // Wire up the toggle
+    const toggleBtn = availPanel.querySelector('#avail-panel-toggle');
+    const panelBody = availPanel.querySelector('#avail-panel-body');
+    const chevron   = availPanel.querySelector('#avail-chevron');
+    if (toggleBtn && panelBody && chevron) {
+      toggleBtn.addEventListener('click', () => {
+        const isOpen = !panelBody.classList.contains('hidden');
+        if (isOpen) {
+          panelBody.classList.add('hidden');
+          chevron.style.transform = 'rotate(-90deg)';
+          toggleBtn.setAttribute('aria-expanded', 'false');
+        } else {
+          panelBody.classList.remove('hidden');
+          chevron.style.transform = 'rotate(0deg)';
+          toggleBtn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
+
+    // ── Fetch Gemini summary asynchronously ──
+    const summaryEl = document.getElementById('ai-summary-text');
+    if (summaryEl) {
+      const aiText = await getGeminiAvailabilitySummary(dateStr, boatLabel, avail);
+      if (aiText) {
+        summaryEl.textContent = `"${aiText}"`;
+      } else {
+        // Fallback smart-logic summary
+        if (avail.freeWindows.length === 0) {
+          summaryEl.textContent = `${boatLabel} is fully booked on this date with no available charter windows.`;
+        } else {
+          const best = avail.freeWindows.reduce((a, b) => (b.endMins - b.startMins) > (a.endMins - a.startMins) ? b : a);
+          const bestHrs = Math.round((best.endMins - best.startMins) / 60 * 10) / 10;
+          summaryEl.textContent = `Best available window: ${minsToTimeStr(best.startMins)} – ${minsToTimeStr(best.endMins)} (${bestHrs} hrs). ${avail.totalFreeHrs} total hours available today.`;
+        }
+      }
+    }
+
+    if (addBtn) {
+      addBtn.onclick = () => {
+        modal.classList.add('hidden');
+        document.getElementById('avail-panel')?.remove();
+        const createBtn = document.getElementById('add-booking-btn');
+        if (createBtn) {
+          createBtn.click();
+          setTimeout(() => {
+            const dateInput = document.getElementById('book-date');
+            if (dateInput) dateInput.value = dateStr;
+          }, 50);
+        }
+      };
+    }
+
+    [closeBtn, closeBtn2].forEach(btn => {
+      if (btn) btn.onclick = () => { modal.classList.add('hidden'); document.getElementById('avail-panel')?.remove(); };
+    });
+
+    modal.onclick = (e) => {
+      if (e.target === modal) { modal.classList.add('hidden'); document.getElementById('avail-panel')?.remove(); }
+    };
+  };
+
+  window.filterManifestByDate = (dateStr) => {
+    currentManifestDate = dateStr;
+    currentManifestFilter = 'date';
+    const datePicker = document.getElementById('manifest-date-picker');
+    if (datePicker) datePicker.value = dateStr;
+    
+    // Switch to manifest tab
+    const tabManifest = document.getElementById('tab-btn-manifest');
+    if (tabManifest) tabManifest.click();
+  };
+
+  window.editBooking = async (id) => {
+    if (typeof window.initBookingsSection === 'function') window.initBookingsSection();
+    if (!fleetCache || fleetCache.length === 0) await loadFleet();
+    let b = bookingsCache.find(x => x.id === id);
+    if (!b) {
+      const { data } = await supabase.from('bookings').select('*').eq('id', id).single();
+      b = data;
+    }
+    if (!b) return;
+
+    document.getElementById('booking-modal-title').textContent = 'Edit Charter Booking';
+    document.getElementById('booking-id').value = b.id;
+    window.selectBoatOption(b.boat_id, b.boat_name);
+    window.renderBoatDropdownOptions('');
+    document.getElementById('book-date').value = b.booking_date;
+    document.getElementById('book-time').value = b.start_time;
+    document.getElementById('book-duration').value = b.duration_hours || '4';
+    document.getElementById('book-cust-name').value = b.customer_name || '';
+    document.getElementById('book-cust-phone').value = b.customer_phone || '';
+    document.getElementById('book-cust-email').value = b.customer_email || '';
+    document.getElementById('book-guests').value = b.guest_count || '1';
+    document.getElementById('book-price').value = b.total_price || 0;
+    const depEl = document.getElementById('book-deposit'); if (depEl) depEl.value = b.deposit_amount || 0;
+    const payEl = document.getElementById('book-pay-method'); if (payEl) payEl.value = b.payment_method || '';
+    document.getElementById('book-status').value = b.status || 'confirmed';
+    
+    // Parse Add-ons from special_requests
+    await window.loadBookingAddons();
+    let notes = b.special_requests || '';
+    
+    // Reset all add-on checkboxes and custom inputs
+    document.querySelectorAll('#dynamic-addons-container .dynamic-addon-row').forEach(row => {
+      const cb = row.querySelector('.addon-cb');
+      const qty = row.querySelector('.addon-qty');
+      const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50, .flex.items-center.gap-1.opacity-100');
+      if (cb) cb.checked = false;
+      if (qty) qty.value = 1;
+      if (wrapper) wrapper.classList.replace('opacity-100', 'opacity-50');
+    });
+    const cNameEl = document.getElementById('custom-addon-name');
+    const cPriceEl = document.getElementById('custom-addon-price');
+    if (cNameEl) cNameEl.value = '';
+    if (cPriceEl) cPriceEl.value = '';
+
+    if (notes) {
+      const lines = notes.split('\\n');
+      const remainingNotes = [];
+      lines.forEach(line => {
+        const match = line.match(/^\[Addon: (\\d+)x (.*?)(?: \\(\\$([0-9.]+)\\))?\]$/);
+        const customMatch = line.match(/^\[Custom Addon: (.*?)(?: \\(\\$([0-9.]+)\\))?\]$/);
+        
+        if (match) {
+          const qty = match[1];
+          const name = match[2];
+          const cb = document.querySelector(`.addon-cb[data-name="${name.replace(/"/g, '\\\\\"')}"]`);
+          if (cb) {
+             cb.checked = true;
+             const row = cb.closest('.dynamic-addon-row');
+             if (row) {
+                const qtyInput = row.querySelector('.addon-qty');
+                const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50, .flex.items-center.gap-1.opacity-100');
+                if (qtyInput) qtyInput.value = qty;
+                if (wrapper) wrapper.classList.replace('opacity-50', 'opacity-100');
+             }
+          }
+        } else if (customMatch) {
+          const name = customMatch[1];
+          const price = customMatch[2] || 0;
+          if (cNameEl) cNameEl.value = name;
+          if (cPriceEl) cPriceEl.value = price;
+        } else {
+          remainingNotes.push(line);
+        }
+      });
+      // Remove trailing empty lines and re-join
+      while(remainingNotes.length > 0 && remainingNotes[remainingNotes.length - 1].trim() === '') remainingNotes.pop();
+      notes = remainingNotes.join('\\n');
+    }
+    document.getElementById('book-notes').value = notes;
+
+    const leadStatusEl = document.getElementById('book-lead-status');
+    if (leadStatusEl) leadStatusEl.value = b.lead_status || 'new';
+
+    const leadContainer = document.getElementById('lead-status-container');
+    if (leadContainer) {
+      if (b.status === 'inquiry') leadContainer.classList.remove('hidden');
+      else leadContainer.classList.add('hidden');
+    }
+
+    const pdfBtn = document.getElementById('generate-pdf-quote-btn');
+    if (pdfBtn) {
+      if (b.status === 'inquiry') pdfBtn.classList.remove('hidden');
+      else pdfBtn.classList.add('hidden');
+    }
+    
+    const delBtn = document.getElementById('delete-booking-btn');
+    if (delBtn) {
+      if (b.status === 'inquiry' || b.lead_status === 'Draft Quote') {
+        delBtn.classList.remove('hidden');
+        delBtn.onclick = () => {
+          document.getElementById('booking-modal').classList.add('hidden');
+          window.deleteBooking(b.id, b.customer_name);
+        };
+      } else {
+        delBtn.classList.add('hidden');
+      }
+    }
+
+    if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+    if (typeof window.updateEndTime === 'function') window.updateEndTime();
+    document.getElementById('booking-modal')?.classList.remove('hidden');
+  };
+
+  window.printBookingInvoice = async (id) => {
+    const { data: b } = await supabase.from('bookings').select('*').eq('id', id).single();
+    if (!b) return;
+    const price = parseFloat(b.total_price || b.amount || 0);
+    const subtotal = price / 1.07;
+    const tax = price - subtotal;
+    const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
+    const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
+    
+    let specialHtml = '';
+    if (b.special_requests) {
+      specialHtml = `<tr><td colspan="2"><strong>Add-ons / Special Requests:</strong><br><span style="white-space: pre-wrap;">${escapeHtml(b.special_requests)}</span></td></tr>`;
+    }
+
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <html><head><title>Invoice - ${b.customer_name}</title>
+      <style>body{font-family:sans-serif;padding:40px;color:#111}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}.hdr{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:20px}</style>
+      </head><body>
+      <div class="hdr"><div><h1 style="margin:0">YACHT RENTALS OF SOUTH FLORIDA</h1><p>Miami, FL | (305) 990-2192</p></div><h2>CHARTER INVOICE</h2></div>
+      <p><strong>Customer:</strong> ${b.customer_name}<br><strong>Phone:</strong> ${b.customer_phone || '-'}<br><strong>Date:</strong> ${b.booking_date}</p>
+      <table><tr><th>Description</th><th>Amount</th></tr>
+      <tr><td>Yacht Charter: ${b.boat_name || 'Fleet Yacht'} (${b.duration_hours || 4} Hours) & Add-ons</td><td>$${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
+      ${specialHtml}
+      <tr><td>Taxes & Fees (7%)</td><td>$${tax.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
+      <tr style="font-size:1.1em; border-top:2px solid #222;"><th>Total Price</th><th>$${price.toLocaleString(undefined, {minimumFractionDigits: 2})}</th></tr>
+      <tr><td>Deposit Paid</td><td>-$${paid.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
+      <tr style="font-size:1.2em"><th>Balance Due</th><th>$${bal.toLocaleString(undefined, {minimumFractionDigits: 2})}</th></tr>
+      </table>
+      <p style="margin-top:40px;color:#666;font-size:0.9em">Thank you for yachting with YRSF!</p>
+      <script>window.print()</script>
+      </body></html>
+    `);
+    win.document.close();
+  };
+
+  window.openMessagePreview = async (id) => {
+    if (!bookingsCache || bookingsCache.length === 0) await loadBookings();
+    const b = bookingsCache.find(x => x.id === id);
+    if (!b) return;
+    
+    if (!settingsCache) settingsCache = await getAllSettings();
+    const settings = settingsCache;
+    let template = settings.whatsapp_booking_template?.value;
+    if (!template) {
+      template = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} is confirmed! We look forward to welcoming you aboard.";
+    }
+
+    const price = parseFloat(b.total_price || b.amount || 0);
+    const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
+    const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
+
+    const text = template
+      .replace(/{customer_name}/g, b.customer_name || 'Guest')
+      .replace(/{boat_name}/g, b.boat_name || 'our luxury yacht')
+      .replace(/{date}/g, b.booking_date || '')
+      .replace(/{time}/g, b.start_time || '')
+      .replace(/{duration}/g, b.duration_hours ? b.duration_hours + ' hours' : '')
+      .replace(/{guests}/g, b.guest_count || '')
+      .replace(/{price}/g, '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2}))
+      .replace(/{deposit}/g, '$' + paid.toLocaleString(undefined, {minimumFractionDigits: 2}))
+      .replace(/{balance}/g, '$' + bal.toLocaleString(undefined, {minimumFractionDigits: 2}))
+      .replace(/{addons}/g, b.special_requests || 'None')
+      .replace(/{address}/g, () => {
+        if (b.boat_id && typeof fleetCache !== 'undefined') {
+          const boat = fleetCache.find(x => x.id === b.boat_id);
+          if (boat && boat.location) return boat.location;
+        }
+        return 'Miami Marina';
+      });
+
+    const modal = document.getElementById('message-preview-modal');
+    const textArea = document.getElementById('preview-message-text');
+    const btnCopy = document.getElementById('btn-copy-message');
+    const btnSendWhatsApp = document.getElementById('btn-send-whatsapp');
+    const btnSendQuo = document.getElementById('btn-send-quo');
+
+    if (modal && textArea) {
+      textArea.value = text;
+      // Use style.display because Tailwind's 'hidden' class uses display:none !important
+      // which cannot be overridden by adding a 'flex' class.
+      modal.style.display = 'flex';
+
+      // Clear old listeners
+      const newBtnCopy = btnCopy.cloneNode(true);
+      btnCopy.parentNode.replaceChild(newBtnCopy, btnCopy);
+      const newBtnSendWhatsApp = btnSendWhatsApp.cloneNode(true);
+      btnSendWhatsApp.parentNode.replaceChild(newBtnSendWhatsApp, btnSendWhatsApp);
+      const newBtnSendQuo = btnSendQuo?.cloneNode(true);
+      if (newBtnSendQuo) btnSendQuo.parentNode.replaceChild(newBtnSendQuo, btnSendQuo);
+
+      newBtnCopy.addEventListener('click', () => {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Message copied to clipboard!', 'success');
+        });
+      });
+
+      newBtnSendWhatsApp.addEventListener('click', () => {
+        if (!b.customer_phone) {
+          showToast('No phone number recorded for this booking.', true);
+          return;
+        }
+        const cleanPhone = b.customer_phone.replace(/[^0-9]/g, '');
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+      });
+
+      if (newBtnSendQuo) {
+        newBtnSendQuo.addEventListener('click', async () => {
+          if (!b.customer_phone) {
+            showToast('No phone number recorded for this booking.', true);
+            return;
+          }
+          await window.sendQuoSMS(b.customer_phone, text);
+        });
+      }
+    }
+  };
+
+  window.deleteBooking = async (id, name, closePanel = false) => {
+    if (!confirm(`Are you sure you want to delete charter booking for "${name}"?`)) return;
+    const { error } = await supabase.from('bookings').delete().eq('id', id);
+    if (error) { showToast('Error deleting booking: ' + error.message, true); return; }
+    showToast('Charter booking removed.');
+    loadBookings();
+    if (window.initCRMSection) window.initCRMSection();
+    if (closePanel) {
+      const p = document.getElementById('customer-profile-panel');
+      if (p) p.classList.add('translate-x-full');
+    }
+  };
+
+  // ─── Top Notification Bell Logic ──────────────────────────────────────────
+  const notifBellBtn = document.getElementById('notification-bell-btn');
+  const notifDropdown = document.getElementById('notif-dropdown');
+  const notifBadge = document.getElementById('notif-badge');
+  const notifList = document.getElementById('notif-list');
+  const clearNotifsBtn = document.getElementById('clear-notifs-btn');
+
+  let notifications = JSON.parse(localStorage.getItem('yrsf_admin_notifications') || '[]');
+
+  function updateNotificationUI() {
+    if (!notifBadge || !notifList) return;
+    const unread = notifications.filter(n => !n.read);
+    if (unread.length > 0) {
+      notifBadge.textContent = unread.length;
+      notifBadge.classList.remove('hidden');
+    } else {
+      notifBadge.classList.add('hidden');
+    }
+    if (notifications.length === 0) {
+      notifList.innerHTML = `<p class="text-xs text-on-surface-variant text-center py-4">No alerts or notifications</p>`;
+    } else {
+      notifList.innerHTML = notifications.map(n => `
+        <div class="p-2.5 rounded-xl border border-outline-variant bg-surface text-xs flex flex-col gap-1 ${n.read ? 'opacity-60' : ''}">
+          <div class="flex items-center justify-between font-bold text-on-surface">
+            <span>${n.title}</span>
+            <span class="text-[10px] text-on-surface-variant">${new Date(n.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+          </div>
+          <p class="text-on-surface-variant">${n.message}</p>
+        </div>
+      `).join('');
+    }
+  }
+
+  if (notifBellBtn) {
+    notifBellBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      notifDropdown.classList.toggle('hidden');
+      notifications.forEach(n => n.read = true);
+      localStorage.setItem('yrsf_admin_notifications', JSON.stringify(notifications));
+      updateNotificationUI();
+    });
+  }
+  if (clearNotifsBtn) {
+    clearNotifsBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      notifications = [];
+      localStorage.setItem('yrsf_admin_notifications', JSON.stringify(notifications));
+      updateNotificationUI();
+      // Clear from database to prevent background sync from re-adding them
+      try {
+        await fetch('/api/clear-notifs', { method: 'POST' });
+      } catch (err) {
+        console.error('Failed to clear notifications in DB', err);
+      }
+    });
+  }
+  document.addEventListener('click', (e) => {
+    if (!notifDropdown?.contains(e.target) && e.target !== notifBellBtn) {
+      notifDropdown?.classList.add('hidden');
+    }
+  });
+
+  // Push Notification Subscription Logic
+  const enablePushBtn = document.getElementById('enable-push-btn');
+  if (enablePushBtn && 'serviceWorker' in navigator && 'PushManager' in window) {
+    // Check initial subscription status
+    navigator.serviceWorker.ready.then(async (registration) => {
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        enablePushBtn.textContent = 'Alerts Subscribed';
+        enablePushBtn.classList.remove('hover:underline', 'text-primary');
+        enablePushBtn.classList.add('text-green-600', 'cursor-default');
+        enablePushBtn.disabled = true;
+      }
+    });
+
+    enablePushBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        // VAPID Public Key generated for Web Push
+        const VAPID_PUBLIC_KEY = 'BGtkbcjrO12YMoDuq2sCQeHlu47uPx3SHTgFKZFYiBW8Qr0D9vgyZSZPdw6_4ZFEI9Snk1VEAj2qTYI1I1YxBXE';
+        
+        // Convert Base64URL to Uint8Array
+        const padding = '='.repeat((4 - VAPID_PUBLIC_KEY.length % 4) % 4);
+        const base64 = (VAPID_PUBLIC_KEY + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: outputArray
+        });
+
+        // Send to backend
+        const res = await fetch('/api/push-subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription })
+        });
+        if (res.ok) {
+          showToast('Background notifications enabled!', 'success');
+          enablePushBtn.textContent = 'Alerts Subscribed';
+          enablePushBtn.classList.remove('hover:underline', 'text-primary');
+          enablePushBtn.classList.add('text-green-600', 'cursor-default');
+          enablePushBtn.disabled = true;
+        } else {
+          throw new Error('Failed to save subscription');
+        }
+      } catch (error) {
+        console.error('Error subscribing to push:', error);
+        if (Notification.permission === 'denied') {
+          showToast('Notifications are blocked by your browser settings.', 'error');
+        } else {
+          showToast('Failed to enable background notifications.', 'error');
+        }
+      }
+    });
+  }
+  updateNotificationUI();
+
+  window.updateGlobalNotifications = (newNotifs) => {
+    notifications = newNotifs;
+    updateNotificationUI();
+  };
+
+  // ─── 1. Revenue & Analytics Section ──────────────────────────────────────
+  window.initRevenueSection = async function() {
+    const section = document.getElementById('section-revenue');
+    if (!section) return;
+
+    // Load bookings to calculate revenue metrics
+    const { data: bookings } = await supabase.from('bookings').select('*');
+    const allBookings = bookings || [];
+
+    let totalRevenue = 0;
+    let totalPaid = 0;
+    let totalOutstanding = 0;
+    const boatRevenues = {};
+    const monthlyRevenues = new Array(12).fill(0);
+    const dayOfWeekCounts = new Array(7).fill(0);
+
+    allBookings.forEach(b => {
+      const price = parseFloat(b.total_price || b.amount || 0);
+      const paid = parseFloat(b.deposit_paid || b.paid_amount || price * 0.3 || 0);
+      totalRevenue += price;
+      totalPaid += paid;
+      totalOutstanding += Math.max(0, price - paid);
+
+      const boatName = b.boat_name || 'Charter Boat';
+      boatRevenues[boatName] = (boatRevenues[boatName] || 0) + price;
+
+      if (b.charter_date || b.date) {
+        const d = new Date(b.charter_date || b.date);
+        if (!isNaN(d.getTime())) {
+          monthlyRevenues[d.getMonth()] += price;
+          dayOfWeekCounts[d.getDay()] += 1;
+        }
+      }
+    });
+
+    document.getElementById('kpi-revenue-ytd').textContent = '$' + totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+    document.getElementById('kpi-avg-booking').textContent = '$' + (allBookings.length ? (totalRevenue / allBookings.length) : 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+    document.getElementById('kpi-total-bookings').textContent = allBookings.length;
+    document.getElementById('kpi-outstanding').textContent = '$' + totalOutstanding.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+    // Render Chart.js if library loaded
+    if (window.Chart) {
+      if (window._chartMonthInstance) window._chartMonthInstance.destroy();
+      if (window._chartBoatsInstance) window._chartBoatsInstance.destroy();
+      if (window._chartDayInstance) window._chartDayInstance.destroy();
+      if (window._chartIncInstance) window._chartIncInstance.destroy();
+
+      // Monthly chart
+      const ctxMonth = document.getElementById('chart-monthly-revenue')?.getContext('2d');
+      if (ctxMonth) {
+        window._chartMonthInstance = new Chart(ctxMonth, {
+          type: 'bar',
+          data: {
+            labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+            datasets: [{ label: 'Revenue ($)', data: monthlyRevenues, backgroundColor: '#455f88', borderRadius: 6 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      // Top boats chart
+      const ctxBoats = document.getElementById('chart-top-boats')?.getContext('2d');
+      if (ctxBoats) {
+        window._chartBoatsInstance = new Chart(ctxBoats, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(boatRevenues).length ? Object.keys(boatRevenues) : ['68FT Azimut', '55FT Sea Ray', '105FT Sunseeker'],
+            datasets: [{ data: Object.keys(boatRevenues).length ? Object.values(boatRevenues) : [45000, 28000, 62000], backgroundColor: ['#455f88', '#5d5f5f', '#336381', '#4c7b9a'] }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      // Day of week chart
+      const ctxDay = document.getElementById('chart-day-of-week')?.getContext('2d');
+      if (ctxDay) {
+        window._chartDayInstance = new Chart(ctxDay, {
+          type: 'bar',
+          data: {
+            labels: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+            datasets: [{ label: 'Bookings Count', data: dayOfWeekCounts, backgroundColor: '#336381', borderRadius: 6 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      // Income vs Deposits chart
+      const ctxInc = document.getElementById('chart-income-vs-deposits')?.getContext('2d');
+      if (ctxInc) {
+        window._chartIncInstance = new Chart(ctxInc, {
+          type: 'pie',
+          data: {
+            labels: ['Collected / Paid', 'Outstanding Balance'],
+            datasets: [{ data: [totalPaid || 75000, totalOutstanding || 15000], backgroundColor: ['#16a34a', '#d97706'] }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+    }
+  };
+
+  // ─── 1.5 Sales & Inquiries Section (Kanban) ────────────────────────────
+  window.initInquiriesSection = async function() {
+    const colNew = document.getElementById('kanban-col-new');
+    const colContacted = document.getElementById('kanban-col-contacted');
+    const colQuoteSent = document.getElementById('kanban-col-quote_sent');
+    if (!colNew) return;
+
+
+    const { data: leads, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('status', 'inquiry')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching leads:', error);
+      return;
+    }
+
+    const newLeads = [];
+    const contactedLeads = [];
+    const quotedLeads = [];
+
+    (leads || []).forEach(lead => {
+      const stage = lead.lead_status || 'new';
+      if (stage === 'new') newLeads.push(lead);
+      else if (stage === 'contacted') contactedLeads.push(lead);
+      else quotedLeads.push(lead);
+    });
+
+    document.getElementById('count-col-new').textContent = newLeads.length;
+    document.getElementById('count-col-contacted').textContent = contactedLeads.length;
+    document.getElementById('count-col-quote_sent').textContent = quotedLeads.length;
+
+    const renderCard = (b) => {
+      const dateStr = b.booking_date ? new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], {month:'short', day:'numeric'}) : 'TBD';
+      return `
+        <div class="bg-white p-3 rounded-xl border border-outline-variant shadow-sm hover:shadow hover:border-secondary/50 cursor-pointer transition-all flex flex-col gap-2" onclick="window.editBooking('${b.id}')">
+          <div class="flex justify-between items-start">
+            <h4 class="font-bold text-sm text-on-surface truncate pr-2">${escapeHtml(b.customer_name || 'Unknown Lead')}</h4>
+            <span class="text-xs font-mono font-bold text-secondary bg-secondary-container/50 px-1.5 py-0.5 rounded">${dateStr}</span>
+          </div>
+          <p class="text-[11px] text-on-surface-variant flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]">directions_boat</span> ${escapeHtml(b.boat_name || 'TBD')}
+          </p>
+          <div class="flex items-center justify-between mt-1 pt-2 border-t border-outline-variant/50">
+            <span class="text-[10px] font-bold text-on-surface-variant flex items-center gap-1">
+               ${b.lead_source === 'web' ? '<span class="material-symbols-outlined text-[12px] text-blue-500">language</span> Web' : '<span class="material-symbols-outlined text-[12px] text-gray-500">edit_document</span> Manual'}
+            </span>
+            <span class="text-[11px] font-bold text-green-700">$${parseFloat(b.total_price || 0).toLocaleString()}</span>
+          </div>
+        </div>
+      `;
+    };
+
+    colNew.innerHTML = newLeads.length ? newLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No new leads.</p>';
+    colContacted.innerHTML = contactedLeads.length ? contactedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No contacted leads.</p>';
+    colQuoteSent.innerHTML = quotedLeads.length ? quotedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No quotes sent.</p>';
+  };
+
+  // ─── 2. Customer CRM Section ─────────────────────────────────────────────
+  window.initCRMSection = async function() {
+    const tbody = document.getElementById('crm-table-body');
+    if (!tbody) return;
+
+    // Fetch bookings to aggregate customers
+    const { data: bookings } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+    const allBookings = bookings || [];
+
+    const customers = {};
+    allBookings.forEach(b => {
+      const rawPhone = b.customer_phone || '';
+      const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+      const cleanEmail = (b.customer_email || '').toLowerCase().trim();
+      const cleanName = (b.customer_name || 'Guest Customer').toLowerCase().trim();
+      
+      let key = cleanPhone.length >= 7 ? `phone_${cleanPhone}` 
+              : (cleanEmail ? `email_${cleanEmail}` : `name_${cleanName}`);
+
+      if (!key) return;
+      if (!customers[key]) {
+        customers[key] = {
+          id: key, // Using normalized key as virtual ID
+          name: b.customer_name || 'Guest Customer',
+          phone: b.customer_phone || '-',
+          email: b.customer_email || '-',
+          bookings: 0,
+          totalSpent: 0,
+          lastDate: b.booking_date || b.charter_date || b.date || '-',
+          history: [],
+          quotes: []
+        };
+      }
+      
+      const amount = parseFloat(b.total_price || b.amount || 0);
+      const isQuote = b.status === 'inquiry' || b.lead_status === 'Draft Quote';
+      
+      if (isQuote) {
+        customers[key].quotes.push(b);
+      } else {
+        customers[key].bookings += 1;
+        customers[key].totalSpent += amount;
+        customers[key].history.push(b);
+        if (new Date(b.booking_date || b.charter_date || b.date) > new Date(customers[key].lastDate)) {
+          customers[key].lastDate = b.booking_date || b.charter_date || b.date;
+        }
+      }
+    });
+
+    const list = Object.values(customers);
+    window._cachedCustomers = list; // Save for modal
+
+    // ── Render helper ────────────────────────────────────────────────────────
+    function renderCRMTable(data) {
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No customers found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = data.map((c, idx) => {
+        // idx into the full cached list so openCustomerProfile always works
+        const fullIdx = window._cachedCustomers.indexOf(c);
+        return `
+          <tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer" onclick="openCustomerProfile(${fullIdx})">
+            <td class="px-4 py-3 font-bold text-on-surface text-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-secondary-container text-secondary flex items-center justify-center font-bold text-xs">${c.name.charAt(0).toUpperCase()}</div>
+                ${c.name}
+              </div>
+            </td>
+            <td class="px-4 py-3 text-on-surface-variant text-sm">${c.phone}</td>
+            <td class="px-4 py-3 text-right font-bold text-secondary text-sm">${c.bookings}</td>
+            <td class="px-4 py-3 text-right font-bold text-green-700 text-sm">$${c.totalSpent.toLocaleString()}</td>
+            <td class="px-4 py-3 text-on-surface-variant text-sm">${c.lastDate}</td>
+            <td class="px-4 py-3 text-center">
+              <button onclick="event.stopPropagation(); sendWhatsAppCRM('${c.phone}', '${c.name}')" class="px-2.5 py-1 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700">WhatsApp</button>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    // ── Sort & Search state ───────────────────────────────────────────────────
+    let currentSort = 'spent';
+    let currentSearch = '';
+
+    function applyFilters() {
+      let data = [...window._cachedCustomers];
+
+      // Search filter
+      if (currentSearch.trim()) {
+        const q = currentSearch.toLowerCase();
+        data = data.filter(c =>
+          c.name.toLowerCase().includes(q) ||
+          c.phone.includes(q) ||
+          c.email.toLowerCase().includes(q)
+        );
+      }
+
+      // Sort
+      if (currentSort === 'spent') data.sort((a, b) => b.totalSpent - a.totalSpent);
+      else if (currentSort === 'bookings') data.sort((a, b) => b.bookings - a.bookings);
+      else if (currentSort === 'recent') data.sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
+
+      renderCRMTable(data);
+    }
+
+    // ── Wire Sort buttons (once) ──────────────────────────────────────────────
+    const sortContainer = document.getElementById('crm-sort-btns');
+    if (sortContainer && !sortContainer.hasAttribute('data-bound')) {
+      sortContainer.setAttribute('data-bound', 'true');
+      sortContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-crm-sort]');
+        if (!btn) return;
+        currentSort = btn.dataset.crmSort;
+        // Update button styles
+        sortContainer.querySelectorAll('[data-crm-sort]').forEach(b => {
+          b.className = 'px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors';
+        });
+        btn.className = 'px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold';
+        applyFilters();
+      });
+    }
+
+    // ── Wire Search input (once) ──────────────────────────────────────────────
+    const searchInput = document.getElementById('crm-search');
+    if (searchInput && !searchInput.hasAttribute('data-bound')) {
+      searchInput.setAttribute('data-bound', 'true');
+      searchInput.addEventListener('input', (e) => {
+        currentSearch = e.target.value;
+        applyFilters();
+      });
+    }
+
+    // ── Wire New Quote / Lead button (once) ───────────────────────────────────
+    const addInqBtn = document.getElementById('add-inquiry-btn');
+    if (addInqBtn && !addInqBtn.hasAttribute('data-bound')) {
+      addInqBtn.setAttribute('data-bound', 'true');
+      addInqBtn.addEventListener('click', () => {
+        const form = document.getElementById('book-form');
+        if (form) form.reset();
+        const bookingId = document.getElementById('booking-id');
+        if (bookingId) bookingId.value = '';
+        const statusEl = document.getElementById('book-status');
+        if (statusEl) { statusEl.value = 'inquiry'; statusEl.dispatchEvent(new Event('change')); }
+        const modal = document.getElementById('booking-modal');
+        if (modal) modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      });
+    }
+
+    // Initial render sorted by most spent
+    applyFilters();
+  };
+
+  window.openCustomerProfile = function(idx) {
+    const c = window._cachedCustomers[idx];
+    if (!c) return;
+    window._openCustomerIdx = idx; // Track for refresh
+
+    document.getElementById('cp-name').textContent = c.name;
+    document.getElementById('cp-phone').textContent = c.phone;
+    document.getElementById('cp-email').textContent = c.email;
+    document.getElementById('cp-avatar').textContent = c.name.charAt(0).toUpperCase();
+    
+    document.getElementById('cp-ltv').textContent = '$' + c.totalSpent.toLocaleString();
+    document.getElementById('cp-bookings').textContent = c.bookings;
+    document.getElementById('cp-last-visit').textContent = c.lastDate;
+
+    // Render History
+    const historyList = document.getElementById('cp-history-list');
+    historyList.innerHTML = c.history.length === 0 ? `<tr><td colspan="4" class="text-center p-4 text-xs text-on-surface-variant">No confirmed charters yet.</td></tr>` : 
+      c.history.map(b => `
+        <tr class="hover:bg-surface-container-low transition-colors group">
+          <td class="p-3 text-sm text-on-surface cursor-pointer" onclick="editBooking('${b.id}')">${b.booking_date || b.charter_date || b.date}</td>
+          <td class="p-3 text-sm font-bold text-secondary cursor-pointer" onclick="editBooking('${b.id}')">${b.boat_name || 'Yacht'}</td>
+          <td class="p-3 text-sm font-bold text-green-700 text-right cursor-pointer" onclick="editBooking('${b.id}')">$${parseFloat(b.total_price || b.amount || 0).toLocaleString()}</td>
+          <td class="p-3 text-right">
+             <button onclick="event.stopPropagation(); deleteBooking('${b.id}', '${escapeHtml(b.customer_name || 'Customer')}', true)" class="opacity-0 group-hover:opacity-100 p-1 text-on-surface-variant hover:text-red-600 transition-all rounded hover:bg-red-50" title="Remove Charter">
+               <span class="material-symbols-outlined text-[16px]">delete</span>
+             </button>
+          </td>
+        </tr>
+      `).join('');
+
+    // Render Quotes
+    const quotesList = document.getElementById('cp-quotes-list');
+    quotesList.innerHTML = c.quotes.length === 0 ? `<p class="text-xs text-center text-on-surface-variant p-4">No quotes or inquiries.</p>` :
+      c.quotes.map(q => `
+        <div class="border border-outline-variant rounded-xl p-3 bg-surface text-sm">
+          <div class="flex items-center justify-between mb-1">
+            <span class="font-bold text-on-surface">${q.boat_name || 'Yacht Inquiry'}</span>
+            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full font-bold">${q.lead_status || 'Draft'}</span>
+          </div>
+          <div class="text-xs text-on-surface-variant mb-2">Requested Date: ${q.booking_date || q.charter_date || 'TBD'}</div>
+          <div class="flex justify-end gap-2">
+            <button onclick="editBooking('${q.id}')" class="text-xs font-bold text-secondary hover:underline">Edit/Send Quote</button>
+          </div>
+        </div>
+      `).join('');
+
+    // Setup Draft Quote button
+    const draftBtn = document.getElementById('cp-draft-quote-btn');
+    if (draftBtn) {
+      draftBtn.onclick = () => {
+        // Close the customer profile modal
+        document.getElementById('customer-profile-modal').classList.add('hidden');
+
+        // Directly open and populate the booking modal (same modal used by add-booking-btn)
+        const form = document.getElementById('book-form');
+        if (form) form.reset();
+
+        const bookingIdEl = document.getElementById('booking-id');
+        if (bookingIdEl) bookingIdEl.value = '';
+
+        // Set status to inquiry first so the status-dependent fields render correctly
+        const statusEl = document.getElementById('book-status');
+        if (statusEl) {
+          statusEl.value = 'inquiry';
+          statusEl.dispatchEvent(new Event('change'));
+        }
+
+        // Populate customer fields
+        setTimeout(() => {
+          const nameEl = document.getElementById('book-cust-name');
+          if (nameEl) nameEl.value = c.name || '';
+          const emailEl = document.getElementById('book-cust-email');
+          if (emailEl) emailEl.value = c.email !== '-' ? c.email : '';
+          const phoneEl = document.getElementById('book-cust-phone');
+          if (phoneEl) phoneEl.value = c.phone !== '-' ? c.phone : '';
+        }, 50);
+
+        // Open the modal
+        const modal = document.getElementById('booking-modal');
+        if (modal) modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      };
+    }
+
+    // Wire refresh button (once)
+    const refreshBtn = document.getElementById('cp-refresh-btn');
+    if (refreshBtn && !refreshBtn.hasAttribute('data-bound')) {
+      refreshBtn.setAttribute('data-bound', 'true');
+      refreshBtn.addEventListener('click', async () => {
+        const icon = refreshBtn.querySelector('.material-symbols-outlined');
+        if (icon) icon.style.animation = 'spin 0.8s linear infinite';
+        refreshBtn.disabled = true;
+        await window.initCRMSection();
+        if (icon) icon.style.animation = '';
+        refreshBtn.disabled = false;
+        // Reopen with updated data
+        const savedIdx = window._openCustomerIdx;
+        if (savedIdx !== undefined && window._cachedCustomers[savedIdx]) {
+          window.openCustomerProfile(savedIdx);
+        }
+        showToast('Customer data refreshed.');
+      });
+    }
+
+    document.getElementById('customer-profile-modal').classList.remove('hidden');
+  };
+
+  window.initInquiriesSection = async function() {
+    const kanbanNew = document.getElementById('kanban-col-new');
+    const kanbanContacted = document.getElementById('kanban-col-contacted');
+    const kanbanSent = document.getElementById('kanban-col-quote_sent');
+    if (!kanbanNew || !kanbanContacted || !kanbanSent) return;
+
+    const { data: leads } = await supabase.from('bookings').select('*').in('status', ['inquiry']).order('created_at', { ascending: false });
+    const allLeads = leads || [];
+
+    const newLeads = allLeads.filter(l => l.lead_status === 'New Web Request');
+    const contactedLeads = allLeads.filter(l => l.lead_status === 'Contacted' || l.lead_status === 'Draft Quote');
+    const quotedLeads = allLeads.filter(l => l.lead_status === 'Quote Sent');
+
+    document.getElementById('count-col-new').textContent = newLeads.length;
+    document.getElementById('count-col-contacted').textContent = contactedLeads.length;
+    document.getElementById('count-col-quote_sent').textContent = quotedLeads.length;
+
+    const renderCard = (l) => {
+      return `
+        <div class="bg-surface border border-outline-variant rounded-xl p-3 shadow-sm hover:shadow transition-shadow cursor-pointer flex flex-col gap-2" onclick="editBooking('${l.id}')">
+          <div class="flex justify-between items-start">
+            <span class="font-bold text-sm text-on-surface">${l.customer_name || 'Web Lead'}</span>
+            <span class="text-xs font-bold text-secondary bg-secondary-container px-2 py-0.5 rounded-md">${l.boat_name || 'Yacht'}</span>
+          </div>
+          <div class="flex justify-between items-center text-xs text-on-surface-variant">
+            <span>Date: ${l.booking_date || l.charter_date || 'TBD'}</span>
+            <span class="font-bold text-green-700">$${parseFloat(l.total_price || 0).toLocaleString()}</span>
+          </div>
+        </div>
+      `;
+    };
+
+    kanbanNew.innerHTML = newLeads.length ? newLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No new leads.</p>';
+    kanbanContacted.innerHTML = contactedLeads.length ? contactedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No contacted leads.</p>';
+    kanbanSent.innerHTML = quotedLeads.length ? quotedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No quotes sent.</p>';
+  };
+
+  window.sendWhatsAppCRM = function(phone, name) {
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const msg = encodeURIComponent(`Hi ${name}! Thanks for yachting with Yacht Rentals of South Florida. Would you like to plan another charter experience soon?`);
+    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+  };
+
+  // ─── 5. Promos & Discounts Section ───────────────────────────────────────
+  window.initPromosSection = async function() {
+    const tbody = document.getElementById('promos-table-body');
+    const addBtn = document.getElementById('add-promo-btn');
+    if (!tbody) return;
+
+    const { data: promos } = await supabase.from('promo_codes').select('*').order('created_at', { ascending: false });
+    const list = promos || [];
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No promo codes active yet.</td></tr>`;
+    } else {
+      tbody.innerHTML = list.map(p => `
+        <tr class="border-b border-outline-variant">
+          <td class="px-4 py-3 font-bold text-secondary text-sm">${p.code}</td>
+          <td class="px-4 py-3 text-on-surface text-sm">${p.type === 'percent' ? p.value + '%' : '$' + p.value} OFF</td>
+          <td class="px-4 py-3 text-on-surface-variant text-sm">${p.expires_at || 'Never'}</td>
+          <td class="px-4 py-3 text-right text-sm">${p.used_count} / ${p.max_uses || 'Unlimited'}</td>
+          <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${p.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.active ? 'Active' : 'Disabled'}</span></td>
+          <td class="px-4 py-3 text-center">
+            <button onclick="togglePromoCode('${p.id}', ${p.active})" class="text-xs font-bold text-secondary hover:underline">${p.active ? 'Disable' : 'Enable'}</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    if (addBtn && !addBtn._bound) {
+      addBtn._bound = true;
+      addBtn.addEventListener('click', async () => {
+        const code = prompt('Enter promo code (e.g. VIP2026):')?.toUpperCase();
+        if (!code) return;
+        const value = prompt('Enter discount percentage or dollar amount:', '15');
+        await supabase.from('promo_codes').insert([{ code, type: 'percent', value: parseFloat(value || 10), active: true }]);
+        showToast('Promo code created!');
+        initPromosSection();
+      });
+    }
+  };
+
+  window.togglePromoCode = async function(id, active) {
+    await supabase.from('promo_codes').update({ active: !active }).eq('id', id);
+    initPromosSection();
+  };
+
+  // ─── 6. Reviews Manager Section ──────────────────────────────────────────
+  window.initReviewsSection = async function() {
+    const listEl = document.getElementById('reviews-list');
+    if (!listEl) return;
+
+    const { data: reviews } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+    const items = reviews || [];
+
+    if (items.length === 0) {
+      listEl.innerHTML = `<p class="text-center text-on-surface-variant py-8 text-sm">No customer reviews waiting for moderation.</p>`;
+    } else {
+      listEl.innerHTML = items.map(r => `
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-bold text-on-surface">${r.customer_name}</span>
+              <span class="text-amber-500 font-bold">★ ${r.rating} / 5</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${r.status.toUpperCase()}</span>
+            </div>
+            <p class="text-sm text-on-surface-variant italic">"${r.review_text}"</p>
+            <p class="text-xs text-on-surface-variant mt-1">Yacht: ${r.boat_name || 'Fleet Yacht'}</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="reviewAction('${r.id}', 'approved')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700">Approve</button>
+            <button onclick="reviewAction('${r.id}', 'rejected')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700">Reject</button>
+          </div>
+        </div>
+      `).join('');
+    }
+  };
+
+  window.reviewAction = async function(id, status) {
+    await supabase.from('reviews').update({ status }).eq('id', id);
+    showToast(`Review ${status}!`);
+    initReviewsSection();
+  };
+
+  // ─── Zapier Integration Logic ───────────────────────
+  window.openZapierSetupModal = async function() {
+    const settings = await getAllSettings();
+    const webhookInput = document.getElementById('zapier-webhook-url-input');
+    if (webhookInput) {
+      webhookInput.value = settings.zapier_webhook_url?.value || '';
+    }
+    document.getElementById('zapier-setup-modal')?.classList.remove('hidden');
+  };
+
+  window.saveZapierWebhookSettings = async function() {
+    const webhookInput = document.getElementById('zapier-webhook-url-input');
+    if (webhookInput) {
+      await updateSettings({
+        zapier_webhook_url: { value: webhookInput.value.trim() }
+      });
+      showToast('Zapier webhook saved successfully!', 'success');
+      document.getElementById('zapier-setup-modal')?.classList.add('hidden');
+      updateZapierStatusPill(webhookInput.value.trim());
+    }
+  };
+
+  window.sendZapierTestPayload = async function() {
+    const webhookInput = document.getElementById('zapier-webhook-url-input');
+    const url = webhookInput ? webhookInput.value.trim() : '';
+    if (!url) {
+      showToast('Please enter a webhook URL first!', true);
+      return;
+    }
+    try {
+      showToast('Sending test payload...');
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'test_connection',
+          message: 'Hello from YRSF! Your Zapier connection is working.',
+          timestamp: new Date().toISOString()
+        })
+      });
+      showToast('Test payload sent! Check Zapier.', 'success');
+    } catch (e) {
+      showToast('Failed to send test payload: ' + e.message, true);
+    }
+  };
+
+  window.dispatchSocialPostNow = async function() {
+    const settings = await getAllSettings();
+    const url = settings.zapier_webhook_url?.value;
+    if (!url) {
+      showToast('Zapier is not configured! Click Zapier Setup to configure it first.', true);
+      return;
+    }
+    
+    const payload = {
+      event: 'social_post',
+      content: 'Book your dream yacht today with YRSF! 🛥️✨',
+      image_urls: ['https://example.com/yacht.jpg'],
+      platforms: ['instagram', 'facebook']
+    };
+
+    try {
+      showToast('Dispatching to Zapier...');
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      showToast('Post dispatched to Zapier!', 'success');
+    } catch (e) {
+      showToast('Failed to dispatch post: ' + e.message, true);
+    }
+  };
+
+  async function updateZapierStatusPill(url = null) {
+    const statusPill = document.getElementById('zapier-status-pill');
+    if (!statusPill) return;
+    
+    if (url === null) {
+      const settings = await getAllSettings();
+      url = settings.zapier_webhook_url?.value;
+    }
+
+    if (url && url.trim() !== '') {
+      statusPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Zapier Connected';
+    } else {
+      statusPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Zapier Not Configured';
+    }
+  }
+
+  // ─── Quo (OpenPhone) Integration ───────────────────
+  window.saveQuoSettings = async function() {
+    const apiKey = document.getElementById('setting-quo-api-key')?.value.trim();
+    const phone = document.getElementById('setting-quo-phone')?.value.trim();
+    
+    await updateSettings({
+      quo_api_key: { value: apiKey },
+      quo_phone: { value: phone }
+    });
+    
+    showToast('Quo Settings saved successfully!', 'success');
+  };
+
+  window.sendQuoSMS = async function(toPhone, message) {
+    const settings = await getAllSettings();
+    const apiKey = settings.quo_api_key?.value;
+    const fromPhone = settings.quo_phone?.value;
+
+    if (!apiKey || !fromPhone) {
+      showToast('Quo API Key or From Phone missing! Please configure in Settings.', true);
+      return false;
+    }
+
+    // Format phone numbers (ensure starting with '+')
+    let cleanTo = toPhone.replace(/[^0-9+]/g, '');
+    if (!cleanTo.startsWith('+')) cleanTo = '+' + (cleanTo.length === 10 ? '1' : '') + cleanTo;
+    
+    let cleanFrom = fromPhone.replace(/[^0-9+]/g, '');
+    if (!cleanFrom.startsWith('+')) cleanFrom = '+' + (cleanFrom.length === 10 ? '1' : '') + cleanFrom;
+
+    try {
+      const btn = document.getElementById('btn-send-quo');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) btn.innerHTML = '<span class="admin-spinner w-4 h-4 mr-2"></span> Sending...';
+      
+      const response = await fetch('https://api.openphone.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: cleanFrom,
+          to: [cleanTo],
+          content: message
+        })
+      });
+
+      if (btn) btn.innerHTML = originalText;
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || response.statusText || 'Unknown Quo API error');
+      }
+
+      showToast('Message sent successfully via Quo!', 'success');
+      return true;
+    } catch (e) {
+      showToast('Failed to send Quo SMS: ' + e.message, true);
+      return false;
+    }
+  };
+
+  // ─── Initial Load ───────────────────────────────────
+  async function loadQuoSettings() {
+    const settings = await getAllSettings();
+    const kInput = document.getElementById('setting-quo-api-key');
+    const pInput = document.getElementById('setting-quo-phone');
+    if (kInput && settings.quo_api_key) kInput.value = settings.quo_api_key.value || '0a17aaecd376f44708bc17d8e42e06acc4b215605f24451cce99a10a55bb5500';
+    if (pInput && settings.quo_phone) pInput.value = settings.quo_phone.value || '';
+  }
+  
+  loadDashboard();
+  loadCommissions();
+  updateZapierStatusPill();
+  loadQuoSettings();
+});
+
+
+
+
