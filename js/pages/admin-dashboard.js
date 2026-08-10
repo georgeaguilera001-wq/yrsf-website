@@ -5746,11 +5746,21 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     });
   }
   if (clearNotifsBtn) {
-    clearNotifsBtn.addEventListener('click', (e) => {
+    clearNotifsBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       notifications = [];
       localStorage.setItem('yrsf_admin_notifications', JSON.stringify(notifications));
       updateNotificationUI();
+      // Clear from database to prevent background sync from re-adding them
+      try {
+        await supabase.from('site_settings').upsert({
+          key: 'admin_notifications',
+          value: [],
+          updated_at: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error('Failed to clear notifications in DB', err);
+      }
     });
   }
   document.addEventListener('click', (e) => {

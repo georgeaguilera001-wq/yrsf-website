@@ -220,20 +220,22 @@ module.exports = async (req, res) => {
         // Keep max 50 notifications to prevent bloat
         if (adminNotifications.length > 50) adminNotifications = adminNotifications.slice(0, 50);
         
-        await supabase.from('site_settings').upsert({
+        const { error: notifErr } = await supabase.from('site_settings').upsert({
           key: 'admin_notifications',
           value: adminNotifications,
           updated_at: new Date().toISOString()
         });
+        if (notifErr) console.error('Failed to update admin_notifications:', notifErr);
       }
     }
 
     // Update site_settings
-    await supabase.from('site_settings').upsert({
+    const { error: cacheErr } = await supabase.from('site_settings').upsert({
       key: 'cached_ical_events',
       value: deduped,
       updated_at: new Date().toISOString()
     });
+    if (cacheErr) console.error('Failed to update cached_ical_events:', cacheErr);
 
     console.log(`Successfully synced ${deduped.length} total events. Generated ${newNotificationsCreated} notifications.`);
     return res.status(200).json({ success: true, eventsCount: deduped.length, newEvents: addedCount });
