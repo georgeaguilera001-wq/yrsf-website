@@ -162,10 +162,10 @@ export function renderBoatCard(boat, options = {}) {
         ` : ''}
 
         <div class="flex items-center justify-between gap-1.5 mt-auto pt-2 border-t border-outline-variant/60">
-          <div class="flex items-center gap-1 min-w-0">
-            <div>
-              <span class="block text-[9px] font-caption text-on-surface-variant leading-none">Starting at</span>
-              <div class="text-secondary font-bold text-sm leading-tight card-price-display truncate">${priceDisplay}</div>
+          <div class="flex items-center gap-1 min-w-0 flex-1">
+            <div class="min-w-0 flex-1">
+              <span class="block text-[9px] font-caption text-on-surface-variant leading-none truncate">Starting at</span>
+              <div class="text-secondary font-bold text-sm leading-tight card-price-display truncate" title="${priceDisplay.replace(/"/g, '&quot;')}">${priceDisplay}</div>
             </div>
             ${hasPrices ? `
             <button class="pricing-toggle-btn p-0.5 bg-surface-container-lowest hover:bg-surface-container rounded-full border border-outline-variant transition-colors flex items-center justify-center shadow-2xs shrink-0" aria-label="View Pricing Tiers" title="View pricing tiers">
