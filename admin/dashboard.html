@@ -36,7 +36,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script>tailwind.config = {darkMode: "class", theme: {extend: {colors: { "primary": "#2563eb", "on-primary": "#ffffff", "primary-container": "#dbeafe", "on-primary-container": "#1e3a8a", "secondary": "#1d4ed8", "on-secondary": "#ffffff", "secondary-container": "#bfdbfe", "on-secondary-container": "#1e3a8a", "tertiary": "#3b82f6", "on-tertiary": "#ffffff", "tertiary-container": "#eff6ff", "on-tertiary-container": "#172554", "error": "#ef4444", "on-error": "#ffffff", "error-container": "#fecaca", "on-error-container": "#7f1d1d", "background": "#f0f9ff", "on-background": "#0f172a", "surface": "#f0f9ff", "on-surface": "#0f172a", "surface-variant": "#e2e8f0", "on-surface-variant": "#475569", "outline": "#94a3b8", "outline-variant": "#cbd5e1", "inverse-surface": "#1e293b", "inverse-on-surface": "#f1f5f9", "inverse-primary": "#93c5fd", "surface-container-lowest": "#ffffff", "surface-container-low": "#f8fafc", "surface-container": "#f1f5f9", "surface-container-high": "#e2e8f0", "surface-container-highest": "#cbd5e1" }, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {md: "24px", lg: "48px", xl: "80px", sm: "12px", "container-max": "1280px", gutter: "24px", base: "8px", xs: "4px"}, fontFamily: {"display-lg": ["Montserrat"], "label-md": ["Montserrat"], "body-md": ["Montserrat"], "headline-md": ["Montserrat"], caption: ["Montserrat"], "headline-lg": ["Montserrat"], "body-lg": ["Montserrat"], headline: ["Montserrat"], display: ["Montserrat"], body: ["Montserrat"], label: ["Montserrat"]}, fontSize: {"display-lg": ["48px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700"}], "label-md": ["14px", {lineHeight: "1.2", letterSpacing: "0.05em", fontWeight: "600"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], caption: ["12px", {lineHeight: "1.4", fontWeight: "500"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}]}}}};</script>
   <link rel="stylesheet" href="/css/shared.css?v=20260806a"/>
-  <link rel="stylesheet" href="/css/admin.css?v=20260810e"/>
+  <link rel="stylesheet" href="/css/admin.css?v=20260810f"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script>
     window.addEventListener('error', function(e) {
@@ -1935,57 +1935,270 @@
           </div>
         </div>
         
-        <div class="pt-2 border-t border-outline-variant">
-          <label class="block font-label text-xs font-bold text-on-surface mb-2">Access Permissions (What sections can they view &amp; edit?)</label>
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5 bg-surface-container-low p-3.5 rounded-xl border border-outline-variant text-xs">
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-dashboard" checked class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">dashboard</span> Dashboard
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-bookings" class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">calendar_month</span> Bookings
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-staff" class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">badge</span> Staff
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-social" class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">cell_tower</span> Social
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-content" class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">description</span> Content
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-fleet" checked class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">directions_boat</span> Fleet
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-seo" class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">search</span> SEO
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-settings" class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">settings</span> Settings
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-revenue" class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">payments</span> Revenue
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-crm" class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">groups</span> CRM
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-partners" class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">handshake</span> Partners
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium hover:text-secondary transition-colors">
-              <input type="checkbox" id="perm-promos" class="rounded text-secondary focus:ring-secondary"/>
-              <span class="material-symbols-outlined text-[16px] text-secondary">confirmation_number</span> Promos
-            </label>
+                <div class="pt-2 border-t border-outline-variant">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block font-label text-xs font-bold text-on-surface">Module Access &amp; Granular Action Sub-Permissions</label>
+            <div class="flex gap-2">
+              <button type="button" id="btn-select-all-perms" class="text-[11px] font-semibold text-secondary hover:underline">Select All</button>
+              <span class="text-outline-variant">|</span>
+              <button type="button" id="btn-deselect-all-perms" class="text-[11px] font-semibold text-on-surface-variant hover:underline">Deselect All</button>
+            </div>
+          </div>
+
+          <div class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1 border border-outline-variant/60 rounded-xl p-2.5 bg-surface-container-lowest/50" id="permissions-accordion-container">
+            
+            <!-- 1. Dashboard -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-dashboard-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="dashboard" checked />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">dashboard</span> Dashboard Overview
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 1</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-2 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-dashboard-view" class="rounded text-secondary perm-sub-check" data-module="dashboard" checked /> View Stats &amp; Charts
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-dashboard-shortcuts" class="rounded text-secondary perm-sub-check" data-module="dashboard" checked /> Use Action Shortcuts
+                </label>
+              </div>
+            </div>
+
+            <!-- 2. Bookings -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-bookings-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="bookings" />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">calendar_month</span> Bookings &amp; Manifest
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 2</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-3 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-bookings-view" class="rounded text-secondary perm-sub-check" data-module="bookings" /> View Manifest
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-bookings-create_edit" class="rounded text-secondary perm-sub-check" data-module="bookings" /> Add/Edit Bookings
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-bookings-delete" class="rounded text-secondary perm-sub-check" data-module="bookings" /> Cancel/Delete
+                </label>
+              </div>
+            </div>
+
+            <!-- 3. Staff -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-staff-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="staff" />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">badge</span> Staff &amp; Timeclock
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 3</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-staff-view" class="rounded text-secondary perm-sub-check" data-module="staff" /> View Staff List
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-staff-create_edit" class="rounded text-secondary perm-sub-check" data-module="staff" /> Add/Edit Staff
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-staff-view_payroll" class="rounded text-secondary perm-sub-check" data-module="staff" /> View Payroll/Wages
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-staff-delete" class="rounded text-secondary perm-sub-check" data-module="staff" /> Delete Staff
+                </label>
+              </div>
+            </div>
+
+            <!-- 4. Social -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-social-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="social" />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">cell_tower</span> Social Hub
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 4</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-3 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-social-view" class="rounded text-secondary perm-sub-check" data-module="social" /> View Posts
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-social-create_edit" class="rounded text-secondary perm-sub-check" data-module="social" /> Write Posts
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-social-delete" class="rounded text-secondary perm-sub-check" data-module="social" /> Delete Posts
+                </label>
+              </div>
+            </div>
+
+            <!-- 5. Content -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-content-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="content" />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">description</span> Content CMS
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 5</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-3 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-content-view" class="rounded text-secondary perm-sub-check" data-module="content" /> View Articles
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-content-create_edit" class="rounded text-secondary perm-sub-check" data-module="content" /> Write/Edit
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-content-delete" class="rounded text-secondary perm-sub-check" data-module="content" /> Delete Content
+                </label>
+              </div>
+            </div>
+
+            <!-- 6. Fleet -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-fleet-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="fleet" checked />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">directions_boat</span> Fleet Management
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 6</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-3 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-fleet-view" class="rounded text-secondary perm-sub-check" data-module="fleet" checked /> View Fleet
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-fleet-create_edit" class="rounded text-secondary perm-sub-check" data-module="fleet" checked /> Add/Edit Boats
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-fleet-delete" class="rounded text-secondary perm-sub-check" data-module="fleet" /> Delete Boats
+                </label>
+              </div>
+            </div>
+
+            <!-- 7. SEO -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-seo-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="seo" />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">search</span> SEO Settings
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 7</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-2 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-seo-view" class="rounded text-secondary perm-sub-check" data-module="seo" /> View SEO Meta
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-seo-create_edit" class="rounded text-secondary perm-sub-check" data-module="seo" /> Update Config
+                </label>
+              </div>
+            </div>
+
+            <!-- 8. Settings -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-settings-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="settings" />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">settings</span> Global Settings
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 8</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-2 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-settings-view" class="rounded text-secondary perm-sub-check" data-module="settings" /> View Settings
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-settings-create_edit" class="rounded text-secondary perm-sub-check" data-module="settings" /> Edit WhatsApp/Info
+                </label>
+              </div>
+            </div>
+
+            <!-- 9. Revenue -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-revenue-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="revenue" />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">payments</span> Revenue &amp; Financials
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 9</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-2 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-revenue-view" class="rounded text-secondary perm-sub-check" data-module="revenue" /> View Financial Charts
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-revenue-manage" class="rounded text-secondary perm-sub-check" data-module="revenue" /> Manage Rates
+                </label>
+              </div>
+            </div>
+
+            <!-- 10. CRM -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-crm-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="crm" />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">groups</span> CRM &amp; Customers
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 10</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-3 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-crm-view" class="rounded text-secondary perm-sub-check" data-module="crm" /> View Clients
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-crm-create_edit" class="rounded text-secondary perm-sub-check" data-module="crm" /> Edit Clients
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-crm-export" class="rounded text-secondary perm-sub-check" data-module="crm" /> Export Contacts
+                </label>
+              </div>
+            </div>
+
+            <!-- 11. Partners -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-partners-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="partners" />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">handshake</span> Partner Submissions
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 11</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-2 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-partners-view" class="rounded text-secondary perm-sub-check" data-module="partners" /> View Applications
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-partners-manage" class="rounded text-secondary perm-sub-check" data-module="partners" /> Approve/Delete
+                </label>
+              </div>
+            </div>
+
+            <!-- 12. Promos -->
+            <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-on-surface">
+                  <input type="checkbox" id="perm-promos-access" class="rounded text-secondary focus:ring-secondary perm-master-check" data-module="promos" />
+                  <span class="material-symbols-outlined text-[18px] text-secondary">confirmation_number</span> Promos &amp; Coupons
+                </label>
+                <span class="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Module 12</span>
+              </div>
+              <div class="mt-2 pt-2 border-t border-outline-variant/50 grid grid-cols-3 gap-2 text-[11px] pl-6">
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-promos-view" class="rounded text-secondary perm-sub-check" data-module="promos" /> View Coupons
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-promos-create_edit" class="rounded text-secondary perm-sub-check" data-module="promos" /> Create/Edit
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-on-surface-variant font-medium">
+                  <input type="checkbox" id="perm-promos-delete" class="rounded text-secondary perm-sub-check" data-module="promos" /> Remove Coupons
+                </label>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -2424,7 +2637,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260810e_auth_fix_1"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260810f_auth_fix_1"></script>
   <script>
     // ── Sidebar Drag-and-Drop Reordering ─────────────────────────────────────
     // ── Dynamic Sidebar Menu Editor ──────────────────────────────────────────
@@ -2828,6 +3041,8 @@
   </div>
 </body>
 </html>
+
+
 
 
 
