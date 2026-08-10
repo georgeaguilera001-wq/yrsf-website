@@ -2666,14 +2666,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const commission_rate = parseFloat(document.getElementById('staff-comm-rate')?.value) || 0;
         const pin = document.getElementById('staff-pin').value.trim() || '1234';
 
-        const permissions = {
-          fleet: document.getElementById('perm-fleet').checked,
-          partners: document.getElementById('perm-partners').checked,
-          addons: document.getElementById('perm-addons').checked,
-          content: document.getElementById('perm-content').checked,
-          seo: document.getElementById('perm-seo').checked,
-          settings: document.getElementById('perm-settings').checked
-        };
+        const permKeys = ['dashboard','bookings','staff','social','content','fleet','seo','settings','revenue','crm','partners','promos'];
+        const permissions = {};
+        permKeys.forEach(k => {
+          const el = document.getElementById('perm-' + k);
+          if (el) permissions[k] = el.checked;
+        });
 
         try {
           const payload = { name, email, role, pay_type, hourly_rate: wage, commission_rate, pin_code: pin, permissions };
@@ -2938,14 +2936,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       tbody.innerHTML = staffUsersCache.map(user => {
         const isWorking = activeStaffIds.has(user.id);
         const perms = user.permissions || {};
-        const permBadges = [
-          perms.fleet ? '<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs">⛵ Fleet</span>' : '',
-          perms.partners ? '<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs">🤝 Partners</span>' : '',
-          perms.addons ? '<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs">➕ Add-ons</span>' : '',
-          perms.content ? '<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs">📝 Content</span>' : '',
-          perms.seo ? '<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs">🔍 SEO</span>' : '',
-          perms.settings ? '<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs">⚙️ Settings</span>' : ''
-        ].filter(Boolean).join(' ') || '<span class="text-xs text-on-surface-variant italic">No edit access</span>';
+        const permKeys = ['dashboard','bookings','staff','social','content','fleet','seo','settings','revenue','crm','partners','promos'];
+        const granted = permKeys.filter(k => perms[k]).length;
+        const permBadges = user.role === 'admin'
+          ? '<span class="bg-primary text-on-primary px-2 py-0.5 rounded text-xs font-bold">Full Access</span>'
+          : `<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs">${granted} Modules Granted</span>`;
 
         return `
           <tr class="hover:bg-surface-container-low/50 transition-colors">
@@ -3130,12 +3125,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const perms = user.permissions || {};
-    document.getElementById('perm-fleet').checked = !!perms.fleet;
-    document.getElementById('perm-partners').checked = !!perms.partners;
-    document.getElementById('perm-addons').checked = !!perms.addons;
-    document.getElementById('perm-content').checked = !!perms.content;
-    document.getElementById('perm-seo').checked = !!perms.seo;
-    document.getElementById('perm-settings').checked = !!perms.settings;
+    const permKeys = ['dashboard','bookings','staff','social','content','fleet','seo','settings','revenue','crm','partners','promos'];
+    permKeys.forEach(k => {
+      const el = document.getElementById('perm-' + k);
+      if (el) el.checked = !!perms[k];
+    });
 
     document.getElementById('staff-modal').classList.remove('hidden');
   };
