@@ -126,7 +126,10 @@ export function renderBoatCard(boat, options = {}) {
         <div class="flex w-full h-full overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" id="carousel-${boat.id}">
           ${imagesHtml}
         </div>
-        ${boat.is_featured ? '<div class="absolute top-2 left-2 bg-secondary text-on-secondary px-2 py-0.5 rounded-full text-[9px] font-bold shadow-sm z-10 pointer-events-none">FEATURED</div>' : ''}
+        <div class="absolute top-2 left-2 z-10 pointer-events-none flex flex-col gap-1 items-start">
+          ${boat.is_featured ? '<div class="bg-secondary text-on-secondary px-2 py-0.5 rounded-full text-[9px] font-bold shadow-sm">FEATURED</div>' : ''}
+          ${boat.is_best_seller ? `<div class="bg-[#FFD700] text-black px-2 py-0.5 rounded-full text-[9px] font-bold shadow-sm flex items-center gap-1"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">star</span>BEST SELLER</div>` : ''}
+        </div>
         ${dotsHtml}
         ${dotsCount > 0 ? `
         <button class="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hidden md:flex z-20" onclick="event.preventDefault(); document.getElementById('carousel-${boat.id}').scrollBy({left: -document.getElementById('carousel-${boat.id}').clientWidth, behavior: 'smooth'})">

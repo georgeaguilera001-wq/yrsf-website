@@ -877,10 +877,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <option value="maintenance" ${boat?.status === 'maintenance' ? 'selected' : ''}>Maintenance</option>
               </select>
             </div>
-            <div class="flex items-end">
+            <div class="flex items-end gap-6">
               <label class="flex items-center gap-2 cursor-pointer pb-3">
                 <input type="checkbox" id="edit-boat-featured" ${boat?.is_featured ? 'checked' : ''} class="w-4 h-4 text-secondary border-outline-variant rounded"/>
                 <span class="font-label text-label-md text-on-surface-variant">Featured</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer pb-3">
+                <input type="checkbox" id="edit-boat-best-seller" ${boat?.is_best_seller ? 'checked' : ''} class="w-4 h-4 text-secondary border-outline-variant rounded"/>
+                <span class="font-label text-label-md text-on-surface-variant">Best Seller</span>
               </label>
             </div>
           </div>
@@ -1633,6 +1637,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         vessel_id: document.getElementById('edit-boat-vessel-id').value.trim() || null,
         status: document.getElementById('edit-boat-status').value,
         is_featured: document.getElementById('edit-boat-featured').checked,
+        is_best_seller: document.getElementById('edit-boat-best-seller').checked,
         ical_feed_url: (() => {
           let u = document.getElementById('edit-boat-ical-url')?.value.trim() || null;
           if (u && !u.includes('/') && !u.includes('.') && /^[a-zA-Z0-9_-]{6,35}$/.test(u)) return u;
