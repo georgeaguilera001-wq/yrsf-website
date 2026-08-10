@@ -5760,11 +5760,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       updateNotificationUI();
       // Clear from database to prevent background sync from re-adding them
       try {
-        await supabase.from('site_settings').upsert({
-          key: 'admin_notifications',
-          value: [],
-          updated_at: new Date().toISOString()
-        });
+        await fetch('/api/clear-notifs', { method: 'POST' });
       } catch (err) {
         console.error('Failed to clear notifications in DB', err);
       }
