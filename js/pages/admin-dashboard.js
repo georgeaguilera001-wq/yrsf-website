@@ -1,10 +1,10 @@
-/**
+﻿/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
 
 import { requireAuth, logout, getUser } from '../services/auth.js';
-import { getAllBoats, createBoat, updateBoat, deleteBoat, getBoatById, updateBoatImages, updateBoatPrices, updateBoatAmenities, updateBoatSpecs } from '../services/boats.js';
+import { getAllBoats, createBoat, updateBoat, deleteBoat, getBoatById, updateBoatImages, updateBoatAmenities, updateBoatSpecs } from '../services/boats.js';
 import { getAddons, getAllAddons, createAddon, updateAddon, deleteAddon } from '../services/addons.js';
 import { getAllBlogs, createBlog, updateBlog, deleteBlog } from '../services/blogs.js';
 import { getAllSettings, updateSettings } from '../services/settings.js';
@@ -6647,3 +6647,4 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
 
 // CACHE BUSTER: 20260810124601
+
