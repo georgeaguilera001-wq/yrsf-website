@@ -1,4 +1,14 @@
 const { createClient } = require('@supabase/supabase-js');
+const webpush = require('web-push');
+
+const VAPID_PUBLIC_KEY = 'BGtkbcjrO12YMoDuq2sCQeHlu47uPx3SHTgFKZFYiBW8Qr0D9vgyZSZPdw6_4ZFEI9Snk1VEAj2qTYI1I1YxBXE';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'I0_d0vnesxbBSUmlDdOKibGo6vEXRO-Vu88QlSlm5j0';
+
+webpush.setVapidDetails(
+  'mailto:admin@yrsf.com',
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+);
 
 // Initialize Supabase Client
 // We use the service role key if available for admin privileges, otherwise anon key
@@ -226,6 +236,29 @@ module.exports = async (req, res) => {
           updated_at: new Date().toISOString()
         });
         if (notifErr) console.error('Failed to update admin_notifications:', notifErr);
+        
+        // Dispatch Web Push Notifications
+        const { data: subSettings } = await supabase.from('site_settings').select('value').eq('key', 'push_subscriptions').single();
+        if (subSettings && subSettings.value && Array.isArray(subSettings.value)) {
+          const subscriptions = subSettings.value;
+          for (const newEv of trulyNewEvents) {
+            const dateObj = new Date(newEv.booking_date + 'T12:00:00');
+            const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const payload = JSON.stringify({
+              title: 'New Reservation!',
+              body: `A new reservation has been added to ${newEv.boat_name} on ${formattedDate}`,
+              url: '/admin/dashboard.html'
+            });
+            
+            const pushPromises = subscriptions.map(sub => 
+              webpush.sendNotification(sub, payload).catch(err => {
+                console.error('Push error to an endpoint:', err.statusCode);
+                // In a production app, we would remove 410 Gone subscriptions here
+              })
+            );
+            await Promise.all(pushPromises);
+          }
+        }
       }
     }
 

@@ -59,7 +59,49 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       })
       .catch(() => {
-        return caches.match(event.request);
       })
+  );
+});
+
+// Web Push Protocol handlers
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      const options = {
+        body: payload.body || 'You have a new reservation.',
+        icon: '/images/favicon.png',
+        badge: '/images/favicon.png',
+        vibrate: [200, 100, 200],
+        data: payload.url || '/admin/dashboard.html'
+      };
+      
+      event.waitUntil(
+        self.registration.showNotification(payload.title || 'YRSF New Booking', options)
+      );
+    } catch (err) {
+      console.error('Error parsing push payload:', err);
+    }
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data || '/admin/dashboard.html';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Check if there is already a window/tab open with the target URL
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url.includes(targetUrl) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // If not, open a new window/tab
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
   );
 });
