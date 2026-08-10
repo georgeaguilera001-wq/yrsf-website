@@ -58,7 +58,8 @@ module.exports = async (req, res) => {
           clearTimeout(timeout);
           if (fetchRes.ok) {
             const text = await fetchRes.text();
-            if (text && (text.toUpperCase().includes('BEGIN:VEVENT') || text.trim().startsWith('[') || text.trim().startsWith('{'))) {
+            // Audit Fix #2: Valid empty calendars contain BEGIN:VCALENDAR but no VEVENT
+            if (text && (text.toUpperCase().includes('BEGIN:VCALENDAR') || text.trim().startsWith('[') || text.trim().startsWith('{'))) {
               return text;
             }
           }
@@ -104,7 +105,8 @@ module.exports = async (req, res) => {
 
           // Race candidates
           const results = await Promise.all(candidates.map(c => fetchIcsDirect(c)));
-          text = results.find(t => t && (t.toUpperCase().includes('BEGIN:VEVENT') || t.trim().startsWith('[') || t.trim().startsWith('{')));
+          // Audit Fix #2: Allow BEGIN:VCALENDAR to mark fetch as successful
+          text = results.find(t => t && (t.toUpperCase().includes('BEGIN:VCALENDAR') || t.trim().startsWith('[') || t.trim().startsWith('{')));
 
           if (!text) {
             console.warn(`Could not fetch valid iCal data for ${boat.name} from any candidate URL`);
@@ -219,28 +221,50 @@ module.exports = async (req, res) => {
     let newNotificationsCreated = 0;
     let existingEventsCount = 0;
     const trulyNewEvents = [];
+    const eventsToNotify = [];
     
     const oldEventKeys = new Set();
+    const boatsWithHistory = new Set();
     oldEvents.forEach(ev => {
+      boatsWithHistory.add(ev.boat_id);
       const extId = ev.external_id || `fb_${ev.boat_id}_${ev.booking_date}_${ev.start_time}_${ev.customer_name}`;
       oldEventKeys.add(`${ev.boat_id}_${extId}`);
     });
 
-    if (oldEvents.length > 0) {
+    // Determine what is new
+    for (const ev of deduped) {
+      const key = `${ev.boat_id}_${ev.external_id}`;
+      if (oldEventKeys.has(key)) {
+        existingEventsCount++;
+      } else {
+        trulyNewEvents.push(ev);
+        // Audit Fix #1: First-sync detection is scoped per-boat
+        if (boatsWithHistory.has(ev.boat_id)) {
+          eventsToNotify.push(ev);
+        }
+      }
+    }
+
+    if (eventsToNotify.length > 0) {
       const { data: notifSetting } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
       let adminNotifications = (notifSetting && notifSetting.value && Array.isArray(notifSetting.value)) ? notifSetting.value : [];
       
-      // Determine what is new
-      for (const ev of deduped) {
-        const key = `${ev.boat_id}_${ev.external_id}`;
-        if (oldEventKeys.has(key)) {
-          existingEventsCount++;
-        } else {
-          trulyNewEvents.push(ev);
+      const { data: subSettings } = await supabase.from('site_settings').select('value').eq('key', 'push_subscriptions').single();
+      const subscriptions = (subSettings && subSettings.value && Array.isArray(subSettings.value)) ? subSettings.value : [];
+      
+      for (const newEv of eventsToNotify) {
+        // Audit Fix #3: Atomic lock for concurrent notifications
+        const lockKey = `notif_lock_${newEv.boat_id}_${newEv.external_id}`;
+        const { error: lockErr } = await supabase.from('site_settings').insert({
+          key: lockKey,
+          value: { time: new Date().toISOString() }
+        });
+        
+        if (lockErr) {
+          console.log(`Lock collision for ${lockKey}. Skipping duplicate notification.`);
+          continue; // Notification already handled by another concurrent process
         }
-      }
 
-      for (const newEv of trulyNewEvents) {
         // Format date beautifully (e.g. "Aug 15")
         const dateObj = new Date(newEv.booking_date + 'T12:00:00');
         const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -253,8 +277,22 @@ module.exports = async (req, res) => {
           read: false
         });
         newNotificationsCreated++;
+
+        // Dispatch Web Push Notifications
+        if (subscriptions.length > 0) {
+          const payload = JSON.stringify({
+            title: 'New Reservation!',
+            body: `A new reservation has been added to ${newEv.boat_name} on ${formattedDate}`,
+            url: '/admin/dashboard.html'
+          });
+          
+          const pushPromises = subscriptions.map(sub => 
+            webpush.sendNotification(sub, payload).catch(err => {})
+          );
+          await Promise.all(pushPromises);
+        }
       }
-      
+
       if (newNotificationsCreated > 0) {
         // Keep max 50 notifications to prevent bloat
         if (adminNotifications.length > 50) adminNotifications = adminNotifications.slice(0, 50);
@@ -265,30 +303,7 @@ module.exports = async (req, res) => {
           updated_at: new Date().toISOString()
         });
         if (notifErr) console.error('Failed to update admin_notifications:', notifErr);
-        
-        // Dispatch Web Push Notifications
-        const { data: subSettings } = await supabase.from('site_settings').select('value').eq('key', 'push_subscriptions').single();
-        if (subSettings && subSettings.value && Array.isArray(subSettings.value)) {
-          const subscriptions = subSettings.value;
-          for (const newEv of trulyNewEvents) {
-            const dateObj = new Date(newEv.booking_date + 'T12:00:00');
-            const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            const payload = JSON.stringify({
-              title: 'New Reservation!',
-              body: `A new reservation has been added to ${newEv.boat_name} on ${formattedDate}`,
-              url: '/admin/dashboard.html'
-            });
-            
-            const pushPromises = subscriptions.map(sub => 
-              webpush.sendNotification(sub, payload).catch(err => {})
-            );
-            await Promise.all(pushPromises);
-          }
-        }
       }
-    } else {
-      // First sync ever - count as new but don't notify to prevent spam
-      trulyNewEvents.push(...deduped);
     }
 
     // Handle Cache Merging (Deletions strategy)
@@ -317,9 +332,9 @@ module.exports = async (req, res) => {
     console.log(`Updated events: 0 (Handled implicitly via cache replacement)`);
     console.log(`Deleted events: ${deletedEventsCount}`);
     console.log(`Notifications sent: ${newNotificationsCreated}`);
-    if (trulyNewEvents.length > 0) {
+    if (eventsToNotify.length > 0) {
       console.log('\nNew events discovered:');
-      trulyNewEvents.forEach(ev => console.log(`- ${ev.customer_name} (external ID: ${ev.external_id})`));
+      eventsToNotify.forEach(ev => console.log(`- ${ev.customer_name} (external ID: ${ev.external_id})`));
     }
     console.log('-----------------------------\n');
 
