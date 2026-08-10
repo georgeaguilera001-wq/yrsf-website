@@ -146,27 +146,25 @@
   border-color: #455f88;
 }
 
-/* --- Mobile Calendar Grid Strict 1x1 Squares --- */
-@media (max-width: 1023px) {
-  #cal-grid {
-    display: grid !important;
-    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-    align-items: start !important;
-    grid-auto-rows: max-content !important;
-  }
-  #cal-grid > div {
-    aspect-ratio: 1 / 1 !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    align-self: start !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 2px !important;
-    overflow: hidden !important;
-  }
+/* --- Calendar Grid Strict 1x1 Squares (Global) --- */
+#cal-grid {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  align-items: start !important;
+  grid-auto-rows: max-content !important;
+}
+#cal-grid > div {
+  aspect-ratio: 1 / 1 !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  align-self: start !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 2px !important;
+  overflow: hidden !important;
 }
 
 /* --- Prevent iOS Safari Auto-Zoom on Select / Input Focus ---
@@ -193,8 +191,5 @@
   margin: 0 auto;
 }
 
-@media (min-width: 1024px) {
-  .calendar-compact-wrapper {
-    zoom: 0.5;
-  }
-}
+
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
@@ -5124,7 +5124,7 @@ return; // Redirect in progress
       if (isMobileView) {
         cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl aspect-square w-full opacity-40" style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important;"></div>`;
       } else {
-        cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl lg:rounded-2xl aspect-square lg:aspect-auto lg:min-h-[96px] p-1 lg:p-2 opacity-40"></div>`;
+        cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl lg:rounded-2xl aspect-square style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important; overflow: hidden !important;" p-1 lg:p-2 opacity-40"></div>`;
       }
     }
 
@@ -5219,7 +5219,7 @@ return; // Redirect in progress
         }).join('');
 
         cellsHtml += `
-          <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl lg:rounded-2xl aspect-square lg:aspect-auto lg:min-h-[96px] p-1 lg:p-2 flex flex-col items-center justify-center lg:items-stretch lg:justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
+          <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl lg:rounded-2xl aspect-square style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important; overflow: hidden !important;" p-1 lg:p-2 flex flex-col items-center justify-center lg:items-stretch lg:justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
             <div class="min-w-0 flex-1 flex flex-col items-center justify-center lg:items-stretch lg:justify-between w-full">
               <div class="flex items-center justify-between gap-1 min-w-0 w-full">
                 <div class="flex items-center justify-center lg:justify-start gap-1 min-w-0 w-full lg:w-auto">
@@ -6668,5 +6668,6 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
 
 // CACHE BUSTER: 20260810124601
+
 
 
