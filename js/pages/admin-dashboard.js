@@ -2680,7 +2680,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (id) {
             const { error } = await supabase.from('staff_users').update(payload).eq('id', id);
             if (error) throw error;
-            showToast('Employee updated successfully!');
+            
+            const newPwd = document.getElementById('staff-new-password')?.value;
+            if (newPwd) {
+              const res = await fetch('/api/update-user-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, password: newPwd })
+              });
+              const resData = await res.json();
+              if (!res.ok) throw new Error(resData.error || 'Failed to update login password');
+              showToast('Employee details and login password updated!');
+            } else {
+              showToast('Employee updated successfully!');
+            }
           } else {
             const res = await fetch('/api/create-user', {
               method: 'POST',
@@ -3111,6 +3124,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('staff-wage').value = user.hourly_rate || 0;
     if (document.getElementById('staff-comm-rate')) document.getElementById('staff-comm-rate').value = user.commission_rate || 0;
     document.getElementById('staff-pin').value = user.pin_code || '1234';
+    if (document.getElementById('staff-password-container')) {
+      document.getElementById('staff-password-container').classList.remove('hidden');
+      document.getElementById('staff-new-password').value = '';
+    }
 
     const perms = user.permissions || {};
     document.getElementById('perm-fleet').checked = !!perms.fleet;
@@ -6569,5 +6586,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   updateZapierStatusPill();
   loadQuoSettings();
 });
+
+
 
 
