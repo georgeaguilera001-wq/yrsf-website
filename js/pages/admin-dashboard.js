@@ -4109,7 +4109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (calSyncBtn) calSyncBtn.addEventListener('click', () => { syncAllIcalFeeds(true); });
 
     // Auto-sync every 5 minutes silently (no notification toast)
-    const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+    const AUTO_SYNC_INTERVAL_MS = 1 * 60 * 1000; // 1 minute
     let autoSyncTimer = null;
 
     function startAutoSync() {
