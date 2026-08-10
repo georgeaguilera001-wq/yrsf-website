@@ -111,7 +111,7 @@ async function initHomePage() {
       }
       if (settings.hero_title?.value) {
         const el = document.getElementById('hero-title');
-        if (el) el.innerHTML = settings.hero_title.value.trim() + '&nbsp;<img src="/images/cursive-heart.png" alt="Heart" class="inline-block w-[1.5em] h-auto align-middle -mt-2 pointer-events-none select-none">';
+        if (el) el.innerHTML = settings.hero_title.value.trim() + '&nbsp;<img src="/images/cursive-heart.png" alt="Heart" class="inline-block w-[1.2em] h-auto align-middle -mt-2 pointer-events-none select-none">';
       }
       if (settings.hero_description?.value) {
         const el = document.getElementById('hero-description');
