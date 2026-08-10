@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YRSF — Change Password Page Logic
  */
 
@@ -94,3 +94,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (errorBox) errorBox.classList.add('hidden');
   }
 });
+
+  // Handle Logout
+  const logoutBtn = document.getElementById("logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "/admin/index.html";
+    });
+  }
+

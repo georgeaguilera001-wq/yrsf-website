@@ -539,45 +539,42 @@ function populateBoatDetail(boat) {
   }
 
   // --- Pricing Tiers & Dynamic Day-of-Week Switcher ---
-  function priceMatchesDay(p, dayCode) {
-    const label = (p.duration_label || '').toLowerCase();
-    const dayType = (p.day_type || '').toLowerCase();
-    const target = dayCode.toLowerCase();
-    if (dayType === target || label.includes(`[${target}]`) || label.includes(`(${target})`) || label.includes(target)) return true;
-    const isWeekday = ['mon', 'tue', 'wed', 'thu'].includes(target);
-    if (isWeekday && (dayType === 'weekday' || label.includes('mon-thu') || label.includes('weekday'))) return true;
-    const isWeekend = ['fri', 'sat', 'sun'].includes(target);
-    if (isWeekend && (dayType === 'weekend' || label.includes('fri-sun') || label.includes('weekend'))) return true;
-    if (!dayType || dayType === 'all' || (!label.includes('mon') && !label.includes('tue') && !label.includes('wed') && !label.includes('thu') && !label.includes('fri') && !label.includes('sat') && !label.includes('sun') && !label.includes('weekday') && !label.includes('weekend'))) return true;
-    return false;
-  }
-
-  function cleanDurationLabel(label) {
-    return (label || '').replace(/\s*\[(all|weekday|weekend|mon|tue|wed|thu|fri|sat|sun)\]/gi, '').trim();
-  }
-
   const pricingEl = $('#pricing-tiers');
   const daySelectorEl = $('#detail-day-selector');
   if (pricingEl) {
-    if (prices.length > 0) {
+    const boatRate = parseFloat(boat.boat_hourly_rate) || 0;
+    const captainRate = parseFloat(boat.captain_hourly_rate) || 0;
+    const minDuration = parseInt(boat.minimum_charter_duration) || 4;
+
+    if (boatRate > 0 || captainRate > 0) {
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const currentDayName = days[(new Date().getDay() + 6) % 7];
 
       function renderDayPrices(dayCode) {
-        const matched = prices.filter(p => priceMatchesDay(p, dayCode));
-        const list = matched.length > 0 ? matched : prices;
         const isWeekendDay = dayCode && ['Sat', 'Sun', 'sat', 'sun', 'Saturday', 'Sunday'].includes(dayCode);
         const multiplier = isWeekendDay ? 1.10 : 1.0;
 
-        pricingEl.innerHTML = list.map(p => {
-          const adjPrice = Math.round(p.price * multiplier);
+        const baseHourly = boatRate + captainRate;
+        const adjustedHourly = baseHourly * multiplier;
+
+        const durations = [];
+        for (let i = minDuration; i <= Math.max(8, minDuration); i++) {
+          durations.push(i);
+        }
+
+        pricingEl.innerHTML = durations.map((d, index) => {
+          const adjPrice = Math.round(adjustedHourly * d);
+          const isPopular = index === 0;
           return `
-          <div class="flex items-center justify-between p-4 rounded-lg border ${p.is_popular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
+          <div class="flex items-center justify-between p-4 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
             <div>
-              <p class="font-label-md text-label-md text-on-surface">${escapeHtml(cleanDurationLabel(p.duration_label))}</p>
-              ${p.is_popular ? '<span class="text-caption text-secondary font-bold">Most Popular</span>' : ''}
+              <p class="font-label-md text-label-md text-on-surface">${d} Hours</p>
+              ${isPopular ? '<span class="text-caption text-secondary font-bold">Most Popular</span>' : ''}
+              <p class="text-[10px] text-on-surface-variant mt-0.5 font-medium tracking-wide uppercase">Boat: ${formatPrice(Math.round(boatRate * d * multiplier))} • Capt: ${formatPrice(Math.round(captainRate * d * multiplier))}</p>
             </div>
-            <p class="font-headline-md text-headline-md text-secondary">${formatPrice(adjPrice)}</p>
+            <div class="text-right">
+              <p class="font-headline-md text-headline-md text-secondary">${formatPrice(adjPrice)}</p>
+            </div>
           </div>
           `;
         }).join('');
@@ -658,3 +655,7 @@ if (document.readyState === 'loading') {
 } else {
   initBoatDetailPage();
 }
+
+
+
+// CACHE BUSTER: 20260810124601

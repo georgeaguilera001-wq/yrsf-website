@@ -997,16 +997,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           </div>
 
-          <!-- Pricing Tiers -->
+          <!-- Hourly Rates -->
           <div class="pt-md border-t border-outline-variant">
-            <div class="flex items-center justify-between mb-4">
-              <label class="block font-headline text-[16px] text-on-surface font-bold">Pricing Tiers</label>
-              <button type="button" id="add-price-tier-btn" class="text-secondary font-label text-label-md flex items-center gap-1 hover:bg-secondary-container px-2 py-1 rounded transition-colors">
-                <span class="material-symbols-outlined text-[18px]">add</span> Add Tier
-              </button>
-            </div>
-            <div id="price-tiers-container" class="flex flex-col gap-3">
-              <!-- Rows injected via JS -->
+            <h4 class="font-headline text-[16px] text-on-surface font-bold mb-4">Charter Pricing</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Boat Hourly Rate ($)</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
+                  <input type="number" id="edit-boat-hourly" value="${boat?.boat_hourly_rate || ''}" class="admin-field w-full pl-7 pr-4 py-3 border border-outline-variant rounded-lg" required/>
+                </div>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Captain Hourly Rate ($)</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
+                  <input type="number" id="edit-boat-capt-hourly" value="${boat?.captain_hourly_rate || ''}" class="admin-field w-full pl-7 pr-4 py-3 border border-outline-variant rounded-lg" required/>
+                </div>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Min. Charter Duration (Hrs)</label>
+                <input type="number" id="edit-boat-min-dur" value="${boat?.minimum_charter_duration || '4'}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg" required/>
+              </div>
             </div>
           </div>
           
@@ -1593,67 +1605,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     renderPhotoManager();
 
-    // Pricing Tiers Logic
-    const pricesContainer = document.getElementById('price-tiers-container');
-    const addPriceBtn = document.getElementById('add-price-tier-btn');
-    
-    function renderPriceRow(durationLabel = '', durationHours = '', price = '') {
-      let cleanLabel = durationLabel;
-      let detectedDay = 'all';
-      const match = durationLabel.match(/\[(all|weekday|weekend|mon|tue|wed|thu|fri|sat|sun)\]/i);
-      if (match) {
-        detectedDay = match[1].toLowerCase();
-        cleanLabel = durationLabel.replace(/\s*\[(all|weekday|weekend|mon|tue|wed|thu|fri|sat|sun)\]/gi, '').trim();
-      }
-
-      const row = document.createElement('div');
-      row.className = 'flex flex-wrap sm:flex-nowrap items-center gap-2 bg-surface-container-lowest p-2.5 rounded-lg border border-outline-variant price-tier-row';
-      row.innerHTML = `
-        <div class="flex-1 min-w-[140px]">
-          <input type="text" placeholder="Label (e.g. 4 Hours)" value="${escapeHtml(cleanLabel)}" class="admin-field w-full px-3 py-2 border border-outline-variant rounded-md text-[13px] price-label-input" required/>
-        </div>
-        <div class="w-full sm:w-40">
-          <select class="admin-field w-full px-2 py-2 border border-outline-variant rounded-md text-[12px] font-bold price-day-input text-secondary">
-            <option value="all" ${detectedDay === 'all' ? 'selected' : ''}>Everyday (All Days)</option>
-            <option value="weekday" ${detectedDay === 'weekday' ? 'selected' : ''}>Mon - Thu (Weekday)</option>
-            <option value="weekend" ${detectedDay === 'weekend' ? 'selected' : ''}>Fri - Sun (Weekend)</option>
-            <option value="mon" ${detectedDay === 'mon' ? 'selected' : ''}>Mondays Only</option>
-            <option value="tue" ${detectedDay === 'tue' ? 'selected' : ''}>Tuesdays Only</option>
-            <option value="wed" ${detectedDay === 'wed' ? 'selected' : ''}>Wednesdays Only</option>
-            <option value="thu" ${detectedDay === 'thu' ? 'selected' : ''}>Thursdays Only</option>
-            <option value="fri" ${detectedDay === 'fri' ? 'selected' : ''}>Fridays Only</option>
-            <option value="sat" ${detectedDay === 'sat' ? 'selected' : ''}>Saturdays Only</option>
-            <option value="sun" ${detectedDay === 'sun' ? 'selected' : ''}>Sundays Only</option>
-          </select>
-        </div>
-        <div class="w-20">
-          <input type="number" placeholder="Hrs" value="${durationHours}" class="admin-field w-full px-2 py-2 border border-outline-variant rounded-md text-[13px] price-hours-input" required/>
-        </div>
-        <div class="w-28 relative">
-          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
-          <input type="number" placeholder="Price" value="${price}" class="admin-field w-full pl-6 pr-2 py-2 border border-outline-variant rounded-md text-[13px] price-value-input" required/>
-        </div>
-        <button type="button" class="p-2 text-error hover:bg-error-container rounded-md transition-colors remove-price-btn" title="Remove">
-          <span class="material-symbols-outlined text-[18px]">delete</span>
-        </button>
-      `;
-      
-      row.querySelector('.remove-price-btn').addEventListener('click', () => {
-        row.remove();
-      });
-      
-      pricesContainer.appendChild(row);
-    }
-    
-    // Load existing prices or add one empty row
-    if (boat?.boat_prices && boat.boat_prices.length > 0) {
-      boat.boat_prices.forEach(p => renderPriceRow(p.duration_label, p.duration_hours, p.price));
-    } else {
-      renderPriceRow('4 Hours', 4, '');
-    }
-    
-    addPriceBtn?.addEventListener('click', () => renderPriceRow());
-
     // Submit
     document.getElementById('boat-editor-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1663,6 +1614,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         slug: document.getElementById('edit-boat-slug').value.trim() || slugify(document.getElementById('edit-boat-name').value),
         length_ft: parseInt(document.getElementById('edit-boat-length').value) || null,
         capacity: parseInt(document.getElementById('edit-boat-capacity').value) || null,
+        boat_hourly_rate: parseFloat(document.getElementById('edit-boat-hourly').value) || 0,
+        captain_hourly_rate: parseFloat(document.getElementById('edit-boat-capt-hourly').value) || 0,
+        minimum_charter_duration: parseInt(document.getElementById('edit-boat-min-dur').value) || 4,
         year: document.getElementById('edit-boat-year') ? (parseInt(document.getElementById('edit-boat-year').value) || null) : (boat?.year || null),
         cabins: document.getElementById('edit-boat-cabins') ? (parseInt(document.getElementById('edit-boat-cabins').value) || null) : (boat?.cabins || null),
         manufacturer: document.getElementById('edit-boat-manufacturer') ? (document.getElementById('edit-boat-manufacturer').value.trim() || null) : (boat?.manufacturer || null),
@@ -1697,20 +1651,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           savedBoat = await updateBoat(boat.id, boatData);
           showToast('Yacht updated successfully!', 'success');
         }
-        
-        // Save Prices
-        const priceRows = document.querySelectorAll('.price-tier-row');
-        const prices = Array.from(priceRows).map(row => {
-          const rawLabel = row.querySelector('.price-label-input').value.trim();
-          const dayType = row.querySelector('.price-day-input')?.value || 'all';
-          const finalLabel = dayType !== 'all' ? `${rawLabel} [${dayType}]` : rawLabel;
-          return {
-            duration_label: finalLabel,
-            duration_hours: parseInt(row.querySelector('.price-hours-input').value) || 0,
-            price: parseFloat(row.querySelector('.price-value-input').value) || 0
-          };
-        });
-        await updateBoatPrices(savedBoat.id, prices);
 
         // Save Images & Videos
         const cleanImages = currentPhotos
@@ -3340,11 +3280,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       // 1. Get Base Boat Price
       if (boatId && duration) {
         const boat = (fleetCache || []).find(b => b.id === boatId);
-        if (boat && boat.boat_prices) {
-          const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
-          if (matchingPrice && matchingPrice.price) {
-            basePrice = parseFloat(matchingPrice.price) || 0;
+        if (boat) {
+          const boatRate = parseFloat(boat.boat_hourly_rate) || 0;
+          const captainRate = parseFloat(boat.captain_hourly_rate) || 0;
+          
+          if (boatRate > 0 || captainRate > 0) {
+            let multiplier = 1.0;
+            const bookDateStr = document.getElementById('book-date')?.value;
+            if (bookDateStr) {
+              const parts = bookDateStr.split('-');
+              if (parts.length === 3) {
+                const dObj = new Date(parts[0], parts[1]-1, parts[2]);
+                const day = dObj.getDay();
+                if (day === 0 || day === 6) multiplier = 1.10; // Sat & Sun
+              }
+            }
+            const dur = parseInt(duration) || 4;
+            basePrice = (boatRate + captainRate) * multiplier * dur;
             boatMatch = true;
+          } else if (boat.boat_prices) {
+            const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
+            if (matchingPrice && matchingPrice.price) {
+              basePrice = parseFloat(matchingPrice.price) || 0;
+              boatMatch = true;
+            }
           }
         }
       }
@@ -6684,3 +6643,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
 
 
+
+
+
+// CACHE BUSTER: 20260810124601

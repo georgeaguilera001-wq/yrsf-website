@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YRSF — Admin Login Page Logic
  */
 
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Success — redirect to dashboard or change password
     if (user && user.user_metadata && user.user_metadata.needs_password_change) {
-      window.location.href = '/admin/change-password.html';
+      window.location.href = '/admin/change-password.html?v=20260810155131';
     } else {
       window.location.href = '/admin/dashboard.html';
     }
@@ -78,3 +78,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (errorBox) errorBox.classList.add('hidden');
   }
 });
+

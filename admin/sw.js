@@ -1,10 +1,10 @@
-/**
+﻿/**
  * YRSF Admin Portal — Service Worker
  * Network-First caching strategy ensures the app ALWAYS loads live updates instantly
  * while falling back cleanly to cached versions when offline.
  */
 
-const CACHE_NAME = 'yrsf-admin-v8';
+const CACHE_NAME = 'yrsf-admin-v9';
 const ASSETS_TO_CACHE = [
   '/admin/dashboard.html',
   '/admin/index.html',
@@ -106,3 +106,4 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+

@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS boats (
   manufacturer      TEXT,
   model             TEXT,
   location          TEXT,                                               -- marina / location name
+  boat_hourly_rate  DECIMAL(10,2) DEFAULT 0.00,
+  captain_hourly_rate DECIMAL(10,2) DEFAULT 0.00,
+  minimum_charter_duration INTEGER DEFAULT 4,
   status            TEXT        DEFAULT 'active'
                                 CHECK (status IN ('active', 'hidden', 'maintenance')),
   is_featured       BOOLEAN     DEFAULT false,

@@ -31,8 +31,8 @@ export async function getBoats({
         id, name, slug, short_description, manufacturer, model,
         length_ft, capacity, cabins, year, location, status,
         is_featured, is_best_seller, sort_order,
-        boat_images(url, alt_text, is_primary),
-        boat_prices(price, duration_label)
+        boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+        boat_images(url, alt_text, is_primary)
       `, { count: 'exact' })
       .eq('status', 'active');
 
@@ -90,12 +90,8 @@ export async function getBoats({
       ...boat,
       primary_image_url: boat.boat_images?.[0]?.url || '',
       primary_image_alt: boat.boat_images?.[0]?.alt_text || boat.name,
-      min_price: boat.boat_prices?.length > 0
-        ? Math.min(...boat.boat_prices.map(p => p.price))
-        : null,
-      min_price_label: boat.boat_prices?.length > 0
-        ? boat.boat_prices.reduce((min, p) => p.price < min.price ? p : min, boat.boat_prices[0]).duration_label
-        : ''
+      min_price: ((boat.boat_hourly_rate || 0) + (boat.captain_hourly_rate || 0)) * (boat.minimum_charter_duration || 4),
+      min_price_label: `${boat.minimum_charter_duration || 4} Hours`
     }));
 
     // Client-side price sorting
@@ -118,8 +114,8 @@ export async function getBoatBySlug(slug) {
       .from('boats')
       .select(`
         *,
+        boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(id, url, alt_text, is_primary, sort_order),
-        boat_prices(id, duration_label, duration_hours, price, is_popular, sort_order),
         boat_amenities(id, name, icon),
         boat_specs(id, label, value, icon, sort_order)
       `)
@@ -135,7 +131,6 @@ export async function getBoatBySlug(slug) {
     // Sort related data
     if (data) {
       data.boat_images?.sort((a, b) => a.sort_order - b.sort_order);
-      data.boat_prices?.sort((a, b) => a.sort_order - b.sort_order);
       data.boat_specs?.sort((a, b) => a.sort_order - b.sort_order);
     }
 
@@ -151,8 +146,8 @@ export async function getFeaturedBoats(limit = 6) {
       .select(`
         id, name, slug, short_description, manufacturer,
         length_ft, capacity, location, is_featured, is_best_seller, sort_order,
-        boat_images(url, alt_text, is_primary),
-        boat_prices(price, duration_label)
+        boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+        boat_images(url, alt_text, is_primary)
       `)
       .eq('status', 'active')
       .or('is_featured.eq.true,is_best_seller.eq.true')
@@ -168,12 +163,8 @@ export async function getFeaturedBoats(limit = 6) {
       ...boat,
       primary_image_url: boat.boat_images?.[0]?.url || '',
       primary_image_alt: boat.boat_images?.[0]?.alt_text || boat.name,
-      min_price: boat.boat_prices?.length > 0
-        ? Math.min(...boat.boat_prices.map(p => p.price))
-        : null,
-      min_price_label: boat.boat_prices?.length > 0
-        ? boat.boat_prices.reduce((min, p) => p.price < min.price ? p : min, boat.boat_prices[0]).duration_label
-        : ''
+      min_price: ((boat.boat_hourly_rate || 0) + (boat.captain_hourly_rate || 0)) * (boat.minimum_charter_duration || 4),
+      min_price_label: `${boat.minimum_charter_duration || 4} Hours`
     })).sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
 
     try {
@@ -215,8 +206,8 @@ export async function getAllBoats() {
     .select(`
       id, name, slug, vessel_id, manufacturer, length_ft, capacity,
       status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
-      boat_images(url, alt_text, is_primary),
-      boat_prices(price, duration_label, duration_hours)
+      boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+      boat_images(url, alt_text, is_primary)
     `)
     .order('sort_order', { ascending: true });
 
@@ -228,9 +219,7 @@ export async function getAllBoats() {
   return (data || []).map(boat => ({
     ...boat,
     primary_image_url: boat.boat_images?.find(img => img.is_primary)?.url || boat.boat_images?.[0]?.url || '',
-    min_price: boat.boat_prices?.length > 0
-      ? Math.min(...boat.boat_prices.map(p => p.price))
-      : null
+    min_price: ((boat.boat_hourly_rate || 0) + (boat.captain_hourly_rate || 0)) * (boat.minimum_charter_duration || 4)
   }));
 }
 
@@ -240,8 +229,8 @@ export async function getBoatById(id) {
     .from('boats')
     .select(`
       *,
+      boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
       boat_images(id, url, alt_text, is_primary, sort_order),
-      boat_prices(id, duration_label, duration_hours, price, is_popular, sort_order),
       boat_amenities(id, name, icon),
       boat_specs(id, label, value, icon, sort_order)
     `)
@@ -255,7 +244,6 @@ export async function getBoatById(id) {
 
   if (data) {
     data.boat_images?.sort((a, b) => a.sort_order - b.sort_order);
-    data.boat_prices?.sort((a, b) => a.sort_order - b.sort_order);
     data.boat_specs?.sort((a, b) => a.sort_order - b.sort_order);
   }
 
@@ -328,30 +316,6 @@ export async function updateBoatImages(boatId, images) {
   clearCache('boat_');
 }
 
-/** Replace all prices for a boat */
-export async function updateBoatPrices(boatId, prices) {
-  await supabase.from('boat_prices').delete().eq('boat_id', boatId);
-
-  if (prices.length === 0) {
-    clearCache('boats_');
-    clearCache('boat_');
-    return;
-  }
-
-  const rows = prices.map((p, i) => ({
-    boat_id: boatId,
-    duration_label: p.duration_label,
-    duration_hours: p.duration_hours,
-    price: p.price,
-    is_popular: p.is_popular || false,
-    sort_order: i
-  }));
-
-  const { error } = await supabase.from('boat_prices').insert(rows);
-  if (error) throw error;
-  clearCache('boats_');
-  clearCache('boat_');
-}
 
 /** Replace all amenities for a boat */
 export async function updateBoatAmenities(boatId, amenities) {
@@ -398,3 +362,7 @@ export async function updateBoatSpecs(boatId, specs) {
   clearCache('boats_');
   clearCache('boat_');
 }
+
+
+
+// CACHE BUSTER: 20260810124601

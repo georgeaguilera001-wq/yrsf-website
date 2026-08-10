@@ -9,50 +9,29 @@ import { formatPrice, escapeHtml, placeholderSrc } from '../utils/dom.js';
 import { openInquiryModal } from './inquiry-modal.js';
 import { showBoatLocationMap } from './location-map-modal.js';
 
-function priceMatchesDay(p, dayCode) {
-  const label = (p.duration_label || '').toLowerCase();
-  const dayType = (p.day_type || '').toLowerCase();
-  const target = dayCode.toLowerCase();
+function getDayPricingInfo(boat, dayCode) {
+  const boatRate = parseFloat(boat.boat_hourly_rate) || 0;
+  const captainRate = parseFloat(boat.captain_hourly_rate) || 0;
+  const minDuration = parseInt(boat.minimum_charter_duration) || 4;
 
-  if (dayType === target || label.includes(`[${target}]`) || label.includes(`(${target})`) || label.includes(target)) {
-    return true;
-  }
-  const isWeekday = ['mon', 'tue', 'wed', 'thu'].includes(target);
-  if (isWeekday && (dayType === 'weekday' || label.includes('mon-thu') || label.includes('weekday'))) {
-    return true;
-  }
-  const isWeekend = ['fri', 'sat', 'sun'].includes(target);
-  if (isWeekend && (dayType === 'weekend' || label.includes('fri-sun') || label.includes('weekend'))) {
-    return true;
-  }
-  if (!dayType || dayType === 'all' || (!label.includes('mon') && !label.includes('tue') && !label.includes('wed') && !label.includes('thu') && !label.includes('fri') && !label.includes('sat') && !label.includes('sun') && !label.includes('weekday') && !label.includes('weekend'))) {
-    return true;
-  }
-  return false;
-}
+  if (boatRate === 0 && captainRate === 0) return { minPrice: null, html: '' };
 
-function cleanDurationLabel(label) {
-  return (label || '').replace(/\s*\[(all|weekday|weekend|mon|tue|wed|thu|fri|sat|sun)\]/gi, '').trim();
-}
-
-function getDayPricingInfo(prices, dayCode) {
-  if (!prices || prices.length === 0) return { minPrice: null, html: '' };
-  const matched = prices.filter(p => priceMatchesDay(p, dayCode));
-  const list = matched.length > 0 ? matched : prices;
-
+  const baseHourly = boatRate + captainRate;
   const isWeekendDay = dayCode && ['Sat', 'Sun', 'sat', 'sun', 'Saturday', 'Sunday'].includes(dayCode);
   const multiplier = isWeekendDay ? 1.10 : 1.0;
+  const adjustedHourly = baseHourly * multiplier;
 
-  const adjustedList = list.map(p => ({
-    ...p,
-    price: Math.round(p.price * multiplier)
-  }));
+  const durations = [];
+  for (let i = minDuration; i <= Math.max(8, minDuration); i++) {
+    durations.push(i);
+  }
 
-  const minPrice = Math.min(...adjustedList.map(p => p.price));
-  const html = adjustedList.map(p => `
+  const minPrice = Math.round(adjustedHourly * durations[0]);
+  
+  const html = durations.map(d => `
     <div class="flex justify-between items-center py-1.5 border-b border-outline-variant last:border-0 text-[12px] @sm:text-[14px]">
-      <span class="text-on-surface-variant font-medium">${escapeHtml(cleanDurationLabel(p.duration_label))}</span>
-      <span class="font-bold text-on-surface">${formatPrice(p.price)}</span>
+      <span class="text-on-surface-variant font-medium">${d} Hours</span>
+      <span class="font-bold text-on-surface">${formatPrice(Math.round(adjustedHourly * d))}</span>
     </div>
   `).join('');
   return { minPrice, html };
@@ -70,12 +49,25 @@ export function renderBoatCard(boat, options = {}) {
   const imgUrl = boat.primary_image_url || 'https://placehold.co/600x400/1e293b/94a3b8?text=No+Photo';
   const imgAlt = escapeHtml(boat.primary_image_alt || boat.name);
   
-  const hasPrices = boat.boat_prices && boat.boat_prices.length > 0;
+  const hasPrices = (boat.boat_hourly_rate > 0 || boat.captain_hourly_rate > 0) || (boat.boat_prices && boat.boat_prices.length > 0);
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const currentDayName = days[(new Date().getDay() + 6) % 7]; // Convert Sunday=0 to index
 
-  const info = getDayPricingInfo(boat.boat_prices || [], currentDayName);
-  const priceDisplay = info.minPrice ? formatPrice(info.minPrice) : (boat.min_price ? formatPrice(boat.min_price) : 'Contact');
+  const info = getDayPricingInfo(boat, currentDayName);
+  
+  // Custom price display for the new structure
+  let priceDisplayHtml = 'Contact';
+  if (boat.boat_hourly_rate > 0 || boat.captain_hourly_rate > 0) {
+    priceDisplayHtml = `
+      <div class="flex flex-col text-left leading-tight">
+        <span class="text-[10px] md:text-[11px] text-on-surface">starting @ <span class="font-bold">${formatPrice(boat.boat_hourly_rate || 0)}/hr</span></span>
+        <span class="text-[8px] md:text-[9px] text-on-surface-variant opacity-90">+ Capt from ${formatPrice(boat.captain_hourly_rate || 0)}/hr</span>
+      </div>
+    `;
+  } else if (info.minPrice || boat.min_price) {
+    priceDisplayHtml = `<span class="font-bold text-[10.5px]">starting @ ${formatPrice(info.minPrice || boat.min_price)}</span>`;
+  }
+  
   const pricesHtml = info.html;
 
       const isVideo = imgUrl && typeof imgUrl === 'string' && (/\.(mp4|mov|webm|ogg)$/i.test(imgUrl) || imgUrl.includes('video/'));
@@ -122,7 +114,7 @@ export function renderBoatCard(boat, options = {}) {
       ` : '';
 
       return `
-    <div class="group @container bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden card-hover flex flex-col flex-grow w-full relative" data-boat-id="${boat.id}" data-prices="${escapeHtml(JSON.stringify(boat.boat_prices || []))}">
+    <div class="group @container bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden card-hover flex flex-col flex-grow w-full relative" data-boat-id="${boat.id}" data-boat="${escapeHtml(JSON.stringify(boat))}">
       <div class="relative w-full aspect-[16/8.5] overflow-hidden group/carousel">
         <div class="flex w-full h-full overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" id="carousel-${boat.id}">
           ${imagesHtml}
@@ -164,9 +156,9 @@ export function renderBoatCard(boat, options = {}) {
 
         <div class="w-full flex items-center justify-between md:justify-center gap-1.5 mt-auto pt-2 border-t border-outline-variant/60">
           ${hasPrices ? `
-          <button class="pricing-toggle-btn flex items-center justify-center gap-1 px-2 py-1 md:p-1 bg-surface-container-lowest hover:bg-surface-container rounded-md border border-outline-variant transition-colors shadow-2xs shrink-0" aria-label="View Pricing Tiers" title="View pricing tiers">
-            <span class="material-symbols-outlined text-[14px] text-on-surface-variant transition-transform duration-300">attach_money</span>
-            <span class="card-price-display text-[10.5px] font-bold text-on-surface-variant md:hidden">starting @ ${priceDisplay}</span>
+          <button class="pricing-toggle-btn flex items-center justify-center gap-1.5 px-2 py-1 md:px-2 md:py-1 bg-surface-container-lowest hover:bg-surface-container rounded-md border border-outline-variant transition-colors shadow-2xs shrink-0" aria-label="View Pricing Tiers" title="View pricing tiers">
+            <span class="material-symbols-outlined text-[16px] text-on-surface-variant transition-transform duration-300">attach_money</span>
+            <div class="card-price-display">${priceDisplayHtml}</div>
           </button>
           ` : ''}
           <button type="button" class="flex-1 md:flex-none flex items-center justify-center bg-secondary/10 hover:bg-secondary/20 text-secondary px-2 py-1 rounded-md text-[10.5px] font-bold transition-colors card-inquire-btn" data-boat-id="${boat.id}" data-boat-name="${escapeHtml(name)}" title="Charter Inquiry">Inquire</button>
@@ -242,14 +234,16 @@ export function initBoatCards(container) {
       btn.className = 'card-day-btn flex-1 py-0.5 rounded text-[8.5px] @sm:text-[9.5px] font-bold transition-all text-center bg-secondary text-on-secondary shadow-2xs active-day';
 
       const dayCode = btn.dataset.day;
-      const pricesRaw = card.dataset.prices;
-      let prices = [];
-      try { prices = JSON.parse(pricesRaw || '[]'); } catch (err) {}
+      const boatRaw = card.dataset.boat;
+      let boat = {};
+      try { boat = JSON.parse(boatRaw || '{}'); } catch (err) {}
 
-      const info = getDayPricingInfo(prices, dayCode);
+      const info = getDayPricingInfo(boat, dayCode);
       const priceDisplayEl = card.querySelector('.card-price-display');
-      if (priceDisplayEl && info.minPrice) {
-        priceDisplayEl.textContent = `starting @ ${formatPrice(info.minPrice)}`;
+      if (priceDisplayEl && (boat.boat_hourly_rate > 0 || boat.captain_hourly_rate > 0)) {
+        // Price display is static base hourly rate, no need to update it on day click since tiers expand for details.
+      } else if (priceDisplayEl && info.minPrice) {
+        priceDisplayEl.innerHTML = `<span class="font-bold text-[10.5px]">starting @ ${formatPrice(info.minPrice)}</span>`;
       }
       const listEl = card.querySelector('.pricing-tiers-list');
       if (listEl && info.html) {
@@ -309,3 +303,7 @@ export function initBoatCards(container) {
     });
   });
 }
+
+
+
+// CACHE BUSTER: 20260810124601
