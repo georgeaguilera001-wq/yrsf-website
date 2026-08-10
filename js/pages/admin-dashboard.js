@@ -2729,16 +2729,92 @@ document.addEventListener('DOMContentLoaded', async () => {
           permissions[mod] = subObj;
         });
 
+        try {
+          const payload = { name, email, role, pay_type, hourly_rate: wage, commission_rate, pin_code: pin, permissions };
+          if (id) {
+            const { error } = await supabase.from('staff_users').update(payload).eq('id', id);
+            if (error) throw error;
+
+            // Optional password update
+            const newPassword = document.getElementById('staff-new-password')?.value;
+            if (newPassword && newPassword.length >= 6) {
+              const { error: pwdErr } = await supabase.rpc('admin_update_user_password', {
+                target_email: email,
+                new_password: newPassword
+              });
+              if (pwdErr) {
+                console.warn('Password RPC error:', pwdErr);
+                showToast('Staff info saved, but password update failed: ' + pwdErr.message, true);
+              } else {
+                showToast('Staff info & password updated successfully!');
+              }
+            } else {
+              showToast('Staff member updated!');
+            }
+          } else {
+            const { error } = await supabase.from('staff_users').insert(payload);
+            if (error) throw error;
+            showToast('New staff member added!');
+          }
+          staffModal.classList.add('hidden');
+          loadStaffUsers();
+        } catch (err) {
+          showToast('Error saving staff: ' + err.message, true);
+        }
+      });
+    }
+
+  async function loadStaffUsers() {
+    const tbody = document.getElementById('staff-table-body');
+    if (!tbody) return;
+    try {
+      const { data, error } = await supabase.from('staff_users').select('*').order('created_at', { ascending: true });
+      if (error) throw error;
+      staffUsersCache = data || [];
+
+      // Fetch active clocks
+      const { data: activeLogs } = await supabase.from('staff_timecards').select('staff_id').is('clock_out', null);
+      const activeStaffIds = new Set((activeLogs || []).map(l => l.staff_id));
+
+      if (staffUsersCache.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-on-surface-variant">No staff employees added yet. Click "Add New Staff" above!</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = staffUsersCache.map(user => {
+        const isWorking = activeStaffIds.has(user.id);
+        const perms = user.permissions || {};
+        
+        let grantedMods = 0;
+        let totalSubGranted = 0;
+
+        Object.keys(MODULE_SUBPERMS).forEach(mod => {
+          const m = perms[mod];
+          const hasAccess = typeof m === 'boolean' ? m : (m?.access ?? false);
+          if (hasAccess) {
+            grantedMods++;
+            if (typeof m === 'object' && m !== null) {
+              totalSubGranted += Object.keys(m).filter(k => k !== 'access' && m[k]).length;
+            } else {
+              totalSubGranted += (MODULE_SUBPERMS[mod] || []).length;
+            }
+          }
+        });
+
+        const permBadges = user.role === 'admin'
+          ? '<span class="bg-primary text-on-primary px-2 py-0.5 rounded text-xs font-bold">Full Access</span>'
+          : `<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs font-medium">${grantedMods} Modules (${totalSubGranted} Actions)</span>`;
+
         return `
           <tr class="hover:bg-surface-container-low/50 transition-colors">
             <td class="p-4">
-              <p class="font-bold text-on-surface">${user.name}</p>
-              <p class="text-xs text-on-surface-variant">${user.email}</p>
+              <p class="font-bold text-on-surface">${escapeHtml(user.name)}</p>
+              <p class="text-xs text-on-surface-variant">${escapeHtml(user.email)}</p>
             </td>
             <td class="p-4">
-              <span class="font-medium text-on-surface">${user.role}</span>
+              <span class="font-medium text-on-surface">${escapeHtml(user.role)}</span>
               ${user.pay_type === 'commission'
-                ? `<p class="text-xs font-mono text-amber-700 font-bold">🤝 ${user.commission_rate || 0}% Comm.</p>`
+                ? `<p class="text-xs font-mono text-amber-700 font-bold">${user.commission_rate || 0}% Comm.</p>`
                 : user.pay_type === 'both'
                 ? `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(user.hourly_rate || 0).toFixed(2)}/hr + <span class="text-amber-700">${user.commission_rate || 0}% Comm.</span></p>`
                 : `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(user.hourly_rate || 0).toFixed(2)}/hr</p>`}
