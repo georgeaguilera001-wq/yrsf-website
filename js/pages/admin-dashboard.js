@@ -495,16 +495,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       refreshBtn.onclick = () => fetchAndRenderInquiries(false);
     }
 
-    // Bell dropdown toggle
-    const bellBtn = document.getElementById('notification-bell-btn');
-    const dropdownEl = document.getElementById('notif-dropdown');
-    if (bellBtn && dropdownEl) {
-      bellBtn.onclick = (e) => {
-        e.stopPropagation();
-        dropdownEl.classList.toggle('hidden');
-      };
-      document.addEventListener('click', () => dropdownEl.classList.add('hidden'));
-    }
+
 
     await fetchAndRenderInquiries(false);
 
@@ -5755,13 +5746,18 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     });
   }
   if (clearNotifsBtn) {
-    clearNotifsBtn.addEventListener('click', () => {
+    clearNotifsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       notifications = [];
       localStorage.setItem('yrsf_admin_notifications', JSON.stringify(notifications));
       updateNotificationUI();
     });
   }
-  document.addEventListener('click', () => notifDropdown?.classList.add('hidden'));
+  document.addEventListener('click', (e) => {
+    if (!notifDropdown?.contains(e.target) && e.target !== notifBellBtn) {
+      notifDropdown?.classList.add('hidden');
+    }
+  });
   updateNotificationUI();
 
   window.updateGlobalNotifications = (newNotifs) => {
