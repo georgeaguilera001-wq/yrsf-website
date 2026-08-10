@@ -69,8 +69,47 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     user = await requireAuth('/admin/index.html');
   } catch {
-    return; // Redirect in progress
+return; // Redirect in progress
   }
+
+  // --- ENFORCE PERMISSIONS ---
+  if (user?.email) {
+    try {
+      const { data: staffUser, error } = await supabase.from('staff_users').select('permissions, role').eq('email', user.email).single();
+      if (!error && staffUser) {
+        const role = (staffUser.role || '').toLowerCase();
+        // Owners and Admins bypass permission checks
+        if (role !== 'owner' && role !== 'admin' && role !== 'superadmin') {
+          const perms = staffUser.permissions || {};
+          let firstVisibleBtn = null;
+          
+          // Hide sidebar items user lacks access to
+          document.querySelectorAll('.admin-sidebar li[data-nav-id]').forEach(li => {
+            const mod = li.getAttribute('data-nav-id');
+            const accessObj = perms[mod];
+            const hasAccess = typeof accessObj === 'object' ? accessObj?.access : (accessObj === true);
+            
+            if (!hasAccess) {
+              li.style.display = 'none'; 
+            } else if (!firstVisibleBtn) {
+              firstVisibleBtn = li.querySelector('button.admin-nav-btn');
+            }
+          });
+          
+          // Auto-redirect if they don't have access to the default Dashboard view
+          setTimeout(() => {
+            const dashboardAccess = perms['dashboard']?.access;
+            if (firstVisibleBtn && !dashboardAccess) {
+              firstVisibleBtn.click();
+            }
+          }, 100);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load permissions:', e);
+    }
+  }
+  // ----------------------------
 
   // Display user email
   const emailEl = document.getElementById('admin-user-email');
@@ -6647,4 +6686,5 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
 
 // CACHE BUSTER: 20260810124601
+
 
