@@ -1373,7 +1373,19 @@ return; // Redirect in progress
     async function generateSmartPricing(promptText, captainRate, imageData) {
       try {
         const { data: setting } = await supabase.from('site_settings').select('value').eq('key', 'gemini_api_key').single();
-        const apiKey = setting?.value?.key || setting?.value;
+        let apiKey = setting?.value?.key || setting?.value;
+        
+        // Robust extraction in case the value was double-stringified in the database
+        if (typeof apiKey === 'string') {
+          apiKey = apiKey.trim();
+          if (apiKey.startsWith('{')) {
+             try { apiKey = JSON.parse(apiKey).key || apiKey; } catch(e) {}
+          }
+          if (apiKey.startsWith('"') && apiKey.endsWith('"')) {
+             apiKey = apiKey.slice(1, -1);
+          }
+        }
+        
         if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') {
            showToast('Gemini API Key not configured in site settings.', 'error');
            return false;
