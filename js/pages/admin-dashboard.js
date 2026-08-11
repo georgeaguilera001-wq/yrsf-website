@@ -1260,7 +1260,11 @@ return; // Redirect in progress
           if (field === 'is_popular') {
             window.__pricingTiers[index][field] = e.target.checked;
           } else {
-            window.__pricingTiers[index][field] = parseFloat(e.target.value) || 0;
+            const val = parseFloat(e.target.value) || 0;
+            window.__pricingTiers[index][field] = val;
+            if (field.startsWith('price_')) {
+              window.__pricingTiers[index]['price'] = val;
+            }
           }
         });
       });
@@ -7359,6 +7363,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
 
 // CACHE BUSTER: 20260810124601
+
 
 
 
