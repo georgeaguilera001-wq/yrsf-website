@@ -167,8 +167,7 @@ export async function getBoatBySlug(slug) {
         boat_images(id, url, alt_text, is_primary, sort_order),
         boat_amenities(id, name, icon),
         boat_specs(id, label, value, icon, sort_order),
-        boat_prices(*),
-        boat_pricing_date_overrides(id, override_date, label, duration_hours, price)
+        boat_prices(*)
       `)
       .eq('slug', slug)
       .eq('status', 'active')
@@ -183,7 +182,8 @@ export async function getBoatBySlug(slug) {
           boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
           boat_images(id, url, alt_text, is_primary, sort_order),
           boat_amenities(id, name, icon),
-          boat_specs(id, label, value, icon, sort_order)
+          boat_specs(id, label, value, icon, sort_order),
+          boat_prices(*)
         `)
         .eq('slug', slug)
         .eq('status', 'active')
