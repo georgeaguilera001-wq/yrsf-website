@@ -350,12 +350,12 @@ function populateBoatDetail(boat) {
           cellClasses += isSelected
             ? 'bg-amber-500/15 border-amber-600 ring-2 ring-amber-500 cursor-pointer shadow-sm'
             : 'bg-amber-50/80 hover:bg-amber-100/90 border-amber-300/80 cursor-pointer shadow-2xs';
-          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-200/90 text-amber-950 border border-amber-400 block text-center truncate" title="${bookingCount} Charter(s) Booked on this date">${bookingCount} ${bookingCount === 1 ? 'Booking' : 'Bookings'}</span>`;
+          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-200/90 text-amber-950 border border-amber-400 block text-center truncate" title="${bookingCount} Charter(s) Booked on this date">${bookingCount}<span class="hidden md:inline"> ${bookingCount === 1 ? 'Booking' : 'Bookings'}</span></span>`;
         } else {
           cellClasses += isSelected
             ? 'bg-secondary/10 border-secondary ring-2 ring-secondary cursor-pointer shadow-sm'
             : 'bg-surface-container-lowest hover:bg-surface-container border-outline-variant cursor-pointer';
-          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300/70 block text-center truncate">0 Bookings • Open</span>`;
+          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300/70 block text-center truncate">0<span class="hidden md:inline"> Bookings</span> • Open</span>`;
         }
 
         daysHtml += `
