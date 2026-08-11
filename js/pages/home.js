@@ -164,15 +164,21 @@ async function initHomePage() {
       if (settings.instagram_embed_code?.value) {
         const container = document.getElementById('instagram-showcase-container');
         if (container) {
-          container.innerHTML = settings.instagram_embed_code.value;
-          // Re-evaluate script tags so widgets like Elfsight load correctly
-          const scripts = container.querySelectorAll('script');
-          scripts.forEach(oldScript => {
-            const newScript = document.createElement('script');
-            Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-            newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-            oldScript.parentNode.replaceChild(newScript, oldScript);
-          });
+          const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+              container.innerHTML = settings.instagram_embed_code.value;
+              // Re-evaluate script tags so widgets like Elfsight load correctly
+              const scripts = container.querySelectorAll('script');
+              scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+              });
+              observer.disconnect();
+            }
+          }, { rootMargin: '200px' });
+          observer.observe(container);
         }
       }
 

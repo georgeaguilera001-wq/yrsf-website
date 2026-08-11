@@ -33,7 +33,7 @@ export async function getBoats({
         is_featured, is_best_seller, sort_order,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(url, alt_text, is_primary),
-        boat_prices(*)
+        boat_prices(id, duration_hours, duration_label, price, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, sort_order)
       `, { count: 'exact' })
       .eq('status', 'active');
 
@@ -71,7 +71,7 @@ export async function getBoats({
       
       let fbQuery = supabase
         .from('boats')
-        .select('*', { count: 'exact' })
+        .select('id, name, slug, short_description, manufacturer, model, length_ft, capacity, cabins, year, location, status, is_featured, is_best_seller, sort_order, boat_hourly_rate, captain_hourly_rate, minimum_charter_duration', { count: 'exact' })
         .eq('status', 'active');
 
       // Search
@@ -107,8 +107,8 @@ export async function getBoats({
         count = fb.count;
         // Fetch prices and images separately to ensure they show up
         try {
-          const { data: allPrices } = await supabase.from('boat_prices').select('*');
-          const { data: allImages } = await supabase.from('boat_images').select('*');
+          const { data: allPrices } = await supabase.from('boat_prices').select('boat_id, duration_hours, duration_label, price, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, sort_order');
+          const { data: allImages } = await supabase.from('boat_images').select('boat_id, url, alt_text, is_primary');
           data.forEach(b => {
             b.boat_prices = (allPrices || []).filter(p => p.boat_id === b.id);
             b.boat_images = (allImages || []).filter(i => i.boat_id === b.id);
@@ -162,12 +162,12 @@ export async function getBoatBySlug(slug) {
     let { data, error } = await supabase
       .from('boats')
       .select(`
-        *,
+        id, name, slug, short_description, description, manufacturer, model, length_ft, capacity, cabins, year, location, status, is_featured, is_best_seller, sort_order,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(id, url, alt_text, is_primary, sort_order),
         boat_amenities(id, name, icon),
         boat_specs(id, label, value, icon, sort_order),
-        boat_prices(*)
+        boat_prices(id, duration_hours, duration_label, price, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, sort_order)
       `)
       .eq('slug', slug)
       .eq('status', 'active')
@@ -178,12 +178,12 @@ export async function getBoatBySlug(slug) {
       const fallback = await supabase
         .from('boats')
         .select(`
-          *,
+          id, name, slug, short_description, description, manufacturer, model, length_ft, capacity, cabins, year, location, status, is_featured, is_best_seller, sort_order,
           boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
           boat_images(id, url, alt_text, is_primary, sort_order),
           boat_amenities(id, name, icon),
           boat_specs(id, label, value, icon, sort_order),
-          boat_prices(*)
+          boat_prices(id, duration_hours, duration_label, price, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, sort_order)
         `)
         .eq('slug', slug)
         .eq('status', 'active')
@@ -217,7 +217,7 @@ export async function getFeaturedBoats(limit = 6) {
         length_ft, capacity, location, is_featured, is_best_seller, sort_order,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(url, alt_text, is_primary),
-        boat_prices(*)
+        boat_prices(id, duration_hours, duration_label, price, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, sort_order)
       `)
       .eq('status', 'active')
       .or('is_featured.eq.true,is_best_seller.eq.true')
@@ -307,11 +307,11 @@ export async function getAllBoats() {
     .select(`
       id, name, slug, vessel_id, manufacturer, length_ft, capacity,
       status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
-      boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
-      boat_images(url, alt_text, is_primary),
-      boat_prices(*)
-    `)
-    .order('sort_order', { ascending: true });
+        boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+        boat_images(url, alt_text, is_primary),
+        boat_prices(id, duration_hours, duration_label, price, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, sort_order)
+      `)
+      .order('sort_order', { ascending: true });
 
   if (error) {
     console.warn('Error fetching all boats, falling back to legacy query:', error);
@@ -349,7 +349,7 @@ export async function getBoatById(id) {
       boat_images(id, url, alt_text, is_primary, sort_order),
       boat_amenities(id, name, icon),
       boat_specs(id, label, value, icon, sort_order),
-      boat_prices(*)
+      boat_prices(id, duration_hours, duration_label, price, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, sort_order)
     `)
     .eq('id', id)
     .single();
@@ -364,7 +364,7 @@ export async function getBoatById(id) {
         boat_images(id, url, alt_text, is_primary, sort_order),
         boat_amenities(id, name, icon),
         boat_specs(id, label, value, icon, sort_order),
-        boat_prices(*)
+        boat_prices(id, duration_hours, duration_label, price, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, sort_order)
       `)
       .eq('id', id)
       .single();
@@ -583,7 +583,7 @@ export async function updateBoatDateOverrides(boatId, overrides) {
 export async function getBoatPricingTiers(boatId) {
   const { data, error } = await supabase
     .from('boat_prices')
-    .select('*')
+    .select('id, duration_hours, duration_label, price, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, sort_order')
     .eq('boat_id', boatId)
     .order('sort_order', { ascending: true });
 
@@ -594,7 +594,7 @@ export async function getBoatPricingTiers(boatId) {
 export async function getBoatDateOverrides(boatId) {
   const { data, error } = await supabase
     .from('boat_pricing_date_overrides')
-    .select('*')
+    .select('id, override_date, label, duration_hours, price')
     .eq('boat_id', boatId)
     .order('override_date', { ascending: true });
 

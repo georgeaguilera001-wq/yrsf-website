@@ -99,7 +99,7 @@ export async function getNavigation(location = 'header') {
   return withCache('nav_' + location, async () => {
     const { data, error } = await supabase
       .from('navigation')
-      .select('*')
+      .select('id, label, url, location, section, sort_order, is_active, created_at')
       .eq('location', location)
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
@@ -117,7 +117,7 @@ export async function getNavigation(location = 'header') {
 export async function getAllNavigation() {
   const { data, error } = await supabase
     .from('navigation')
-    .select('*')
+    .select('id, label, url, location, section, sort_order, is_active, created_at')
     .order('location', { ascending: true })
     .order('sort_order', { ascending: true });
 

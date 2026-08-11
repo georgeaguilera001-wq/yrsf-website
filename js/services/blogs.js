@@ -30,7 +30,7 @@ export async function getPublishedBlogs() {
 export async function getBlogBySlug(slug) {
   const { data, error } = await supabase
     .from('blogs')
-    .select('*')
+    .select('id, title, slug, excerpt, content, image_url, status, seo_title, seo_description, created_at, updated_at')
     .eq('slug', slug)
     .eq('status', 'published')
     .single();
@@ -66,7 +66,7 @@ export async function getAllBlogs() {
 export async function getBlogById(id) {
   const { data, error } = await supabase
     .from('blogs')
-    .select('*')
+    .select('id, title, slug, excerpt, content, image_url, status, seo_title, seo_description, created_at, updated_at')
     .eq('id', id)
     .single();
 

@@ -13,7 +13,7 @@ export async function getAddons() {
   return withCache('addons_active', async () => {
     const { data, error } = await supabase
       .from('addons')
-      .select('*')
+      .select('id, name, description, price_text, price_value, image_url, image_alt, badge, features, is_featured, status, sort_order')
       .eq('status', 'active')
       .order('sort_order', { ascending: true });
 
@@ -31,7 +31,7 @@ export async function getAddonById(id) {
   return withCache('addon_' + id, async () => {
     const { data, error } = await supabase
       .from('addons')
-      .select('*')
+      .select('id, name, description, price_text, price_value, image_url, image_alt, badge, features, is_featured, status, sort_order')
       .eq('id', id)
       .single();
 
@@ -50,7 +50,7 @@ export async function getAddonById(id) {
 export async function getAllAddons() {
   const { data, error } = await supabase
     .from('addons')
-    .select('*')
+    .select('id, name, description, price_text, price_value, image_url, image_alt, badge, features, is_featured, status, sort_order')
     .order('sort_order', { ascending: true });
 
   if (error) {
