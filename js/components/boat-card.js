@@ -22,14 +22,18 @@ function getDayPricingInfo(boat, dayCode) {
     const sorted = [...pricingTiers].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
     const lowestTier = sorted[0];
     const boatPrice = parseFloat(lowestTier[dayKey]) || parseFloat(lowestTier.price) || 0;
-    const minPrice = Math.round(boatPrice + (captainRate * lowestTier.duration_hours));
+    const minPrice = Math.round(boatPrice);
 
     const html = sorted.map(tier => {
       const tierBoatPrice = parseFloat(tier[dayKey]) || parseFloat(tier.price) || 0;
-      const total = Math.round(tierBoatPrice + (captainRate * tier.duration_hours));
+      const captainTotal = Math.round(captainRate * tier.duration_hours);
+      const total = Math.round(tierBoatPrice + captainTotal);
       return `
         <div class="flex justify-between items-center py-1.5 border-b border-outline-variant last:border-0 text-[12px] @sm:text-[14px]">
-          <span class="text-on-surface-variant font-medium">${tier.duration_hours} Hours</span>
+          <div class="flex flex-col">
+            <span class="text-on-surface-variant font-medium">${tier.duration_hours} Hours</span>
+            ${captainTotal > 0 ? `<span class="text-[9px] text-on-surface-variant opacity-80">+ Capt: ${formatPrice(captainTotal)}</span>` : ''}
+          </div>
           <span class="font-bold text-on-surface">${formatPrice(total)}</span>
         </div>
       `;
@@ -43,7 +47,7 @@ function getDayPricingInfo(boat, dayCode) {
 
   if (boatRate === 0 && captainRate === 0) return { minPrice: null, html: '', hasTiers: false };
 
-  const baseHourly = boatRate + captainRate;
+  const baseHourly = boatRate; // Exclude captain from base for minPrice
   const isWeekendDay = dayCode && ['Sat', 'Sun', 'sat', 'sun', 'Saturday', 'Sunday'].includes(dayCode);
   const multiplier = isWeekendDay ? 1.10 : 1.0;
   const adjustedHourly = baseHourly * multiplier;
@@ -55,12 +59,19 @@ function getDayPricingInfo(boat, dayCode) {
 
   const minPrice = Math.round(adjustedHourly * durations[0]);
   
-  const html = durations.map(d => `
-    <div class="flex justify-between items-center py-1.5 border-b border-outline-variant last:border-0 text-[12px] @sm:text-[14px]">
-      <span class="text-on-surface-variant font-medium">${d} Hours</span>
-      <span class="font-bold text-on-surface">${formatPrice(Math.round(adjustedHourly * d))}</span>
-    </div>
-  `).join('');
+  const html = durations.map(d => {
+    const captainTotal = Math.round(captainRate * d);
+    const total = Math.round((adjustedHourly * d) + captainTotal);
+    return `
+      <div class="flex justify-between items-center py-1.5 border-b border-outline-variant last:border-0 text-[12px] @sm:text-[14px]">
+        <div class="flex flex-col">
+          <span class="text-on-surface-variant font-medium">${d} Hours</span>
+          ${captainTotal > 0 ? `<span class="text-[9px] text-on-surface-variant opacity-80">+ Capt: ${formatPrice(captainTotal)}</span>` : ''}
+        </div>
+        <span class="font-bold text-on-surface">${formatPrice(total)}</span>
+      </div>
+    `;
+  }).join('');
   return { minPrice, html, hasTiers: false };
 }
 
@@ -89,7 +100,6 @@ export function renderBoatCard(boat, options = {}) {
     priceDisplayHtml = `
       <div class="flex flex-col text-left leading-tight">
         <span class="text-[10px] md:text-[11px] text-on-surface">starting @ <span class="font-bold">${formatPrice(info.minPrice)}</span></span>
-        ${boat.captain_hourly_rate > 0 ? `<span class="text-[8px] md:text-[9px] text-on-surface-variant opacity-90">incl. Captain</span>` : ''}
       </div>
     `;
   } else if (boat.min_price) {
@@ -271,7 +281,6 @@ export function initBoatCards(container) {
         priceDisplayEl.innerHTML = `
           <div class="flex flex-col text-left leading-tight">
             <span class="text-[10px] md:text-[11px] text-on-surface">starting @ <span class="font-bold">${formatPrice(info.minPrice)}</span></span>
-            ${boat.captain_hourly_rate > 0 ? `<span class="text-[8px] md:text-[9px] text-on-surface-variant opacity-90">incl. Captain</span>` : ''}
           </div>
         `;
       }
