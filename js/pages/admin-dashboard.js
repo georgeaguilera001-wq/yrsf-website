@@ -4,7 +4,7 @@
  */
 
 import { requireAuth, logout, getUser } from '../services/auth.js';
-import { getAllBoats, createBoat, updateBoat, deleteBoat, getBoatById, updateBoatImages, updateBoatAmenities, updateBoatSpecs, updateBoatPrices, updateBoatPricingTiers, updateBoatDateOverrides } from '../services/boats.js?v=20260811v3';
+import { getAllBoats, createBoat, updateBoat, deleteBoat, getBoatById, updateBoatImages, updateBoatAmenities, updateBoatSpecs, updateBoatPrices, updateBoatPricingTiers, updateBoatDateOverrides } from '../services/boats.js?v=20260811v4';
 import { getAddons, getAllAddons, createAddon, updateAddon, deleteAddon } from '../services/addons.js';
 import { getAllBlogs, createBlog, updateBlog, deleteBlog } from '../services/blogs.js';
 import { getAllSettings, updateSettings } from '../services/settings.js';

@@ -349,8 +349,7 @@ export async function getBoatById(id) {
       boat_images(id, url, alt_text, is_primary, sort_order),
       boat_amenities(id, name, icon),
       boat_specs(id, label, value, icon, sort_order),
-      boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order),
-      boat_pricing_date_overrides(id, override_date, label, duration_hours, price)
+      boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order)
     `)
     .eq('id', id)
     .single();
@@ -364,7 +363,8 @@ export async function getBoatById(id) {
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(id, url, alt_text, is_primary, sort_order),
         boat_amenities(id, name, icon),
-        boat_specs(id, label, value, icon, sort_order)
+        boat_specs(id, label, value, icon, sort_order),
+        boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order)
       `)
       .eq('id', id)
       .single();
@@ -548,7 +548,7 @@ export async function updateBoatPricingTiers(boatId, tiers) {
 
 /** Replace all date overrides for a boat */
 export async function updateBoatDateOverrides(boatId, overrides) {
-  await supabase.from('boat_pricing_date_overrides').delete().eq('boat_id', boatId);
+  // await supabase.from('boat_pricing_date_overrides').delete().eq('boat_id', boatId);
 
   if (!overrides || overrides.length === 0) {
     clearCache('boats_');
@@ -556,6 +556,7 @@ export async function updateBoatDateOverrides(boatId, overrides) {
     return;
   }
 
+  /*
   const rows = overrides.map(o => ({
     boat_id: boatId,
     override_date: o.override_date,
@@ -566,6 +567,7 @@ export async function updateBoatDateOverrides(boatId, overrides) {
 
   const { error } = await supabase.from('boat_pricing_date_overrides').insert(rows);
   if (error) throw error;
+  */
   clearCache('boats_');
   clearCache('boat_');
 }
