@@ -21,23 +21,37 @@ module.exports = async (req, res) => {
         // Extract slug/ID from URL path like /l/45dbcdd22183772c or /boats/pershing-pershing
         const match = targetUrl.match(/\/(?:l|boats)\/([a-zA-Z0-9_-]+)/);
         const boatIdOrSlug = match ? match[1] : null;
+        const isLink = targetUrl.includes('/l/');
+        const urlObj = new URL(targetUrl);
+        const origin = urlObj.origin;
 
         let boatImages = [];
 
         if (boatIdOrSlug) {
-          // Attempt direct lookup by ID/hash
-          const apiRes = await fetch(`https://clientyachtlink.com/api/boats/${boatIdOrSlug}`);
-          if (apiRes.ok) {
-            const data = await apiRes.json();
-            if (data && Array.isArray(data.images) && data.images.length > 0) {
-              boatImages = data.images;
+          if (isLink) {
+            // It's a proposal link, fetch the photos directly
+            const apiRes = await fetch(`${origin}/api/link/${boatIdOrSlug}/photos`);
+            if (apiRes.ok) {
+              const data = await apiRes.json();
+              if (data && Array.isArray(data.images) && data.images.length > 0) {
+                boatImages = data.images;
+              }
+            }
+          } else {
+            // Attempt direct lookup by boat ID/slug
+            const apiRes = await fetch(`${origin}/api/boats/${boatIdOrSlug}`);
+            if (apiRes.ok) {
+              const data = await apiRes.json();
+              if (data && Array.isArray(data.images) && data.images.length > 0) {
+                boatImages = data.images;
+              }
             }
           }
         }
 
-        // Fallback: Query all boats API if direct endpoint returned empty or was slug-based
-        if (boatImages.length === 0) {
-          const allBoatsRes = await fetch('https://clientyachtlink.com/api/boats');
+        // Fallback: Query all boats API if direct endpoint returned empty
+        if (boatImages.length === 0 && !isLink) {
+          const allBoatsRes = await fetch(`${origin}/api/boats`);
           if (allBoatsRes.ok) {
             const allBoats = await allBoatsRes.json();
             if (Array.isArray(allBoats)) {
@@ -55,7 +69,7 @@ module.exports = async (req, res) => {
 
         boatImages.forEach(img => {
           if (typeof img === 'string') {
-            const fullUrl = img.startsWith('/') ? `https://clientyachtlink.com${img}` : img;
+            const fullUrl = img.startsWith('/') ? `${origin}${img}` : img;
             urls.add(fullUrl);
           }
         });
@@ -79,7 +93,12 @@ module.exports = async (req, res) => {
         }
       });
 
-      if (!fetchRes.ok) throw new Error(`Failed to fetch ${targetUrl}: ${fetchRes.status}`);
+      if (!fetchRes.ok) {
+        if (fetchRes.status === 403 || fetchRes.status === 401) {
+          throw new Error(`Access Denied (${fetchRes.status}). The gallery provider (${new URL(targetUrl).hostname}) actively blocks automated imports using Cloudflare or a similar firewall. Please import these photos using Google Drive, Dropbox, or upload them manually.`);
+        }
+        throw new Error(`Failed to fetch ${targetUrl}: ${fetchRes.status}`);
+      }
 
       const html = await fetchRes.text();
 
