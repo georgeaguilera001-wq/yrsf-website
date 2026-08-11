@@ -1478,7 +1478,18 @@ return; // Redirect in progress
 Return ONLY a valid JSON object matching exactly this schema:
 {
   "tiers": [
-    { "duration_hours": number, "wholesale_price": number, "is_popular": boolean, "sort_order": number }
+    { 
+      "duration_hours": number, 
+      "wholesale_price_mon": number, 
+      "wholesale_price_tue": number,
+      "wholesale_price_wed": number,
+      "wholesale_price_thu": number,
+      "wholesale_price_fri": number,
+      "wholesale_price_sat": number,
+      "wholesale_price_sun": number,
+      "is_popular": boolean, 
+      "sort_order": number 
+    }
   ],
   "overrides": [
     { "override_date": "YYYY-MM-DD", "label": string, "duration_hours": number, "wholesale_price": number }
@@ -1486,11 +1497,12 @@ Return ONLY a valid JSON object matching exactly this schema:
 }
 
 EXTRACTION RULES:
-1. Extract ONLY the duration (in hours) and the owner's wholesale price (the cost to us before any markups).
-2. DO NOT perform any math or calculate retail markups. We will handle markups in our deterministic pricing engine.
-3. DO NOT calculate captain fees.
-4. If a duration is implicitly standard, default to 4 or 8 hours depending on context.
-5. Do not include markdown formatting or \`\`\`json blocks. Return ONLY raw JSON text.`;
+1. Extract ONLY the duration (in hours) and the owner's wholesale price (the cost to us before any markups) per day of the week.
+2. If the user only provides one price, apply it to all days of the week (wholesale_price_mon through wholesale_price_sun).
+3. DO NOT perform any math or calculate retail markups. We will handle markups in our deterministic pricing engine.
+4. DO NOT calculate captain fees.
+5. If a duration is implicitly standard, default to 4 or 8 hours depending on context.
+6. Do not include markdown formatting or \`\`\`json blocks. Return ONLY raw JSON text.`;
 
         const parts = [{ text: systemPrompt + '\n\nUser Input: ' + promptText }];
         if (imageData) {
@@ -1574,34 +1586,48 @@ EXTRACTION RULES:
 
         if (parsed.tiers) {
           window.__pricingTiers = parsed.tiers.map((t, idx) => {
-            // AI returns wholesale_price and duration_hours.
+            // AI returns wholesale_price by day and duration_hours.
             // We must map it through the deterministic engine.
-            if (typeof t.wholesale_price !== 'number' || isNaN(t.wholesale_price) || t.wholesale_price <= 0) {
+            
+            // Allow legacy single wholesale_price fallback just in case the AI hallucinates
+            const getPrice = (dayVal) => (typeof dayVal === 'number' && dayVal > 0) ? dayVal : (t.wholesale_price || 0);
+
+            const wMon = getPrice(t.wholesale_price_mon);
+            const wTue = getPrice(t.wholesale_price_tue);
+            const wWed = getPrice(t.wholesale_price_wed);
+            const wThu = getPrice(t.wholesale_price_thu);
+            const wFri = getPrice(t.wholesale_price_fri);
+            const wSat = getPrice(t.wholesale_price_sat);
+            const wSun = getPrice(t.wholesale_price_sun);
+
+            if (wMon <= 0) {
               throw new Error(`AI generated invalid wholesale price for ${t.duration_hours} hours. Please enter it manually.`);
             }
             if (typeof t.duration_hours !== 'number' || isNaN(t.duration_hours) || t.duration_hours <= 0) {
               throw new Error(`AI generated invalid duration hours. Please enter it manually.`);
             }
 
-            const calc = calculateCharterPricing({
-              wholesalePrice: t.wholesale_price,
-              durationHours: t.duration_hours,
-              captainHourlyRate: captainRate
-            });
+            const calcMon = calculateCharterPricing({ wholesalePrice: wMon, durationHours: t.duration_hours, captainHourlyRate: captainRate });
+            const calcTue = calculateCharterPricing({ wholesalePrice: wTue, durationHours: t.duration_hours, captainHourlyRate: captainRate });
+            const calcWed = calculateCharterPricing({ wholesalePrice: wWed, durationHours: t.duration_hours, captainHourlyRate: captainRate });
+            const calcThu = calculateCharterPricing({ wholesalePrice: wThu, durationHours: t.duration_hours, captainHourlyRate: captainRate });
+            const calcFri = calculateCharterPricing({ wholesalePrice: wFri, durationHours: t.duration_hours, captainHourlyRate: captainRate });
+            const calcSat = calculateCharterPricing({ wholesalePrice: wSat, durationHours: t.duration_hours, captainHourlyRate: captainRate });
+            const calcSun = calculateCharterPricing({ wholesalePrice: wSun, durationHours: t.duration_hours, captainHourlyRate: captainRate });
 
             return {
-               duration_hours: calc.durationHours,
-               wholesale_price: calc.wholesalePrice,
-               price_mon: calc.boatPrice,
-               price_tue: calc.boatPrice,
-               price_wed: calc.boatPrice,
-               price_thu: calc.boatPrice,
-               price_fri: calc.boatPrice,
-               price_sat: calc.boatPrice,
-               price_sun: calc.boatPrice,
+               duration_hours: calcMon.durationHours,
+               wholesale_price: calcMon.wholesalePrice, // keep mon as standard for legacy refs if needed
+               price_mon: calcMon.boatPrice,
+               price_tue: calcTue.boatPrice,
+               price_wed: calcWed.boatPrice,
+               price_thu: calcThu.boatPrice,
+               price_fri: calcFri.boatPrice,
+               price_sat: calcSat.boatPrice,
+               price_sun: calcSun.boatPrice,
                is_popular: t.is_popular || false,
                sort_order: t.sort_order ?? idx,
-               _calc: calc 
+               _calc: calcMon 
             };
           });
         }
