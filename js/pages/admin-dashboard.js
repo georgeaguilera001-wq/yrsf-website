@@ -14,6 +14,7 @@ import { openModal, closeModal, confirmModal } from '../components/modal.js';
 import { escapeHtml, formatPrice, slugify } from '../utils/dom.js';
 import { initSocialHub } from '../components/social-hub.js';
 import { calculateCharterPricing } from '../utils/pricing.js';
+import { clearCache } from '../utils/cache.js';
 
 // Nested Action-Level Sub-Permissions Configuration
 const MODULE_SUBPERMS = {
@@ -2476,6 +2477,8 @@ EXTRACTION RULES:
           console.warn('Failed to save date overrides:', e);
         }
 
+        clearCache('boat');
+        showToast('Yacht saved successfully!', 'success');
         closeModal();
         loaded.dashboard = false;
         loadFleet(true);
