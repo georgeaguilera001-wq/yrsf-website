@@ -216,7 +216,7 @@ export function renderBoatCard(boat, options = {}) {
               <span class="material-symbols-outlined text-[14px]">close</span>
             </button>
             <p class="text-[9.5px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5 px-1">Pricing Tiers</p>
-            <div class="pricing-tiers-list">${pricesHtml}</div>
+            <div class="pricing-tiers-list max-h-[160px] overflow-y-auto pr-1 [scrollbar-width:thin]">${pricesHtml}</div>
           </div>
         </div>
         ` : ''}
