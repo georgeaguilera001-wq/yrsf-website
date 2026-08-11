@@ -1436,8 +1436,15 @@ If a day of the week is not specified, assume the standard price. Use current ye
           })
         });
 
-        if (!res.ok) throw new Error('Gemini API Error');
-        const json = await res.json();
+        if (!res.ok) {
+          const errText = await res.text();
+          let errMsg = 'Gemini API Error';
+          try {
+             errMsg = JSON.parse(errText).error.message;
+          } catch(e) {}
+          throw new Error(errMsg);
+        }
+        const json = JSON.parse(await res.text());
         const textRes = json.candidates[0].content.parts[0].text;
         
         let parsed;
