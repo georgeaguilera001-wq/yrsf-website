@@ -37,7 +37,7 @@ async function geocodeLocation(locationName) {
   // 1. Check local storage cache (from verified addresses or previous geocoding)
   const cacheKey = `geocode_${normName}`;
   const cached = localStorage.getItem(cacheKey);
-  if (cached) return JSON.parse(cached);
+  if (cached && cached !== 'undefined' && cached !== 'null') { try { return JSON.parse(cached); } catch(e) {} }
 
   // 2. Exact match or substring checking for predefined
   for (const [key, coords] of Object.entries(PREDEFINED_LOCATIONS)) {
@@ -334,3 +334,4 @@ export async function initMarinaMap() {
     console.error('Error initializing map:', error);
   }
 }
+

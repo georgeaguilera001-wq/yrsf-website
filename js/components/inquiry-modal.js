@@ -174,7 +174,7 @@ export function openInquiryModal({ boatName = 'General Charter Inquiry', boatId 
 
       // Always save to persistent local inquiries queue first (guarantees instant display on Admin Dashboard)
       try {
-        const localList = JSON.parse(localStorage.getItem('yrsf_all_inquiries') || '[]');
+        let localList = []; try { const raw = localStorage.getItem('yrsf_all_inquiries'); if (raw && raw !== 'undefined') localList = JSON.parse(raw); } catch(e) {}
         localList.unshift(inquiryPayload);
         localStorage.setItem('yrsf_all_inquiries', JSON.stringify(localList));
       } catch (e) {}
@@ -241,3 +241,4 @@ export function openInquiryModal({ boatName = 'General Charter Inquiry', boatId 
     container.querySelector('#succ-close-btn').onclick = closeModal;
   };
 }
+

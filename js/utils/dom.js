@@ -119,3 +119,12 @@ export function renderSkeletons(count = 3) {
     </div>
   `).join('');
 }
+
+export function safeJsonParse(str, fallback = null) {
+  if (!str || str === 'undefined' || str === 'null') return fallback;
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    return fallback;
+  }
+}

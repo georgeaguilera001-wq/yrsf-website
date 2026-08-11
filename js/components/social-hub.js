@@ -151,7 +151,7 @@ async function loadSocialPosts() {
     socialPosts = data;
   } catch (err) {
     const cached = localStorage.getItem('yrsf_social_posts');
-    socialPosts = cached ? JSON.parse(cached) : [];
+    if (cached && cached !== 'undefined' && cached !== 'null') { try { socialPosts = JSON.parse(cached); } catch(e) { socialPosts = []; } } else { socialPosts = []; }
   }
   
   const queueCountEl = document.getElementById('social-queue-count');
@@ -1013,3 +1013,4 @@ async function deleteSocialPost(id) {
   renderSocialCalendar();
   if (window.showToast) window.showToast('Post deleted.', 'info');
 }
+

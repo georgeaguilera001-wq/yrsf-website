@@ -692,7 +692,7 @@ return; // Redirect in progress
       try {
         const localCached = localStorage.getItem('yrsf_admin_fleet_cache');
         if (localCached) {
-          allAdminBoatsCache = JSON.parse(localCached);
+          if (localCached && localCached !== 'undefined') { try { allAdminBoatsCache = JSON.parse(localCached); } catch(e) {} }
           fleetCache = allAdminBoatsCache;
           renderFleetTable();
         }
@@ -1552,7 +1552,7 @@ EXTRACTION RULES:
         if (!res || !res.ok) {
           let actualErrorMsg = "Gemini AI is currently busy. Please try again in a few seconds.";
           try {
-            const errObj = JSON.parse(lastErrorText);
+            let errObj = {}; if (lastErrorText && lastErrorText !== 'undefined') { try { errObj = JSON.parse(lastErrorText); } catch(e) {} }
             if (errObj.error && errObj.error.message) {
               actualErrorMsg = errObj.error.message;
             }
@@ -1561,13 +1561,13 @@ EXTRACTION RULES:
           }
           throw new Error(actualErrorMsg);
         }
-        const json = JSON.parse(await res.text());
+        let json = {}; try { const t = await res.text(); if (t && t !== 'undefined') json = JSON.parse(t); } catch(e) {}
         const textRes = json.candidates[0].content.parts[0].text;
         
         let parsed;
         try {
           const cleaned = textRes.replace(/```json/g, '').replace(/```/g, '').trim();
-          parsed = JSON.parse(cleaned);
+          if (cleaned && cleaned !== 'undefined') { try { parsed = JSON.parse(cleaned); } catch(e) {} }
         } catch (e) {
           throw new Error("Could not parse AI response as JSON");
         }
@@ -2275,7 +2275,7 @@ EXTRACTION RULES:
             const scrapeRes = await fetch(`/api/scrape-images?url=${encodeURIComponent(link)}`);
             if (!scrapeRes.ok) throw new Error('Gallery Scraper Error: ' + await scrapeRes.text());
             
-            const scrapeData = await scrapeRes.json();
+            let scrapeData = {}; try { const text = await scrapeRes.text(); if (text && text !== 'undefined' && text !== 'null') scrapeData = JSON.parse(text); } catch(e) { throw new Error('Failed to parse gallery images JSON'); }
             const scrapedUrls = scrapeData.images || [];
             
             if (scrapedUrls.length === 0) {
@@ -5000,7 +5000,7 @@ EXTRACTION RULES:
           // Check for new notifications
           const { data: notifData } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
           if (notifData && notifData.value && Array.isArray(notifData.value)) {
-            let localNotifs = JSON.parse(localStorage.getItem('yrsf_admin_notifications') || '[]');
+            let localNotifs = []; try { const rawN = localStorage.getItem('yrsf_admin_notifications'); if (rawN && rawN !== 'undefined') localNotifs = JSON.parse(rawN); } catch(e) {}
             let addedNew = false;
             
             // Loop backwards so newest gets unshifted properly
@@ -5851,7 +5851,7 @@ EXTRACTION RULES:
     if (!window.externalIcsEvents || window.externalIcsEvents.length === 0) {
       try {
         const saved = localStorage.getItem('yrsf_external_ics_events');
-        if (saved) window.externalIcsEvents = JSON.parse(saved);
+        if (saved && saved !== 'undefined') { try { window.externalIcsEvents = JSON.parse(saved); } catch(e) {} }
       } catch (e) {}
       if (!window.externalIcsEvents) window.externalIcsEvents = [];
     }
@@ -6612,7 +6612,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   const notifList = document.getElementById('notif-list');
   const clearNotifsBtn = document.getElementById('clear-notifs-btn');
 
-  let notifications = JSON.parse(localStorage.getItem('yrsf_admin_notifications') || '[]');
+  let notifications = []; try { const rawN = localStorage.getItem('yrsf_admin_notifications'); if (rawN && rawN !== 'undefined') notifications = JSON.parse(rawN); } catch(e) {}
 
   function updateNotificationUI() {
     if (!notifBadge || !notifList) return;
@@ -7456,6 +7456,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
 
 // CACHE BUSTER: 20260810124601
+
 
 
 

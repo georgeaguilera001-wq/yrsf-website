@@ -9,7 +9,8 @@ const STORAGE_KEY = 'yrsf_favorites';
 export function getFavorites() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    if (!data || data === 'undefined' || data === 'null') return [];
+  try { return JSON.parse(data); } catch(e) { return []; }
   } catch {
     return [];
   }
@@ -60,3 +61,4 @@ export function clearFavorites() {
     detail: { boatId: null, isFavorite: false, count: 0 }
   }));
 }
+

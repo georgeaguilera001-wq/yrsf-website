@@ -28,7 +28,7 @@ export async function withCache(key, fetcher, ttlMs = DEFAULT_TTL) {
   // 2. Check sessionStorage (instant retrieval across page navigations!)
   try {
     const stored = sessionStorage.getItem('yrsf_cache_v3_' + key);
-    if (stored) {
+    if (stored && stored !== 'undefined' && stored !== 'null') {
       const item = JSON.parse(stored);
       if (now - item.time < ttlMs) {
         memoryCache.set(key, item);
@@ -87,3 +87,4 @@ export function clearCache(prefix = '') {
     keysToRemove.forEach(k => sessionStorage.removeItem(k));
   } catch (e) {}
 }
+

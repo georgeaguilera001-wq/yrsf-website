@@ -87,7 +87,8 @@ async function initCatalogPage() {
       try {
         const cachedPublic = localStorage.getItem('yrsf_public_fleet_cache');
         if (cachedPublic) {
-          const parsed = JSON.parse(cachedPublic);
+          if (!cachedPublic || cachedPublic === 'undefined') return;
+  try { const parsed = JSON.parse(cachedPublic);
           if (parsed && parsed.length > 0) {
             renderProgressiveGrid(parsed);
           }
@@ -257,3 +258,4 @@ if (document.readyState === 'loading') {
 } else {
   initCatalogPage();
 }
+
