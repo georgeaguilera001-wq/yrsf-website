@@ -26,15 +26,13 @@ function getDayPricingInfo(boat, dayCode) {
 
     const html = sorted.map(tier => {
       const tierBoatPrice = parseFloat(tier[dayKey]) || parseFloat(tier.price) || 0;
-      const captainTotal = Math.round(captainRate * tier.duration_hours);
-      const total = Math.round(tierBoatPrice + captainTotal);
       return `
         <div class="flex justify-between items-center py-1.5 border-b border-outline-variant last:border-0 text-[12px] @sm:text-[14px]">
           <div class="flex flex-col">
             <span class="text-on-surface-variant font-medium">${tier.duration_hours} Hours</span>
-            ${captainTotal > 0 ? `<span class="text-[9px] text-on-surface-variant opacity-80">+ Capt: ${formatPrice(captainTotal)}</span>` : ''}
+            ${captainRate > 0 ? `<span class="text-[9px] text-on-surface-variant opacity-80">+ Capt: ${formatPrice(captainRate)}/hr</span>` : ''}
           </div>
-          <span class="font-bold text-on-surface">${formatPrice(total)}</span>
+          <span class="font-bold text-on-surface">Boat: ${formatPrice(Math.round(tierBoatPrice))}</span>
         </div>
       `;
     }).join('');
@@ -60,15 +58,14 @@ function getDayPricingInfo(boat, dayCode) {
   const minPrice = Math.round(adjustedHourly * durations[0]);
   
   const html = durations.map(d => {
-    const captainTotal = Math.round(captainRate * d);
-    const total = Math.round((adjustedHourly * d) + captainTotal);
+    const tierBoatPrice = Math.round(adjustedHourly * d);
     return `
       <div class="flex justify-between items-center py-1.5 border-b border-outline-variant last:border-0 text-[12px] @sm:text-[14px]">
         <div class="flex flex-col">
           <span class="text-on-surface-variant font-medium">${d} Hours</span>
-          ${captainTotal > 0 ? `<span class="text-[9px] text-on-surface-variant opacity-80">+ Capt: ${formatPrice(captainTotal)}</span>` : ''}
+          ${captainRate > 0 ? `<span class="text-[9px] text-on-surface-variant opacity-80">+ Capt: ${formatPrice(captainRate)}/hr</span>` : ''}
         </div>
-        <span class="font-bold text-on-surface">${formatPrice(total)}</span>
+        <span class="font-bold text-on-surface">Boat: ${formatPrice(tierBoatPrice)}</span>
       </div>
     `;
   }).join('');
