@@ -48,6 +48,10 @@ function lazyLoadElement(el) {
         el.src = 'https://placehold.co/600x400/1e293b/94a3b8?text=No+Photo';
       };
       el.src = src;
+    } else if (el.tagName === 'VIDEO') {
+      el.src = src;
+      el.load();
+      el.classList.add('loaded');
     } else {
       el.style.backgroundImage = `url('${src}')`;
       el.classList.add('loaded');
