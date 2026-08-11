@@ -907,7 +907,7 @@ return; // Redirect in progress
           </button>
         </div>
 
-        <form id="boat-editor-form">
+        <form id="boat-editor-form" novalidate>
           <!-- TAB 1: Yacht Details & Media -->
           <div id="edit-boat-panel-general" class="flex flex-col gap-md">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
@@ -2222,9 +2222,29 @@ If a day of the week is not specified, assume the standard price. Use current ye
     document.getElementById('boat-editor-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      const nameInput = document.getElementById('edit-boat-name');
+      if (!nameInput || !nameInput.value.trim()) {
+        document.querySelector('.edit-boat-tab-btn[data-tab="general"]')?.click();
+        showToast('Please enter a Yacht Name.', 'warning');
+        nameInput?.focus();
+        return;
+      }
+
+      if (currentPhotos.some(p => p.uploading)) {
+        showToast('Please wait for photo uploads or cloud imports to finish before saving.', 'warning');
+        return;
+      }
+
+      const saveBtn = e.target.querySelector('button[type="submit"]');
+      const originalSaveText = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = `<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Saving...`;
+      }
+
       const boatData = {
-        name: document.getElementById('edit-boat-name').value.trim(),
-        slug: document.getElementById('edit-boat-slug').value.trim() || slugify(document.getElementById('edit-boat-name').value),
+        name: nameInput.value.trim(),
+        slug: document.getElementById('edit-boat-slug').value.trim() || slugify(nameInput.value),
         length_ft: parseInt(document.getElementById('edit-boat-length').value) || null,
         capacity: parseInt(document.getElementById('edit-boat-capacity').value) || null,
         boat_hourly_rate: 0,
@@ -2252,6 +2272,10 @@ If a day of the week is not specified, assume the standard price. Use current ye
 
       if (boatData.ical_feed_url && (boatData.ical_feed_url.includes('timetr.ee/s/') || boatData.ical_feed_url.includes('/invitations/'))) {
         alert('⚠️ Notice: That is a TimeTree Web Share / Invitation link!\n\nUnlike Google Calendar, Apple Calendar, or Teamup (which have native 1-click .ics export links), TimeTree does not have a built-in iCal export in their app.\n\nTo sync a TimeTree calendar into YRSF:\n• Use a free converter like "TimeTree Exporter" to generate a secret .ics link from their calendar.\n• OR recommend your partner captain use Google Calendar / Apple Calendar / Teamup, which natively support 1-click industry standard .ics syncing!');
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = originalSaveText;
+        }
         return;
       }
 
@@ -2267,7 +2291,7 @@ If a day of the week is not specified, assume the standard price. Use current ye
 
         // Save Images & Videos
         const cleanImages = currentPhotos
-          .filter(p => !p.uploading && p.url && (p.url.startsWith('http') || p.url.startsWith('/')))
+          .filter(p => !p.uploading && p.url && (p.url.startsWith('http') || p.url.startsWith('/') || p.url.startsWith('data:')))
           .map((p, idx) => ({
             url: p.url,
             alt_text: p.alt_text || `${savedBoat.name} image ${idx + 1}`,
@@ -2300,7 +2324,12 @@ If a day of the week is not specified, assume the standard price. Use current ye
         loaded.dashboard = false;
         loadFleet(true);
       } catch (err) {
-        showToast('Error: ' + err.message, 'error');
+        console.error('Error saving yacht:', err);
+        showToast('Error saving yacht: ' + err.message, 'error', 7000);
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = originalSaveText;
+        }
       }
     });
   }
