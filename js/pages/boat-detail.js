@@ -549,7 +549,7 @@ function populateBoatDetail(boat) {
   const daySelectorEl = $('#detail-day-selector');
   if (pricingEl) {
     const captainRate = parseFloat(boat.captain_hourly_rate) || 0;
-    const pricingTiers = boat.boat_pricing_tiers || [];
+    const pricingTiers = boat.boat_prices || boat.boat_pricing_tiers || [];
     const dateOverrides = boat.boat_pricing_date_overrides || [];
     const boatRate = parseFloat(boat.boat_hourly_rate) || 0;
     const minDuration = parseInt(boat.minimum_charter_duration) || 4;
@@ -583,18 +583,17 @@ function populateBoatDetail(boat) {
               </div>
             ` + pricingTiers.map((tier, index) => {
               const override = todayOverrides.find(o => o.duration_hours === tier.duration_hours);
-              const boatPrice = override ? parseFloat(override.price) : parseFloat(tier[dayKey]) || 0;
-              const totalPrice = boatPrice + (captainRate * tier.duration_hours);
+              const boatPrice = override ? parseFloat(override.price) : (parseFloat(tier[dayKey]) || parseFloat(tier.price) || 0);
               const isPopular = tier.is_popular;
               return `
               <div class="flex items-center justify-between p-4 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
                 <div>
                   <p class="font-label-md text-label-md text-on-surface">${tier.duration_hours} Hours</p>
                   ${isPopular ? '<span class="text-caption text-secondary font-bold">Most Popular</span>' : ''}
-                  <p class="text-[10px] text-on-surface-variant mt-0.5 font-medium tracking-wide uppercase">Boat: ${formatPrice(Math.round(boatPrice))}${captainRate > 0 ? ` • Capt: ${formatPrice(Math.round(captainRate * tier.duration_hours))}` : ''}</p>
+                  ${captainRate > 0 ? `<p class="text-[11px] font-semibold text-secondary mt-0.5">+ Capt: ${formatPrice(captainRate)}/hr</p>` : ''}
                 </div>
                 <div class="text-right">
-                  <p class="font-headline-md text-headline-md text-secondary">${formatPrice(Math.round(totalPrice))}</p>
+                  <p class="font-headline-md text-headline-md font-bold text-on-surface">Boat: ${formatPrice(Math.round(boatPrice))}</p>
                 </div>
               </div>
               `;
@@ -604,18 +603,17 @@ function populateBoatDetail(boat) {
 
           // Normal tier pricing for selected day
           pricingEl.innerHTML = pricingTiers.map((tier, index) => {
-            const boatPrice = parseFloat(tier[dayKey]) || 0;
-            const totalPrice = boatPrice + (captainRate * tier.duration_hours);
+            const boatPrice = parseFloat(tier[dayKey]) || parseFloat(tier.price) || 0;
             const isPopular = tier.is_popular;
             return `
             <div class="flex items-center justify-between p-4 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
               <div>
                 <p class="font-label-md text-label-md text-on-surface">${tier.duration_hours} Hours</p>
                 ${isPopular ? '<span class="text-caption text-secondary font-bold">Most Popular</span>' : ''}
-                <p class="text-[10px] text-on-surface-variant mt-0.5 font-medium tracking-wide uppercase">Boat: ${formatPrice(Math.round(boatPrice))}${captainRate > 0 ? ` • Capt: ${formatPrice(Math.round(captainRate * tier.duration_hours))}` : ''}</p>
+                ${captainRate > 0 ? `<p class="text-[11px] font-semibold text-secondary mt-0.5">+ Capt: ${formatPrice(captainRate)}/hr</p>` : ''}
               </div>
               <div class="text-right">
-                <p class="font-headline-md text-headline-md text-secondary">${formatPrice(Math.round(totalPrice))}</p>
+                <p class="font-headline-md text-headline-md font-bold text-on-surface">Boat: ${formatPrice(Math.round(boatPrice))}</p>
               </div>
             </div>
             `;
@@ -624,7 +622,7 @@ function populateBoatDetail(boat) {
           // Fallback: old-style hourly rate calculation
           const isWeekendDay = dayCode && ['Sat', 'Sun'].includes(dayCode);
           const multiplier = isWeekendDay ? 1.10 : 1.0;
-          const baseHourly = boatRate + captainRate;
+          const baseHourly = boatRate;
           const adjustedHourly = baseHourly * multiplier;
 
           const durations = [];
@@ -633,17 +631,17 @@ function populateBoatDetail(boat) {
           }
 
           pricingEl.innerHTML = durations.map((d, index) => {
-            const adjPrice = Math.round(adjustedHourly * d);
+            const tierBoatPrice = Math.round(adjustedHourly * d);
             const isPopular = index === 0;
             return `
             <div class="flex items-center justify-between p-4 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
               <div>
                 <p class="font-label-md text-label-md text-on-surface">${d} Hours</p>
                 ${isPopular ? '<span class="text-caption text-secondary font-bold">Most Popular</span>' : ''}
-                <p class="text-[10px] text-on-surface-variant mt-0.5 font-medium tracking-wide uppercase">Boat: ${formatPrice(Math.round(boatRate * d * multiplier))} • Capt: ${formatPrice(Math.round(captainRate * d * multiplier))}</p>
+                ${captainRate > 0 ? `<p class="text-[11px] font-semibold text-secondary mt-0.5">+ Capt: ${formatPrice(captainRate)}/hr</p>` : ''}
               </div>
               <div class="text-right">
-                <p class="font-headline-md text-headline-md text-secondary">${formatPrice(adjPrice)}</p>
+                <p class="font-headline-md text-headline-md font-bold text-on-surface">Boat: ${formatPrice(tierBoatPrice)}</p>
               </div>
             </div>
             `;
