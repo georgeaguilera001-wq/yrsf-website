@@ -1173,6 +1173,8 @@ return; // Redirect in progress
         }))
       : (boat?.boat_prices ? JSON.parse(JSON.stringify(boat.boat_pricing_tiers)) : []);
 
+    console.log("TRACE 5 - RAW BOAT FROM DATABASE (boat_prices)", boat?.boat_prices);
+    console.log("TRACE 7 - EDIT FORM STATE (initialPrices)", initialPrices);
     window.__pricingTiers = initialPrices;
     window.__dateOverrides = boat?.boat_pricing_date_overrides ? JSON.parse(JSON.stringify(boat.boat_pricing_date_overrides)) : [];
 
@@ -7368,6 +7370,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
 
 // CACHE BUSTER: 20260810124601
+
 
 
 
