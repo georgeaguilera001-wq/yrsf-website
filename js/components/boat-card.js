@@ -21,11 +21,15 @@ function getDayPricingInfo(boat, dayCode) {
   if (pricingTiers.length > 0) {
     const sorted = [...pricingTiers].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
     const lowestTier = sorted[0];
-    const boatPrice = parseFloat(lowestTier[dayKey]) || parseFloat(lowestTier.price) || 0;
+    const pDay0 = parseFloat(lowestTier[dayKey]);
+    const pBase0 = parseFloat(lowestTier.price);
+    const boatPrice = (!isNaN(pDay0) && pDay0 > 0) ? pDay0 : ((!isNaN(pBase0) && pBase0 > 0) ? pBase0 : 0);
     const minPrice = Math.round(boatPrice);
 
     const html = sorted.map(tier => {
-      const tierBoatPrice = parseFloat(tier[dayKey]) || parseFloat(tier.price) || 0;
+      const pDay = parseFloat(tier[dayKey]);
+      const pBase = parseFloat(tier.price);
+      const tierBoatPrice = (!isNaN(pDay) && pDay > 0) ? pDay : ((!isNaN(pBase) && pBase > 0) ? pBase : 0);
       return `
         <div class="flex justify-between items-center py-1.5 border-b border-outline-variant last:border-0 text-[12px] @sm:text-[14px]">
           <div class="flex flex-col">

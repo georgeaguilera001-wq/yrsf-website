@@ -583,7 +583,9 @@ function populateBoatDetail(boat) {
               </div>
             ` + pricingTiers.map((tier, index) => {
               const override = todayOverrides.find(o => o.duration_hours === tier.duration_hours);
-              const boatPrice = override ? parseFloat(override.price) : (parseFloat(tier[dayKey]) || parseFloat(tier.price) || 0);
+              const pDay = override ? parseFloat(override.price) : parseFloat(tier[dayKey]);
+              const pBase = parseFloat(tier.price);
+              const boatPrice = (!isNaN(pDay) && pDay > 0) ? pDay : ((!isNaN(pBase) && pBase > 0) ? pBase : 0);
               const isPopular = tier.is_popular;
               return `
               <div class="flex items-center justify-between p-4 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
@@ -603,7 +605,9 @@ function populateBoatDetail(boat) {
 
           // Normal tier pricing for selected day
           pricingEl.innerHTML = pricingTiers.map((tier, index) => {
-            const boatPrice = parseFloat(tier[dayKey]) || parseFloat(tier.price) || 0;
+            const pDay = parseFloat(tier[dayKey]);
+            const pBase = parseFloat(tier.price);
+            const boatPrice = (!isNaN(pDay) && pDay > 0) ? pDay : ((!isNaN(pBase) && pBase > 0) ? pBase : 0);
             const isPopular = tier.is_popular;
             return `
             <div class="flex items-center justify-between p-4 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">

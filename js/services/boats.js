@@ -33,7 +33,7 @@ export async function getBoats({
         is_featured, is_best_seller, sort_order,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(url, alt_text, is_primary),
-        boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order)
+        boat_prices(*)
       `, { count: 'exact' })
       .eq('status', 'active');
 
@@ -167,7 +167,7 @@ export async function getBoatBySlug(slug) {
         boat_images(id, url, alt_text, is_primary, sort_order),
         boat_amenities(id, name, icon),
         boat_specs(id, label, value, icon, sort_order),
-        boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order),
+        boat_prices(*),
         boat_pricing_date_overrides(id, override_date, label, duration_hours, price)
       `)
       .eq('slug', slug)
@@ -217,7 +217,7 @@ export async function getFeaturedBoats(limit = 6) {
         length_ft, capacity, location, is_featured, is_best_seller, sort_order,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(url, alt_text, is_primary),
-        boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order)
+        boat_prices(*)
       `)
       .eq('status', 'active')
       .or('is_featured.eq.true,is_best_seller.eq.true')
@@ -309,7 +309,7 @@ export async function getAllBoats() {
       status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
       boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
       boat_images(url, alt_text, is_primary),
-      boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order)
+      boat_prices(*)
     `)
     .order('sort_order', { ascending: true });
 
@@ -349,7 +349,7 @@ export async function getBoatById(id) {
       boat_images(id, url, alt_text, is_primary, sort_order),
       boat_amenities(id, name, icon),
       boat_specs(id, label, value, icon, sort_order),
-      boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order)
+      boat_prices(*)
     `)
     .eq('id', id)
     .single();
@@ -364,7 +364,7 @@ export async function getBoatById(id) {
         boat_images(id, url, alt_text, is_primary, sort_order),
         boat_amenities(id, name, icon),
         boat_specs(id, label, value, icon, sort_order),
-        boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order)
+        boat_prices(*)
       `)
       .eq('id', id)
       .single();
