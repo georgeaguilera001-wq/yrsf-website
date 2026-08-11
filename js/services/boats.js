@@ -68,11 +68,44 @@ export async function getBoats({
 
     if (error || !data || data.length === 0) {
       console.warn('Main join query returned empty or error, falling back to direct boats table query:', error);
-      const fb = await supabase.from('boats').select('*').eq('status', 'active').order('sort_order', { ascending: true });
+      
+      let fbQuery = supabase
+        .from('boats')
+        .select('*', { count: 'exact' })
+        .eq('status', 'active');
+
+      // Search
+      if (search) {
+        fbQuery = fbQuery.or(`name.ilike.%${search}%,manufacturer.ilike.%${search}%,model.ilike.%${search}%,short_description.ilike.%${search}%`);
+      }
+
+      // Filters
+      if (minCapacity) fbQuery = fbQuery.gte('capacity', minCapacity);
+      if (maxCapacity) fbQuery = fbQuery.lte('capacity', maxCapacity);
+      if (minLength) fbQuery = fbQuery.gte('length_ft', minLength);
+      if (maxLength) fbQuery = fbQuery.lte('length_ft', maxLength);
+
+      // Sorting
+      if (sortBy === 'price_asc' || sortBy === 'price_desc') {
+        fbQuery = fbQuery.order('sort_order', { ascending: true });
+      } else if (sortBy === 'length_asc') {
+        fbQuery = fbQuery.order('length_ft', { ascending: true });
+      } else if (sortBy === 'length_desc') {
+        fbQuery = fbQuery.order('length_ft', { ascending: false });
+      } else if (sortBy === 'capacity_desc') {
+        fbQuery = fbQuery.order('capacity', { ascending: false });
+      } else {
+        fbQuery = fbQuery.order('sort_order', { ascending: true });
+      }
+
+      fbQuery = fbQuery.range(offset, offset + limit - 1);
+
+      const fb = await fbQuery;
+      
       if (fb.data && fb.data.length > 0) {
         data = fb.data;
-        count = fb.data.length;
-        // Fetch prices separately to ensure pricing shows
+        count = fb.count;
+        // Fetch prices and images separately to ensure they show up
         try {
           const { data: allPrices } = await supabase.from('boat_prices').select('*');
           const { data: allImages } = await supabase.from('boat_images').select('*');
