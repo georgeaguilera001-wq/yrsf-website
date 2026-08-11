@@ -27,7 +27,7 @@ export async function withCache(key, fetcher, ttlMs = DEFAULT_TTL) {
 
   // 2. Check sessionStorage (instant retrieval across page navigations!)
   try {
-    const stored = sessionStorage.getItem('yrsf_cache_' + key);
+    const stored = sessionStorage.getItem('yrsf_cache_v2_' + key);
     if (stored) {
       const item = JSON.parse(stored);
       if (now - item.time < ttlMs) {
@@ -54,7 +54,7 @@ export async function withCache(key, fetcher, ttlMs = DEFAULT_TTL) {
         const item = { time: Date.now(), data };
         memoryCache.set(key, item);
         try {
-          sessionStorage.setItem('yrsf_cache_' + key, JSON.stringify(item));
+          sessionStorage.setItem('yrsf_cache_v2_' + key, JSON.stringify(item));
         } catch (e) {}
       }
       return data;
