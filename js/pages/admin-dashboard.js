@@ -2030,7 +2030,6 @@ If a day of the week is not specified, assume the standard price. Use current ye
         if (cloudStatus) cloudStatus.textContent = 'Scanning cloud folder...';
 
         try {
-          let files = [];
           if (link.includes('drive.google.com')) {
             const match = link.match(/folders\/([a-zA-Z0-9_-]+)/);
             if (!match) throw new Error('Could not extract folder ID from Google Drive URL. Ensure it looks like https://drive.google.com/drive/folders/ABC...');
@@ -2038,14 +2037,29 @@ If a day of the week is not specified, assume the standard price. Use current ye
             const res = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&fields=files(id,name,mimeType)&key=${GOOGLE_KEY}`);
             if (!res.ok) throw new Error('Google Drive API error: ' + await res.text());
             const data = await res.json();
-            files = (data.files || []).filter(f => f.mimeType.startsWith('image/')).map(f => ({
-              name: f.name,
-              downloadFn: async () => {
-                const dlRes = await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}?alt=media&key=${GOOGLE_KEY}`);
-                if (!dlRes.ok) throw new Error('Drive download failed');
-                return await dlRes.blob();
-              }
+            const driveFiles = (data.files || []).filter(f => f.mimeType.startsWith('image/'));
+            
+            if (driveFiles.length === 0) {
+              throw new Error('No image files found in that Google Drive folder.');
+            }
+
+            showToast(`Found ${driveFiles.length} photos in Google Drive...`, 'info', 4000);
+            
+            // Attach Google Drive direct view URLs
+            const drivePhotos = driveFiles.map(f => ({
+              url: `https://lh3.googleusercontent.com/d/${f.id}=w1600`,
+              alt_text: f.name
             }));
+            
+            currentPhotos.push(...drivePhotos);
+            renderPhotoManager();
+
+            if (cloudStatus) {
+              cloudStatus.textContent = `✓ Imported ${driveFiles.length} photos!`;
+              cloudStatus.className = 'text-xs font-bold text-green-600';
+            }
+            showToast(`✓ Imported ${driveFiles.length} Google Drive photos! Remember to click Save Changes.`, 'success', 6000);
+
           } else if (link.includes('dropbox.com')) {
             let entries = [];
             let token = DROPBOX_TOKEN || await getDropboxAccessToken();
@@ -2086,11 +2100,22 @@ If a day of the week is not specified, assume the standard price. Use current ye
             }
 
             const rawFiles = entries.filter(f => f['.tag'] === 'file' && f.name.match(/\.(jpg|jpeg|png|gif|webp|heic|mov|mp4)$/i));
-            files = rawFiles.map(f => ({
-              name: f.name,
-              downloadFn: async () => {
-                await new Promise(r => setTimeout(r, 300));
-                for (let attempt = 1; attempt <= 4; attempt++) {
+            if (rawFiles.length === 0) {
+              throw new Error('No image/video files found in that Dropbox folder.');
+            }
+
+            showToast(`Transferring ${rawFiles.length} Dropbox items...`, 'info', 4000);
+            
+            // Transfer Dropbox files to Supabase Storage in parallel batches of 4
+            const BATCH_SIZE = 4;
+            let successCount = 0;
+
+            for (let i = 0; i < rawFiles.length; i += BATCH_SIZE) {
+              const batch = rawFiles.slice(i, i + BATCH_SIZE);
+              if (cloudStatus) cloudStatus.textContent = `Transferring ${i + 1}-${Math.min(i + BATCH_SIZE, rawFiles.length)} / ${rawFiles.length}...`;
+              
+              await Promise.all(batch.map(async (f) => {
+                try {
                   let currentToken = await getDropboxAccessToken();
                   const dlRes = await fetch('https://content.dropboxapi.com/2/sharing/get_shared_link_file', {
                     method: 'POST',
@@ -2100,28 +2125,40 @@ If a day of the week is not specified, assume the standard price. Use current ye
                     }
                   });
 
-                  if (dlRes.ok) return await dlRes.blob();
+                  if (!dlRes.ok) return;
 
-                  if (dlRes.status === 401) {
-                    window._cachedDropboxToken = null;
-                    continue;
+                  const blob = await dlRes.blob();
+                  const cleanName = f.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+                  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}-${cleanName}`;
+                  const filePath = `boats/${fileName}`;
+                  const contentType = blob.type || 'image/jpeg';
+
+                  const { error: uploadError } = await supabase.storage
+                    .from('images')
+                    .upload(filePath, blob, { cacheControl: '3600', upsert: false, contentType });
+
+                  if (!uploadError) {
+                    const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
+                    currentPhotos.push({ url: publicUrl, alt_text: f.name });
+                    successCount++;
                   }
-
-                  if (dlRes.status === 429 || dlRes.status >= 500) {
-                    const waitTime = Math.pow(2, attempt) * 1200;
-                    console.warn(`Dropbox rate limit hit downloading ${f.name}. Pausing ${waitTime/1000}s...`);
-                    await new Promise(r => setTimeout(r, waitTime));
-                    continue;
-                  }
-
-                  throw new Error(`Dropbox Download error (${dlRes.status}): ` + await dlRes.text());
+                } catch (err) {
+                  console.warn('Dropbox batch item error:', f.name, err);
                 }
-                throw new Error(`Dropbox download failed after 4 retries for ${f.name}`);
-              }
-            }));
+              }));
+
+              renderPhotoManager();
+            }
+
+            if (cloudStatus) {
+              cloudStatus.textContent = `✓ Imported ${successCount} Dropbox photos!`;
+              cloudStatus.className = 'text-xs font-bold text-green-600';
+            }
+            showToast(`✓ Imported ${successCount} Dropbox photos! Click Save Changes when ready.`, 'success', 6000);
+
           } else if (link.startsWith('http')) {
-            // GENERIC GALLERY URL
-            if (cloudStatus) cloudStatus.textContent = 'Scraping gallery for images...';
+            // GENERIC GALLERY URL (Aryeo, MLS, Property Galleries, etc.)
+            if (cloudStatus) cloudStatus.textContent = 'Scraping gallery for photos...';
             const scrapeRes = await fetch(`/api/scrape-images?url=${encodeURIComponent(link)}`);
             if (!scrapeRes.ok) throw new Error('Gallery Scraper Error: ' + await scrapeRes.text());
             
@@ -2132,78 +2169,38 @@ If a day of the week is not specified, assume the standard price. Use current ye
               throw new Error('No images found on that gallery website.');
             }
             
-            files = scrapedUrls.map(url => {
-              // Extract filename from URL or generate one
-              const urlParts = url.split('/');
-              let extractedName = urlParts[urlParts.length - 1] || 'image.jpg';
-              if (extractedName.includes('?')) extractedName = extractedName.split('?')[0];
-              
-              return {
-                name: extractedName,
-                downloadFn: async () => {
-                  const proxyRes = await fetch(`/api/proxy-image?url=${encodeURIComponent(url)}`);
-                  if (!proxyRes.ok) throw new Error('Failed to proxy image: ' + await proxyRes.text());
-                  return await proxyRes.blob();
-                }
-              };
+            // Deduplicate and filter out junk icons/logos
+            const cleanUrls = Array.from(new Set(scrapedUrls)).filter(u => {
+              if (!u || typeof u !== 'string') return false;
+              const lower = u.toLowerCase();
+              return !lower.includes('favicon') && 
+                     !lower.includes('apple-touch-icon') && 
+                     !lower.includes('tracking') && 
+                     !lower.includes('logo') && 
+                     !lower.includes('avatar') &&
+                     !lower.includes('mux.com');
             });
-            
+
+            if (cleanUrls.length === 0) {
+              throw new Error('No high-resolution boat images found on that gallery page.');
+            }
+
+            // Instantly attach cleaned gallery photo URLs!
+            const newPhotos = cleanUrls.map(u => ({ url: u }));
+            currentPhotos.push(...newPhotos);
+            renderPhotoManager();
+
+            if (cloudStatus) {
+              cloudStatus.textContent = `✓ Pulled ${cleanUrls.length} photos!`;
+              cloudStatus.className = 'text-xs font-bold text-green-600';
+            }
+            showToast(`✓ Pulled and attached ${cleanUrls.length} gallery photos! Click Save Changes when ready.`, 'success', 6000);
+
           } else {
             throw new Error('Please enter a valid Google Drive, Dropbox, or Gallery URL.');
           }
-
-          if (files.length === 0) {
-            throw new Error('No image files found in that cloud folder.');
-          }
-
-          showToast(`Pulling ${files.length} images from cloud directly...`, 'info', 5000);
-          if (cloudStatus) cloudStatus.textContent = `Transferring 0 / ${files.length}...`;
-
-          let count = 0;
-          for (const file of files) {
-            count++;
-            if (cloudStatus) cloudStatus.textContent = `Transferring ${count} / ${files.length}...`;
-            importCloudBtn.innerHTML = `<span class="admin-spinner w-4 h-4"></span> ${count}/${files.length}`;
-            
-            const tempPreview = 'https://placehold.co/200x200/1e293b/38bdf8?text=Loading+' + count;
-            const tempItem = { url: tempPreview, uploading: true, file_name: file.name };
-            currentPhotos.push(tempItem);
-            renderPhotoManager();
-
-            try {
-              const blob = await file.downloadFn();
-              const cleanName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
-              const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}-${cleanName}`;
-              const filePath = `boats/${fileName}`;
-              const contentType = blob.type || 'image/jpeg';
-
-              const { error: uploadError } = await supabase.storage
-                .from('images')
-                .upload(filePath, blob, { cacheControl: '3600', upsert: false, contentType });
-
-              if (uploadError) throw uploadError;
-
-              const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
-
-              const idx = currentPhotos.indexOf(tempItem);
-              if (idx !== -1) {
-                currentPhotos[idx] = { url: publicUrl };
-              }
-              renderPhotoManager();
-            } catch (err) {
-              console.error('Failed file:', file.name, err);
-              const idx = currentPhotos.indexOf(tempItem);
-              if (idx !== -1) currentPhotos.splice(idx, 1);
-              renderPhotoManager();
-            }
-          }
-
-          if (cloudStatus) {
-            cloudStatus.textContent = `✓ Imported ${files.length} photos!`;
-            cloudStatus.className = 'text-xs font-bold text-green-600';
-          }
-          showToast(`✓ Imported ${files.length} photos straight from the cloud! Remember to click Save Changes.`, 'success', 6000);
         } catch (err) {
+          console.error('Cloud Import Error:', err);
           showToast(`⚠️ Cloud Import Error: ${err.message}`, 'error', 7000);
           if (cloudStatus) {
             cloudStatus.textContent = `Error: ${err.message}`;
