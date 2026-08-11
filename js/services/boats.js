@@ -126,7 +126,7 @@ export async function getBoats({
  */
 export async function getBoatBySlug(slug) {
   return withCache('boat_slug_' + slug, async () => {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('boats')
       .select(`
         *,
@@ -142,8 +142,25 @@ export async function getBoatBySlug(slug) {
       .single();
 
     if (error) {
-      console.error('Error fetching boat:', error);
-      return null;
+      console.warn('Error fetching boat, falling back to legacy query:', error);
+      const fallback = await supabase
+        .from('boats')
+        .select(`
+          *,
+          boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+          boat_images(id, url, alt_text, is_primary, sort_order),
+          boat_amenities(id, name, icon),
+          boat_specs(id, label, value, icon, sort_order)
+        `)
+        .eq('slug', slug)
+        .eq('status', 'active')
+        .single();
+        
+      data = fallback.data;
+      if (fallback.error) {
+        console.error('Fallback failed:', fallback.error);
+        return null;
+      }
     }
 
     // Sort related data
@@ -160,7 +177,7 @@ export async function getBoatBySlug(slug) {
 /** Fetch featured, active boats with primary image and lowest price */
 export async function getFeaturedBoats(limit = 6) {
   return withCache('boats_featured_' + limit, async () => {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('boats')
       .select(`
         id, name, slug, short_description, manufacturer,
@@ -175,8 +192,25 @@ export async function getFeaturedBoats(limit = 6) {
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching featured boats:', error);
-      return [];
+      console.warn('Error fetching featured boats, falling back to legacy query:', error);
+      const fallback = await supabase
+        .from('boats')
+        .select(`
+          id, name, slug, short_description, manufacturer,
+          length_ft, capacity, location, is_featured, is_best_seller, sort_order,
+          boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+          boat_images(url, alt_text, is_primary)
+        `)
+        .eq('status', 'active')
+        .or('is_featured.eq.true,is_best_seller.eq.true')
+        .order('sort_order', { ascending: true })
+        .limit(limit);
+      
+      data = fallback.data;
+      if (fallback.error) {
+         console.error('Fallback failed:', fallback.error);
+         return [];
+      }
     }
 
     const result = (data || []).map(boat => {
@@ -235,7 +269,7 @@ export async function searchBoats(query) {
 
 /** Get ALL boats regardless of status (admin view) */
 export async function getAllBoats() {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('boats')
     .select(`
       id, name, slug, vessel_id, manufacturer, length_ft, capacity,
@@ -247,8 +281,22 @@ export async function getAllBoats() {
     .order('sort_order', { ascending: true });
 
   if (error) {
-    console.error('Error fetching all boats:', error);
-    return [];
+    console.warn('Error fetching all boats, falling back to legacy query:', error);
+    const fallback = await supabase
+      .from('boats')
+      .select(`
+        id, name, slug, vessel_id, manufacturer, length_ft, capacity,
+        status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
+        boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+        boat_images(url, alt_text, is_primary)
+      `)
+      .order('sort_order', { ascending: true });
+    
+    data = fallback.data;
+    if (fallback.error) {
+       console.error('Fallback failed:', fallback.error);
+       return [];
+    }
   }
 
   return (data || []).map(boat => ({
@@ -260,7 +308,7 @@ export async function getAllBoats() {
 
 /** Get a single boat by ID (admin - includes hidden boats) */
 export async function getBoatById(id) {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('boats')
     .select(`
       *,
@@ -275,8 +323,24 @@ export async function getBoatById(id) {
     .single();
 
   if (error) {
-    console.error('Error fetching boat by ID:', error);
-    return null;
+    console.warn('Error fetching boat by ID, falling back to legacy query:', error);
+    const fallback = await supabase
+      .from('boats')
+      .select(`
+        *,
+        boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+        boat_images(id, url, alt_text, is_primary, sort_order),
+        boat_amenities(id, name, icon),
+        boat_specs(id, label, value, icon, sort_order)
+      `)
+      .eq('id', id)
+      .single();
+      
+    data = fallback.data;
+    if (fallback.error) {
+       console.error('Fallback failed:', fallback.error);
+       return null;
+    }
   }
 
   if (data) {
