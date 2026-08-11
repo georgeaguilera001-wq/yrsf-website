@@ -1500,11 +1500,32 @@ If a day of the week is not specified, assume the standard price. Use current ye
           });
         }
 
-        const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-pro'];
+        // Dynamically fetch supported models for this API key
+        let supportedModels = [];
+        try {
+          const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+          if (modelsRes.ok) {
+            const modelsData = await modelsRes.json();
+            // Filter for models that support generateContent and contain "gemini-1.5" or "gemini"
+            supportedModels = modelsData.models
+              .filter(m => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'))
+              .map(m => m.name.replace('models/', ''));
+          }
+        } catch (e) {
+          console.warn("Could not fetch models list", e);
+        }
+
+        // Fallback if dynamic fetch fails
+        if (supportedModels.length === 0) {
+          supportedModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'];
+        }
+        
+        console.log("Attempting Gemini API with models:", supportedModels);
+
         let res = null;
         let lastErrorText = '';
 
-        for (const model of modelsToTry) {
+        for (const model of supportedModels) {
           try {
             res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
               method: 'POST',
