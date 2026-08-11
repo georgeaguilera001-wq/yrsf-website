@@ -469,6 +469,201 @@ export async function updateBoatAmenities(boatId, amenities) {
   }));
 
   const { error } = await supabase.from('boat_amenities').insert(rows);
+}
+
+/** Get total count of active boats */
+export async function getBoatCount() {
+  const { count, error } = await supabase
+    .from('boats')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'active');
+
+  return error ? 0 : count;
+}
+
+/** Quick search for autocomplete */
+export async function searchBoats(query) {
+  const { data, error } = await supabase
+    .from('boats')
+    .select('id, name, slug, boat_images(url, is_primary)')
+    .eq('status', 'active')
+    .ilike('name', `%${query}%`)
+    .limit(5);
+
+  return error ? [] : data || [];
+}
+
+// ─── Admin Queries ────────────────────────────────────────
+
+/** Get ALL boats regardless of status (admin view) */
+export async function getAllBoats() {
+  let { data, error } = await supabase
+    .from('boats')
+    .select(`
+      id, name, slug, vessel_id, manufacturer, length_ft, capacity,
+      status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
+      boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+      boat_images(url, alt_text, is_primary),
+      boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order)
+    `)
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    console.warn('Error fetching all boats, falling back to legacy query:', error);
+    const fallback = await supabase
+      .from('boats')
+      .select(`
+        id, name, slug, vessel_id, manufacturer, length_ft, capacity,
+        status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
+        boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+        boat_images(url, alt_text, is_primary)
+      `)
+      .order('sort_order', { ascending: true });
+    
+    data = fallback.data;
+    if (fallback.error) {
+       console.error('Fallback failed:', fallback.error);
+       return [];
+    }
+  }
+
+  return (data || []).map(boat => ({
+    ...boat,
+    primary_image_url: boat.boat_images?.find(img => img.is_primary)?.url || boat.boat_images?.[0]?.url || '',
+    min_price: ((boat.boat_hourly_rate || 0) + (boat.captain_hourly_rate || 0)) * (boat.minimum_charter_duration || 4)
+  }));
+}
+
+/** Get a single boat by ID (admin - includes hidden boats) */
+export async function getBoatById(id) {
+  let { data, error } = await supabase
+    .from('boats')
+    .select(`
+      *,
+      boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+      boat_images(id, url, alt_text, is_primary, sort_order),
+      boat_amenities(id, name, icon),
+      boat_specs(id, label, value, icon, sort_order),
+      boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order),
+      boat_pricing_date_overrides(id, override_date, label, duration_hours, price)
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.warn('Error fetching boat by ID, falling back to legacy query:', error);
+    const fallback = await supabase
+      .from('boats')
+      .select(`
+        *,
+        boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
+        boat_images(id, url, alt_text, is_primary, sort_order),
+        boat_amenities(id, name, icon),
+        boat_specs(id, label, value, icon, sort_order)
+      `)
+      .eq('id', id)
+      .single();
+      
+    data = fallback.data;
+    if (fallback.error) {
+       console.error('Fallback failed:', fallback.error);
+       return null;
+    }
+  }
+
+  if (data) {
+    data.boat_images?.sort((a, b) => a.sort_order - b.sort_order);
+    data.boat_specs?.sort((a, b) => a.sort_order - b.sort_order);
+    data.boat_pricing_tiers?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  }
+
+  return data;
+}
+
+/** Create a new boat */
+export async function createBoat(boatData) {
+  const { data, error } = await supabase
+    .from('boats')
+    .insert(boatData)
+    .select()
+    .single();
+
+  if (error) throw error;
+  clearCache('boats_');
+  clearCache('boat_');
+  return data;
+}
+
+/** Update a boat by ID */
+export async function updateBoat(id, boatData) {
+  const { data, error } = await supabase
+    .from('boats')
+    .update(boatData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  clearCache('boats_');
+  clearCache('boat_');
+  return data;
+}
+
+/** Delete a boat by ID (cascade deletes related data) */
+export async function deleteBoat(id) {
+  const { error } = await supabase
+    .from('boats')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  clearCache('boats_');
+  clearCache('boat_');
+}
+
+/** Replace all images for a boat */
+export async function updateBoatImages(boatId, images) {
+  // Delete existing
+  await supabase.from('boat_images').delete().eq('boat_id', boatId);
+
+  if (images.length === 0) {
+    clearCache('boats_');
+    clearCache('boat_');
+    return;
+  }
+
+  const rows = images.map((img, i) => ({
+    boat_id: boatId,
+    url: img.url,
+    alt_text: img.alt_text || '',
+    is_primary: img.is_primary || i === 0,
+    sort_order: i
+  }));
+
+  const { error } = await supabase.from('boat_images').insert(rows);
+  if (error) throw error;
+  clearCache('boats_');
+  clearCache('boat_');
+}
+
+
+/** Replace all amenities for a boat */
+export async function updateBoatAmenities(boatId, amenities) {
+  await supabase.from('boat_amenities').delete().eq('boat_id', boatId);
+
+  if (amenities.length === 0) {
+    clearCache('boats_');
+    clearCache('boat_');
+    return;
+  }
+
+  const rows = amenities.map(a => ({
+    boat_id: boatId,
+    name: a.name,
+    icon: a.icon || 'check_circle'
+  }));
+
+  const { error } = await supabase.from('boat_amenities').insert(rows);
   if (error) throw error;
   clearCache('boats_');
   clearCache('boat_');
@@ -478,7 +673,7 @@ export async function updateBoatAmenities(boatId, amenities) {
 export async function updateBoatSpecs(boatId, specs) {
   await supabase.from('boat_specs').delete().eq('boat_id', boatId);
 
-  if (specs.length === 0) {
+  if (!specs || specs.length === 0) {
     clearCache('boats_');
     clearCache('boat_');
     return;
@@ -500,40 +695,54 @@ export async function updateBoatSpecs(boatId, specs) {
 
 // ─── Dynamic Pricing CRUD ─────────────────────────────────
 
-/** Replace all pricing tiers for a boat */
-export async function updateBoatPricingTiers(boatId, tiers) {
-  // Delete existing tiers
-  await supabase.from('boat_pricing_tiers').delete().eq('boat_id', boatId);
+/** Replace all prices for a boat in boat_prices table */
+export async function updateBoatPrices(boatId, prices) {
+  // Delete existing prices for this boat
+  const { error: delError } = await supabase.from('boat_prices').delete().eq('boat_id', boatId);
+  if (delError) {
+    console.warn('Warning deleting old boat_prices:', delError);
+  }
 
-  if (!tiers || tiers.length === 0) {
+  if (!prices || prices.length === 0) {
     clearCache('boats_');
     clearCache('boat_');
     return;
   }
 
-  const rows = tiers.map((t, i) => ({
-    boat_id: boatId,
-    duration_hours: t.duration_hours,
-    price_mon: t.price_mon || 0,
-    price_tue: t.price_tue || 0,
-    price_wed: t.price_wed || 0,
-    price_thu: t.price_thu || 0,
-    price_fri: t.price_fri || 0,
-    price_sat: t.price_sat || 0,
-    price_sun: t.price_sun || 0,
-    is_popular: t.is_popular || false,
-    sort_order: i
-  }));
+  const rows = prices.map((p, i) => {
+    const durationHrs = parseInt(p.duration_hours) || 4;
+    // Derive single rate from price or day-of-week rates
+    let rate = parseFloat(p.price);
+    if (isNaN(rate) || rate <= 0) {
+      rate = parseFloat(p.price_mon || p.price_thu || p.price_fri || p.price_sat || p.price_sun) || 0;
+    }
 
-  const { error } = await supabase.from('boat_pricing_tiers').insert(rows);
-  if (error) throw error;
+    return {
+      boat_id: boatId,
+      duration_hours: durationHrs,
+      duration_label: p.duration_label || `${durationHrs} Hours`,
+      price: rate,
+      is_popular: Boolean(p.is_popular),
+      sort_order: i
+    };
+  });
+
+  const { error } = await supabase.from('boat_prices').insert(rows);
+  if (error) {
+    console.error('Failed inserting boat_prices:', error);
+    throw error;
+  }
   clearCache('boats_');
   clearCache('boat_');
 }
 
+/** Legacy alias for backwards compatibility */
+export async function updateBoatPricingTiers(boatId, tiers) {
+  return await updateBoatPrices(boatId, tiers);
+}
+
 /** Replace all date overrides for a boat */
 export async function updateBoatDateOverrides(boatId, overrides) {
-  // Delete existing overrides
   await supabase.from('boat_pricing_date_overrides').delete().eq('boat_id', boatId);
 
   if (!overrides || overrides.length === 0) {
@@ -559,7 +768,7 @@ export async function updateBoatDateOverrides(boatId, overrides) {
 /** Get pricing tiers for a boat */
 export async function getBoatPricingTiers(boatId) {
   const { data, error } = await supabase
-    .from('boat_pricing_tiers')
+    .from('boat_prices')
     .select('*')
     .eq('boat_id', boatId)
     .order('sort_order', { ascending: true });

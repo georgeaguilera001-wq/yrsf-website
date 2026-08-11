@@ -4,7 +4,7 @@
  */
 
 import { requireAuth, logout, getUser } from '../services/auth.js';
-import { getAllBoats, createBoat, updateBoat, deleteBoat, getBoatById, updateBoatImages, updateBoatAmenities, updateBoatSpecs, updateBoatPricingTiers, updateBoatDateOverrides } from '../services/boats.js';
+import { getAllBoats, createBoat, updateBoat, deleteBoat, getBoatById, updateBoatImages, updateBoatAmenities, updateBoatSpecs, updateBoatPrices, updateBoatPricingTiers, updateBoatDateOverrides } from '../services/boats.js';
 import { getAddons, getAllAddons, createAddon, updateAddon, deleteAddon } from '../services/addons.js';
 import { getAllBlogs, createBlog, updateBlog, deleteBlog } from '../services/blogs.js';
 import { getAllSettings, updateSettings } from '../services/settings.js';
@@ -1158,7 +1158,22 @@ return; // Redirect in progress
     });
 
     // Initialize global arrays for this modal instance
-    window.__pricingTiers = boat?.boat_pricing_tiers ? JSON.parse(JSON.stringify(boat.boat_pricing_tiers)) : [];
+    const initialPrices = (boat?.boat_prices && boat.boat_prices.length > 0)
+      ? boat.boat_prices.map(p => ({
+          duration_hours: p.duration_hours,
+          price: p.price,
+          price_mon: p.price_mon || p.price,
+          price_tue: p.price_tue || p.price,
+          price_wed: p.price_wed || p.price,
+          price_thu: p.price_thu || p.price,
+          price_fri: p.price_fri || p.price,
+          price_sat: p.price_sat || p.price,
+          price_sun: p.price_sun || p.price,
+          is_popular: Boolean(p.is_popular)
+        }))
+      : (boat?.boat_pricing_tiers ? JSON.parse(JSON.stringify(boat.boat_pricing_tiers)) : []);
+
+    window.__pricingTiers = initialPrices;
     window.__dateOverrides = boat?.boat_pricing_date_overrides ? JSON.parse(JSON.stringify(boat.boat_pricing_date_overrides)) : [];
 
     // Tiers rendering logic
@@ -2322,15 +2337,16 @@ If a day of the week is not specified, assume the standard price. Use current ye
           await updateBoatImages(savedBoat.id, cleanImages);
         }
 
-        // Save Pricing Tiers
+        // Save Pricing Tiers / Rates to boat_prices
         try {
           const tiersToSave = (window.__pricingTiers || []).map((t, idx) => ({
              ...t,
              sort_order: idx
           }));
-          await updateBoatPricingTiers(savedBoat.id, tiersToSave);
+          await updateBoatPrices(savedBoat.id, tiersToSave);
         } catch(e) {
-          console.warn('Failed to save pricing tiers:', e);
+          console.error('Failed to save pricing tiers:', e);
+          showToast('Warning: Rates could not be saved (' + e.message + ')', 'error');
         }
 
         // Save Date Overrides
