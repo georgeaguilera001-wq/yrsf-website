@@ -1356,7 +1356,7 @@ return; // Redirect in progress
     }
 
     // --- AI Smart Pricing Generator ---
-    async function generateSmartPricing(promptText) {
+    async function generateSmartPricing(promptText, captainRate) {
       try {
         const { data: setting } = await supabase.from('site_settings').select('value').eq('key', 'gemini_api_key').single();
         const apiKey = setting?.value?.key || setting?.value;
@@ -1375,6 +1375,33 @@ Return ONLY a valid JSON object matching exactly this schema:
     { "override_date": "YYYY-MM-DD", "label": string, "duration_hours": number, "price": number }
   ]
 }
+
+YACHT CHARTER PRICING MODEL
+Use the following pricing rules whenever calculating and auto-filling yacht charter prices.
+
+IMPORTANT:
+The owner/wholesale price provided by the user already includes everything required to operate the charter. We resell the charter to the customer using a 30% markup over the owner's wholesale price.
+
+STEP 1 — CALCULATE RETAIL PRICE
+For every charter duration: Customer Pre-Tax Price = Owner Wholesale Price × 1.30
+
+STEP 2 — SEPARATE THE CAPTAIN FEE
+The captain fee must be separated FROM the customer's pre-tax total.
+Use the configured captain hourly rate for this boat: $${captainRate} per charter hour.
+Captain Fee = Charter Hours × $${captainRate}
+
+STEP 3 — CALCULATE THE BOAT PRICE
+Boat Price = Customer Pre-Tax Total - Captain Fee
+
+You MUST output the "Boat Price" for the JSON schema fields (price_mon, price_tue, price, etc.). 
+
+IMPORTANT RULES
+1. Never add the captain fee on top of the 30%-marked-up retail price.
+2. The captain fee is being ALLOCATED from the retail total.
+3. Boat Price + Captain Fee must always equal the Customer Pre-Tax Total (Wholesale × 1.30).
+4. Do not calculate or add taxes.
+5. Perform this calculation independently for every duration.
+
 If a day of the week is not specified, assume the standard price. Use current year for holidays if unspecified. Do not include markdown formatting or \`\`\`json blocks. Return ONLY raw JSON text.`;
 
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
@@ -1413,12 +1440,16 @@ If a day of the week is not specified, assume the standard price. Use current ye
     document.getElementById('ai-pricing-btn')?.addEventListener('click', async (e) => {
       const prompt = document.getElementById('ai-pricing-prompt').value.trim();
       if (!prompt) return showToast('Please enter pricing rules first.', 'error');
+      
+      const captRateInput = document.getElementById('edit-boat-capt-hourly');
+      const captainRate = captRateInput && captRateInput.value ? parseFloat(captRateInput.value) : 75;
+
       const btn = e.currentTarget;
       const originalHtml = btn.innerHTML;
       btn.innerHTML = `<span class="admin-spinner w-4 h-4 border-white"></span> Thinking...`;
       btn.disabled = true;
       
-      const success = await generateSmartPricing(prompt);
+      const success = await generateSmartPricing(prompt, captainRate);
       if (success) {
         renderPricingTiersGrid();
         renderDateOverridesEditor();
