@@ -2368,11 +2368,16 @@ If a day of the week is not specified, assume the standard price. Use current ye
         }
 
         // Save Pricing Tiers / Rates to boat_prices
+        console.log("SAVE CHANGES CLICKED");
+        console.log("TRACE 1 - PRICING UI STATE", JSON.parse(JSON.stringify(window.__pricingTiers || [])));
+        console.log("TRACE 2 - ENTIRE BOAT STATE", boatData);
+
         try {
           const tiersToSave = (window.__pricingTiers || []).map((t, idx) => ({
              ...t,
              sort_order: idx
           }));
+          console.log("TRACE 3 - FINAL SAVE PAYLOAD", JSON.stringify(tiersToSave, null, 2));
           await updateBoatPrices(savedBoat.id, tiersToSave);
         } catch(e) {
           console.error('Failed to save pricing tiers:', e);
@@ -7363,6 +7368,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
 
 // CACHE BUSTER: 20260810124601
+
 
 
 
