@@ -192,20 +192,20 @@ export function renderBoatCard(boat, options = {}) {
         </div>
         ` : ''}
 
-        <div class="w-full flex items-center justify-between md:justify-center gap-1.5 mt-auto pt-2 border-t border-outline-variant/60">
+        <div class="w-full flex items-center justify-between gap-1.5 mt-auto pt-2 border-t border-outline-variant/60">
           ${hasPrices ? `
-          <button class="pricing-toggle-btn flex items-center justify-center gap-1.5 px-2 py-1 md:px-2 md:py-1 bg-surface-container-lowest hover:bg-surface-container rounded-md border border-outline-variant transition-colors shadow-2xs shrink-0" aria-label="View Pricing Tiers" title="View pricing tiers">
-            <span class="material-symbols-outlined text-[16px] text-on-surface-variant transition-transform duration-300">attach_money</span>
+          <button class="pricing-toggle-btn flex items-center justify-center gap-1 px-2 py-1 bg-surface-container-lowest hover:bg-surface-container rounded-md border border-outline-variant transition-colors shadow-2xs shrink-0" aria-label="View Pricing Tiers" title="View pricing tiers">
+            <span class="material-symbols-outlined text-[15px] text-on-surface-variant transition-transform duration-300">attach_money</span>
             <div class="card-price-display">${priceDisplayHtml}</div>
           </button>
           ` : ''}
-          <button type="button" class="flex-1 md:flex-none flex items-center justify-center bg-secondary/10 hover:bg-secondary/20 text-secondary px-2 py-1 rounded-md text-[10.5px] font-bold transition-colors card-inquire-btn" data-boat-id="${boat.id}" data-boat-name="${escapeHtml(name)}" title="Charter Inquiry">Inquire</button>
-          <button class="whatsapp-btn flex items-center justify-center bg-green-50 text-green-700 border border-green-200 p-1.5 md:p-1 rounded-md hover:bg-green-100 transition-colors shrink-0" data-boat-name="${name}" aria-label="Contact on WhatsApp" title="WhatsApp">
+          <button type="button" class="shrink-0 flex items-center justify-center bg-secondary/10 hover:bg-secondary/20 text-secondary px-2 py-1.5 rounded-md text-[10.5px] font-bold transition-colors card-inquire-btn" data-boat-id="${boat.id}" data-boat-name="${escapeHtml(name)}" title="Charter Inquiry">Inquire</button>
+          <button class="whatsapp-btn flex items-center justify-center bg-green-50 text-green-700 border border-green-200 p-1.5 rounded-md hover:bg-green-100 transition-colors shrink-0" data-boat-name="${name}" aria-label="Contact on WhatsApp" title="WhatsApp">
             <span class="material-symbols-outlined text-[14px]">chat</span>
           </button>
-          <a class="flex items-center justify-center gap-1 bg-secondary text-on-secondary px-2 py-1 md:p-1 rounded-md hover:opacity-90 transition-colors shadow-2xs shrink-0" href="/boat.html?slug=${slug}" title="View Details">
-            <span class="text-[10.5px] font-bold text-on-secondary md:hidden">View</span>
-            <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+          <a class="flex-1 flex items-center justify-center gap-1 bg-secondary text-on-secondary px-2.5 py-1.5 rounded-md hover:opacity-90 transition-colors shadow-2xs font-bold text-[11px] truncate" href="/boat.html?slug=${slug}" title="View Details">
+            <span class="truncate">View Details</span>
+            <span class="material-symbols-outlined text-[14px] shrink-0">arrow_forward</span>
           </a>
         </div>
         
