@@ -1377,12 +1377,12 @@ Return ONLY a valid JSON object matching exactly this schema:
 }
 If a day of the week is not specified, assume the standard price. Use current year for holidays if unspecified. Do not include markdown formatting or \`\`\`json blocks. Return ONLY raw JSON text.`;
 
-        const res = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=\${apiKey}\`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [
-              { role: 'user', parts: [{ text: systemPrompt + '\\n\\nUser Input: ' + promptText }] }
+              { role: 'user', parts: [{ text: systemPrompt + '\n\nUser Input: ' + promptText }] }
             ]
           })
         });
@@ -1393,7 +1393,7 @@ If a day of the week is not specified, assume the standard price. Use current ye
         
         let parsed;
         try {
-          const cleaned = textRes.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+          const cleaned = textRes.replace(/```json/g, '').replace(/```/g, '').trim();
           parsed = JSON.parse(cleaned);
         } catch (e) {
           throw new Error("Could not parse AI response as JSON");
@@ -1415,7 +1415,7 @@ If a day of the week is not specified, assume the standard price. Use current ye
       if (!prompt) return showToast('Please enter pricing rules first.', 'error');
       const btn = e.currentTarget;
       const originalHtml = btn.innerHTML;
-      btn.innerHTML = \`<span class="admin-spinner w-4 h-4 border-white"></span> Thinking...\`;
+      btn.innerHTML = `<span class="admin-spinner w-4 h-4 border-white"></span> Thinking...`;
       btn.disabled = true;
       
       const success = await generateSmartPricing(prompt);
