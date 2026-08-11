@@ -581,9 +581,9 @@ function populateBoatDetail(boat) {
             // Group overrides by duration
             const overrideLabel = todayOverrides[0]?.label || 'Special Date';
             pricingEl.innerHTML = `
-              <div class="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
-                <span class="material-symbols-outlined text-amber-600 text-[16px]">celebration</span>
-                <span class="text-xs font-bold text-amber-900">${escapeHtml(overrideLabel)} Pricing — Special rates apply today</span>
+              <div class="mb-2 px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-600 text-[15px]">celebration</span>
+                <span class="text-[11px] font-bold text-amber-900">${escapeHtml(overrideLabel)} Pricing — Special rates apply today</span>
               </div>
             ` + pricingTiers.map((tier, index) => {
               const override = todayOverrides.find(o => o.duration_hours === tier.duration_hours);
@@ -592,14 +592,16 @@ function populateBoatDetail(boat) {
               const boatPrice = (!isNaN(pDay) && pDay > 0) ? pDay : ((!isNaN(pBase) && pBase > 0) ? pBase : 0);
               const isPopular = tier.is_popular;
               return `
-              <div class="flex items-center justify-between p-4 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
+              <div class="flex items-center justify-between py-2 px-3 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
                 <div>
-                  <p class="font-label-md text-label-md text-on-surface">${tier.duration_hours} Hours</p>
-                  ${isPopular ? '<span class="text-caption text-secondary font-bold">Most Popular</span>' : ''}
+                  <div class="flex items-center gap-1.5">
+                    <p class="font-bold text-sm text-on-surface">${tier.duration_hours} Hours</p>
+                    ${isPopular ? '<span class="text-[9.5px] bg-secondary/15 text-secondary font-extrabold px-1.5 py-0.5 rounded">Most Popular</span>' : ''}
+                  </div>
                   ${captainRate > 0 ? `<p class="text-[11px] font-semibold text-secondary mt-0.5">+ Capt: ${formatPrice(captainRate)}/hr</p>` : ''}
                 </div>
                 <div class="text-right">
-                  <p class="font-headline-md text-headline-md font-bold text-on-surface">Boat: ${formatPrice(Math.round(boatPrice))}</p>
+                  <p class="text-base sm:text-lg font-bold text-on-surface">Boat: ${formatPrice(Math.round(boatPrice))}</p>
                 </div>
               </div>
               `;
@@ -614,14 +616,16 @@ function populateBoatDetail(boat) {
             const boatPrice = (!isNaN(pDay) && pDay > 0) ? pDay : ((!isNaN(pBase) && pBase > 0) ? pBase : 0);
             const isPopular = tier.is_popular;
             return `
-            <div class="flex items-center justify-between p-4 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
+            <div class="flex items-center justify-between py-2 px-3 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
               <div>
-                <p class="font-label-md text-label-md text-on-surface">${tier.duration_hours} Hours</p>
-                ${isPopular ? '<span class="text-caption text-secondary font-bold">Most Popular</span>' : ''}
+                <div class="flex items-center gap-1.5">
+                  <p class="font-bold text-sm text-on-surface">${tier.duration_hours} Hours</p>
+                  ${isPopular ? '<span class="text-[9.5px] bg-secondary/15 text-secondary font-extrabold px-1.5 py-0.5 rounded">Most Popular</span>' : ''}
+                </div>
                 ${captainRate > 0 ? `<p class="text-[11px] font-semibold text-secondary mt-0.5">+ Capt: ${formatPrice(captainRate)}/hr</p>` : ''}
               </div>
               <div class="text-right">
-                <p class="font-headline-md text-headline-md font-bold text-on-surface">Boat: ${formatPrice(Math.round(boatPrice))}</p>
+                <p class="text-base sm:text-lg font-bold text-on-surface">Boat: ${formatPrice(Math.round(boatPrice))}</p>
               </div>
             </div>
             `;
@@ -642,14 +646,16 @@ function populateBoatDetail(boat) {
             const tierBoatPrice = Math.round(adjustedHourly * d);
             const isPopular = index === 0;
             return `
-            <div class="flex items-center justify-between p-4 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
+            <div class="flex items-center justify-between py-2 px-3 rounded-lg border ${isPopular ? 'border-secondary bg-secondary/5' : 'border-outline-variant'} transition-colors">
               <div>
-                <p class="font-label-md text-label-md text-on-surface">${d} Hours</p>
-                ${isPopular ? '<span class="text-caption text-secondary font-bold">Most Popular</span>' : ''}
+                <div class="flex items-center gap-1.5">
+                  <p class="font-bold text-sm text-on-surface">${d} Hours</p>
+                  ${isPopular ? '<span class="text-[9.5px] bg-secondary/15 text-secondary font-extrabold px-1.5 py-0.5 rounded">Most Popular</span>' : ''}
+                </div>
                 ${captainRate > 0 ? `<p class="text-[11px] font-semibold text-secondary mt-0.5">+ Capt: ${formatPrice(captainRate)}/hr</p>` : ''}
               </div>
               <div class="text-right">
-                <p class="font-headline-md text-headline-md font-bold text-on-surface">Boat: ${formatPrice(tierBoatPrice)}</p>
+                <p class="text-base sm:text-lg font-bold text-on-surface">Boat: ${formatPrice(tierBoatPrice)}</p>
               </div>
             </div>
             `;
