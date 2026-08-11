@@ -1287,9 +1287,11 @@ return; // Redirect in progress
           const tier = window.__pricingTiers[rowIndex];
           if (weekday > 0) {
             tier.price_mon = tier.price_tue = tier.price_wed = tier.price_thu = weekday;
+            tier.price = weekday; // Keep base price in sync
           }
           if (weekend > 0) {
             tier.price_fri = tier.price_sat = tier.price_sun = weekend;
+            tier.price = weekend; // Weekend overrides weekday if both are set for base price
           }
           renderPricingTiersGrid();
         });
