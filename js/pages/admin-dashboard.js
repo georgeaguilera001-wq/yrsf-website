@@ -1049,6 +1049,19 @@ return; // Redirect in progress
               </div>
             </div>
 
+            <!-- AI Smart Pricing Autofill -->
+            <div class="mb-8 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="material-symbols-outlined text-purple-600 text-lg">auto_awesome</span>
+                <h5 class="font-label text-sm text-purple-900 font-bold">AI Smart Autofill</h5>
+              </div>
+              <p class="text-xs text-purple-800 mb-3 leading-relaxed">Paste your pricing rules in plain English (e.g., "4 hours is $1500, weekends $2000. July 4th is $2500"). The AI will map it into the grids below.</p>
+              <textarea id="ai-pricing-prompt" class="admin-field w-full px-3 py-2 border border-purple-200 rounded-lg text-sm bg-white mb-3 focus:ring-purple-500 focus:border-purple-500" rows="2" placeholder="Describe your pricing here..."></textarea>
+              <button type="button" id="ai-pricing-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
+                <span class="material-symbols-outlined text-[16px]">magic_button</span> Generate Pricing
+              </button>
+            </div>
+
             <!-- Tiers Editor -->
             <div class="mb-8">
               <div class="flex items-center justify-between mb-3">
@@ -1341,6 +1354,80 @@ return; // Redirect in progress
         });
       });
     }
+
+    // --- AI Smart Pricing Generator ---
+    async function generateSmartPricing(promptText) {
+      try {
+        const { data: setting } = await supabase.from('site_settings').select('value').eq('key', 'gemini_api_key').single();
+        const apiKey = setting?.value?.key || setting?.value;
+        if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') {
+           showToast('Gemini API Key not configured in site settings.', 'error');
+           return false;
+        }
+
+        const systemPrompt = `You are a smart pricing assistant. The user will give you natural language pricing rules. 
+Return ONLY a valid JSON object matching exactly this schema:
+{
+  "tiers": [
+    { "duration_hours": number, "price_mon": number, "price_tue": number, "price_wed": number, "price_thu": number, "price_fri": number, "price_sat": number, "price_sun": number, "is_popular": boolean, "sort_order": number }
+  ],
+  "overrides": [
+    { "override_date": "YYYY-MM-DD", "label": string, "duration_hours": number, "price": number }
+  ]
+}
+If a day of the week is not specified, assume the standard price. Use current year for holidays if unspecified. Do not include markdown formatting or \`\`\`json blocks. Return ONLY raw JSON text.`;
+
+        const res = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=\${apiKey}\`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              { role: 'user', parts: [{ text: systemPrompt + '\\n\\nUser Input: ' + promptText }] }
+            ]
+          })
+        });
+
+        if (!res.ok) throw new Error('Gemini API Error');
+        const json = await res.json();
+        const textRes = json.candidates[0].content.parts[0].text;
+        
+        let parsed;
+        try {
+          const cleaned = textRes.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+          parsed = JSON.parse(cleaned);
+        } catch (e) {
+          throw new Error("Could not parse AI response as JSON");
+        }
+
+        if (parsed.tiers) window.__pricingTiers = parsed.tiers;
+        if (parsed.overrides) window.__dateOverrides = parsed.overrides;
+        
+        return true;
+      } catch (err) {
+        showToast('AI Error: ' + err.message, 'error');
+        console.error(err);
+        return false;
+      }
+    }
+
+    document.getElementById('ai-pricing-btn')?.addEventListener('click', async (e) => {
+      const prompt = document.getElementById('ai-pricing-prompt').value.trim();
+      if (!prompt) return showToast('Please enter pricing rules first.', 'error');
+      const btn = e.currentTarget;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = \`<span class="admin-spinner w-4 h-4 border-white"></span> Thinking...\`;
+      btn.disabled = true;
+      
+      const success = await generateSmartPricing(prompt);
+      if (success) {
+        renderPricingTiersGrid();
+        renderDateOverridesEditor();
+        showToast('Pricing generated successfully!', 'success');
+      }
+      
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+    });
 
     // Attach Add Tier / Add Override listeners
     document.getElementById('add-tier-btn')?.addEventListener('click', () => {
