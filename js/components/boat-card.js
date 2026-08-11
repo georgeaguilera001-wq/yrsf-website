@@ -80,12 +80,12 @@ export function renderBoatCard(boat, options = {}) {
         if (!a.is_primary && b.is_primary) return 1;
         return (a.sort_order || 0) - (b.sort_order || 0);
       });
-      images = images.slice(0, 20); // Limit to 20 images max on the card
+      images = images.slice(0, 5); // Limit to 5 images max on the card
       
       if (isVideo) {
         imagesHtml = `
           <a href="/boat.html?slug=${slug}" class="w-full h-full shrink-0 snap-center relative block">
-            <video src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" muted playsinline loop></video>
+            <video data-src="${imgUrl}" class="lazy-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" muted playsinline loop></video>
             <div class="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none group-hover:bg-black/30 transition-colors">
               <span class="material-symbols-outlined text-white text-3xl drop-shadow-md">play_circle</span>
             </div>
@@ -93,12 +93,11 @@ export function renderBoatCard(boat, options = {}) {
         `;
       } else {
         imagesHtml = images.map((img, index) => `
-          <a href="/boat.html?slug=${slug}" class="w-full h-full shrink-0 snap-center relative block">
+          <a href="/boat.html?slug=${slug}" class="w-full h-full shrink-0 snap-center relative block bg-surface-container-low">
             <img
-              class="${index === 0 ? 'lazy-image' : ''} w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${index === 0 ? 'loaded' : ''}"
-              src="${img.url}"
+              class="lazy-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              data-src="${img.url}"
               alt="${escapeHtml(img.alt_text || imgAlt)}"
-              ${index > 0 ? 'loading="lazy"' : ''}
               decoding="async"
               onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e293b/94a3b8?text=No+Photo';"
             />

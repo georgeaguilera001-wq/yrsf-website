@@ -74,7 +74,7 @@ async function loadSimilarBoats(boatId, boatLength) {
     const { data: allBoats } = await getBoats({ 
       minLength: boatLength ? boatLength - 5 : null,
       maxLength: boatLength ? boatLength + 5 : null,
-      limit: 50 
+      limit: 15 
     });
     
     const similarBoats = allBoats
