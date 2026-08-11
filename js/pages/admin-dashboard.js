@@ -893,164 +893,182 @@ return; // Redirect in progress
 
     const html = `
       <div class="max-h-[80vh] overflow-y-auto">
-        <h2 class="font-headline text-headline-lg text-on-surface mb-md">${title}</h2>
-        <form id="boat-editor-form" class="flex flex-col gap-md">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
-            <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Yacht Name *</label>
-              <input type="text" id="edit-boat-name" required value="${escapeHtml(boat?.name || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
-            </div>
-            <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Slug (URL)</label>
-              <input type="text" id="edit-boat-slug" value="${escapeHtml(boat?.slug || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="auto-generated"/>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-md">
-            <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Length (ft)</label>
-              <input type="number" id="edit-boat-length" value="${boat?.length_ft || ''}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
-            </div>
-            <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Capacity</label>
-              <input type="number" id="edit-boat-capacity" value="${boat?.capacity || ''}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 gap-md">
-            <div class="relative col-span-1">
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Exact Dock Address / Marina Location *</label>
-              <div class="relative">
-                <input type="text" id="edit-boat-location" autocomplete="off" placeholder="Start typing address (e.g. 201 NW South River Dr, Miami)..." value="${escapeHtml(boat?.location || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary pr-10"/>
-                <span id="loc-verify-icon" class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined ${boat?.location ? 'text-green-600' : 'text-on-surface-variant'}">${boat?.location ? 'verified' : 'search'}</span>
-              </div>
-              <div id="loc-suggestions-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 hidden"></div>
-              <p id="loc-verify-status" class="text-xs mt-1 ${boat?.location ? 'text-green-600 font-bold' : 'text-on-surface-variant'}">${boat?.location ? '✓ Confirmed address' : 'Type to search and confirm exact dock location on map.'}</p>
-              
-              <div id="admin-map-preview-wrapper" class="w-full h-48 rounded-xl overflow-hidden border border-outline-variant mt-2 relative ${boat?.location ? '' : 'hidden'}">
-                <div id="admin-preview-map" class="w-full h-full"></div>
-              </div>
-            </div>
-          </div>
-          <div>
-            <label class="block font-label text-label-md text-on-surface-variant mb-2">Short Description</label>
-            <textarea id="edit-boat-short-desc" rows="2" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg">${escapeHtml(boat?.short_description || '')}</textarea>
-          </div>
-          <div>
-            <label class="block font-label text-label-md text-on-surface-variant mb-2">Full Description (HTML supported)</label>
-            <textarea id="edit-boat-description" rows="4" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg">${escapeHtml(boat?.description || '')}</textarea>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
-            <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Vessel ID</label>
-              <input type="text" id="edit-boat-vessel-id" value="${escapeHtml(boat?.vessel_id || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
-            </div>
-            <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Status</label>
-              <select id="edit-boat-status" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg">
-                <option value="active" ${boat?.status === 'active' ? 'selected' : ''}>Active</option>
-                <option value="hidden" ${boat?.status === 'hidden' ? 'selected' : ''}>Hidden</option>
-                <option value="maintenance" ${boat?.status === 'maintenance' ? 'selected' : ''}>Maintenance</option>
-              </select>
-            </div>
-            <div class="flex items-end gap-6">
-              <label class="flex items-center gap-2 cursor-pointer pb-3">
-                <input type="checkbox" id="edit-boat-featured" ${boat?.is_featured ? 'checked' : ''} class="w-4 h-4 text-secondary border-outline-variant rounded"/>
-                <span class="font-label text-label-md text-on-surface-variant">Featured</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer pb-3">
-                <input type="checkbox" id="edit-boat-best-seller" ${boat?.is_best_seller ? 'checked' : ''} class="w-4 h-4 text-secondary border-outline-variant rounded"/>
-                <span class="font-label text-label-md text-on-surface-variant">Best Seller</span>
-              </label>
-            </div>
-          </div>
-          
-          <!-- External Calendar Sync (.ics Feed) -->
-          <div class="pt-md border-t border-outline-variant bg-blue-50/50 p-4 rounded-xl border border-blue-200">
-            <h4 class="font-headline text-[15px] font-bold text-blue-900 mb-1 flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-blue-700 text-lg">sync_desktop</span> External Calendar Sync (iCal / .ics Feed)
-            </h4>
-            <p class="text-xs text-on-surface-variant mb-3">Paste the secret iCal (.ics) feed URL from Google Calendar, TimeTree, Teamup, or Boatsetter to sync dates automatically into your Master Calendar.</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div class="md:col-span-2">
-                <div class="flex items-center justify-between mb-1">
-                  <label class="block font-label text-xs font-bold text-on-surface">iCal (.ics) Feed URL(s)</label>
-                  <select id="ical-provider-template-select" class="px-2 py-1 bg-blue-100/80 border border-blue-300 rounded text-[11px] font-bold text-blue-900 cursor-pointer hover:bg-blue-200 transition-colors">
-                    <option value="">⚡ Quick-Select Provider Format...</option>
-                    <option value="timetree">🌳 TimeTree (Sync via Bridge)</option>
-                    <option value="google">📅 Google Calendar (.ics Link)</option>
-                    <option value="icloud">🍏 Apple iCloud Calendar</option>
-                    <option value="boatsetter">⚓ Boatsetter Charter Feed</option>
-                  </select>
-                </div>
-                <div id="timetree-input-group" class="hidden flex items-center border border-blue-300 rounded-lg overflow-hidden bg-white mb-2 shadow-sm">
-                  <span class="px-2.5 py-2 bg-blue-100 text-blue-900 font-mono text-[11px] font-bold select-none border-r border-blue-200">
-                    https://yrsf-website.onrender.com/timetree.ics?c=
-                  </span>
-                  <input type="text" id="timetree-code-input" placeholder="Paste Calendar Code (e.g. P4XL7kVS7UF8)" class="flex-1 px-3 py-2 font-mono text-xs font-bold text-on-surface outline-none"/>
-                </div>
-                <textarea id="edit-boat-ical-url" rows="2" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics&#10;https://timetree.com/export/..." class="admin-field w-full px-3 py-2 bg-white border border-outline-variant rounded-lg font-mono text-xs">${escapeHtml(boat?.ical_feed_url || '')}</textarea>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+          <h2 class="font-headline text-headline-lg text-on-surface">${title}</h2>
+        </div>
+
+        <!-- Edit Boat Navigation Tabs -->
+        <div class="flex items-center gap-6 border-b border-outline-variant mb-6 sticky top-0 bg-white z-20 pt-1" id="edit-boat-tabs-bar">
+          <button type="button" class="edit-boat-tab-btn pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2 cursor-pointer transition-all" data-tab="general">
+            <span class="material-symbols-outlined text-lg">directions_boat</span> Yacht Details &amp; Media
+          </button>
+          <button type="button" class="edit-boat-tab-btn pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 cursor-pointer transition-all" data-tab="pricing">
+            <span class="material-symbols-outlined text-lg">payments</span> Charter Pricing
+          </button>
+        </div>
+
+        <form id="boat-editor-form">
+          <!-- TAB 1: Yacht Details & Media -->
+          <div id="edit-boat-panel-general" class="flex flex-col gap-md">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Yacht Name *</label>
+                <input type="text" id="edit-boat-name" required value="${escapeHtml(boat?.name || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
               </div>
               <div>
-                <label class="block font-label text-xs font-bold text-on-surface mb-1">Source Label or Filter Keyword</label>
-                <input type="text" id="edit-boat-ical-label" value="${escapeHtml(boat?.ical_feed_label || '')}" placeholder="e.g. Filter: Remedy OR Google Cal" class="admin-field w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs font-bold"/>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Slug (URL)</label>
+                <input type="text" id="edit-boat-slug" value="${escapeHtml(boat?.slug || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary" placeholder="auto-generated"/>
               </div>
             </div>
-            <p class="text-[11px] text-blue-800 mt-2 bg-blue-100/70 p-2 rounded-lg font-medium">💡 <b>Multiple Calendars?</b> Paste <b>multiple .ics URLs</b> (separated by comma or new line) to merge 2+ calendars into this yacht! Or if using a Master Feed containing all boats, type <code class="bg-white px-1.5 py-0.5 rounded border border-blue-300 font-mono text-blue-900 font-bold">Filter: BoatName</code> in the filter box to only import events matching this yacht!</p>
-          </div>
-
-          <!-- Drag & Drop Photo Manager -->
-          <div class="pt-md border-t border-outline-variant bg-surface-container-low p-4 rounded-xl border border-outline-variant">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-              <h4 class="font-headline text-[15px] font-bold text-on-surface flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-secondary text-lg">photo_library</span> Photo Gallery &amp; Reordering
-              </h4>
-              <div class="flex items-center gap-2 flex-wrap">
-                <input type="file" id="boat-gallery-upload-input" accept="image/*,video/*,.mp4,.mov,.webm,.jpg,.jpeg,.png,.webp" multiple class="hidden" />
-                <button type="button" id="upload-photo-btn" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold hover:opacity-90 flex items-center gap-1 shadow-2xs transition-all cursor-pointer">
-                  <span class="material-symbols-outlined text-sm">cloud_upload</span> Upload Photos / Videos
-                </button>
-                <button type="button" id="add-photo-btn" class="px-2.5 py-1.5 bg-surface-container-high text-on-surface hover:bg-surface-container-highest rounded-lg text-xs font-bold transition-colors flex items-center gap-1 border border-outline-variant cursor-pointer" title="Add Image/Video URL from web">
-                  <span class="material-symbols-outlined text-sm">link</span> URL
-                </button>
-              </div>
-            </div>
-            <p class="text-xs text-on-surface-variant mb-3">Upload multiple photos/videos from your device or gallery. Drag thumbnails left/right to reorder. First item is used as the cover media.</p>
-            
-            <div class="bg-surface-container p-3 rounded-xl border border-outline-variant mb-3 flex flex-col gap-2">
-              <div class="flex items-center justify-between">
-                <label class="block font-label text-xs font-bold text-secondary flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm">cloud_sync</span> Import from Google Drive, Dropbox, or Gallery URL
-                </label>
-                <span id="cloud-import-status" class="text-xs font-bold text-on-surface-variant"></span>
-              </div>
-              <div class="flex gap-2 flex-col sm:flex-row">
-                <input type="text" id="edit-boat-photo-link" value="${escapeHtml(boat?.photo_link || '')}" placeholder="Paste Google Drive or Dropbox shared folder link here..." class="admin-field flex-1 px-3 py-2 border border-outline-variant rounded-lg font-body text-xs text-on-surface bg-surface-container-lowest focus:ring-secondary focus:border-secondary"/>
-                <button type="button" id="import-cloud-folder-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-sm cursor-pointer">
-                  <span class="material-symbols-outlined text-sm">download</span> Pull All Photos Now
-                </button>
-              </div>
-              <p class="text-[10px] text-on-surface-variant leading-tight">No need to download files to your computer! Paste the folder link and click "Pull All Photos Now" to transfer all pictures from Drive/Dropbox straight into this yacht's gallery below.</p>
-            </div>
-
-            <div id="photo-manager-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3.5 max-h-[360px] overflow-y-auto p-2.5 bg-surface-container-lowest rounded-xl border border-outline-variant/60 min-h-[110px]">
-              <!-- Photos injected via JS -->
-            </div>
-          </div>
-
-          <!-- Charter Pricing / Tiers / Overrides -->
-          <div class="pt-md border-t border-outline-variant">
-            <h4 class="font-headline text-[16px] text-on-surface font-bold mb-4">Charter Pricing</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="grid grid-cols-2 gap-md">
               <div>
-                <label class="block font-label text-label-md text-on-surface-variant mb-2">Captain Hourly Rate ($)</label>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Length (ft)</label>
+                <input type="number" id="edit-boat-length" value="${boat?.length_ft || ''}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Capacity</label>
+                <input type="number" id="edit-boat-capacity" value="${boat?.capacity || ''}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 gap-md">
+              <div class="relative col-span-1">
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Exact Dock Address / Marina Location *</label>
                 <div class="relative">
-                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
-                  <input type="number" id="edit-boat-capt-hourly" value="${boat?.captain_hourly_rate || ''}" class="admin-field w-full pl-7 pr-4 py-3 border border-outline-variant rounded-lg" required/>
+                  <input type="text" id="edit-boat-location" autocomplete="off" placeholder="Start typing address (e.g. 201 NW South River Dr, Miami)..." value="${escapeHtml(boat?.location || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary pr-10"/>
+                  <span id="loc-verify-icon" class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined ${boat?.location ? 'text-green-600' : 'text-on-surface-variant'}">${boat?.location ? 'verified' : 'search'}</span>
+                </div>
+                <div id="loc-suggestions-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 hidden"></div>
+                <p id="loc-verify-status" class="text-xs mt-1 ${boat?.location ? 'text-green-600 font-bold' : 'text-on-surface-variant'}">${boat?.location ? '✓ Confirmed address' : 'Type to search and confirm exact dock location on map.'}</p>
+                
+                <div id="admin-map-preview-wrapper" class="w-full h-48 rounded-xl overflow-hidden border border-outline-variant mt-2 relative ${boat?.location ? '' : 'hidden'}">
+                  <div id="admin-preview-map" class="w-full h-full"></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block font-label text-label-md text-on-surface-variant mb-2">Short Description</label>
+              <textarea id="edit-boat-short-desc" rows="2" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg">${escapeHtml(boat?.short_description || '')}</textarea>
+            </div>
+            <div>
+              <label class="block font-label text-label-md text-on-surface-variant mb-2">Full Description (HTML supported)</label>
+              <textarea id="edit-boat-description" rows="4" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg">${escapeHtml(boat?.description || '')}</textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Vessel ID</label>
+                <input type="text" id="edit-boat-vessel-id" value="${escapeHtml(boat?.vessel_id || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
+              </div>
+              <div>
+                <label class="block font-label text-label-md text-on-surface-variant mb-2">Status</label>
+                <select id="edit-boat-status" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg">
+                  <option value="active" ${boat?.status === 'active' ? 'selected' : ''}>Active</option>
+                  <option value="hidden" ${boat?.status === 'hidden' ? 'selected' : ''}>Hidden</option>
+                  <option value="maintenance" ${boat?.status === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+                </select>
+              </div>
+              <div class="flex items-end gap-6">
+                <label class="flex items-center gap-2 cursor-pointer pb-3">
+                  <input type="checkbox" id="edit-boat-featured" ${boat?.is_featured ? 'checked' : ''} class="w-4 h-4 text-secondary border-outline-variant rounded"/>
+                  <span class="font-label text-label-md text-on-surface-variant">Featured</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer pb-3">
+                  <input type="checkbox" id="edit-boat-best-seller" ${boat?.is_best_seller ? 'checked' : ''} class="w-4 h-4 text-secondary border-outline-variant rounded"/>
+                  <span class="font-label text-label-md text-on-surface-variant">Best Seller</span>
+                </label>
+              </div>
+            </div>
+            
+            <!-- External Calendar Sync (.ics Feed) -->
+            <div class="pt-md border-t border-outline-variant bg-blue-50/50 p-4 rounded-xl border border-blue-200">
+              <h4 class="font-headline text-[15px] font-bold text-blue-900 mb-1 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-blue-700 text-lg">sync_desktop</span> External Calendar Sync (iCal / .ics Feed)
+              </h4>
+              <p class="text-xs text-on-surface-variant mb-3">Paste the secret iCal (.ics) feed URL from Google Calendar, TimeTree, Teamup, or Boatsetter to sync dates automatically into your Master Calendar.</p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="md:col-span-2">
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="block font-label text-xs font-bold text-on-surface">iCal (.ics) Feed URL(s)</label>
+                    <select id="ical-provider-template-select" class="px-2 py-1 bg-blue-100/80 border border-blue-300 rounded text-[11px] font-bold text-blue-900 cursor-pointer hover:bg-blue-200 transition-colors">
+                      <option value="">⚡ Quick-Select Provider Format...</option>
+                      <option value="timetree">🌳 TimeTree (Sync via Bridge)</option>
+                      <option value="google">📅 Google Calendar (.ics Link)</option>
+                      <option value="icloud">🍏 Apple iCloud Calendar</option>
+                      <option value="boatsetter">⚓ Boatsetter Charter Feed</option>
+                    </select>
+                  </div>
+                  <div id="timetree-input-group" class="hidden flex items-center border border-blue-300 rounded-lg overflow-hidden bg-white mb-2 shadow-sm">
+                    <span class="px-2.5 py-2 bg-blue-100 text-blue-900 font-mono text-[11px] font-bold select-none border-r border-blue-200">
+                      https://yrsf-website.onrender.com/timetree.ics?c=
+                    </span>
+                    <input type="text" id="timetree-code-input" placeholder="Paste Calendar Code (e.g. P4XL7kVS7UF8)" class="flex-1 px-3 py-2 font-mono text-xs font-bold text-on-surface outline-none"/>
+                  </div>
+                  <textarea id="edit-boat-ical-url" rows="2" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics&#10;https://timetree.com/export/..." class="admin-field w-full px-3 py-2 bg-white border border-outline-variant rounded-lg font-mono text-xs">${escapeHtml(boat?.ical_feed_url || '')}</textarea>
+                </div>
+                <div>
+                  <label class="block font-label text-xs font-bold text-on-surface mb-1">Source Label or Filter Keyword</label>
+                  <input type="text" id="edit-boat-ical-label" value="${escapeHtml(boat?.ical_feed_label || '')}" placeholder="e.g. Filter: Remedy OR Google Cal" class="admin-field w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs font-bold"/>
+                </div>
+              </div>
+              <p class="text-[11px] text-blue-800 mt-2 bg-blue-100/70 p-2 rounded-lg font-medium">💡 <b>Multiple Calendars?</b> Paste <b>multiple .ics URLs</b> (separated by comma or new line) to merge 2+ calendars into this yacht! Or if using a Master Feed containing all boats, type <code class="bg-white px-1.5 py-0.5 rounded border border-blue-300 font-mono text-blue-900 font-bold">Filter: BoatName</code> in the filter box to only import events matching this yacht!</p>
+            </div>
+
+            <!-- Drag & Drop Photo Manager -->
+            <div class="pt-md border-t border-outline-variant bg-surface-container-low p-4 rounded-xl border border-outline-variant">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                <h4 class="font-headline text-[15px] font-bold text-on-surface flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-secondary text-lg">photo_library</span> Photo Gallery &amp; Reordering
+                </h4>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <input type="file" id="boat-gallery-upload-input" accept="image/*,video/*,.mp4,.mov,.webm,.jpg,.jpeg,.png,.webp" multiple class="hidden" />
+                  <button type="button" id="upload-photo-btn" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold hover:opacity-90 flex items-center gap-1 shadow-2xs transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-sm">cloud_upload</span> Upload Photos / Videos
+                  </button>
+                  <button type="button" id="add-photo-btn" class="px-2.5 py-1.5 bg-surface-container-high text-on-surface hover:bg-surface-container-highest rounded-lg text-xs font-bold transition-colors flex items-center gap-1 border border-outline-variant cursor-pointer" title="Add Image/Video URL from web">
+                    <span class="material-symbols-outlined text-sm">link</span> URL
+                  </button>
+                </div>
+              </div>
+              <p class="text-xs text-on-surface-variant mb-3">Upload multiple photos/videos from your device or gallery. Drag thumbnails left/right to reorder. First item is used as the cover media.</p>
+              
+              <div class="bg-surface-container p-3 rounded-xl border border-outline-variant mb-3 flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <label class="block font-label text-xs font-bold text-secondary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">cloud_sync</span> Import from Google Drive, Dropbox, or Gallery URL
+                  </label>
+                  <span id="cloud-import-status" class="text-xs font-bold text-on-surface-variant"></span>
+                </div>
+                <div class="flex gap-2 flex-col sm:flex-row">
+                  <input type="text" id="edit-boat-photo-link" value="${escapeHtml(boat?.photo_link || '')}" placeholder="Paste Google Drive or Dropbox shared folder link here..." class="admin-field flex-1 px-3 py-2 border border-outline-variant rounded-lg font-body text-xs text-on-surface bg-surface-container-lowest focus:ring-secondary focus:border-secondary"/>
+                  <button type="button" id="import-cloud-folder-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-sm">download</span> Pull All Photos Now
+                  </button>
+                </div>
+                <p class="text-[10px] text-on-surface-variant leading-tight">No need to download files to your computer! Paste the folder link and click "Pull All Photos Now" to transfer all pictures from Drive/Dropbox straight into this yacht's gallery below.</p>
+              </div>
+
+              <div id="photo-manager-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3.5 max-h-[360px] overflow-y-auto p-2.5 bg-surface-container-lowest rounded-xl border border-outline-variant/60 min-h-[110px]">
+                <!-- Photos injected via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: Charter Pricing -->
+          <div id="edit-boat-panel-pricing" class="flex flex-col gap-md hidden">
+            <div>
+              <h4 class="font-headline text-[16px] text-on-surface font-bold mb-4">Captain &amp; Rates Setup</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label class="block font-label text-label-md text-on-surface-variant mb-2">Captain Hourly Rate ($) *</label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
+                    <input type="number" id="edit-boat-capt-hourly" value="${boat?.captain_hourly_rate || ''}" class="admin-field w-full pl-7 pr-4 py-3 border border-outline-variant rounded-lg" required/>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- AI Smart Pricing Autofill -->
-            <div class="mb-8 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+            <div class="p-4 bg-purple-50 border border-purple-200 rounded-xl">
               <div class="flex items-center gap-2 mb-2">
                 <span class="material-symbols-outlined text-purple-600 text-lg">auto_awesome</span>
                 <h5 class="font-label text-sm text-purple-900 font-bold">AI Smart Autofill</h5>
@@ -1064,10 +1082,10 @@ return; // Redirect in progress
               </div>
               
               <div class="flex flex-wrap items-center gap-2">
-                <button type="button" id="ai-pricing-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
+                <button type="button" id="ai-pricing-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto cursor-pointer">
                   <span class="material-symbols-outlined text-[16px]">magic_button</span> Generate Pricing
                 </button>
-                <button type="button" id="ai-pricing-attach-btn" class="bg-white border border-purple-200 hover:bg-purple-50 text-purple-700 text-xs font-bold px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
+                <button type="button" id="ai-pricing-attach-btn" class="bg-white border border-purple-200 hover:bg-purple-50 text-purple-700 text-xs font-bold px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto cursor-pointer">
                   <span class="material-symbols-outlined text-[16px]">image</span> Attach Image
                 </button>
                 <input type="file" id="ai-pricing-file-upload" accept="image/*" class="hidden" />
@@ -1075,10 +1093,10 @@ return; // Redirect in progress
             </div>
 
             <!-- Tiers Editor -->
-            <div class="mb-8">
+            <div>
               <div class="flex items-center justify-between mb-3">
                 <h5 class="font-label text-label-lg text-on-surface font-bold">Charter Pricing Tiers</h5>
-                <button type="button" id="add-tier-btn" class="text-xs font-bold text-secondary bg-secondary/10 px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-secondary/20 transition-colors">
+                <button type="button" id="add-tier-btn" class="text-xs font-bold text-secondary bg-secondary/10 px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-secondary/20 transition-colors cursor-pointer">
                   <span class="material-symbols-outlined text-[16px]">add</span> Add Duration
                 </button>
               </div>
@@ -1091,7 +1109,7 @@ return; // Redirect in progress
             <div>
               <div class="flex items-center justify-between mb-3">
                 <h5 class="font-label text-label-lg text-on-surface font-bold">Holiday / Special Date Pricing</h5>
-                <button type="button" id="add-override-btn" class="text-xs font-bold text-secondary bg-secondary/10 px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-secondary/20 transition-colors">
+                <button type="button" id="add-override-btn" class="text-xs font-bold text-secondary bg-secondary/10 px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-secondary/20 transition-colors cursor-pointer">
                   <span class="material-symbols-outlined text-[16px]">add</span> Add Override
                 </button>
               </div>
@@ -1102,8 +1120,8 @@ return; // Redirect in progress
           </div>
           
           <div class="flex justify-end gap-3 pt-md border-t border-outline-variant sticky bottom-0 bg-white p-4 -mx-4 md:-mx-6 -mb-4 md:-mb-6 mt-6 rounded-b-2xl shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-20">
-            <button type="button" class="px-6 py-2 border border-outline-variant rounded-lg font-label text-label-md hover:bg-surface-container transition-colors" id="cancel-boat-edit">Cancel</button>
-            <button type="submit" class="bg-secondary text-on-secondary px-6 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
+            <button type="button" class="px-6 py-2 border border-outline-variant rounded-lg font-label text-label-md hover:bg-surface-container transition-colors cursor-pointer" id="cancel-boat-edit">Cancel</button>
+            <button type="submit" class="bg-secondary text-on-secondary px-6 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer">
               <span class="material-symbols-outlined text-[18px]">save</span> ${isNew ? 'Create Yacht' : 'Save Changes'}
             </button>
           </div>
@@ -1111,7 +1129,33 @@ return; // Redirect in progress
       </div>
     `;
 
-    openModal(html, { maxWidth: '720px', closeOnOverlay: false });
+    openModal(html, { maxWidth: '820px', closeOnOverlay: false });
+
+    // Tab Switching Listener
+    const tabBtns = document.querySelectorAll('.edit-boat-tab-btn');
+    const panelGeneral = document.getElementById('edit-boat-panel-general');
+    const panelPricing = document.getElementById('edit-boat-panel-pricing');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        tabBtns.forEach(b => {
+          if (b === btn) {
+            b.className = 'edit-boat-tab-btn pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2 cursor-pointer transition-all';
+          } else {
+            b.className = 'edit-boat-tab-btn pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 cursor-pointer transition-all';
+          }
+        });
+
+        if (tab === 'general') {
+          panelGeneral.classList.remove('hidden');
+          panelPricing.classList.add('hidden');
+        } else if (tab === 'pricing') {
+          panelGeneral.classList.add('hidden');
+          panelPricing.classList.remove('hidden');
+        }
+      });
+    });
 
     // Initialize global arrays for this modal instance
     window.__pricingTiers = boat?.boat_pricing_tiers ? JSON.parse(JSON.stringify(boat.boat_pricing_tiers)) : [];
