@@ -1527,13 +1527,16 @@ If a day of the week is not specified, assume the standard price. Use current ye
         }
 
         if (!res || !res.ok) {
+          let actualErrorMsg = "Gemini AI is currently busy. Please try again in a few seconds.";
           try {
             const errObj = JSON.parse(lastErrorText);
             if (errObj.error && errObj.error.message) {
-              throw new Error(errObj.error.message);
+              actualErrorMsg = errObj.error.message;
             }
-          } catch(e) {}
-          throw new Error("Gemini AI is currently busy. Please try again in a few seconds.");
+          } catch(e) {
+            // failed to parse JSON error, fallback to generic message
+          }
+          throw new Error(actualErrorMsg);
         }
         const json = JSON.parse(await res.text());
         const textRes = json.candidates[0].content.parts[0].text;
