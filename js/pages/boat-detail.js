@@ -176,8 +176,14 @@ function populateBoatDetail(boat) {
   if (nameEl) nameEl.textContent = boat.name;
 
   const locationEl = $('#boat-location');
-  if (locationEl && boat.location) locationEl.textContent = boat.location;
-
+  if (locationEl && boat.location) {
+    locationEl.innerHTML = `
+      <button class="flex items-center gap-1.5 hover:text-secondary transition-colors cursor-pointer text-left" onclick="window.__showBoatLocationMap('${escapeHtml(boat.name)}', '${escapeHtml(boat.location)}')">
+        <span class="material-symbols-outlined text-[20px]">location_on</span>
+        <span>${escapeHtml(boat.location)}</span>
+      </button>
+    `;
+  }
   // --- Quick Specs ---
   const quickSpecs = $('#quick-specs');
   if (quickSpecs) {
