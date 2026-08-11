@@ -1018,7 +1018,7 @@ return; // Redirect in progress
             <div class="bg-surface-container p-3 rounded-xl border border-outline-variant mb-3 flex flex-col gap-2">
               <div class="flex items-center justify-between">
                 <label class="block font-label text-xs font-bold text-secondary flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm">cloud_sync</span> Import Directly from Google Drive or Dropbox Folder
+                  <span class="material-symbols-outlined text-sm">cloud_sync</span> Import from Google Drive, Dropbox, or Gallery URL
                 </label>
                 <span id="cloud-import-status" class="text-xs font-bold text-on-surface-variant"></span>
               </div>
@@ -1868,8 +1868,37 @@ return; // Redirect in progress
                 throw new Error(`Dropbox download failed after 4 retries for ${f.name}`);
               }
             }));
+          } else if (link.startsWith('http')) {
+            // GENERIC GALLERY URL
+            if (cloudStatus) cloudStatus.textContent = 'Scraping gallery for images...';
+            const scrapeRes = await fetch(`/api/scrape-images?url=${encodeURIComponent(link)}`);
+            if (!scrapeRes.ok) throw new Error('Gallery Scraper Error: ' + await scrapeRes.text());
+            
+            const scrapeData = await scrapeRes.json();
+            const scrapedUrls = scrapeData.images || [];
+            
+            if (scrapedUrls.length === 0) {
+              throw new Error('No images found on that gallery website.');
+            }
+            
+            files = scrapedUrls.map(url => {
+              // Extract filename from URL or generate one
+              const urlParts = url.split('/');
+              let extractedName = urlParts[urlParts.length - 1] || 'image.jpg';
+              if (extractedName.includes('?')) extractedName = extractedName.split('?')[0];
+              
+              return {
+                name: extractedName,
+                downloadFn: async () => {
+                  const proxyRes = await fetch(`/api/proxy-image?url=${encodeURIComponent(url)}`);
+                  if (!proxyRes.ok) throw new Error('Failed to proxy image: ' + await proxyRes.text());
+                  return await proxyRes.blob();
+                }
+              };
+            });
+            
           } else {
-            throw new Error('Please enter a valid Google Drive or Dropbox folder URL.');
+            throw new Error('Please enter a valid Google Drive, Dropbox, or Gallery URL.');
           }
 
           if (files.length === 0) {
