@@ -455,7 +455,7 @@ return; // Redirect in progress
         // Combine with localStorage queue (guarantees inquiries show even if DB schema/RLS constraint hindered save)
         let localInquiries = [];
         try {
-          localInquiries = JSON.parse(localStorage.getItem('yrsf_all_inquiries') || '[]');
+          try { const rawInq = localStorage.getItem('yrsf_all_inquiries'); localInquiries = (rawInq && rawInq !== 'undefined') ? JSON.parse(rawInq) : []; } catch(e) { localInquiries = []; }
         } catch (e) {}
 
         const seenIds = new Set();
@@ -553,7 +553,7 @@ return; // Redirect in progress
 
         function removeLocalInquiry(id) {
           try {
-            const localList = JSON.parse(localStorage.getItem('yrsf_all_inquiries') || '[]');
+            let localList = []; try { const rawInq = localStorage.getItem('yrsf_all_inquiries'); localList = (rawInq && rawInq !== 'undefined') ? JSON.parse(rawInq) : []; } catch(e) { localList = []; }
             const updated = localList.filter(item => item.id !== id);
             localStorage.setItem('yrsf_all_inquiries', JSON.stringify(updated));
           } catch (e) {}
@@ -1173,12 +1173,12 @@ return; // Redirect in progress
           price_sun: p.price_sun || p.price,
           is_popular: Boolean(p.is_popular)
         }))
-      : (boat?.boat_prices ? JSON.parse(JSON.stringify(boat.boat_pricing_tiers)) : []);
+      : ((boat?.boat_pricing_tiers && Array.isArray(boat.boat_pricing_tiers)) ? JSON.parse(JSON.stringify(boat.boat_pricing_tiers)) : []);
 
     console.log("TRACE 5 - RAW BOAT FROM DATABASE (boat_prices)", boat?.boat_prices);
     console.log("TRACE 7 - EDIT FORM STATE (initialPrices)", initialPrices);
     window.__pricingTiers = initialPrices;
-    window.__dateOverrides = boat?.boat_pricing_date_overrides ? JSON.parse(JSON.stringify(boat.boat_pricing_date_overrides)) : [];
+    window.__dateOverrides = (boat?.boat_pricing_date_overrides && Array.isArray(boat.boat_pricing_date_overrides)) ? JSON.parse(JSON.stringify(boat.boat_pricing_date_overrides)) : [];
 
     // Tiers rendering logic
     function renderPricingTiersGrid() {
@@ -1826,7 +1826,7 @@ EXTRACTION RULES:
       const normLoc = boat.location.trim().toLowerCase();
       const cachedCoords = localStorage.getItem(`geocode_${normLoc}`);
       if (cachedCoords) {
-        const [lat, lon] = JSON.parse(cachedCoords);
+        let lat, lon; try { if (cachedCoords && cachedCoords !== 'undefined') { const coordsArr = JSON.parse(cachedCoords); lat = coordsArr[0]; lon = coordsArr[1]; } } catch(e) {}
         setTimeout(() => showPreviewMap(lat, lon, boat.location), 300);
       } else {
         fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(boat.location + (boat.location.toLowerCase().includes('miami') || boat.location.toLowerCase().includes('fl') ? '' : ', Miami, FL'))}&format=json&limit=1`)
@@ -2414,7 +2414,7 @@ EXTRACTION RULES:
 
         // Save Pricing Tiers / Rates to boat_prices
         console.log("SAVE CHANGES CLICKED");
-        console.log("TRACE 1 - PRICING UI STATE", JSON.parse(JSON.stringify(window.__pricingTiers || [])));
+        try { console.log('TRACE 1 - PRICING UI STATE', JSON.parse(JSON.stringify(window.__pricingTiers || []))); } catch(e) {}
         console.log("TRACE 2 - ENTIRE BOAT STATE", boatData);
 
         try {
@@ -5616,7 +5616,7 @@ EXTRACTION RULES:
           // If Render backend proxy returned JSON
           if (text.trim().startsWith('[') || text.trim().startsWith('{')) {
             try {
-              const parsed = JSON.parse(text);
+              let parsed = null; try { if (text && text !== 'undefined' && text !== 'null') parsed = JSON.parse(text); } catch(e) {}
               // Case 1: JSON wraps an .ics string (e.g. { "ics": "BEGIN:VCALENDAR..." })
               if (typeof parsed === 'object' && !Array.isArray(parsed)) {
                 let foundIcsStr = false;
@@ -7456,6 +7456,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
 
 // CACHE BUSTER: 20260810124601
+
 
 
 
