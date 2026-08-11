@@ -178,9 +178,9 @@ function populateBoatDetail(boat) {
   const locationEl = $('#boat-location');
   if (locationEl && boat.location) {
     locationEl.innerHTML = `
-      <button class="flex items-center gap-1.5 hover:text-secondary transition-colors cursor-pointer text-left" onclick="window.__showBoatLocationMap('${escapeHtml(boat.name)}', '${escapeHtml(boat.location)}')">
-        <span class="material-symbols-outlined text-[20px]">location_on</span>
-        <span>${escapeHtml(boat.location)}</span>
+      <button class="flex items-center gap-1.5 hover:text-secondary transition-colors cursor-pointer text-left max-w-full truncate" onclick="window.__showBoatLocationMap('${escapeHtml(boat.name)}', '${escapeHtml(boat.location)}')">
+        <span class="material-symbols-outlined text-[18px] md:text-[20px] shrink-0">location_on</span>
+        <span class="truncate">${escapeHtml(boat.location)}</span>
       </button>
     `;
   }

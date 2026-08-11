@@ -67,12 +67,12 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-lg mb-6 lg:mb-lg">
       <!-- Left Column: Details -->
       <div class="lg:col-span-2">
-        <div class="flex items-start justify-between mb-md">
-          <div>
-            <h1 class="font-display-lg text-[38px] md:text-display-lg text-on-surface mb-2 leading-[1.1] tracking-[-0.02em]" id="boat-name">Loading...</h1>
-            <p class="font-body-lg text-body-lg text-on-surface-variant" id="boat-location"></p>
+        <div class="flex items-start justify-between mb-md gap-3">
+          <div class="min-w-0 flex-1">
+            <h1 class="font-display-lg text-2xl sm:text-3xl md:text-display-lg text-on-surface mb-1 md:mb-2 leading-[1.1] tracking-[-0.02em] truncate" id="boat-name">Loading...</h1>
+            <p class="font-body-lg text-sm sm:text-base md:text-body-lg text-on-surface-variant truncate" id="boat-location"></p>
           </div>
-          <div class="flex gap-2">
+          <div class="flex gap-2 shrink-0">
             <button class="favorite-btn p-3 border border-outline-variant rounded-lg hover:bg-surface-container transition-colors" id="detail-favorite-btn" aria-label="Toggle favorite">
               <span class="material-symbols-outlined">favorite</span>
             </button>
