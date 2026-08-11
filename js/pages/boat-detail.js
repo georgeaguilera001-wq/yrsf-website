@@ -355,7 +355,7 @@ function populateBoatDetail(boat) {
           cellClasses += isSelected
             ? 'bg-secondary/10 border-secondary ring-2 ring-secondary cursor-pointer shadow-sm'
             : 'bg-surface-container-lowest hover:bg-surface-container border-outline-variant cursor-pointer';
-          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300/70 block text-center truncate">0<span class="hidden md:inline"> Bookings</span> • Open</span>`;
+          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300/70 block text-center truncate">0<span class="hidden md:inline"> Bookings • Open</span></span>`;
         }
 
         daysHtml += `
@@ -401,8 +401,8 @@ function populateBoatDetail(boat) {
             </div>
           ` : `
             <div class="flex flex-wrap items-center gap-4 mb-4 text-xs font-medium text-on-surface-variant">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> 0 Bookings • Open for Charter</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Charters Booked (Alternative time slots may still be open)</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> 0 Bookings<span class="hidden md:inline"> • Open for Charter</span></span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Charters Booked<span class="hidden md:inline"> (Alternative time slots may still be open)</span></span>
             </div>
           `}
 
