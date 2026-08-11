@@ -231,34 +231,34 @@
 <p class="text-on-surface-variant font-body-md">Curated outings tailored to your special occasion.</p>
 </div>
 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-sm">
-<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+<a href="/birthday" class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center block">
 <span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">cake</span>
 <p class="font-label-md text-xs">Birthday</p>
-</div>
-<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+</a>
+<a href="/bachelor-bachelorette" class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center block">
 <span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">celebration</span>
 <p class="font-label-md text-xs">Bachelor/ette</p>
-</div>
-<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+</a>
+<a href="/family-day" class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center block">
 <span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">family_restroom</span>
 <p class="font-label-md text-xs">Family Day</p>
-</div>
-<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+</a>
+<a href="/luxury-yachts" class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center block">
 <span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">diamond</span>
 <p class="font-label-md text-xs">Luxury Yachts</p>
-</div>
-<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+</a>
+<a href="/corporate" class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center block">
 <span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">business_center</span>
 <p class="font-label-md text-xs">Corporate</p>
-</div>
-<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+</a>
+<a href="/sunset-cruise" class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center block">
 <span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">wb_twilight</span>
 <p class="font-label-md text-xs">Sunset Cruise</p>
-</div>
-<div class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+</a>
+<a href="/proposals" class="group cursor-pointer bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all text-center block">
 <span class="material-symbols-outlined text-secondary text-3xl mb-2 group-hover:scale-110 transition-transform">favorite</span>
 <p class="font-label-md text-xs">Proposals</p>
-</div>
+</a>
 </div>
 </div>
 </section>
@@ -445,16 +445,7 @@
 </svg>
 </a>
 <script type="module" src="/js/pages/home.js"></script>
-<script>
-    // Interactive states for experience cards
-    document.querySelectorAll('.group').forEach(el => {
-        el.addEventListener('click', (e) => {
-            if(el.tagName.toLowerCase() === 'details') return;
-            const type = el.querySelector('p').textContent;
-            window.location.href = `https://wa.me/13059902192?text=I'm interested in a ${type} experience with YRSF!`;
-        });
-    });
-</script>
+
 
 <!-- Public Review Modal -->
 <div id="review-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden animate-fade-in">
