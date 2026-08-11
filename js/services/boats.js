@@ -526,7 +526,14 @@ export async function updateBoatPrices(boatId, prices) {
       boat_id: boatId,
       duration_hours: durationHrs,
       duration_label: p.duration_label || `${durationHrs} Hours`,
-      price: rate,
+      price: rate, // keep base price for fallback
+      price_mon: parseFloat(p.price_mon) || rate,
+      price_tue: parseFloat(p.price_tue) || rate,
+      price_wed: parseFloat(p.price_wed) || rate,
+      price_thu: parseFloat(p.price_thu) || rate,
+      price_fri: parseFloat(p.price_fri) || rate,
+      price_sat: parseFloat(p.price_sat) || rate,
+      price_sun: parseFloat(p.price_sun) || rate,
       is_popular: Boolean(p.is_popular),
       sort_order: i
     };
