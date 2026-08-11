@@ -1055,11 +1055,23 @@ return; // Redirect in progress
                 <span class="material-symbols-outlined text-purple-600 text-lg">auto_awesome</span>
                 <h5 class="font-label text-sm text-purple-900 font-bold">AI Smart Autofill</h5>
               </div>
-              <p class="text-xs text-purple-800 mb-3 leading-relaxed">Paste your pricing rules in plain English (e.g., "4 hours is $1500, weekends $2000. July 4th is $2500"). The AI will map it into the grids below.</p>
-              <textarea id="ai-pricing-prompt" class="admin-field w-full px-3 py-2 border border-purple-200 rounded-lg text-sm bg-white mb-3 focus:ring-purple-500 focus:border-purple-500" rows="2" placeholder="Describe your pricing here..."></textarea>
-              <button type="button" id="ai-pricing-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
-                <span class="material-symbols-outlined text-[16px]">magic_button</span> Generate Pricing
-              </button>
+              <p class="text-xs text-purple-800 mb-3 leading-relaxed">Paste your pricing rules in plain English, or paste/attach an image of your pricing table. The AI will map it into the grids below.</p>
+              <textarea id="ai-pricing-prompt" class="admin-field w-full px-3 py-2 border border-purple-200 rounded-lg text-sm bg-white mb-2 focus:ring-purple-500 focus:border-purple-500" rows="2" placeholder="Describe your pricing or paste an image (Ctrl+V)..."></textarea>
+              
+              <div id="ai-pricing-image-preview-container" class="hidden mb-3 relative inline-block">
+                <img id="ai-pricing-image-preview" class="max-h-32 rounded-lg border border-purple-200 shadow-sm" src="" />
+                <button type="button" id="ai-pricing-image-remove" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors shadow-sm"><span class="material-symbols-outlined text-[14px]">close</span></button>
+              </div>
+              
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" id="ai-pricing-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
+                  <span class="material-symbols-outlined text-[16px]">magic_button</span> Generate Pricing
+                </button>
+                <button type="button" id="ai-pricing-attach-btn" class="bg-white border border-purple-200 hover:bg-purple-50 text-purple-700 text-xs font-bold px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto">
+                  <span class="material-symbols-outlined text-[16px]">image</span> Attach Image
+                </button>
+                <input type="file" id="ai-pricing-file-upload" accept="image/*" class="hidden" />
+              </div>
             </div>
 
             <!-- Tiers Editor -->
@@ -1356,7 +1368,9 @@ return; // Redirect in progress
     }
 
     // --- AI Smart Pricing Generator ---
-    async function generateSmartPricing(promptText, captainRate) {
+    let attachedSmartPricingImage = null; // Stores { mimeType, data: base64 }
+
+    async function generateSmartPricing(promptText, captainRate, imageData) {
       try {
         const { data: setting } = await supabase.from('site_settings').select('value').eq('key', 'gemini_api_key').single();
         const apiKey = setting?.value?.key || setting?.value;
@@ -1365,7 +1379,7 @@ return; // Redirect in progress
            return false;
         }
 
-        const systemPrompt = `You are a smart pricing assistant. The user will give you natural language pricing rules. 
+        const systemPrompt = `You are a smart pricing assistant. The user will give you natural language pricing rules or an image of a pricing sheet. 
 Return ONLY a valid JSON object matching exactly this schema:
 {
   "tiers": [
@@ -1404,13 +1418,21 @@ IMPORTANT RULES
 
 If a day of the week is not specified, assume the standard price. Use current year for holidays if unspecified. Do not include markdown formatting or \`\`\`json blocks. Return ONLY raw JSON text.`;
 
+        const parts = [{ text: systemPrompt + '\n\nUser Input: ' + promptText }];
+        if (imageData) {
+          parts.push({
+            inlineData: {
+              mimeType: imageData.mimeType,
+              data: imageData.data
+            }
+          });
+        }
+
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [
-              { role: 'user', parts: [{ text: systemPrompt + '\n\nUser Input: ' + promptText }] }
-            ]
+            contents: [{ role: 'user', parts: parts }]
           })
         });
 
@@ -1437,9 +1459,60 @@ If a day of the week is not specified, assume the standard price. Use current ye
       }
     }
 
+    const aiPromptInput = document.getElementById('ai-pricing-prompt');
+    const aiAttachBtn = document.getElementById('ai-pricing-attach-btn');
+    const aiFileInput = document.getElementById('ai-pricing-file-upload');
+    const aiPreviewContainer = document.getElementById('ai-pricing-image-preview-container');
+    const aiPreviewImg = document.getElementById('ai-pricing-image-preview');
+    const aiRemoveBtn = document.getElementById('ai-pricing-image-remove');
+    
+    function setSmartPricingImage(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64Url = e.target.result;
+        const base64Data = base64Url.split(',')[1]; // Strip data:image/... prefix
+        attachedSmartPricingImage = {
+          mimeType: file.type,
+          data: base64Data
+        };
+        aiPreviewImg.src = base64Url;
+        aiPreviewContainer.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    aiRemoveBtn?.addEventListener('click', () => {
+      attachedSmartPricingImage = null;
+      aiPreviewImg.src = '';
+      aiPreviewContainer.classList.add('hidden');
+      if (aiFileInput) aiFileInput.value = '';
+    });
+    
+    aiAttachBtn?.addEventListener('click', () => aiFileInput?.click());
+    
+    aiFileInput?.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        setSmartPricingImage(e.target.files[0]);
+      }
+    });
+    
+    aiPromptInput?.addEventListener('paste', (e) => {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (let item of items) {
+        if (item.type.indexOf('image') === 0) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          setSmartPricingImage(file);
+          showToast('Image pasted from clipboard!', 'info');
+          break;
+        }
+      }
+    });
+
     document.getElementById('ai-pricing-btn')?.addEventListener('click', async (e) => {
       const prompt = document.getElementById('ai-pricing-prompt').value.trim();
-      if (!prompt) return showToast('Please enter pricing rules first.', 'error');
+      if (!prompt && !attachedSmartPricingImage) return showToast('Please enter pricing rules or attach an image.', 'error');
       
       const captRateInput = document.getElementById('edit-boat-capt-hourly');
       const captainRate = captRateInput && captRateInput.value ? parseFloat(captRateInput.value) : 75;
@@ -1449,7 +1522,7 @@ If a day of the week is not specified, assume the standard price. Use current ye
       btn.innerHTML = `<span class="admin-spinner w-4 h-4 border-white"></span> Thinking...`;
       btn.disabled = true;
       
-      const success = await generateSmartPricing(prompt, captainRate);
+      const success = await generateSmartPricing(prompt, captainRate, attachedSmartPricingImage);
       if (success) {
         renderPricingTiersGrid();
         renderDateOverridesEditor();
