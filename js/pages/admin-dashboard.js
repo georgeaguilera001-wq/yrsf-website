@@ -1427,6 +1427,7 @@ IMPORTANT RULES
 3. Boat Price + Captain Fee must always equal the Customer Pre-Tax Total (Wholesale × 1.30).
 4. Do not calculate or add taxes.
 5. Perform this calculation independently for every duration.
+6. If any math calculation results in a decimal, ALWAYS round UP to the nearest whole number (e.g. 1250.25 -> 1251).
 
 If a day of the week is not specified, assume the standard price. Use current year for holidays if unspecified. Do not include markdown formatting or \`\`\`json blocks. Return ONLY raw JSON text.`;
 
