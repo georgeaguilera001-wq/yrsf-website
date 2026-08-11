@@ -33,7 +33,7 @@ export async function getBoats({
         is_featured, is_best_seller, sort_order,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(url, alt_text, is_primary),
-        boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order)
+        boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order)
       `, { count: 'exact' })
       .eq('status', 'active');
 
@@ -122,7 +122,7 @@ export async function getBoats({
     // Flatten the data
     const boats = (data || []).map(boat => {
       // Calculate min_price from pricing tiers if available, else fallback to hourly rates
-      const tiers = boat.boat_pricing_tiers || [];
+      const tiers = boat.boat_prices || [];
       let min_price, min_price_label;
       if (tiers.length > 0) {
         const sorted = [...tiers].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
@@ -167,7 +167,7 @@ export async function getBoatBySlug(slug) {
         boat_images(id, url, alt_text, is_primary, sort_order),
         boat_amenities(id, name, icon),
         boat_specs(id, label, value, icon, sort_order),
-        boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order),
+        boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order),
         boat_pricing_date_overrides(id, override_date, label, duration_hours, price)
       `)
       .eq('slug', slug)
@@ -200,7 +200,7 @@ export async function getBoatBySlug(slug) {
     if (data) {
       data.boat_images?.sort((a, b) => a.sort_order - b.sort_order);
       data.boat_specs?.sort((a, b) => a.sort_order - b.sort_order);
-      data.boat_pricing_tiers?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+      data.boat_prices?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
     }
 
     return data;
@@ -217,7 +217,7 @@ export async function getFeaturedBoats(limit = 6) {
         length_ft, capacity, location, is_featured, is_best_seller, sort_order,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(url, alt_text, is_primary),
-        boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order)
+        boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order)
       `)
       .eq('status', 'active')
       .or('is_featured.eq.true,is_best_seller.eq.true')
@@ -247,7 +247,7 @@ export async function getFeaturedBoats(limit = 6) {
     }
 
     const result = (data || []).map(boat => {
-      const tiers = boat.boat_pricing_tiers || [];
+      const tiers = boat.boat_prices || [];
       let min_price, min_price_label;
       if (tiers.length > 0) {
         const sorted = [...tiers].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
@@ -309,7 +309,7 @@ export async function getAllBoats() {
       status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
       boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
       boat_images(url, alt_text, is_primary),
-      boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order)
+      boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order)
     `)
     .order('sort_order', { ascending: true });
 
@@ -349,7 +349,7 @@ export async function getBoatById(id) {
       boat_images(id, url, alt_text, is_primary, sort_order),
       boat_amenities(id, name, icon),
       boat_specs(id, label, value, icon, sort_order),
-      boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order),
+      boat_prices(id, duration_hours, duration_label, price, is_popular, sort_order),
       boat_pricing_date_overrides(id, override_date, label, duration_hours, price)
     `)
     .eq('id', id)
@@ -379,7 +379,7 @@ export async function getBoatById(id) {
   if (data) {
     data.boat_images?.sort((a, b) => a.sort_order - b.sort_order);
     data.boat_specs?.sort((a, b) => a.sort_order - b.sort_order);
-    data.boat_pricing_tiers?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    data.boat_prices?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   }
 
   return data;

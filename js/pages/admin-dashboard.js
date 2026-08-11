@@ -1171,7 +1171,7 @@ return; // Redirect in progress
           price_sun: p.price_sun || p.price,
           is_popular: Boolean(p.is_popular)
         }))
-      : (boat?.boat_pricing_tiers ? JSON.parse(JSON.stringify(boat.boat_pricing_tiers)) : []);
+      : (boat?.boat_prices ? JSON.parse(JSON.stringify(boat.boat_pricing_tiers)) : []);
 
     window.__pricingTiers = initialPrices;
     window.__dateOverrides = boat?.boat_pricing_date_overrides ? JSON.parse(JSON.stringify(boat.boat_pricing_date_overrides)) : [];
