@@ -355,7 +355,7 @@ function populateBoatDetail(boat) {
           cellClasses += isSelected
             ? 'bg-secondary/10 border-secondary ring-2 ring-secondary cursor-pointer shadow-sm'
             : 'bg-surface-container-lowest hover:bg-surface-container border-outline-variant cursor-pointer';
-          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300/70 block text-center truncate">0<span class="hidden md:inline"> Bookings • Open</span></span>`;
+          statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300/70 block text-center truncate">0<span class="hidden md:inline"> Bookings</span></span>`;
         }
 
         daysHtml += `
