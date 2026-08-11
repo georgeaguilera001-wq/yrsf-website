@@ -202,7 +202,11 @@ function populateBoatDetail(boat) {
           <p class="font-label-md text-label-md text-on-surface">${s.value}</p>
         </div>
       </div>
-    `).join('');
+    `).join('') + `
+      <button type="button" onclick="document.getElementById('pricing-card-container').scrollIntoView({behavior: 'smooth'})" class="lg:hidden ml-auto bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label-md text-label-md font-bold hover:opacity-90 transition-all flex items-center justify-center shadow-sm">
+        Charter Rates
+      </button>
+    `;
   }
 
   // --- Tab Content ---
