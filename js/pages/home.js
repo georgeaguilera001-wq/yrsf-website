@@ -7,7 +7,7 @@ import { initFooter } from '../components/footer.js';
 import { initToastContainer } from '../components/toast.js';
 import { getFeaturedBoats, getBoatCount } from '../services/boats.js';
 import { getAllSettings } from '../services/settings.js';
-import { renderBoatCard, initBoatCards } from '../components/boat-card.js';
+import { renderBoatCard, initBoatCards } from '../components/boat-card.js?v=20260811v3';
 import { initLazyLoading } from '../utils/lazy-load.js';
 import { renderSkeletons } from '../utils/dom.js';
 import { initMarinaMap } from '../components/map.js';

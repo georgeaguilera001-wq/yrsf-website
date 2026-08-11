@@ -11,7 +11,7 @@ import { showBoatLocationMap } from './location-map-modal.js';
 
 function getDayPricingInfo(boat, dayCode) {
   const captainRate = parseFloat(boat.captain_hourly_rate) || 0;
-  const pricingTiers = boat.boat_pricing_tiers || [];
+  const pricingTiers = boat.boat_prices || boat.boat_pricing_tiers || [];
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const dayKeys = ['price_mon', 'price_tue', 'price_wed', 'price_thu', 'price_fri', 'price_sat', 'price_sun'];
   const dayIndex = days.indexOf(dayCode);
@@ -21,11 +21,11 @@ function getDayPricingInfo(boat, dayCode) {
   if (pricingTiers.length > 0) {
     const sorted = [...pricingTiers].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
     const lowestTier = sorted[0];
-    const boatPrice = parseFloat(lowestTier[dayKey]) || 0;
+    const boatPrice = parseFloat(lowestTier[dayKey]) || parseFloat(lowestTier.price) || 0;
     const minPrice = Math.round(boatPrice + (captainRate * lowestTier.duration_hours));
 
     const html = sorted.map(tier => {
-      const tierBoatPrice = parseFloat(tier[dayKey]) || 0;
+      const tierBoatPrice = parseFloat(tier[dayKey]) || parseFloat(tier.price) || 0;
       const total = Math.round(tierBoatPrice + (captainRate * tier.duration_hours));
       return `
         <div class="flex justify-between items-center py-1.5 border-b border-outline-variant last:border-0 text-[12px] @sm:text-[14px]">
@@ -76,7 +76,7 @@ export function renderBoatCard(boat, options = {}) {
   const imgUrl = boat.primary_image_url || 'https://placehold.co/600x400/1e293b/94a3b8?text=No+Photo';
   const imgAlt = escapeHtml(boat.primary_image_alt || boat.name);
   
-  const pricingTiers = boat.boat_pricing_tiers || [];
+  const pricingTiers = boat.boat_prices || boat.boat_pricing_tiers || [];
   const hasPrices = pricingTiers.length > 0 || (boat.boat_hourly_rate > 0 || boat.captain_hourly_rate > 0) || (boat.boat_prices && boat.boat_prices.length > 0);
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const currentDayName = days[(new Date().getDay() + 6) % 7]; // Convert Sunday=0 to index
@@ -85,22 +85,15 @@ export function renderBoatCard(boat, options = {}) {
   
   // Custom price display for the new structure
   let priceDisplayHtml = 'Contact';
-  if (info.hasTiers && info.minPrice) {
+  if (info.minPrice) {
     priceDisplayHtml = `
       <div class="flex flex-col text-left leading-tight">
         <span class="text-[10px] md:text-[11px] text-on-surface">starting @ <span class="font-bold">${formatPrice(info.minPrice)}</span></span>
         ${boat.captain_hourly_rate > 0 ? `<span class="text-[8px] md:text-[9px] text-on-surface-variant opacity-90">incl. Captain</span>` : ''}
       </div>
     `;
-  } else if (boat.boat_hourly_rate > 0 || boat.captain_hourly_rate > 0) {
-    priceDisplayHtml = `
-      <div class="flex flex-col text-left leading-tight">
-        <span class="text-[10px] md:text-[11px] text-on-surface">starting @ <span class="font-bold">${formatPrice(boat.boat_hourly_rate || 0)}/hr</span></span>
-        <span class="text-[8px] md:text-[9px] text-on-surface-variant opacity-90">+ Capt from ${formatPrice(boat.captain_hourly_rate || 0)}/hr</span>
-      </div>
-    `;
-  } else if (info.minPrice || boat.min_price) {
-    priceDisplayHtml = `<span class="font-bold text-[10.5px]">starting @ ${formatPrice(info.minPrice || boat.min_price)}</span>`;
+  } else if (boat.min_price) {
+    priceDisplayHtml = `<span class="font-bold text-[10.5px]">starting @ ${formatPrice(boat.min_price)}</span>`;
   }
   
   const pricesHtml = info.html;
@@ -274,10 +267,13 @@ export function initBoatCards(container) {
 
       const info = getDayPricingInfo(boat, dayCode);
       const priceDisplayEl = card.querySelector('.card-price-display');
-      if (priceDisplayEl && (boat.boat_hourly_rate > 0 || boat.captain_hourly_rate > 0)) {
-        // Price display is static base hourly rate, no need to update it on day click since tiers expand for details.
-      } else if (priceDisplayEl && info.minPrice) {
-        priceDisplayEl.innerHTML = `<span class="font-bold text-[10.5px]">starting @ ${formatPrice(info.minPrice)}</span>`;
+      if (priceDisplayEl && info.minPrice) {
+        priceDisplayEl.innerHTML = `
+          <div class="flex flex-col text-left leading-tight">
+            <span class="text-[10px] md:text-[11px] text-on-surface">starting @ <span class="font-bold">${formatPrice(info.minPrice)}</span></span>
+            ${boat.captain_hourly_rate > 0 ? `<span class="text-[8px] md:text-[9px] text-on-surface-variant opacity-90">incl. Captain</span>` : ''}
+          </div>
+        `;
       }
       const listEl = card.querySelector('.pricing-tiers-list');
       if (listEl && info.html) {

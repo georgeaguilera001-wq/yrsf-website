@@ -7,7 +7,7 @@ import { initFooter } from '../components/footer.js';
 import { initToastContainer, showToast } from '../components/toast.js';
 import { getBoatBySlug, getBoats } from '../services/boats.js';
 import { renderImageGallery, openLightbox } from '../components/image-gallery.js';
-import { renderBoatCard, initBoatCards } from '../components/boat-card.js';
+import { renderBoatCard, initBoatCards } from '../components/boat-card.js?v=20260811v3';
 import { initLazyLoading } from '../utils/lazy-load.js';
 import { formatPrice, escapeHtml, getUrlParam, $ } from '../utils/dom.js';
 import { isFavorite, toggleFavorite } from '../utils/favorites.js';

@@ -13,6 +13,7 @@ import { showToast } from '../components/toast.js';
 import { openModal, closeModal, confirmModal } from '../components/modal.js';
 import { escapeHtml, formatPrice, slugify } from '../utils/dom.js';
 import { initSocialHub } from '../components/social-hub.js';
+import { calculateCharterPricing } from '../utils/pricing.js';
 
 // Nested Action-Level Sub-Permissions Configuration
 const MODULE_SUBPERMS = {
@@ -1231,6 +1232,13 @@ return; // Redirect in progress
                 </button>
               </td>
             </tr>
+            ${tier._calc ? `
+            <tr class="bg-purple-50/50">
+              <td colspan="10" class="p-2 text-[11px] text-purple-700 text-center font-mono border-b border-outline-variant">
+                <b>AI TRACE:</b> Wholesale: $${formatPrice(tier._calc.wholesalePrice)} &times; 1.30 = <b>Retail: $${formatPrice(tier._calc.retailPreTax)}</b> &nbsp;|&nbsp; Captain: $${formatPrice(tier._calc.captainFee)} &nbsp;|&nbsp; <b>Boat: $${formatPrice(tier._calc.boatPrice)}</b>
+              </td>
+            </tr>
+            ` : ''}
           `;
         });
       }
@@ -1342,18 +1350,25 @@ return; // Redirect in progress
             <div class="p-3 bg-surface-container-lowest grid gap-2">
               <div class="flex flex-wrap items-center gap-3">
                 ${group.items.sort((a,b) => a.duration_hours - b.duration_hours).map(item => `
-                  <div class="flex items-center gap-2 bg-surface-container p-2 rounded-lg border border-outline-variant">
-                    <div class="flex flex-col w-16">
-                      <span class="text-[10px] text-on-surface-variant font-bold leading-tight">Hrs</span>
-                      <input type="number" value="${item.duration_hours || ''}" class="override-item-input admin-field px-1 py-0.5 border border-outline-variant rounded bg-white text-sm text-center" data-index="${item.originalIndex}" data-field="duration_hours" min="1"/>
+                  <div class="flex flex-col gap-2 bg-surface-container p-2 rounded-lg border border-outline-variant w-full sm:w-auto">
+                    <div class="flex items-center gap-2">
+                      <div class="flex flex-col w-16">
+                        <span class="text-[10px] text-on-surface-variant font-bold leading-tight">Hrs</span>
+                        <input type="number" value="${item.duration_hours || ''}" class="override-item-input admin-field px-1 py-0.5 border border-outline-variant rounded bg-white text-sm text-center" data-index="${item.originalIndex}" data-field="duration_hours" min="1"/>
+                      </div>
+                      <div class="flex flex-col w-24">
+                        <span class="text-[10px] text-on-surface-variant font-bold leading-tight">Boat Price ($)</span>
+                        <input type="number" value="${item.price || ''}" class="override-item-input admin-field px-1 py-0.5 border border-outline-variant rounded bg-white text-sm text-right" data-index="${item.originalIndex}" data-field="price" min="0"/>
+                      </div>
+                      <button type="button" class="del-override-item-btn text-error/70 hover:text-error mt-3" data-index="${item.originalIndex}">
+                        <span class="material-symbols-outlined text-[16px]">close</span>
+                      </button>
                     </div>
-                    <div class="flex flex-col w-20">
-                      <span class="text-[10px] text-on-surface-variant font-bold leading-tight">Price ($)</span>
-                      <input type="number" value="${item.price || ''}" class="override-item-input admin-field px-1 py-0.5 border border-outline-variant rounded bg-white text-sm text-right" data-index="${item.originalIndex}" data-field="price" min="0"/>
+                    ${item._calc ? `
+                    <div class="text-[10px] text-purple-700 font-mono bg-purple-50 p-1 rounded border border-purple-100 mt-1">
+                      <b>AI TRACE:</b> Wholesale: $${formatPrice(item._calc.wholesalePrice)} &times; 1.30 = Retail: $${formatPrice(item._calc.retailPreTax)} | Capt: $${formatPrice(item._calc.captainFee)} | Boat: $${formatPrice(item._calc.boatPrice)}
                     </div>
-                    <button type="button" class="del-override-item-btn text-error/70 hover:text-error mt-3" data-index="${item.originalIndex}">
-                      <span class="material-symbols-outlined text-[16px]">close</span>
-                    </button>
+                    ` : ''}
                   </div>
                 `).join('')}
                 <button type="button" class="add-override-duration-btn text-xs font-bold text-secondary bg-secondary/10 px-2 py-1.5 rounded-lg flex items-center gap-1 hover:bg-secondary/20 transition-colors h-fit mt-3" data-date="${date}" data-label="${escapeHtml(group.label || '')}">
@@ -1458,45 +1473,23 @@ return; // Redirect in progress
            return false;
         }
 
-        const systemPrompt = `You are a smart pricing assistant. The user will give you natural language pricing rules or an image of a pricing sheet. 
+        const systemPrompt = `You are a smart data extraction assistant. The user will give you natural language pricing rules or an image of a pricing sheet.
 Return ONLY a valid JSON object matching exactly this schema:
 {
   "tiers": [
-    { "duration_hours": number, "price_mon": number, "price_tue": number, "price_wed": number, "price_thu": number, "price_fri": number, "price_sat": number, "price_sun": number, "is_popular": boolean, "sort_order": number }
+    { "duration_hours": number, "wholesale_price": number, "is_popular": boolean, "sort_order": number }
   ],
   "overrides": [
-    { "override_date": "YYYY-MM-DD", "label": string, "duration_hours": number, "price": number }
+    { "override_date": "YYYY-MM-DD", "label": string, "duration_hours": number, "wholesale_price": number }
   ]
 }
 
-YACHT CHARTER PRICING MODEL
-Use the following pricing rules whenever calculating and auto-filling yacht charter prices.
-
-IMPORTANT:
-The owner/wholesale price provided by the user already includes everything required to operate the charter. We resell the charter to the customer using a 30% markup over the owner's wholesale price.
-
-STEP 1 — CALCULATE RETAIL PRICE
-For every charter duration: Customer Pre-Tax Price = Owner Wholesale Price × 1.30
-
-STEP 2 — SEPARATE THE CAPTAIN FEE
-The captain fee must be separated FROM the customer's pre-tax total.
-Use the configured captain hourly rate for this boat: $${captainRate} per charter hour.
-Captain Fee = Charter Hours × $${captainRate}
-
-STEP 3 — CALCULATE THE BOAT PRICE
-Boat Price = Customer Pre-Tax Total - Captain Fee
-
-You MUST output the "Boat Price" for the JSON schema fields (price_mon, price_tue, price, etc.). 
-
-IMPORTANT RULES
-1. Never add the captain fee on top of the 30%-marked-up retail price.
-2. The captain fee is being ALLOCATED from the retail total.
-3. Boat Price + Captain Fee must always equal the Customer Pre-Tax Total (Wholesale × 1.30).
-4. Do not calculate or add taxes.
-5. Perform this calculation independently for every duration.
-6. If any math calculation results in a decimal, ALWAYS round UP to the nearest whole number (e.g. 1250.25 -> 1251).
-
-If a day of the week is not specified, assume the standard price. Use current year for holidays if unspecified. Do not include markdown formatting or \`\`\`json blocks. Return ONLY raw JSON text.`;
+EXTRACTION RULES:
+1. Extract ONLY the duration (in hours) and the owner's wholesale price (the cost to us before any markups).
+2. DO NOT perform any math or calculate retail markups. We will handle markups in our deterministic pricing engine.
+3. DO NOT calculate captain fees.
+4. If a duration is implicitly standard, default to 4 or 8 hours depending on context.
+5. Do not include markdown formatting or \`\`\`json blocks. Return ONLY raw JSON text.`;
 
         const parts = [{ text: systemPrompt + '\n\nUser Input: ' + promptText }];
         if (imageData) {
@@ -1578,8 +1571,57 @@ If a day of the week is not specified, assume the standard price. Use current ye
           throw new Error("Could not parse AI response as JSON");
         }
 
-        if (parsed.tiers) window.__pricingTiers = parsed.tiers;
-        if (parsed.overrides) window.__dateOverrides = parsed.overrides;
+        if (parsed.tiers) {
+          window.__pricingTiers = parsed.tiers.map((t, idx) => {
+            // AI returns wholesale_price and duration_hours.
+            // We must map it through the deterministic engine.
+            if (typeof t.wholesale_price !== 'number' || isNaN(t.wholesale_price) || t.wholesale_price <= 0) {
+              throw new Error(`AI generated invalid wholesale price for ${t.duration_hours} hours. Please enter it manually.`);
+            }
+            if (typeof t.duration_hours !== 'number' || isNaN(t.duration_hours) || t.duration_hours <= 0) {
+              throw new Error(`AI generated invalid duration hours. Please enter it manually.`);
+            }
+
+            const calc = calculateCharterPricing({
+              wholesalePrice: t.wholesale_price,
+              durationHours: t.duration_hours,
+              captainHourlyRate: captainRate
+            });
+
+            return {
+               duration_hours: calc.durationHours,
+               wholesale_price: calc.wholesalePrice,
+               price_mon: calc.boatPrice,
+               price_tue: calc.boatPrice,
+               price_wed: calc.boatPrice,
+               price_thu: calc.boatPrice,
+               price_fri: calc.boatPrice,
+               price_sat: calc.boatPrice,
+               price_sun: calc.boatPrice,
+               is_popular: t.is_popular || false,
+               sort_order: t.sort_order ?? idx,
+               _calc: calc 
+            };
+          });
+        }
+        
+        if (parsed.overrides) {
+           window.__dateOverrides = parsed.overrides.map(o => {
+             const calc = calculateCharterPricing({
+               wholesalePrice: o.wholesale_price,
+               durationHours: o.duration_hours,
+               captainHourlyRate: captainRate
+             });
+             return {
+                override_date: o.override_date,
+                label: o.label,
+                duration_hours: calc.durationHours,
+                wholesale_price: calc.wholesalePrice,
+                price: calc.boatPrice,
+                _calc: calc
+             };
+           });
+        }
         
         return true;
       } catch (err) {
@@ -2379,16 +2421,57 @@ If a day of the week is not specified, assume the standard price. Use current ye
              ...t,
              sort_order: idx
           }));
+          
+          // --- MANDATORY PRE-SAVE VALIDATION ---
+          const captainRate = parseFloat(boatData.captain_hourly_rate) || 75;
+          for (const tier of tiersToSave) {
+             if (tier.wholesale_price) {
+                const calc = calculateCharterPricing({
+                   wholesalePrice: tier.wholesale_price,
+                   durationHours: tier.duration_hours,
+                   captainHourlyRate: captainRate
+                });
+                
+                const uiBoatPrice = parseFloat(tier.price) || parseFloat(tier.price_mon) || 0;
+                
+                if (uiBoatPrice !== calc.boatPrice) {
+                   showToast(`SAVE BLOCKED: Pricing tier ${tier.duration_hours}H failed validation (Boat+Capt != Retail). Expected Boat Price: $${calc.boatPrice}, Found: $${uiBoatPrice}.`, 'error');
+                   return; // Block save
+                }
+             }
+          }
+          
           console.log("TRACE 3 - FINAL SAVE PAYLOAD", JSON.stringify(tiersToSave, null, 2));
           await updateBoatPrices(savedBoat.id, tiersToSave);
         } catch(e) {
           console.error('Failed to save pricing tiers:', e);
           showToast('Warning: Rates could not be saved (' + e.message + ')', 'error');
+          return; // Stop execution if rates fail to save
         }
 
         // Save Date Overrides
         try {
-          await updateBoatDateOverrides(savedBoat.id, window.__dateOverrides || []);
+          const overridesToSave = window.__dateOverrides || [];
+          
+          // Overrides Validation
+          for (const o of overridesToSave) {
+             if (o.wholesale_price) {
+                const calc = calculateCharterPricing({
+                   wholesalePrice: o.wholesale_price,
+                   durationHours: o.duration_hours,
+                   captainHourlyRate: captainRate
+                });
+                
+                const uiBoatPrice = parseFloat(o.price) || 0;
+                
+                if (uiBoatPrice !== calc.boatPrice) {
+                   showToast(`SAVE BLOCKED: Date Override ${o.override_date} failed validation. Expected Boat Price: $${calc.boatPrice}, Found: $${uiBoatPrice}.`, 'error');
+                   return;
+                }
+             }
+          }
+          
+          await updateBoatDateOverrides(savedBoat.id, overridesToSave);
         } catch(e) {
           console.warn('Failed to save date overrides:', e);
         }
