@@ -2,11 +2,28 @@
 <html class="light" lang="en">
 <head>
   <meta charset="utf-8"/>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      document.body.innerHTML = '<div style="color:red; padding:20px; font-size:20px; font-family:sans-serif;">' +
+        '<b>Error:</b> ' + message + '<br>' +
+        '<b>Source:</b> ' + source + '<br>' +
+        '<b>Line:</b> ' + lineno + '<br>' +
+        '<b>Column:</b> ' + colno + '<br>' +
+        '<b>Stack:</b> <pre>' + (error && error.stack ? error.stack : 'N/A') + '</pre>' +
+        '</div>';
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      document.body.innerHTML = '<div style="color:red; padding:20px; font-size:20px; font-family:sans-serif;">' +
+        '<b>Unhandled Promise Rejection:</b> ' + event.reason + '<br>' +
+        '<b>Stack:</b> <pre>' + (event.reason && event.reason.stack ? event.reason.stack : 'N/A') + '</pre>' +
+        '</div>';
+    });
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Yacht Details | YRSF</title>
   <meta name="description" content="View details, pricing, and photos for this luxury yacht charter in Miami."/>
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="YRSF � Yacht Rentals of South Florida" />
+  <meta property="og:site_name" content="YRSF  Yacht Rentals of South Florida" />
   <meta property="og:title" content="Luxury Yacht Details | YRSF" />
   <meta property="og:description" content="View details, pricing, and photos for this luxury yacht charter in Miami." />
   <meta property="og:image" content="https://lh3.googleusercontent.com/aida-public/AB6AXuBqIjoMHtZEKlMGDicvmd77AkvUpTVFck9K9RKzshd08dW25kM-A-ave9FLIGovaRQc7ou8NqlwpBk1XIF1PXB0pgioKBQjyHvVFjj47Ut6115UWWvcSAQ4fkws1TfIj1E0PRzDQqdRJaQwiw9HPu6YAoi2xFI_la8bF2_2Hj7mG4Zd9w78R_Ydn9IoTuK1WmwFlYIOvEJrnFzXwg_WRglYz_Y9OsVKK-fO6UFjlBb8EPvax5zy3AOmnVnOpzEOr07EezkOirgItJs" />
