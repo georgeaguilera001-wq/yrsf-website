@@ -1485,17 +1485,40 @@ If a day of the week is not specified, assume the standard price. Use current ye
           });
         }
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: parts }]
-          })
-        });
+        const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+        let res = null;
+        let lastErrorText = '';
 
-        if (!res.ok) {
-          const errText = await res.text();
-          throw new Error("RAW API ERROR: " + errText);
+        for (const model of modelsToTry) {
+          try {
+            res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ role: 'user', parts: parts }]
+              })
+            });
+
+            if (res.ok) {
+              break;
+            } else {
+              lastErrorText = await res.text();
+              console.warn(`Gemini model ${model} error (${res.status}), trying fallback...`, lastErrorText);
+              await new Promise(r => setTimeout(r, 400));
+            }
+          } catch (e) {
+            lastErrorText = e.message;
+          }
+        }
+
+        if (!res || !res.ok) {
+          try {
+            const errObj = JSON.parse(lastErrorText);
+            if (errObj.error && errObj.error.message) {
+              throw new Error(errObj.error.message);
+            }
+          } catch(e) {}
+          throw new Error("Gemini AI is currently busy. Please try again in a few seconds.");
         }
         const json = JSON.parse(await res.text());
         const textRes = json.candidates[0].content.parts[0].text;
@@ -5975,14 +5998,22 @@ Blocked Hours: ${availability.totalBlockedHrs} hrs
 
 Write ONLY the summary sentence(s), no extra explanation.`;
 
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-      });
-      if (!res.ok) return null;
-      const json = await res.json();
-      return json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+      const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+      for (const model of modelsToTry) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          });
+          if (res.ok) {
+            const json = await res.json();
+            const txt = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (txt) return txt;
+          }
+        } catch(e) {}
+      }
+      return null;
     } catch (e) {
       return null;
     }
