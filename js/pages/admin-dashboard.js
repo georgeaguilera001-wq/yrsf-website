@@ -1,10 +1,10 @@
-﻿/**
+/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
 
 import { requireAuth, logout, getUser } from '../services/auth.js';
-import { getAllBoats, createBoat, updateBoat, deleteBoat, getBoatById, updateBoatImages, updateBoatAmenities, updateBoatSpecs } from '../services/boats.js';
+import { getAllBoats, createBoat, updateBoat, deleteBoat, getBoatById, updateBoatImages, updateBoatAmenities, updateBoatSpecs, updateBoatPricingTiers, updateBoatDateOverrides } from '../services/boats.js';
 import { getAddons, getAllAddons, createAddon, updateAddon, deleteAddon } from '../services/addons.js';
 import { getAllBlogs, createBlog, updateBlog, deleteBlog } from '../services/blogs.js';
 import { getAllSettings, updateSettings } from '../services/settings.js';
@@ -1036,17 +1036,10 @@ return; // Redirect in progress
             </div>
           </div>
 
-          <!-- Hourly Rates -->
+          <!-- Charter Pricing / Tiers / Overrides -->
           <div class="pt-md border-t border-outline-variant">
             <h4 class="font-headline text-[16px] text-on-surface font-bold mb-4">Charter Pricing</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label class="block font-label text-label-md text-on-surface-variant mb-2">Boat Hourly Rate ($)</label>
-                <div class="relative">
-                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
-                  <input type="number" id="edit-boat-hourly" value="${boat?.boat_hourly_rate || ''}" class="admin-field w-full pl-7 pr-4 py-3 border border-outline-variant rounded-lg" required/>
-                </div>
-              </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Captain Hourly Rate ($)</label>
                 <div class="relative">
@@ -1054,9 +1047,31 @@ return; // Redirect in progress
                   <input type="number" id="edit-boat-capt-hourly" value="${boat?.captain_hourly_rate || ''}" class="admin-field w-full pl-7 pr-4 py-3 border border-outline-variant rounded-lg" required/>
                 </div>
               </div>
-              <div>
-                <label class="block font-label text-label-md text-on-surface-variant mb-2">Min. Charter Duration (Hrs)</label>
-                <input type="number" id="edit-boat-min-dur" value="${boat?.minimum_charter_duration || '4'}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg" required/>
+            </div>
+
+            <!-- Tiers Editor -->
+            <div class="mb-8">
+              <div class="flex items-center justify-between mb-3">
+                <h5 class="font-label text-label-lg text-on-surface font-bold">Charter Pricing Tiers</h5>
+                <button type="button" id="add-tier-btn" class="text-xs font-bold text-secondary bg-secondary/10 px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-secondary/20 transition-colors">
+                  <span class="material-symbols-outlined text-[16px]">add</span> Add Duration
+                </button>
+              </div>
+              <div id="pricing-tiers-editor" class="w-full overflow-x-auto border border-outline-variant rounded-xl bg-surface-container-lowest">
+                <!-- Rendered via JS -->
+              </div>
+            </div>
+
+            <!-- Overrides Editor -->
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h5 class="font-label text-label-lg text-on-surface font-bold">Holiday / Special Date Pricing</h5>
+                <button type="button" id="add-override-btn" class="text-xs font-bold text-secondary bg-secondary/10 px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-secondary/20 transition-colors">
+                  <span class="material-symbols-outlined text-[16px]">add</span> Add Override
+                </button>
+              </div>
+              <div id="date-overrides-editor" class="flex flex-col gap-3">
+                <!-- Rendered via JS -->
               </div>
             </div>
           </div>
@@ -1072,6 +1087,285 @@ return; // Redirect in progress
     `;
 
     openModal(html, { maxWidth: '720px', closeOnOverlay: false });
+
+    // Initialize global arrays for this modal instance
+    window.__pricingTiers = boat?.boat_pricing_tiers ? JSON.parse(JSON.stringify(boat.boat_pricing_tiers)) : [];
+    window.__dateOverrides = boat?.boat_pricing_date_overrides ? JSON.parse(JSON.stringify(boat.boat_pricing_date_overrides)) : [];
+
+    // Tiers rendering logic
+    function renderPricingTiersGrid() {
+      const container = document.getElementById('pricing-tiers-editor');
+      if (!container) return;
+      
+      let html = `
+        <table class="w-full text-left min-w-[700px] border-collapse">
+          <thead>
+            <tr class="bg-surface-container text-xs text-on-surface-variant border-b border-outline-variant">
+              <th class="p-2 font-bold w-16">Hrs</th>
+              <th class="p-2 font-bold">Mon</th>
+              <th class="p-2 font-bold">Tue</th>
+              <th class="p-2 font-bold">Wed</th>
+              <th class="p-2 font-bold">Thu</th>
+              <th class="p-2 font-bold">Fri</th>
+              <th class="p-2 font-bold">Sat</th>
+              <th class="p-2 font-bold">Sun</th>
+              <th class="p-2 font-bold text-center">Popular</th>
+              <th class="p-2 w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      if (window.__pricingTiers.length === 0) {
+        html += `<tr><td colspan="10" class="p-4 text-center text-sm text-on-surface-variant">No durations configured. Add one above.</td></tr>`;
+      } else {
+        // Sort tiers by duration
+        window.__pricingTiers.sort((a, b) => a.duration_hours - b.duration_hours);
+        
+        window.__pricingTiers.forEach((tier, index) => {
+          html += `
+            <tr class="border-b border-outline-variant last:border-0 hover:bg-surface-container-lowest/50 transition-colors">
+              <td class="p-2">
+                <input type="number" data-index="${index}" data-field="duration_hours" value="${tier.duration_hours || ''}" class="tier-input admin-field w-full px-2 py-1 border border-outline-variant rounded-md text-sm text-center" min="1"/>
+              </td>
+              ${['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => `
+                <td class="p-2">
+                  <div class="relative">
+                    <span class="absolute left-1.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-xs">$</span>
+                    <input type="number" data-index="${index}" data-field="price_${day}" value="${tier[`price_${day}`] || ''}" class="tier-input admin-field w-full pl-4 pr-1 py-1 border border-outline-variant rounded-md text-sm text-right" min="0"/>
+                  </div>
+                </td>
+              `).join('')}
+              <td class="p-2 text-center">
+                <input type="checkbox" data-index="${index}" data-field="is_popular" ${tier.is_popular ? 'checked' : ''} class="tier-input admin-field w-4 h-4 rounded text-secondary focus:ring-secondary"/>
+              </td>
+              <td class="p-2 text-center">
+                <button type="button" class="del-tier-btn text-error hover:bg-error/10 p-1 rounded transition-colors" data-index="${index}" title="Remove Duration">
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+      
+      html += `
+          </tbody>
+        </table>
+        ${window.__pricingTiers.length > 0 ? `
+          <div class="p-2 bg-surface-container/50 border-t border-outline-variant flex items-center gap-3 text-xs">
+            <span class="font-bold text-on-surface-variant">Quick Fill Row:</span>
+            <input type="number" id="qf-weekday" placeholder="Wkdy $" class="admin-field px-2 py-1 w-20 border border-outline-variant rounded-md text-sm"/>
+            <input type="number" id="qf-weekend" placeholder="Wknd $" class="admin-field px-2 py-1 w-20 border border-outline-variant rounded-md text-sm"/>
+            <button type="button" id="qf-apply-btn" class="bg-surface-variant text-on-surface hover:bg-on-surface-variant hover:text-white px-3 py-1 rounded-md transition-colors font-medium">Fill Selected Row</button>
+            <select id="qf-row-select" class="admin-field px-2 py-1 border border-outline-variant rounded-md text-sm ml-auto">
+              ${window.__pricingTiers.map((t, i) => `<option value="${i}">${t.duration_hours || '?'} Hrs</option>`).join('')}
+            </select>
+          </div>
+        ` : ''}
+      `;
+      
+      container.innerHTML = html;
+
+      // Attach event listeners for tier inputs
+      container.querySelectorAll('.tier-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const index = parseInt(e.target.getAttribute('data-index'));
+          const field = e.target.getAttribute('data-field');
+          
+          if (field === 'is_popular') {
+            window.__pricingTiers[index][field] = e.target.checked;
+          } else {
+            window.__pricingTiers[index][field] = parseFloat(e.target.value) || 0;
+          }
+        });
+      });
+
+      // Attach delete buttons
+      container.querySelectorAll('.del-tier-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const index = parseInt(e.currentTarget.getAttribute('data-index'));
+          window.__pricingTiers.splice(index, 1);
+          renderPricingTiersGrid();
+        });
+      });
+
+      // Quick fill
+      const qfBtn = container.querySelector('#qf-apply-btn');
+      if (qfBtn) {
+        qfBtn.addEventListener('click', () => {
+          const weekday = parseFloat(container.querySelector('#qf-weekday').value) || 0;
+          const weekend = parseFloat(container.querySelector('#qf-weekend').value) || 0;
+          const rowIndex = parseInt(container.querySelector('#qf-row-select').value);
+          
+          if (isNaN(rowIndex)) return;
+          
+          const tier = window.__pricingTiers[rowIndex];
+          if (weekday > 0) {
+            tier.price_mon = tier.price_tue = tier.price_wed = tier.price_thu = weekday;
+          }
+          if (weekend > 0) {
+            tier.price_fri = tier.price_sat = tier.price_sun = weekend;
+          }
+          renderPricingTiersGrid();
+        });
+      }
+    }
+
+    // Overrides rendering logic
+    function renderDateOverridesEditor() {
+      const container = document.getElementById('date-overrides-editor');
+      if (!container) return;
+
+      if (window.__dateOverrides.length === 0) {
+        container.innerHTML = '<div class="p-4 text-center text-sm text-on-surface-variant bg-surface-container-lowest border border-outline-variant rounded-xl">No date overrides configured.</div>';
+        return;
+      }
+
+      // Group overrides by date
+      const grouped = {};
+      window.__dateOverrides.forEach((override, index) => {
+        if (!override.override_date) return;
+        if (!grouped[override.override_date]) {
+          grouped[override.override_date] = { label: override.label, items: [] };
+        }
+        grouped[override.override_date].items.push({ ...override, originalIndex: index });
+      });
+
+      let html = '';
+      
+      Object.keys(grouped).sort().forEach(date => {
+        const group = grouped[date];
+        html += `
+          <div class="border border-outline-variant rounded-xl overflow-hidden">
+            <div class="bg-surface-container px-4 py-2 flex items-center justify-between border-b border-outline-variant">
+              <div class="flex items-center gap-3">
+                <input type="date" value="${date}" class="override-date-group admin-field px-2 py-1 border border-outline-variant rounded-md text-sm font-bold" data-old-date="${date}"/>
+                <input type="text" value="${escapeHtml(group.label || '')}" placeholder="Label (e.g. July 4th)" class="override-label-group admin-field px-2 py-1 border border-outline-variant rounded-md text-sm w-40" data-date="${date}"/>
+              </div>
+              <button type="button" class="del-override-group-btn text-error hover:bg-error/10 p-1 rounded transition-colors" data-date="${date}" title="Remove Entire Date">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
+            <div class="p-3 bg-surface-container-lowest grid gap-2">
+              <div class="flex flex-wrap items-center gap-3">
+                ${group.items.sort((a,b) => a.duration_hours - b.duration_hours).map(item => `
+                  <div class="flex items-center gap-2 bg-surface-container p-2 rounded-lg border border-outline-variant">
+                    <div class="flex flex-col w-16">
+                      <span class="text-[10px] text-on-surface-variant font-bold leading-tight">Hrs</span>
+                      <input type="number" value="${item.duration_hours || ''}" class="override-item-input admin-field px-1 py-0.5 border border-outline-variant rounded bg-white text-sm text-center" data-index="${item.originalIndex}" data-field="duration_hours" min="1"/>
+                    </div>
+                    <div class="flex flex-col w-20">
+                      <span class="text-[10px] text-on-surface-variant font-bold leading-tight">Price ($)</span>
+                      <input type="number" value="${item.price || ''}" class="override-item-input admin-field px-1 py-0.5 border border-outline-variant rounded bg-white text-sm text-right" data-index="${item.originalIndex}" data-field="price" min="0"/>
+                    </div>
+                    <button type="button" class="del-override-item-btn text-error/70 hover:text-error mt-3" data-index="${item.originalIndex}">
+                      <span class="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                  </div>
+                `).join('')}
+                <button type="button" class="add-override-duration-btn text-xs font-bold text-secondary bg-secondary/10 px-2 py-1.5 rounded-lg flex items-center gap-1 hover:bg-secondary/20 transition-colors h-fit mt-3" data-date="${date}" data-label="${escapeHtml(group.label || '')}">
+                  <span class="material-symbols-outlined text-[16px]">add</span> Duration
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+
+      // Group Date Change
+      container.querySelectorAll('.override-date-group').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const oldDate = e.target.getAttribute('data-old-date');
+          const newDate = e.target.value;
+          if (!newDate) return;
+          window.__dateOverrides.forEach(o => {
+            if (o.override_date === oldDate) o.override_date = newDate;
+          });
+          renderDateOverridesEditor();
+        });
+      });
+
+      // Group Label Change
+      container.querySelectorAll('.override-label-group').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const date = e.target.getAttribute('data-date');
+          const newLabel = e.target.value;
+          window.__dateOverrides.forEach(o => {
+            if (o.override_date === date) o.label = newLabel;
+          });
+        });
+      });
+
+      // Group Delete
+      container.querySelectorAll('.del-override-group-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const date = e.currentTarget.getAttribute('data-date');
+          window.__dateOverrides = window.__dateOverrides.filter(o => o.override_date !== date);
+          renderDateOverridesEditor();
+        });
+      });
+
+      // Item Update
+      container.querySelectorAll('.override-item-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const index = parseInt(e.target.getAttribute('data-index'));
+          const field = e.target.getAttribute('data-field');
+          window.__dateOverrides[index][field] = parseFloat(e.target.value) || 0;
+        });
+      });
+
+      // Item Delete
+      container.querySelectorAll('.del-override-item-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const index = parseInt(e.currentTarget.getAttribute('data-index'));
+          window.__dateOverrides.splice(index, 1);
+          renderDateOverridesEditor();
+        });
+      });
+
+      // Add Duration to existing date
+      container.querySelectorAll('.add-override-duration-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const date = e.currentTarget.getAttribute('data-date');
+          const label = e.currentTarget.getAttribute('data-label');
+          window.__dateOverrides.push({
+            override_date: date,
+            label: label,
+            duration_hours: 4,
+            price: 0
+          });
+          renderDateOverridesEditor();
+        });
+      });
+    }
+
+    // Attach Add Tier / Add Override listeners
+    document.getElementById('add-tier-btn')?.addEventListener('click', () => {
+      window.__pricingTiers.push({
+        duration_hours: 4,
+        price_mon: 0, price_tue: 0, price_wed: 0, price_thu: 0, price_fri: 0, price_sat: 0, price_sun: 0,
+        is_popular: false
+      });
+      renderPricingTiersGrid();
+    });
+
+    document.getElementById('add-override-btn')?.addEventListener('click', () => {
+      const today = new Date().toISOString().split('T')[0];
+      window.__dateOverrides.push({
+        override_date: today,
+        label: 'Special Date',
+        duration_hours: 4,
+        price: 0
+      });
+      renderDateOverridesEditor();
+    });
+
+    // Initial renders
+    renderPricingTiersGrid();
+    renderDateOverridesEditor();
 
     // Auto-generate slug from name
     const nameInput = document.getElementById('edit-boat-name');
@@ -1653,9 +1947,9 @@ return; // Redirect in progress
         slug: document.getElementById('edit-boat-slug').value.trim() || slugify(document.getElementById('edit-boat-name').value),
         length_ft: parseInt(document.getElementById('edit-boat-length').value) || null,
         capacity: parseInt(document.getElementById('edit-boat-capacity').value) || null,
-        boat_hourly_rate: parseFloat(document.getElementById('edit-boat-hourly').value) || 0,
+        boat_hourly_rate: 0,
         captain_hourly_rate: parseFloat(document.getElementById('edit-boat-capt-hourly').value) || 0,
-        minimum_charter_duration: parseInt(document.getElementById('edit-boat-min-dur').value) || 4,
+        minimum_charter_duration: (window.__pricingTiers && window.__pricingTiers.length > 0) ? Math.min(...window.__pricingTiers.map(t => t.duration_hours || 4)) : 4,
         year: document.getElementById('edit-boat-year') ? (parseInt(document.getElementById('edit-boat-year').value) || null) : (boat?.year || null),
         cabins: document.getElementById('edit-boat-cabins') ? (parseInt(document.getElementById('edit-boat-cabins').value) || null) : (boat?.cabins || null),
         manufacturer: document.getElementById('edit-boat-manufacturer') ? (document.getElementById('edit-boat-manufacturer').value.trim() || null) : (boat?.manufacturer || null),
@@ -1702,6 +1996,24 @@ return; // Redirect in progress
           }));
         if (cleanImages.length > 0 || !isNew) {
           await updateBoatImages(savedBoat.id, cleanImages);
+        }
+
+        // Save Pricing Tiers
+        try {
+          const tiersToSave = (window.__pricingTiers || []).map((t, idx) => ({
+             ...t,
+             sort_order: idx
+          }));
+          await updateBoatPricingTiers(savedBoat.id, tiersToSave);
+        } catch(e) {
+          console.warn('Failed to save pricing tiers:', e);
+        }
+
+        // Save Date Overrides
+        try {
+          await updateBoatDateOverrides(savedBoat.id, window.__dateOverrides || []);
+        } catch(e) {
+          console.warn('Failed to save date overrides:', e);
         }
 
         closeModal();

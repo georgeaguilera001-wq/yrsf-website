@@ -32,7 +32,8 @@ export async function getBoats({
         length_ft, capacity, cabins, year, location, status,
         is_featured, is_best_seller, sort_order,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
-        boat_images(url, alt_text, is_primary)
+        boat_images(url, alt_text, is_primary),
+        boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order)
       `, { count: 'exact' })
       .eq('status', 'active');
 
@@ -86,13 +87,28 @@ export async function getBoats({
     if (!data) return { data: [], count: 0 };
 
     // Flatten the data
-    const boats = (data || []).map(boat => ({
-      ...boat,
-      primary_image_url: boat.boat_images?.[0]?.url || '',
-      primary_image_alt: boat.boat_images?.[0]?.alt_text || boat.name,
-      min_price: ((boat.boat_hourly_rate || 0) + (boat.captain_hourly_rate || 0)) * (boat.minimum_charter_duration || 4),
-      min_price_label: `${boat.minimum_charter_duration || 4} Hours`
-    }));
+    const boats = (data || []).map(boat => {
+      // Calculate min_price from pricing tiers if available, else fallback to hourly rates
+      const tiers = boat.boat_pricing_tiers || [];
+      let min_price, min_price_label;
+      if (tiers.length > 0) {
+        const sorted = [...tiers].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        const lowestTier = sorted[0];
+        const dayPrices = [lowestTier.price_mon, lowestTier.price_tue, lowestTier.price_wed, lowestTier.price_thu, lowestTier.price_fri, lowestTier.price_sat, lowestTier.price_sun].map(Number);
+        min_price = Math.min(...dayPrices.filter(p => p > 0)) || dayPrices[0];
+        min_price_label = `${lowestTier.duration_hours} Hours`;
+      } else {
+        min_price = ((boat.boat_hourly_rate || 0) + (boat.captain_hourly_rate || 0)) * (boat.minimum_charter_duration || 4);
+        min_price_label = `${boat.minimum_charter_duration || 4} Hours`;
+      }
+      return {
+        ...boat,
+        primary_image_url: boat.boat_images?.[0]?.url || '',
+        primary_image_alt: boat.boat_images?.[0]?.alt_text || boat.name,
+        min_price,
+        min_price_label
+      };
+    });
 
     // Client-side price sorting
     if (sortBy === 'price_asc') {
@@ -117,7 +133,9 @@ export async function getBoatBySlug(slug) {
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(id, url, alt_text, is_primary, sort_order),
         boat_amenities(id, name, icon),
-        boat_specs(id, label, value, icon, sort_order)
+        boat_specs(id, label, value, icon, sort_order),
+        boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order),
+        boat_pricing_date_overrides(id, override_date, label, duration_hours, price)
       `)
       .eq('slug', slug)
       .eq('status', 'active')
@@ -132,6 +150,7 @@ export async function getBoatBySlug(slug) {
     if (data) {
       data.boat_images?.sort((a, b) => a.sort_order - b.sort_order);
       data.boat_specs?.sort((a, b) => a.sort_order - b.sort_order);
+      data.boat_pricing_tiers?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
     }
 
     return data;
@@ -147,7 +166,8 @@ export async function getFeaturedBoats(limit = 6) {
         id, name, slug, short_description, manufacturer,
         length_ft, capacity, location, is_featured, is_best_seller, sort_order,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
-        boat_images(url, alt_text, is_primary)
+        boat_images(url, alt_text, is_primary),
+        boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order)
       `)
       .eq('status', 'active')
       .or('is_featured.eq.true,is_best_seller.eq.true')
@@ -159,13 +179,27 @@ export async function getFeaturedBoats(limit = 6) {
       return [];
     }
 
-    const result = (data || []).map(boat => ({
-      ...boat,
-      primary_image_url: boat.boat_images?.[0]?.url || '',
-      primary_image_alt: boat.boat_images?.[0]?.alt_text || boat.name,
-      min_price: ((boat.boat_hourly_rate || 0) + (boat.captain_hourly_rate || 0)) * (boat.minimum_charter_duration || 4),
-      min_price_label: `${boat.minimum_charter_duration || 4} Hours`
-    })).sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
+    const result = (data || []).map(boat => {
+      const tiers = boat.boat_pricing_tiers || [];
+      let min_price, min_price_label;
+      if (tiers.length > 0) {
+        const sorted = [...tiers].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        const lowestTier = sorted[0];
+        const dayPrices = [lowestTier.price_mon, lowestTier.price_tue, lowestTier.price_wed, lowestTier.price_thu, lowestTier.price_fri, lowestTier.price_sat, lowestTier.price_sun].map(Number);
+        min_price = Math.min(...dayPrices.filter(p => p > 0)) || dayPrices[0];
+        min_price_label = `${lowestTier.duration_hours} Hours`;
+      } else {
+        min_price = ((boat.boat_hourly_rate || 0) + (boat.captain_hourly_rate || 0)) * (boat.minimum_charter_duration || 4);
+        min_price_label = `${boat.minimum_charter_duration || 4} Hours`;
+      }
+      return {
+        ...boat,
+        primary_image_url: boat.boat_images?.[0]?.url || '',
+        primary_image_alt: boat.boat_images?.[0]?.alt_text || boat.name,
+        min_price,
+        min_price_label
+      };
+    }).sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
 
     try {
       localStorage.setItem('yrsf_featured_boats', JSON.stringify(result));
@@ -207,7 +241,8 @@ export async function getAllBoats() {
       id, name, slug, vessel_id, manufacturer, length_ft, capacity,
       status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
       boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
-      boat_images(url, alt_text, is_primary)
+      boat_images(url, alt_text, is_primary),
+      boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order)
     `)
     .order('sort_order', { ascending: true });
 
@@ -232,7 +267,9 @@ export async function getBoatById(id) {
       boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
       boat_images(id, url, alt_text, is_primary, sort_order),
       boat_amenities(id, name, icon),
-      boat_specs(id, label, value, icon, sort_order)
+      boat_specs(id, label, value, icon, sort_order),
+      boat_pricing_tiers(id, duration_hours, price_mon, price_tue, price_wed, price_thu, price_fri, price_sat, price_sun, is_popular, sort_order),
+      boat_pricing_date_overrides(id, override_date, label, duration_hours, price)
     `)
     .eq('id', id)
     .single();
@@ -245,6 +282,7 @@ export async function getBoatById(id) {
   if (data) {
     data.boat_images?.sort((a, b) => a.sort_order - b.sort_order);
     data.boat_specs?.sort((a, b) => a.sort_order - b.sort_order);
+    data.boat_pricing_tiers?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   }
 
   return data;
@@ -363,6 +401,85 @@ export async function updateBoatSpecs(boatId, specs) {
   clearCache('boat_');
 }
 
+// ─── Dynamic Pricing CRUD ─────────────────────────────────
+
+/** Replace all pricing tiers for a boat */
+export async function updateBoatPricingTiers(boatId, tiers) {
+  // Delete existing tiers
+  await supabase.from('boat_pricing_tiers').delete().eq('boat_id', boatId);
+
+  if (!tiers || tiers.length === 0) {
+    clearCache('boats_');
+    clearCache('boat_');
+    return;
+  }
+
+  const rows = tiers.map((t, i) => ({
+    boat_id: boatId,
+    duration_hours: t.duration_hours,
+    price_mon: t.price_mon || 0,
+    price_tue: t.price_tue || 0,
+    price_wed: t.price_wed || 0,
+    price_thu: t.price_thu || 0,
+    price_fri: t.price_fri || 0,
+    price_sat: t.price_sat || 0,
+    price_sun: t.price_sun || 0,
+    is_popular: t.is_popular || false,
+    sort_order: i
+  }));
+
+  const { error } = await supabase.from('boat_pricing_tiers').insert(rows);
+  if (error) throw error;
+  clearCache('boats_');
+  clearCache('boat_');
+}
+
+/** Replace all date overrides for a boat */
+export async function updateBoatDateOverrides(boatId, overrides) {
+  // Delete existing overrides
+  await supabase.from('boat_pricing_date_overrides').delete().eq('boat_id', boatId);
+
+  if (!overrides || overrides.length === 0) {
+    clearCache('boats_');
+    clearCache('boat_');
+    return;
+  }
+
+  const rows = overrides.map(o => ({
+    boat_id: boatId,
+    override_date: o.override_date,
+    label: o.label,
+    duration_hours: o.duration_hours,
+    price: o.price || 0
+  }));
+
+  const { error } = await supabase.from('boat_pricing_date_overrides').insert(rows);
+  if (error) throw error;
+  clearCache('boats_');
+  clearCache('boat_');
+}
+
+/** Get pricing tiers for a boat */
+export async function getBoatPricingTiers(boatId) {
+  const { data, error } = await supabase
+    .from('boat_pricing_tiers')
+    .select('*')
+    .eq('boat_id', boatId)
+    .order('sort_order', { ascending: true });
+
+  return error ? [] : (data || []);
+}
+
+/** Get date overrides for a boat */
+export async function getBoatDateOverrides(boatId) {
+  const { data, error } = await supabase
+    .from('boat_pricing_date_overrides')
+    .select('*')
+    .eq('boat_id', boatId)
+    .order('override_date', { ascending: true });
+
+  return error ? [] : (data || []);
+}
 
 
 // CACHE BUSTER: 20260810124601

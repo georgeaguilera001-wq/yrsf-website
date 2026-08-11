@@ -77,7 +77,7 @@ CREATE TRIGGER trg_boats_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ────────────────────────────────────────────────────────────────────────────
--- 3. BOAT_PRICES — Duration-based pricing tiers per boat
+-- 3. BOAT_PRICES — Duration-based pricing tiers per boat (LEGACY)
 -- ────────────────────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS boat_prices (
