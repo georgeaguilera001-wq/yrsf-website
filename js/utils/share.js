@@ -27,7 +27,7 @@ export function shareFavoritesOnWhatsApp(boats, baseUrl = window.location.origin
     if (boat.min_price) message += ` - $${Number(boat.min_price).toLocaleString()}`;
     message += `\n${baseUrl}/boats/${boat.slug}\n\n`;
   });
-  message += `Browse the full fleet: ${baseUrl}/ourfleet.html`;
+  message += `Browse the full fleet: ${baseUrl}/ourfleet`;
 
   shareOnWhatsApp(message);
 }
