@@ -1,6 +1,45 @@
 {
-  "cleanUrls": true,
   "rewrites": [
+    {
+      "source": "/boats",
+      "destination": "/boats.html"
+    },
+    {
+      "source": "/experiences",
+      "destination": "/experiences.html"
+    },
+    {
+      "source": "/bachelor-bachelorette",
+      "destination": "/bachelor-bachelorette.html"
+    },
+    {
+      "source": "/birthday",
+      "destination": "/birthday.html"
+    },
+    {
+      "source": "/corporate",
+      "destination": "/corporate.html"
+    },
+    {
+      "source": "/family-day",
+      "destination": "/family-day.html"
+    },
+    {
+      "source": "/sunset-cruise",
+      "destination": "/sunset-cruise.html"
+    },
+    {
+      "source": "/luxury-yachts",
+      "destination": "/luxury-yachts.html"
+    },
+    {
+      "source": "/addons",
+      "destination": "/addons.html"
+    },
+    {
+      "source": "/map",
+      "destination": "/map.html"
+    },
     {
       "source": "/boats/:slug",
       "destination": "/boat.html?slug=:slug"
