@@ -5,6 +5,7 @@
 // 1. Define the global tracking function requested
 window.trackWhatsAppClick = function(label = "WhatsApp Inquiry") {
   if (typeof gtag === "function") {
+    console.log("WhatsApp click detected", window.location.href, label);
     gtag("event", "whatsapp_click", {
       event_category: "lead",
       event_label: label,
@@ -19,7 +20,7 @@ window.trackWhatsAppClick = function(label = "WhatsApp Inquiry") {
 if (typeof document !== "undefined") {
   document.addEventListener("click", function(e) {
     // Check if the clicked element or any of its parents is a WhatsApp link/button
-    const target = e.target.closest('a[href*="wa.me"], button[onclick*="wa.me"]');
+    const target = e.target.closest('a[href*="wa.me"], a[href*="api.whatsapp.com"], [onclick*="wa.me"], [onclick*="api.whatsapp.com"]');
     
     if (target) {
       // Determine a smart label based on context
