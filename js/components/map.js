@@ -1,8 +1,30 @@
 import { getBoats } from '../services/boats.js';
 
 const PREDEFINED_LOCATIONS = {
+  // Exact marina addresses from the fleet database
+  '555, northwest south river drive, miami': [25.7830, -80.2050],
+  '555 nw south river dr, miami, fl 33136, united states': [25.7830, -80.2050],
+  '555 nw south river dr': [25.7830, -80.2050],
+  '201 nw south river dr, miami, fl 33128': [25.7745, -80.2015],
   '201 nw south river dr': [25.7745, -80.2015],
-  '201 nw south river drive': [25.7745, -80.2015],
+  '1631 nw south river dr, miami, fl': [25.7790, -80.2150],
+  '3399, northwest south river drive, fronton trailer park': [25.7930, -80.2520],
+  '3218 nw north river dr   miami, fl 33142   united states': [25.7905, -80.2380],
+  '3350, northwest 21st street, miami': [25.7880, -80.2530],
+  '2215 nw 14th st, miami, fl 33125': [25.7870, -80.2270],
+  '2147, northwest 32nd avenue, miami': [25.7920, -80.2430],
+  '1800, northwest 24th avenue, miami': [25.7845, -80.2355],
+  '961, northwest 7th street, miami': [25.7755, -80.2110],
+  '55 sw miami avenue rd, miami, fl 33130': [25.7680, -80.1930],
+  'chamonix marina': [25.7810, -80.2100],
+  'venetian marina': [25.7910, -80.1530],
+  'fontainebleau': [25.8090, -80.1210],
+  'miami beach marina, 300, alton road': [25.7705, -80.1395],
+  'miami beach marina': [25.7705, -80.1395],
+  "monty's, 2550, south bayshore drive": [25.7275, -80.2370],
+  'rickenbacker marina': [25.7320, -80.1665],
+  'we deliver to the boat!': [25.7780, -80.2030],
+  // General zone fallbacks
   'south river dr': [25.7745, -80.2015],
   'south river drive': [25.7745, -80.2015],
   'miami river': [25.7686, -80.1989],
@@ -11,7 +33,7 @@ const PREDEFINED_LOCATIONS = {
   'haulover / north miami': [25.9015, -80.1232],
   'haulover': [25.9015, -80.1232],
   'north miami': [25.9015, -80.1232],
-  'miami': [25.7617, -80.1918] // Fallback
+  'miami': [25.7617, -80.1918]
 };
 
 function getMarinaZone(locationName) {
@@ -150,21 +172,20 @@ export async function initMarinaMap() {
     }
     if (boats.length === 0) return;
 
-    // Group boats by marina zone so all boats appear on the map
+    // Group boats by exact address (only boats at the same address share a pin)
     const locations = {};
     boats.forEach(boat => {
       const rawLoc = boat.location || 'Miami River';
-      const zone = getMarinaZone(rawLoc);
-      if (!locations[zone]) {
-        locations[zone] = {
+      if (!locations[rawLoc]) {
+        locations[rawLoc] = {
           boats: [],
           rawNames: []
         };
       }
-      if (!locations[zone].rawNames.includes(rawLoc)) {
-        locations[zone].rawNames.push(rawLoc);
+      if (!locations[rawLoc].rawNames.includes(rawLoc)) {
+        locations[rawLoc].rawNames.push(rawLoc);
       }
-      locations[zone].boats.push(boat);
+      locations[rawLoc].boats.push(boat);
     });
 
     // Create markers
