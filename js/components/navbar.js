@@ -5,6 +5,7 @@
 
 import { getFavoriteCount } from '../utils/favorites.js';
 import { $ } from '../utils/dom.js';
+import '../utils/analytics.js';
 
 /**
  * Render the navbar HTML.
