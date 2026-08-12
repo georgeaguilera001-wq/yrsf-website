@@ -49,7 +49,7 @@ async function initLandingPage() {
           <div class="col-span-full py-12 text-center text-on-surface-variant bg-surface-container rounded-2xl">
             <span class="material-symbols-outlined text-4xl mb-3 block opacity-50">sailing</span>
             <p class="font-bold">No specific vessels found for this category at the moment.</p>
-            <a href="/boats.html" class="text-primary hover:underline mt-2 inline-block">View all boats</a>
+            <a href="/ourfleet.html" class="text-primary hover:underline mt-2 inline-block">View all boats</a>
           </div>
         `;
         return;

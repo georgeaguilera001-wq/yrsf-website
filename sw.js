@@ -8,7 +8,7 @@ const CACHE_NAME = 'yrsf-main-v22';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/boats.html',
+  '/ourfleet.html',
   '/css/shared.css',
   '/js/pages/home.js'
 ];

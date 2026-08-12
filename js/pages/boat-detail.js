@@ -32,7 +32,7 @@ async function initBoatDetailPage() {
   }
 
   if (!slug) {
-    window.location.href = '/boats.html';
+    window.location.href = '/ourfleet.html';
     return;
   }
 
@@ -61,7 +61,7 @@ function show404() {
         <span class="material-symbols-outlined text-[64px] text-outline-variant mb-4 block">sailing</span>
         <h1 class="font-headline-lg text-headline-lg text-on-surface mb-4">Yacht Not Found</h1>
         <p class="font-body-lg text-body-lg text-on-surface-variant mb-8">This yacht may no longer be available.</p>
-        <a href="/boats.html" class="bg-secondary text-on-secondary px-8 py-3 rounded-lg font-label-md hover:opacity-90 transition-all inline-flex items-center gap-2">
+        <a href="/ourfleet.html" class="bg-secondary text-on-secondary px-8 py-3 rounded-lg font-label-md hover:opacity-90 transition-all inline-flex items-center gap-2">
           <span class="material-symbols-outlined">arrow_back</span> Browse All Yachts
         </a>
       </div>

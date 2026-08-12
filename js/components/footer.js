@@ -21,10 +21,10 @@ export function renderFooter() {
         <div class="space-y-md">
           <h4 class="font-label-md text-secondary-fixed font-bold uppercase tracking-widest">Our Fleet</h4>
           <ul class="space-y-2 font-body-md">
-            <li><a class="text-on-secondary opacity-80 hover:opacity-100 transition-opacity" href="/boats.html">Affordable Boats</a></li>
-            <li><a class="text-on-secondary opacity-80 hover:opacity-100 transition-opacity" href="/boats.html">Luxury Yachts</a></li>
-            <li><a class="text-on-secondary opacity-80 hover:opacity-100 transition-opacity" href="/boats.html">Party Vessels</a></li>
-            <li><a class="text-on-secondary opacity-80 hover:opacity-100 transition-opacity" href="/boats.html">All Vessels</a></li>
+            <li><a class="text-on-secondary opacity-80 hover:opacity-100 transition-opacity" href="/ourfleet.html">Affordable Boats</a></li>
+            <li><a class="text-on-secondary opacity-80 hover:opacity-100 transition-opacity" href="/ourfleet.html">Luxury Yachts</a></li>
+            <li><a class="text-on-secondary opacity-80 hover:opacity-100 transition-opacity" href="/ourfleet.html">Party Vessels</a></li>
+            <li><a class="text-on-secondary opacity-80 hover:opacity-100 transition-opacity" href="/ourfleet.html">All Vessels</a></li>
           </ul>
         </div>
         <div class="space-y-md">
