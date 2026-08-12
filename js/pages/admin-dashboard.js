@@ -1886,8 +1886,48 @@ EXTRACTION RULES:
 
         debounceTimer = setTimeout(async () => {
           try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + (query.toLowerCase().includes('miami') || query.toLowerCase().includes('fl') ? '' : ', Miami, FL'))}&format=json&addressdetails=1&limit=5`);
-            const data = await res.json();
+            // Normalize abbreviations that Nominatim doesn't handle well
+            function expandAddress(q) {
+              let expanded = q;
+              // Expand ordinals: "7 St" -> "7th Street", "21 St" -> "21st Street"
+              expanded = expanded.replace(/\b(\d+)\s+(St|Street|Ave|Avenue|Dr|Drive|Blvd|Boulevard|Ct|Court|Pl|Place|Rd|Road|Ter|Terrace|Way|Ln|Lane)\b/gi, (match, num, street) => {
+                const n = parseInt(num);
+                let suffix = 'th';
+                if (n % 100 !== 11 && n % 10 === 1) suffix = 'st';
+                else if (n % 100 !== 12 && n % 10 === 2) suffix = 'nd';
+                else if (n % 100 !== 13 && n % 10 === 3) suffix = 'rd';
+                return num + suffix + ' ' + street;
+              });
+              // Expand street type abbreviations
+              expanded = expanded.replace(/\bSt\b(?!\w)/g, 'Street');
+              expanded = expanded.replace(/\bDr\b(?!\w)/g, 'Drive');
+              expanded = expanded.replace(/\bAve\b(?!\w)/g, 'Avenue');
+              expanded = expanded.replace(/\bBlvd\b(?!\w)/g, 'Boulevard');
+              expanded = expanded.replace(/\bCt\b(?!\w)/g, 'Court');
+              expanded = expanded.replace(/\bPl\b(?!\w)/g, 'Place');
+              expanded = expanded.replace(/\bRd\b(?!\w)/g, 'Road');
+              expanded = expanded.replace(/\bLn\b(?!\w)/g, 'Lane');
+              expanded = expanded.replace(/\bTer\b(?!\w)/g, 'Terrace');
+              // Expand directional abbreviations
+              expanded = expanded.replace(/\bNW\b/g, 'Northwest');
+              expanded = expanded.replace(/\bNE\b/g, 'Northeast');
+              expanded = expanded.replace(/\bSW\b/g, 'Southwest');
+              expanded = expanded.replace(/\bSE\b/g, 'Southeast');
+              return expanded;
+            }
+
+            const suffix = (query.toLowerCase().includes('miami') || query.toLowerCase().includes('fl')) ? '' : ', Miami, FL';
+            let searchQuery = query + suffix;
+            let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&addressdetails=1&limit=5`);
+            let data = await res.json();
+
+            // If no results, retry with expanded abbreviations
+            if ((!data || data.length === 0) && expandAddress(query) !== query) {
+              searchQuery = expandAddress(query) + suffix;
+              res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&addressdetails=1&limit=5`);
+              data = await res.json();
+            }
+
             locDropdown.innerHTML = '';
             if (!data || data.length === 0) {
               locDropdown.innerHTML = `<div class="p-3 text-xs">
