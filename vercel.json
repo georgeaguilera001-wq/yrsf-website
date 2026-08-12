@@ -4,6 +4,10 @@
     {
       "source": "/boats/:slug",
       "destination": "/boat.html?slug=:slug"
+    },
+    {
+      "source": "/pay/:token",
+      "destination": "/api/pay?t=:token"
     }
   ],
   "headers": [

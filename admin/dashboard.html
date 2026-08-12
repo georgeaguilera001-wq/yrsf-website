@@ -2487,8 +2487,22 @@
               </select>
             </div>
           </div>
-          
-          <!-- Stripe Payment Portal UI (Hidden by default) -->
+          <!-- Itemized Breakdown -->
+          <div id="itemized-breakdown" class="hidden flex flex-col gap-1 mt-3 mb-3 p-3 bg-white rounded-lg border border-outline-variant text-xs font-mono">
+             <div class="flex justify-between text-on-surface"><span>Boat charter (<span id="ib-duration">4</span> hours)</span><span id="ib-boat-price">$0.00</span></div>
+             <div class="flex justify-between text-on-surface" id="ib-captain-row"><span>Captain fee</span><span id="ib-captain-price">$0.00</span></div>
+             <div id="ib-addons-container"></div>
+             <div class="border-t border-outline-variant my-1"></div>
+             <div class="flex justify-between text-on-surface font-bold"><span>Subtotal</span><span id="ib-subtotal">$0.00</span></div>
+             <div class="flex justify-between text-on-surface"><span>Taxes (7.00%)</span><span id="ib-taxes">$0.00</span></div>
+             <div class="border-t border-outline-variant my-1"></div>
+             <div class="flex justify-between text-on-surface font-bold text-sm"><span>Total cost</span><span id="ib-total">$0.00</span></div>
+             <div class="flex justify-between text-blue-700 font-bold mt-1"><span>Required deposit</span><span id="ib-deposit">$0.00</span></div>
+             <div class="flex justify-between text-green-700 font-bold"><span>Amount paid</span><span id="ib-paid">$0.00</span></div>
+             <div class="flex justify-between text-red-600 font-bold"><span>Remaining balance</span><span id="ib-balance">$0.00</span></div>
+          </div>
+
+          <!-- Stripe Payment Portal UI -->
           <div id="stripe-portal-container" class="hidden mt-3 p-4 rounded-xl bg-white border border-indigo-200 shadow-sm relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
             <div class="flex items-center justify-between mb-3">
@@ -2500,21 +2514,29 @@
             
             <div class="flex flex-col gap-3">
               <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <select id="stripe-payment-type" class="px-2 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-bold focus:ring-2 focus:ring-indigo-500 flex-1">
-                  <option value="deposit">Charge Deposit Amount</option>
-                  <option value="balance">Charge Remaining Balance</option>
-                  <option value="full">Charge Full Amount</option>
-                </select>
-                <button type="button" id="generate-stripe-link-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-3 rounded-lg shadow transition-colors flex items-center justify-center gap-1 shrink-0">
-                  <span class="material-symbols-outlined text-sm">magic_button</span> Generate Link
+                <button type="button" id="generate-stripe-link-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-3 rounded-lg shadow transition-colors flex items-center justify-center gap-1 shrink-0 w-full sm:w-auto">
+                  <span class="material-symbols-outlined text-sm">magic_button</span> Generate Link for 5-Min Hold
                 </button>
+                <div id="hold-status-display" class="hidden text-xs font-bold px-2 py-1.5 rounded-lg border flex-1 text-center sm:text-left">
+                  <span id="hold-status-text">Generating secure payment link...</span>
+                  <span id="hold-countdown" class="ml-2 font-mono text-indigo-600 hidden"></span>
+                </div>
               </div>
               
-              <div id="stripe-link-result-container" class="hidden flex items-center gap-2">
-                <input type="text" id="stripe-generated-link" readonly class="w-full px-2 py-2 bg-green-50 border border-green-200 rounded-lg text-[10px] sm:text-xs text-green-900 font-mono focus:outline-none"/>
-                <button type="button" id="copy-stripe-link-btn" class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg shadow transition-colors flex items-center justify-center shrink-0" title="Copy Link">
-                  <span class="material-symbols-outlined text-[16px]">content_copy</span>
-                </button>
+              <div id="stripe-link-result-container" class="hidden flex-col gap-3 mt-2 border-t border-indigo-100 pt-3">
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">Customer Message</label>
+                  <textarea id="customer-message-template" readonly rows="4" class="w-full text-xs p-2 bg-indigo-50 border border-indigo-100 rounded-lg focus:outline-none resize-none font-mono"></textarea>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="text" id="stripe-generated-link" readonly class="w-full px-2 py-2 bg-green-50 border border-green-200 rounded-lg text-[10px] sm:text-xs text-green-900 font-mono focus:outline-none"/>
+                  <button type="button" id="copy-stripe-link-btn" class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg shadow transition-colors flex items-center justify-center shrink-0" title="Copy Short Link Only">
+                    <span class="material-symbols-outlined text-[16px]">link</span>
+                  </button>
+                  <button type="button" id="copy-message-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg shadow transition-colors flex items-center justify-center shrink-0" title="Copy Full Message">
+                    <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                  </button>
+                </div>
               </div>
               <p id="stripe-link-error" class="hidden text-[10px] text-red-600 font-bold"></p>
             </div>

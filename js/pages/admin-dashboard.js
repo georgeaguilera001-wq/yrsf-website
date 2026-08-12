@@ -4180,7 +4180,8 @@ EXTRACTION RULES:
       const priceInput = document.getElementById('book-price');
       if (!priceInput) return;
       
-      let basePrice = 0;
+      let baseBoatPrice = 0;
+      let captainPrice = 0;
       let boatMatch = false;
 
       // 1. Get Base Boat Price
@@ -4195,7 +4196,8 @@ EXTRACTION RULES:
           if (boat.boat_prices && boat.boat_prices.length > 0) {
             const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
             if (matchingPrice && matchingPrice.price) {
-              basePrice = parseFloat(matchingPrice.price) + (captainRate * dur);
+              baseBoatPrice = parseFloat(matchingPrice.price);
+              captainPrice = (captainRate * dur);
               boatMatch = true;
               hasTieredPrice = true;
             }
@@ -4212,7 +4214,8 @@ EXTRACTION RULES:
                 if (day === 0 || day === 6) multiplier = 1.10; // Sat & Sun
               }
             }
-            basePrice = (boatRate + captainRate) * multiplier * dur;
+            baseBoatPrice = boatRate * multiplier * dur;
+            captainPrice = captainRate * multiplier * dur;
             boatMatch = true;
           }
         }
@@ -4220,6 +4223,7 @@ EXTRACTION RULES:
 
       // 2. Sum Dynamic Add-ons
       let addonsTotal = 0;
+      let addonsHtml = '';
       document.querySelectorAll('.dynamic-addon-row').forEach(row => {
         const cb = row.querySelector('.addon-cb');
         const qtyInput = row.querySelector('.addon-qty');
@@ -4227,7 +4231,9 @@ EXTRACTION RULES:
         if (cb && cb.checked && qtyInput) {
           const qty = parseInt(qtyInput.value, 10) || 1;
           const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
-          addonsTotal += (price * qty);
+          const totalLine = (price * qty);
+          addonsTotal += totalLine;
+          addonsHtml += `<div class="flex justify-between text-on-surface"><span>Add-on: ${escapeHtml(cb.dataset.name)}${qty > 1 ? ` (x${qty})` : ''}</span><span>$${totalLine.toFixed(2)}</span></div>`;
         }
       });
 
@@ -4237,11 +4243,12 @@ EXTRACTION RULES:
       let customTotal = 0;
       if (customPriceInput && customPriceInput.value && customNameInput && customNameInput.value.trim() !== '') {
         customTotal = parseFloat(customPriceInput.value) || 0;
+        addonsHtml += `<div class="flex justify-between text-on-surface"><span>Custom: ${escapeHtml(customNameInput.value)}</span><span>$${customTotal.toFixed(2)}</span></div>`;
       }
 
       // Update Total
       if (boatMatch || addonsTotal > 0 || customTotal > 0) {
-        const subtotal = basePrice + addonsTotal + customTotal;
+        const subtotal = baseBoatPrice + captainPrice + addonsTotal + customTotal;
         const tax = subtotal * 0.07;
         const newTotal = subtotal + tax;
         priceInput.value = newTotal.toFixed(2);
@@ -4253,6 +4260,22 @@ EXTRACTION RULES:
         }
         
         if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+
+        // Update Itemized Breakdown UI
+        const ibEl = document.getElementById('itemized-breakdown');
+        if (ibEl) {
+          ibEl.classList.remove('hidden');
+          const dur = parseInt(duration) || 4;
+          document.getElementById('ib-duration').textContent = dur;
+          document.getElementById('ib-boat-price').textContent = '$' + baseBoatPrice.toFixed(2);
+          document.getElementById('ib-captain-price').textContent = '$' + captainPrice.toFixed(2);
+          document.getElementById('ib-addons-container').innerHTML = addonsHtml;
+          document.getElementById('ib-subtotal').textContent = '$' + subtotal.toFixed(2);
+          document.getElementById('ib-taxes').textContent = '$' + tax.toFixed(2);
+          document.getElementById('ib-total').textContent = '$' + newTotal.toFixed(2);
+          document.getElementById('ib-deposit').textContent = '$' + (depositEl ? depositEl.value : '0.00');
+          // Paid and Balance are handled in updateBalanceCalc
+        }
         
         // Animation
         priceInput.classList.add('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
@@ -4262,6 +4285,34 @@ EXTRACTION RULES:
           priceInput.classList.remove('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
           if (depositEl) depositEl.classList.remove('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
         }, 1000);
+      } else {
+        const ibEl = document.getElementById('itemized-breakdown');
+        if (ibEl) ibEl.classList.add('hidden');
+      }
+
+      if (typeof invalidateHold === 'function') invalidateHold();
+    };
+
+    window.invalidateHold = () => {
+      if (typeof currentHoldId !== 'undefined' && currentHoldId) {
+        currentHoldId = null;
+        if (typeof stopHoldPolling === 'function') stopHoldPolling();
+        
+        const statusDisplay = document.getElementById('hold-status-display');
+        const statusText = document.getElementById('hold-status-text');
+        const countdownText = document.getElementById('hold-countdown');
+        const linkInput = document.getElementById('stripe-generated-link');
+        const tmpl = document.getElementById('customer-message-template');
+        
+        if (statusDisplay && !statusDisplay.classList.contains('hidden')) {
+          statusDisplay.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
+          statusDisplay.classList.remove('bg-blue-50', 'text-blue-800', 'border-blue-200', 'bg-green-50', 'text-green-800', 'border-green-200');
+          statusText.textContent = 'Form changed. Link invalidated.';
+          if (countdownText) countdownText.classList.add('hidden');
+          if (linkInput) linkInput.value = 'Link invalidated. Please regenerate.';
+          if (tmpl) tmpl.value = 'Link invalidated. Please regenerate.';
+          showToast('Payment link invalidated because form values changed. Please generate a new one.', true);
+        }
       }
     };
 
@@ -4312,6 +4363,7 @@ EXTRACTION RULES:
 
     const bookDurationEl = document.getElementById('book-duration');
     const bookTimeEl = document.getElementById('book-time');
+    const bookDateEl = document.getElementById('book-date');
     if (bookDurationEl) {
       bookDurationEl.addEventListener('change', () => {
         updateDynamicPrice();
@@ -4319,7 +4371,15 @@ EXTRACTION RULES:
       });
     }
     if (bookTimeEl) {
-      bookTimeEl.addEventListener('change', window.updateEndTime);
+      bookTimeEl.addEventListener('change', () => {
+        window.updateEndTime();
+        if (typeof invalidateHold === 'function') invalidateHold();
+      });
+    }
+    if (bookDateEl) {
+      bookDateEl.addEventListener('change', () => {
+        updateDynamicPrice();
+      });
     }
 
     window.selectBoatOption = (id, name) => {
@@ -4342,9 +4402,12 @@ EXTRACTION RULES:
           const boat = (fleetCache || []).find(b => b.id === id);
           if (boat && boat.boat_prices && boat.boat_prices.length > 0) {
             const sortedPrices = [...boat.boat_prices].sort((a, b) => a.duration_hours - b.duration_hours);
-            durationEl.innerHTML = sortedPrices.map(p => 
-              `<option value="${p.duration_hours}">${escapeHtml(p.duration_label)} - $${parseFloat(p.price).toLocaleString()}</option>`
-            ).join('');
+            const capRate = parseFloat(boat.captain_hourly_rate) || 0;
+            durationEl.innerHTML = sortedPrices.map(p => {
+              const capTotal = capRate * p.duration_hours;
+              const capText = capRate > 0 ? ` (Captain: $${capRate}/hr · $${capTotal} total)` : ' ⚠️ Captain Rate Missing';
+              return `<option value="${p.duration_hours}">${escapeHtml(p.duration_label)} - Boat: $${parseFloat(p.price).toLocaleString()}${capText}</option>`;
+            }).join('');
           } else {
             durationEl.innerHTML = '<option value="4">4 Hours (Default) - Custom Pricing</option>';
           }
@@ -4776,6 +4839,11 @@ EXTRACTION RULES:
         }
       }
       if (bookBalHidden) bookBalHidden.value = rem.toFixed(2);
+      
+      const ibPaid = document.getElementById('ib-paid');
+      const ibBal = document.getElementById('ib-balance');
+      if (ibPaid) ibPaid.textContent = '$' + dep.toFixed(2);
+      if (ibBal) ibBal.textContent = '$' + rem.toFixed(2);
     };
 
     // Global Add-ons Loader for the Modal
@@ -4895,36 +4963,132 @@ EXTRACTION RULES:
       });
     }
 
+    let currentHoldId = null;
+    let holdPollInterval = null;
+    let holdExpirationTime = null;
+
+    const stopHoldPolling = () => {
+      if (holdPollInterval) clearInterval(holdPollInterval);
+      holdPollInterval = null;
+    };
+
+    const updateCustomerMessage = (shortLink) => {
+      const custName = document.getElementById('book-cust-name').value.trim() || 'Customer';
+      const boatSelect = document.getElementById('book-boat-select');
+      const boatName = boatSelect.options[boatSelect.selectedIndex]?.getAttribute('data-name') || 'Yacht';
+      const date = document.getElementById('book-date').value || '';
+      const time = document.getElementById('book-time').value || '';
+      const dep = document.getElementById('book-deposit').value || '0.00';
+      const msg = `Hello ${custName},\n\nThank you for choosing Yacht Rentals of South Florida. To confirm your reservation for ${boatName} on ${date} at ${time}, please complete the deposit payment of $${parseFloat(dep).toLocaleString('en-US', {minimumFractionDigits: 2})} using the secure link below:\n\n${shortLink}\n\nPlease note that this payment link is active for five minutes. If payment is not completed within that time, the temporary reservation hold will expire and the selected time slot may become available to another customer.\n\nThank you!`;
+      const tmpl = document.getElementById('customer-message-template');
+      if (tmpl) tmpl.value = msg;
+    };
+
     if (genLinkBtn) {
       genLinkBtn.addEventListener('click', async () => {
-        const bookingId = document.getElementById('booking-id')?.value;
-        if (!bookingId) {
-          showToast('Please save the booking first before generating a link.', true);
+        const boatId = document.getElementById('book-boat-select')?.value;
+        const bookDate = document.getElementById('book-date')?.value;
+        const bookTime = document.getElementById('book-time')?.value;
+        const bookDur = document.getElementById('book-duration')?.value;
+        const deposit = document.getElementById('book-deposit')?.value;
+        
+        if (!boatId || !bookDate || !bookTime || !bookDur || !deposit) {
+          showToast('Please fill out the boat, date, time, duration, and deposit before generating a link.', true);
           return;
         }
 
-        const paymentType = document.getElementById('stripe-payment-type')?.value || 'full';
-        
         const originalHtml = genLinkBtn.innerHTML;
         genLinkBtn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white"></span>';
         genLinkBtn.disabled = true;
         linkResultContainer?.classList.add('hidden');
         if (linkError) linkError.classList.add('hidden');
         
+        const boatSelect = document.getElementById('book-boat-select');
+        const boatName = boatSelect.options[boatSelect.selectedIndex]?.getAttribute('data-name') || '';
+
+        const payload = {
+          boat_id: boatId,
+          boat_name: boatName,
+          booking_date: bookDate,
+          start_time: bookTime,
+          duration_hours: bookDur,
+          customer_name: document.getElementById('book-cust-name')?.value.trim() || '',
+          customer_phone: document.getElementById('book-cust-phone')?.value.trim() || '',
+          customer_email: document.getElementById('book-cust-email')?.value.trim() || '',
+          guest_count: document.getElementById('book-guests')?.value || 1,
+          total_price: document.getElementById('book-price')?.value || 0,
+          deposit_amount: deposit,
+          addons: []
+        };
+        
         try {
-          const res = await fetch('/api/create-checkout', {
+          const res = await fetch('/api/create-hold', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ booking_id: bookingId, payment_type: paymentType })
+            body: JSON.stringify(payload)
           });
           
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Failed to generate link');
           
           if (linkInput && linkResultContainer) {
-            linkInput.value = data.url;
+            linkInput.value = data.short_url;
+            updateCustomerMessage(data.short_url);
             linkResultContainer.classList.remove('hidden');
+            linkResultContainer.style.display = 'flex'; // force flex
           }
+
+          // Start polling
+          currentHoldId = data.hold_id;
+          holdExpirationTime = new Date(data.expires_at).getTime();
+          
+          const statusDisplay = document.getElementById('hold-status-display');
+          const statusText = document.getElementById('hold-status-text');
+          const countdownText = document.getElementById('hold-countdown');
+          
+          if (statusDisplay) {
+            statusDisplay.classList.remove('hidden');
+            statusDisplay.classList.add('bg-blue-50', 'text-blue-800', 'border-blue-200');
+            statusDisplay.classList.remove('bg-green-50', 'text-green-800', 'border-green-200', 'bg-red-50', 'text-red-800', 'border-red-200');
+            statusText.textContent = 'Awaiting payment...';
+            countdownText.classList.remove('hidden');
+          }
+
+          stopHoldPolling();
+          holdPollInterval = setInterval(async () => {
+            const now = new Date().getTime();
+            const left = Math.max(0, holdExpirationTime - now);
+            if (countdownText) {
+              const m = Math.floor(left / 60000);
+              const s = Math.floor((left % 60000) / 1000);
+              countdownText.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+
+            // Check Supabase
+            const { data: holdInfo } = await supabase.from('booking_holds').select('status').eq('id', currentHoldId).single();
+            if (holdInfo) {
+              if (holdInfo.status === 'paid') {
+                stopHoldPolling();
+                statusDisplay.classList.add('bg-green-50', 'text-green-800', 'border-green-200');
+                statusDisplay.classList.remove('bg-blue-50', 'text-blue-800', 'border-blue-200');
+                statusText.textContent = 'Payment received! Ready to save.';
+                countdownText.classList.add('hidden');
+                document.getElementById('book-status').value = 'confirmed';
+                document.getElementById('book-pay-method').value = 'stripe';
+                showToast('Payment confirmed by provider! You may now Save Booking.', 'success');
+              } else if (holdInfo.status === 'expired' || (left === 0 && holdInfo.status === 'pending_payment')) {
+                stopHoldPolling();
+                statusDisplay.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
+                statusDisplay.classList.remove('bg-blue-50', 'text-blue-800', 'border-blue-200');
+                statusText.textContent = 'Payment link expired.';
+                countdownText.classList.add('hidden');
+                if (linkInput) linkInput.value = 'Link expired';
+                const tmpl = document.getElementById('customer-message-template');
+                if (tmpl) tmpl.value = 'Link expired';
+              }
+            }
+          }, 3000);
+          
         } catch(err) {
           showToast('Error generating link: ' + err.message, true);
           if (linkError) {
@@ -4934,6 +5098,24 @@ EXTRACTION RULES:
         } finally {
           genLinkBtn.innerHTML = originalHtml;
           genLinkBtn.disabled = false;
+        }
+      });
+    }
+
+    const copyMsgBtn = document.getElementById('copy-message-btn');
+    if (copyMsgBtn) {
+      copyMsgBtn.addEventListener('click', () => {
+        const tmpl = document.getElementById('customer-message-template');
+        if (tmpl && tmpl.value && tmpl.value !== 'Link expired') {
+          navigator.clipboard.writeText(tmpl.value).then(() => {
+            showToast('Full message copied to clipboard!', 'success');
+            copyMsgBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">check</span>';
+            setTimeout(() => {
+              copyMsgBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">content_copy</span>';
+            }, 2000);
+          });
+        } else {
+          showToast('Cannot copy an expired or empty message.', true);
         }
       });
     }
@@ -4978,7 +5160,31 @@ EXTRACTION RULES:
     if (form) {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // Manual override check if no hold is paid
+        const isStripe = document.getElementById('book-pay-method')?.value === 'stripe';
+        if (isStripe && currentHoldId) {
+          const { data: holdCheck } = await supabase.from('booking_holds').select('status').eq('id', currentHoldId).single();
+          if (!holdCheck || holdCheck.status !== 'paid') {
+            showToast('Cannot save. The payment hold has not been confirmed as paid.', true);
+            return;
+          }
+        } else if (isStripe && !currentHoldId) {
+            showToast('You selected Stripe but did not generate a payment link. Please generate a link or choose another payment method.', true);
+            return;
+        } else {
+          // Manual booking override
+          const conf = confirm('You are creating/updating this booking without a confirmed Stripe payment hold. Is this correct?');
+          if (!conf) return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnHtml = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white"></span>';
+        submitBtn.disabled = true;
+
         const id = document.getElementById('booking-id').value;
+        const boatSelect = document.getElementById('book-boat-select');
         const boat_id = boatSelect.value || null;
         const boat_name = boatSelect.options[boatSelect.selectedIndex]?.getAttribute('data-name') || boatSelect.options[boatSelect.selectedIndex]?.text.split(' (')[0] || 'Custom Charter';
         const booking_date = document.getElementById('book-date').value;
@@ -5039,7 +5245,6 @@ EXTRACTION RULES:
             if (error) throw error;
             showToast('🛥️ New charter scheduled & manifest updated!', 'success');
             
-            // Webhook Dispatch for Confirmation Messages
             try {
               const settings = await getAllSettings();
               const webhookUrl = settings.zapier_webhook_url?.value;
@@ -5053,10 +5258,19 @@ EXTRACTION RULES:
               }
             } catch(e) {}
           }
+
+          if (typeof currentHoldId !== 'undefined' && currentHoldId) {
+             await supabase.from('booking_holds').update({ status: 'finalized' }).eq('id', currentHoldId);
+             currentHoldId = null;
+          }
+
           modal.classList.add('hidden');
           loadBookings();
         } catch (err) {
           showToast('Error saving booking: ' + err.message, true);
+        } finally {
+          submitBtn.innerHTML = originalBtnHtml;
+          submitBtn.disabled = false;
         }
       });
     }

@@ -41,54 +41,76 @@ module.exports = async (req, res) => {
     const session = event.data.object;
 
     const bookingId = session.metadata?.booking_id;
+    const holdId = session.metadata?.hold_id;
     const paymentType = session.metadata?.payment_type;
-    const amountTotal = session.amount_total / 100; // in dollars
-
-    if (!bookingId) {
-      console.warn('No booking_id in session metadata, skipping...');
-      return res.json({ received: true });
-    }
 
     // Initialize Supabase admin client
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch current booking
-    const { data: booking, error: fetchError } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('id', bookingId)
-      .single();
+    if (holdId) {
+      // This is a new temporary hold being paid
+      const { data: hold, error: fetchError } = await supabase
+        .from('booking_holds')
+        .select('*')
+        .eq('id', holdId)
+        .single();
 
-    if (fetchError || !booking) {
-      console.error(`Booking not found: ${bookingId}`);
-      return res.status(404).send('Booking not found');
+      if (fetchError || !hold) {
+        console.error(`Hold not found: ${holdId}`);
+        return res.status(404).send('Hold not found');
+      }
+
+      if (hold.status === 'pending_payment') {
+        const { error: updateError } = await supabase
+          .from('booking_holds')
+          .update({ status: 'paid' })
+          .eq('id', holdId);
+
+        if (updateError) {
+          console.error('Error updating hold:', updateError);
+          return res.status(500).send('Error updating hold');
+        }
+        console.log(`Hold ${holdId} updated to paid.`);
+      } else {
+        console.log(`Hold ${holdId} is already ${hold.status}, ignoring webhook.`);
+      }
+    } else if (bookingId) {
+      // Legacy flow: existing confirmed booking getting paid
+      const { data: booking, error: fetchError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', bookingId)
+        .single();
+
+      if (fetchError || !booking) {
+        console.error(`Booking not found: ${bookingId}`);
+        return res.status(404).send('Booking not found');
+      }
+
+      let updateData = {};
+      if (paymentType === 'deposit') {
+        updateData.status = 'confirmed';
+        updateData.payment_method = 'stripe';
+      } else if (paymentType === 'balance' || paymentType === 'full') {
+        updateData.status = 'completed';
+        updateData.payment_method = 'stripe';
+      }
+
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update(updateData)
+        .eq('id', bookingId);
+
+      if (updateError) {
+        console.error('Error updating booking:', updateError);
+        return res.status(500).send('Error updating booking');
+      }
+      console.log(`Booking ${bookingId} updated successfully. Payment Type: ${paymentType}`);
+    } else {
+      console.warn('No booking_id or hold_id in session metadata, skipping...');
     }
-
-    let updateData = {};
-    if (paymentType === 'deposit') {
-      // If paying deposit, status goes to confirmed (if it was inquiry)
-      updateData.status = 'confirmed';
-      // Assume deposit_amount is fully paid, or just mark it paid somewhere if we had a flag
-      updateData.payment_method = 'stripe';
-    } else if (paymentType === 'balance' || paymentType === 'full') {
-      // If paying full balance, status goes to completed
-      updateData.status = 'completed';
-      updateData.payment_method = 'stripe';
-    }
-
-    const { error: updateError } = await supabase
-      .from('bookings')
-      .update(updateData)
-      .eq('id', bookingId);
-
-    if (updateError) {
-      console.error('Error updating booking:', updateError);
-      return res.status(500).send('Error updating booking');
-    }
-
-    console.log(`Booking ${bookingId} updated successfully. Payment Type: ${paymentType}`);
   }
 
   res.json({ received: true });

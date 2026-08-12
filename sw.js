@@ -42,14 +42,14 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Network-First strategy: Always fetch live code first so changes show instantly!
+// Stale-While-Revalidate strategy for blazing fast loads while keeping data fresh
 self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('supabase.co') || event.request.method !== 'GET') {
     return;
   }
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -57,9 +57,11 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      })
-      .catch(() => {
-      })
+      }).catch(() => {
+        // Fallback for offline if not in cache (already handled by returning cachedResponse if it exists)
+      });
+      return cachedResponse || fetchPromise;
+    })
   );
 });
 
