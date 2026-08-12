@@ -65,9 +65,8 @@ async function initHomePage() {
   if (grid) {
     try {
       const cachedBoats = localStorage.getItem('yrsf_featured_boats');
-      if (cachedBoats) {
-        if (cachedBoats && cachedBoats !== 'undefined') {
-    try { const boats = JSON.parse(cachedBoats);
+      if (cachedBoats && cachedBoats !== 'undefined' && cachedBoats !== 'null') {
+        const boats = JSON.parse(cachedBoats);
         if (Array.isArray(boats) && boats.length > 0) {
           grid.innerHTML = boats.map(boat => renderBoatCard(boat)).join('');
           initBoatCards(grid);
