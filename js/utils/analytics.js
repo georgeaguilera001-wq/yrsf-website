@@ -94,12 +94,14 @@ if (typeof document !== "undefined") {
     // --- favorite_boat ---
     const favoriteTarget = target.closest('.favorite-btn');
     if (favoriteTarget) {
-      // Only track if it doesn't already have 'active', meaning they are favoriting it, not unfavoriting.
-      // Or we can just track every click as an engagement event. The requirement says "favorites/saves a yacht".
-      fireGA4Event("favorite_boat", {
-        event_category: "engagement",
-        boat_name: getBoatName(favoriteTarget)
-      });
+      // The capture phase intercepts the click BEFORE toggleFavorite executes and adds the .active class.
+      // Therefore, if it currently does NOT have .active, the user is favoriting it.
+      if (!favoriteTarget.classList.contains('active')) {
+        fireGA4Event("favorite_boat", {
+          event_category: "engagement",
+          boat_name: getBoatName(favoriteTarget)
+        });
+      }
     }
 
     // --- book_now ---
@@ -112,15 +114,14 @@ if (typeof document !== "undefined") {
     }
   }, true);
 
-  // --- submit_inquiry ---
-  document.addEventListener("submit", function(e) {
-    if (e.target.id === 'boat-inquiry-form') {
-      const formData = new FormData(e.target);
-      const boatPreference = formData.get('boatPreference');
-      fireGA4Event("submit_inquiry", {
-        event_category: "lead",
-        boat_name: boatPreference || getBoatName(e.target)
-      });
-    }
-  }, true);
+  // Expose a dedicated tracking function for inquiries to be called only upon confirmed API success
+  window.trackInquirySuccess = function(boatName, boatId) {
+    fireGA4Event("submit_inquiry", {
+      event_category: "lead",
+      boat_name: boatName,
+      boat_id: boatId,
+      page_path: window.location.pathname,
+      button_location: "inquiry_modal"
+    });
+  };
 }

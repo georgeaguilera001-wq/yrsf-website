@@ -196,7 +196,11 @@ export function openInquiryModal({ boatName = 'General Charter Inquiry', boatId 
         guest_count: parseInt(guests, 10) || 1,
         special_requests: `Best time to call: ${callTime}`,
         status: 'inquiry'
-      }]).catch(() => {});
+      }]).then((res) => {
+        if (!res.error && window.trackInquirySuccess) {
+          window.trackInquirySuccess(finalBoatName, boatId);
+        }
+      }).catch(() => {});
 
       // Fetch admin email from site_settings or fallback
       let notifyEmail = 'georgeaguilera001@gmail.com';
