@@ -6,7 +6,7 @@ import { initNavbar } from '../components/navbar.js';
 import { initFooter } from '../components/footer.js';
 import { initToastContainer } from '../components/toast.js';
 import { getBoats } from '../services/boats.js';
-import { renderBoatCard, initBoatCards } from '../components/boat-card.js?v=20260811v3';
+import { renderBoatCard, initBoatCards } from '../components/boat-card.js?v=20260811v4';
 import { renderFilterBar, initFilterBar } from '../components/filter-bar.js';
 import { initLazyLoading } from '../utils/lazy-load.js';
 import { getUrlParam, setUrlParams, renderSkeletons } from '../utils/dom.js';

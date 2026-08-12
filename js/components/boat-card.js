@@ -199,12 +199,12 @@ export function renderBoatCard(boat, options = {}) {
             <div class="card-price-display">${priceDisplayHtml}</div>
           </button>
           ` : ''}
-          <button type="button" class="shrink-0 flex items-center justify-center bg-secondary/10 hover:bg-secondary/20 text-secondary px-2 py-1.5 rounded-md text-[10.5px] font-bold transition-colors card-inquire-btn" data-boat-id="${boat.id}" data-boat-name="${escapeHtml(name)}" title="Charter Inquiry">Inquire</button>
-          <button class="whatsapp-btn flex items-center justify-center gap-1 bg-green-50 text-green-700 border border-green-200 px-2 py-1.5 rounded-md hover:bg-green-100 transition-colors shrink-0 font-bold text-[10.5px]" data-boat-name="${name}" aria-label="Contact on WhatsApp" title="WhatsApp">
+          <button type="button" class="shrink-0 md:hidden flex items-center justify-center bg-secondary/10 hover:bg-secondary/20 text-secondary px-2 py-1.5 rounded-md text-[10.5px] font-bold transition-colors card-inquire-btn" data-boat-id="${boat.id}" data-boat-name="${escapeHtml(name)}" title="Charter Inquiry">Inquire</button>
+          <button class="whatsapp-btn flex-1 md:shrink-0 flex items-center justify-center gap-1 bg-green-50 text-green-700 border border-green-200 px-2 py-1.5 rounded-md hover:bg-green-100 transition-colors font-bold text-[10.5px]" data-boat-name="${name}" aria-label="Contact on WhatsApp" title="WhatsApp">
             <span class="material-symbols-outlined text-[14px]">chat</span>
             <span>Chat</span>
           </button>
-          <a class="flex-1 flex items-center justify-center gap-1 bg-secondary text-on-secondary px-2.5 py-1.5 rounded-md hover:opacity-90 transition-colors shadow-2xs font-bold text-[11px] truncate" href="/boat.html?slug=${slug}" title="View Details">
+          <a class="flex-1 md:hidden flex items-center justify-center gap-1 bg-secondary text-on-secondary px-2.5 py-1.5 rounded-md hover:opacity-90 transition-colors shadow-2xs font-bold text-[11px] truncate" href="/boat.html?slug=${slug}" title="View Details">
             <span class="truncate">View Details</span>
             <span class="material-symbols-outlined text-[14px] shrink-0">arrow_forward</span>
           </a>
