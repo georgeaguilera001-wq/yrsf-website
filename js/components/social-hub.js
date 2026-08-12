@@ -146,7 +146,7 @@ async function sendZapierTestPayload() {
 // ─── Data Loading ─────────────────────────────────────────────────────────────
 async function loadSocialPosts() {
   try {
-    const { data, error } = await supabase.from('social_posts').select('*').order('scheduled_for', { ascending: true });
+    const { data, error } = await supabase.from('social_posts').select('id, type, external_id, title, content, image_url, video_url, link_url, target_platform, scheduled_for, published_at, status, meta_data').order('scheduled_for', { ascending: true });
     if (error || !data) throw error;
     socialPosts = data;
   } catch (err) {

@@ -155,6 +155,27 @@ export async function getBoats({
 }
 
 /**
+ * Fetch lightweight boat data specifically for the Marina Map to avoid huge payloads.
+ */
+export async function getMapBoats({ limit = 500, offset = 0 } = {}) {
+  const cacheKey = 'map_boats_' + limit + '_' + offset;
+  return withCache(cacheKey, async () => {
+    let { data, error, count } = await supabase
+      .from('boats')
+      .select('id, name, slug, length_ft, capacity, location', { count: 'exact' })
+      .eq('status', 'active')
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.warn('Error fetching map boats:', error);
+      return { data: [], count: 0 };
+    }
+    return { data: data || [], count: count || 0 };
+  });
+}
+
+
+/**
  * Fetch a single boat by slug with ALL related data.
  */
 export async function getBoatBySlug(slug) {

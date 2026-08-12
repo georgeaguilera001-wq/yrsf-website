@@ -1,4 +1,4 @@
-import { getBoats } from '../services/boats.js';
+import { getMapBoats } from '../services/boats.js';
 
 const PREDEFINED_LOCATIONS = {
   // Exact marina addresses from the fleet database
@@ -199,7 +199,7 @@ export async function initMarinaMap() {
     let offset = 0;
     const batchSize = 500;
     while (true) {
-      const { data: batch, count } = await getBoats({ limit: batchSize, offset });
+      const { data: batch, count } = await getMapBoats({ limit: batchSize, offset });
       if (!batch || batch.length === 0) break;
       boats = boats.concat(batch);
       if (boats.length >= (count || batch.length) || batch.length < batchSize) break;
