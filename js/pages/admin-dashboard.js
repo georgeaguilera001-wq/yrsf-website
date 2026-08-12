@@ -1890,10 +1890,24 @@ EXTRACTION RULES:
             const data = await res.json();
             locDropdown.innerHTML = '';
             if (!data || data.length === 0) {
-              locDropdown.innerHTML = `<div class="p-3 text-xs text-on-surface-variant">No exact address found. Try adding street type (e.g. Dr, St, Ave) or city.</div>`;
+              locDropdown.innerHTML = `<div class="p-3 text-xs">
+                <div class="p-2 hover:bg-surface-container-low cursor-pointer rounded-lg border border-outline-variant mb-2 flex items-start gap-2 transition-colors" id="loc-use-as-is">
+                  <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">edit_location_alt</span>
+                  <span class="font-medium text-on-surface">Use "<strong>${escapeHtml(query)}</strong>" as-is</span>
+                </div>
+                <p class="text-on-surface-variant">OpenStreetMap didn't find this address. You can use it anyway, or try adding more detail (e.g. street type, city, zip).</p>
+              </div>`;
+              locDropdown.querySelector('#loc-use-as-is').addEventListener('click', () => {
+                locInput.value = query;
+                locDropdown.classList.add('hidden');
+                locIcon.textContent = 'edit_location_alt';
+                locIcon.className = 'absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-amber-600';
+                locStatus.innerHTML = '⚠ Address not verified via map, but it will be saved.';
+                locStatus.className = 'text-xs mt-1 text-amber-600 font-medium';
+              });
               locDropdown.classList.remove('hidden');
-              locStatus.textContent = 'No matches found. Please select a valid address.';
-              locStatus.className = 'text-xs mt-1 text-error';
+              locStatus.textContent = 'No exact map match — you can still use this address.';
+              locStatus.className = 'text-xs mt-1 text-amber-600';
               return;
             }
 
@@ -4113,7 +4127,14 @@ EXTRACTION RULES:
     const boatOptionsList = document.getElementById('book-boat-options-list');
     const boatSearchContainer = document.getElementById('book-boat-search-container');
 
+    let _dynamicPriceTimeout = null;
     const updateDynamicPrice = () => {
+      clearTimeout(_dynamicPriceTimeout);
+      _dynamicPriceTimeout = setTimeout(() => {
+        _updateDynamicPrice();
+      }, 200);
+    };
+    const _updateDynamicPrice = () => {
       const boatId = document.getElementById('book-boat-select')?.value;
       const duration = document.getElementById('book-duration')?.value;
       const priceInput = document.getElementById('book-price');
