@@ -334,8 +334,36 @@ export async function initMarinaMap() {
         }
         stayTimer = setTimeout(async () => {
           try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + (query.toLowerCase().includes('miami') || query.toLowerCase().includes('fl') ? '' : ', Miami, FL'))}&format=json&addressdetails=1&limit=5`);
-            const data = await res.json();
+            function expandAddress(q) {
+              let expanded = q;
+              expanded = expanded.replace(/\b(\d+)\s+(St|Street|Ave|Avenue|Dr|Drive|Blvd|Boulevard|Ct|Court|Pl|Place|Rd|Road|Ter|Terrace|Way|Ln|Lane)\b/gi, (match, num, street) => {
+                const n = parseInt(num);
+                let suffix = 'th';
+                if (n % 100 !== 11 && n % 10 === 1) suffix = 'st';
+                else if (n % 100 !== 12 && n % 10 === 2) suffix = 'nd';
+                else if (n % 100 !== 13 && n % 10 === 3) suffix = 'rd';
+                return num + suffix + ' ' + street;
+              });
+              expanded = expanded.replace(/\bSt\b(?!\w)/g, 'Street').replace(/\bDr\b(?!\w)/g, 'Drive')
+                .replace(/\bAve\b(?!\w)/g, 'Avenue').replace(/\bBlvd\b(?!\w)/g, 'Boulevard')
+                .replace(/\bCt\b(?!\w)/g, 'Court').replace(/\bPl\b(?!\w)/g, 'Place')
+                .replace(/\bRd\b(?!\w)/g, 'Road').replace(/\bLn\b(?!\w)/g, 'Lane')
+                .replace(/\bTer\b(?!\w)/g, 'Terrace').replace(/\bNW\b/g, 'Northwest')
+                .replace(/\bNE\b/g, 'Northeast').replace(/\bSW\b/g, 'Southwest').replace(/\bSE\b/g, 'Southeast');
+              return expanded;
+            }
+
+            const suffix = (query.toLowerCase().includes('miami') || query.toLowerCase().includes('fl')) ? '' : ', Miami, FL';
+            let searchQuery = query + suffix;
+            let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&addressdetails=1&limit=5`);
+            let data = await res.json();
+
+            if ((!data || data.length === 0) && expandAddress(query) !== query) {
+              searchQuery = expandAddress(query) + suffix;
+              res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&addressdetails=1&limit=5`);
+              data = await res.json();
+            }
+
             stayDropdown.innerHTML = '';
             if (!data || data.length === 0) {
               stayDropdown.innerHTML = `<div class="p-3 text-xs text-on-surface-variant">No locations found. Try hotel name or street address.</div>`;
