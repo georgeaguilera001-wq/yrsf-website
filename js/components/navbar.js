@@ -15,6 +15,7 @@ export function renderNavbar(activePage = '') {
 
   const links = [
     { id: 'boats', label: 'Our Fleet', href: '/boats.html' },
+    { id: 'map', label: 'Boats Map', href: '/map.html' },
     { id: 'experiences', label: 'Experiences', href: '#' },
     { id: 'addons', label: 'Add-ons', href: '/addons.html' },
     { id: 'advice', label: 'Expert Advice', href: '#' }
