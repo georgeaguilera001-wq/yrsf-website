@@ -71,17 +71,52 @@ async function geocodeLocation(locationName) {
   const cached = localStorage.getItem(cacheKey);
   if (cached && cached !== 'undefined' && cached !== 'null') { try { return JSON.parse(cached); } catch(e) {} }
 
-  // 2. Exact match or substring checking for predefined
-  for (const [key, coords] of Object.entries(PREDEFINED_LOCATIONS)) {
-    if (normName.includes(key) || key.includes(normName)) {
-      return coords;
+  // 2. Exact match first
+  if (PREDEFINED_LOCATIONS[normName]) {
+    return PREDEFINED_LOCATIONS[normName];
+  }
+
+  // 3. Safe substring match (sort keys by longest first to avoid partial matching short words)
+  const sortedKeys = Object.keys(PREDEFINED_LOCATIONS).sort((a, b) => b.length - a.length);
+  for (const key of sortedKeys) {
+    if (key !== 'miami' && key !== 'fl' && normName.includes(key)) {
+      return PREDEFINED_LOCATIONS[key];
     }
   }
 
-  // 3. Try live Nominatim OpenStreetMap search for exact address
+  // 4. Try live Nominatim OpenStreetMap search with abbreviation expansion
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(normName + (normName.includes('miami') || normName.includes('fl') ? '' : ', Miami, FL'))}&format=json&limit=1`);
-    const data = await res.json();
+    function expandAddress(q) {
+      let expanded = q;
+      expanded = expanded.replace(/\b(\d+)\s+(St|Street|Ave|Avenue|Dr|Drive|Blvd|Boulevard|Ct|Court|Pl|Place|Rd|Road|Ter|Terrace|Way|Ln|Lane)\b/gi, (match, num, street) => {
+        const n = parseInt(num);
+        let suffix = 'th';
+        if (n % 100 !== 11 && n % 10 === 1) suffix = 'st';
+        else if (n % 100 !== 12 && n % 10 === 2) suffix = 'nd';
+        else if (n % 100 !== 13 && n % 10 === 3) suffix = 'rd';
+        return num + suffix + ' ' + street;
+      });
+      expanded = expanded.replace(/\bSt\b(?!\w)/g, 'Street').replace(/\bDr\b(?!\w)/g, 'Drive')
+        .replace(/\bAve\b(?!\w)/g, 'Avenue').replace(/\bBlvd\b(?!\w)/g, 'Boulevard')
+        .replace(/\bCt\b(?!\w)/g, 'Court').replace(/\bPl\b(?!\w)/g, 'Place')
+        .replace(/\bRd\b(?!\w)/g, 'Road').replace(/\bLn\b(?!\w)/g, 'Lane')
+        .replace(/\bTer\b(?!\w)/g, 'Terrace').replace(/\bNW\b/g, 'Northwest')
+        .replace(/\bNE\b/g, 'Northeast').replace(/\bSW\b/g, 'Southwest').replace(/\bSE\b/g, 'Southeast');
+      return expanded;
+    }
+
+    const suffix = (normName.includes('miami') || normName.includes('fl')) ? '' : ', Miami, FL';
+    let searchQuery = normName + suffix;
+    
+    let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1`);
+    let data = await res.json();
+    
+    if ((!data || data.length === 0) && expandAddress(normName) !== normName) {
+      searchQuery = expandAddress(normName) + suffix;
+      res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1`);
+      data = await res.json();
+    }
+
     if (data && data.length > 0) {
       const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
       localStorage.setItem(cacheKey, JSON.stringify(coords));
@@ -91,7 +126,7 @@ async function geocodeLocation(locationName) {
     console.warn('Geocoding failed for', normName, err);
   }
 
-  // 4. Fallback to smart marina zone
+  // 5. Fallback to smart marina zone
   const zone = getMarinaZone(locationName).toLowerCase();
   if (PREDEFINED_LOCATIONS[zone]) {
     return PREDEFINED_LOCATIONS[zone];
