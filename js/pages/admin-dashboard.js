@@ -4128,8 +4128,19 @@ EXTRACTION RULES:
         if (boat) {
           const boatRate = parseFloat(boat.boat_hourly_rate) || 0;
           const captainRate = parseFloat(boat.captain_hourly_rate) || 0;
+          const dur = parseInt(duration) || 4;
           
-          if (boatRate > 0 || captainRate > 0) {
+          let hasTieredPrice = false;
+          if (boat.boat_prices && boat.boat_prices.length > 0) {
+            const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
+            if (matchingPrice && matchingPrice.price) {
+              basePrice = parseFloat(matchingPrice.price) + (captainRate * dur);
+              boatMatch = true;
+              hasTieredPrice = true;
+            }
+          }
+          
+          if (!hasTieredPrice && (boatRate > 0 || captainRate > 0)) {
             let multiplier = 1.0;
             const bookDateStr = document.getElementById('book-date')?.value;
             if (bookDateStr) {
@@ -4140,15 +4151,8 @@ EXTRACTION RULES:
                 if (day === 0 || day === 6) multiplier = 1.10; // Sat & Sun
               }
             }
-            const dur = parseInt(duration) || 4;
             basePrice = (boatRate + captainRate) * multiplier * dur;
             boatMatch = true;
-          } else if (boat.boat_prices) {
-            const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
-            if (matchingPrice && matchingPrice.price) {
-              basePrice = parseFloat(matchingPrice.price) || 0;
-              boatMatch = true;
-            }
           }
         }
       }
@@ -6503,11 +6507,26 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   window.printBookingInvoice = async (id) => {
     const { data: b } = await supabase.from('bookings').select('*').eq('id', id).single();
     if (!b) return;
+    
+    // Look up the boat to get the current captain rate
+    if (!fleetCache || fleetCache.length === 0) await loadFleet();
+    let boat = (fleetCache || []).find(x => x.id === b.boat_id);
+    if (!boat && b.boat_id) {
+      const { data } = await supabase.from('boats').select('captain_hourly_rate').eq('id', b.boat_id).single();
+      boat = data;
+    }
+    
+    const captainHourly = boat ? (parseFloat(boat.captain_hourly_rate) || 0) : 0;
+    const duration = parseInt(b.duration_hours) || 4;
+    const captainTotal = captainHourly * duration;
+
     const price = parseFloat(b.total_price || b.amount || 0);
     const subtotal = price / 1.07;
     const tax = price - subtotal;
     const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
     const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
+    
+    const boatSubtotal = subtotal - captainTotal;
     
     let specialHtml = '';
     if (b.special_requests) {
@@ -6522,7 +6541,8 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       <div class="hdr"><div><h1 style="margin:0">YACHT RENTALS OF SOUTH FLORIDA</h1><p>Miami, FL | (305) 990-2192</p></div><h2>CHARTER INVOICE</h2></div>
       <p><strong>Customer:</strong> ${b.customer_name}<br><strong>Phone:</strong> ${b.customer_phone || '-'}<br><strong>Date:</strong> ${b.booking_date}</p>
       <table><tr><th>Description</th><th>Amount</th></tr>
-      <tr><td>Yacht Charter: ${b.boat_name || 'Fleet Yacht'} (${b.duration_hours || 4} Hours) & Add-ons</td><td>$${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
+      <tr><td>Yacht Charter: ${b.boat_name || 'Fleet Yacht'} (${duration} Hours) & Add-ons</td><td>$${boatSubtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
+      ${captainTotal > 0 ? `<tr><td>Captain & Crew Services (${duration} Hours)</td><td>$${captainTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>` : ''}
       ${specialHtml}
       <tr><td>Taxes & Fees (7%)</td><td>$${tax.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
       <tr style="font-size:1.1em; border-top:2px solid #222;"><th>Total Price</th><th>$${price.toLocaleString(undefined, {minimumFractionDigits: 2})}</th></tr>
