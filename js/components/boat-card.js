@@ -238,7 +238,8 @@ export function initBoatCards(container) {
   window.__showBoatLocationMap = (name, address) => showBoatLocationMap(name, address);
 
   // Favorite buttons
-  container.querySelectorAll('.favorite-btn').forEach(btn => {
+  container.querySelectorAll('.favorite-btn:not([data-bound])').forEach(btn => {
+    btn.setAttribute('data-bound', 'true');
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -249,7 +250,8 @@ export function initBoatCards(container) {
   });
 
   // WhatsApp buttons
-  container.querySelectorAll('.whatsapp-btn').forEach(btn => {
+  container.querySelectorAll('.whatsapp-btn:not([data-bound])').forEach(btn => {
+    btn.setAttribute('data-bound', 'true');
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -259,7 +261,8 @@ export function initBoatCards(container) {
   });
 
   // Day of week pricing pills
-  container.querySelectorAll('.card-day-btn').forEach(btn => {
+  container.querySelectorAll('.card-day-btn:not([data-bound])').forEach(btn => {
+    btn.setAttribute('data-bound', 'true');
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -294,7 +297,8 @@ export function initBoatCards(container) {
   });
 
   // Inquiry buttons
-  container.querySelectorAll('.card-inquire-btn').forEach(btn => {
+  container.querySelectorAll('.card-inquire-btn:not([data-bound])').forEach(btn => {
+    btn.setAttribute('data-bound', 'true');
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -306,7 +310,8 @@ export function initBoatCards(container) {
   });
 
   // Pricing toggle buttons
-  container.querySelectorAll('.pricing-toggle-btn').forEach(btn => {
+  container.querySelectorAll('.pricing-toggle-btn:not([data-bound])').forEach(btn => {
+    btn.setAttribute('data-bound', 'true');
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -328,7 +333,8 @@ export function initBoatCards(container) {
   });
 
   // Pricing close buttons
-  container.querySelectorAll('.pricing-close-btn').forEach(btn => {
+  container.querySelectorAll('.pricing-close-btn:not([data-bound])').forEach(btn => {
+    btn.setAttribute('data-bound', 'true');
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
