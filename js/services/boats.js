@@ -163,6 +163,7 @@ export async function getBoatBySlug(slug) {
       .from('boats')
       .select(`
         id, name, slug, short_description, description, manufacturer, model, length_ft, capacity, cabins, year, location, status, is_featured, is_best_seller, sort_order,
+        ical_feed_url, ical_feed_label, seo_title, seo_description, seo_keywords, photo_link, vessel_id, calendar_url,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(id, url, alt_text, is_primary, sort_order),
         boat_amenities(id, name, icon),
@@ -179,6 +180,7 @@ export async function getBoatBySlug(slug) {
         .from('boats')
         .select(`
           id, name, slug, short_description, description, manufacturer, model, length_ft, capacity, cabins, year, location, status, is_featured, is_best_seller, sort_order,
+          ical_feed_url, ical_feed_label, seo_title, seo_description, seo_keywords, photo_link, vessel_id, calendar_url,
           boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
           boat_images(id, url, alt_text, is_primary, sort_order),
           boat_amenities(id, name, icon),
