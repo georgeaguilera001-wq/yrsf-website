@@ -18,9 +18,10 @@ window.trackWhatsAppClick = function(label = "WhatsApp Inquiry") {
 
 // 2. Set up global event listener for automatic tracking
 if (typeof document !== "undefined") {
+  // Use capture phase (true) so we intercept the click BEFORE any dynamic buttons call e.stopPropagation()
   document.addEventListener("click", function(e) {
     // Check if the clicked element or any of its parents is a WhatsApp link/button
-    const target = e.target.closest('a[href*="wa.me"], a[href*="api.whatsapp.com"], [onclick*="wa.me"], [onclick*="api.whatsapp.com"]');
+    const target = e.target.closest('a[href*="wa.me"], a[href*="api.whatsapp.com"], [onclick*="wa.me"], [onclick*="api.whatsapp.com"], .whatsapp-btn, [id*="whatsapp"]');
     
     if (target) {
       // Determine a smart label based on context
@@ -44,10 +45,12 @@ if (typeof document !== "undefined") {
         }
       } else if (window.location.pathname.includes('/boat')) {
         label = "Boat Details WhatsApp";
+      } else if (target.closest('.fixed') || target.closest('[role="dialog"]')) {
+        label = "Modal WhatsApp";
       }
 
       // Fire tracking event
       window.trackWhatsAppClick(label);
     }
-  });
+  }, true); // <- TRUE ensures we catch the event during the capture phase, bypassing stopPropagation
 }
