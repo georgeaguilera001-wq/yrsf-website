@@ -40,7 +40,7 @@ export function renderFooter() {
           <h4 class="font-label-md text-secondary-fixed font-bold uppercase tracking-widest">Connect</h4>
           <ul class="space-y-3 font-body-md">
             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm">call</span> 305-990-2192</li>
-            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm">mail</span> concierge@yrsfmiami.com</li>
+            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm">mail</span> pay@sfyachtrentals.com</li>
           </ul>
           <div class="flex gap-md pt-2">
             <a class="hover:opacity-100 opacity-60" href="#"><span class="material-symbols-outlined">share</span></a>
