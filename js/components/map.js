@@ -16,19 +16,29 @@ const PREDEFINED_LOCATIONS = {
 
 function getMarinaZone(locationName) {
   const norm = (locationName || 'Miami River').trim().toLowerCase();
-  if (norm.includes('river') || norm.includes('201') || norm.includes('brickell') || norm.includes('downtown')) {
+  // Miami River zone: River Dr addresses, NW Miami addresses, downtown area
+  if (norm.includes('river') || norm.includes('brickell') || norm.includes('downtown') ||
+      norm.includes('chamonix') || norm.includes('nw ') || norm.includes('northwest') ||
+      norm.includes('sw miami ave') || norm.includes('deliver') ||
+      norm.includes('7th street') || norm.includes('14th st') || norm.includes('21st st') ||
+      norm.includes('24th ave') || norm.includes('32nd ave') || norm.includes('fronton')) {
     return 'Miami River';
   }
-  if (norm.includes('beach') || norm.includes('star') || norm.includes('biscayne')) {
+  // Miami Beach zone: Beach, Venetian, Fontainebleau, Star Island, Biscayne
+  if (norm.includes('beach') || norm.includes('venetian') || norm.includes('fontainebleau') ||
+      norm.includes('star') || norm.includes('biscayne') || norm.includes('alton')) {
     return 'Miami Beach';
   }
-  if (norm.includes('grove') || norm.includes('coconut') || norm.includes('gables')) {
+  // Coconut Grove zone: Grove, Monty's, Rickenbacker, Bayshore
+  if (norm.includes('grove') || norm.includes('coconut') || norm.includes('gables') ||
+      norm.includes('monty') || norm.includes('rickenbacker') || norm.includes('bayshore')) {
     return 'Coconut Grove';
   }
+  // Haulover / North Miami zone
   if (norm.includes('haulover') || norm.includes('north miami') || norm.includes('sunny') || norm.includes('sandbar')) {
     return 'Haulover / North Miami';
   }
-  return locationName || 'Miami River';
+  return 'Miami River';
 }
 
 async function geocodeLocation(locationName) {
@@ -140,11 +150,11 @@ export async function initMarinaMap() {
     }
     if (boats.length === 0) return;
 
-    // Group boats by exact location name
+    // Group boats by marina zone so all boats appear on the map
     const locations = {};
     boats.forEach(boat => {
       const rawLoc = boat.location || 'Miami River';
-      const zone = rawLoc;
+      const zone = getMarinaZone(rawLoc);
       if (!locations[zone]) {
         locations[zone] = {
           boats: [],
