@@ -127,9 +127,18 @@ export async function initMarinaMap() {
   }).addTo(map);
 
   try {
-    // Fetch all active boats
-    const { data: boats } = await getBoats({ limit: 100 });
-    if (!boats || boats.length === 0) return;
+    // Fetch ALL active boats (paginate to ensure none are missed)
+    let boats = [];
+    let offset = 0;
+    const batchSize = 500;
+    while (true) {
+      const { data: batch, count } = await getBoats({ limit: batchSize, offset });
+      if (!batch || batch.length === 0) break;
+      boats = boats.concat(batch);
+      if (boats.length >= (count || batch.length) || batch.length < batchSize) break;
+      offset += batchSize;
+    }
+    if (boats.length === 0) return;
 
     // Group boats by exact location name
     const locations = {};
