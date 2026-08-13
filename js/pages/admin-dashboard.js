@@ -5038,6 +5038,13 @@ EXTRACTION RULES:
             linkResultContainer.style.display = 'flex'; // force flex
           }
 
+          const submitBtn = document.querySelector('#booking-form button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            submitBtn.title = 'Awaiting payment...';
+          }
+
           // Start polling
           currentHoldId = data.hold_id;
           holdExpirationTime = new Date(data.expires_at).getTime();
@@ -5075,6 +5082,11 @@ EXTRACTION RULES:
                 countdownText.classList.add('hidden');
                 document.getElementById('book-status').value = 'confirmed';
                 document.getElementById('book-pay-method').value = 'stripe';
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                  submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                  submitBtn.title = '';
+                }
                 showToast('Payment confirmed by provider! You may now Save Booking.', 'success');
               } else if (holdInfo.status === 'expired' || (left === 0 && holdInfo.status === 'pending_payment')) {
                 stopHoldPolling();
@@ -5085,6 +5097,11 @@ EXTRACTION RULES:
                 if (linkInput) linkInput.value = 'Link expired';
                 const tmpl = document.getElementById('customer-message-template');
                 if (tmpl) tmpl.value = 'Link expired';
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                  submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                  submitBtn.title = '';
+                }
               }
             }
           }, 3000);
