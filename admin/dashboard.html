@@ -2442,10 +2442,14 @@
           <p class="font-label text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
             <span class="material-symbols-outlined text-[16px]">payments</span> Financial Details &amp; Balance
           </p>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div>
               <label class="block font-label text-xs font-bold text-on-surface mb-1">Total Price ($) *</label>
               <input type="number" step="0.01" min="0" id="book-price" required placeholder="2500.00" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold text-on-surface focus:ring-2 focus:ring-secondary"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Discount ($)</label>
+              <input type="number" step="0.01" min="0" id="book-discount" placeholder="0.00" value="0" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold text-red-600 focus:ring-2 focus:ring-red-500"/>
             </div>
             <div>
               <label class="block font-label text-xs font-bold text-on-surface mb-1">Deposit Paid ($)</label>
@@ -2462,20 +2466,20 @@
               <label class="block font-label text-xs font-bold text-on-surface mb-1">Payment Method *</label>
               <select id="book-pay-method" required class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
                 <option value="none">-- Select Method --</option>
-                <option value="stripe">?? Credit Card (Stripe Portal)</option>
-                <option value="zelle">?? Zelle</option>
-                <option value="cashapp">?? CashApp</option>
-                <option value="cash">?? Cash (At Dock)</option>
+                <option value="stripe">💳 Credit Card (Stripe Portal)</option>
+                <option value="zelle">📱 Zelle</option>
+                <option value="cashapp">💵 CashApp</option>
+                <option value="cash">💵 Cash (At Dock)</option>
                 <option value="other">Other / Manual</option>
               </select>
             </div>
             <div>
               <label class="block font-label text-xs font-bold text-on-surface mb-1">Booking Status</label>
               <select id="book-status" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
-                <option value="inquiry">?? Draft / Quote (Unpaid)</option>
-                <option value="confirmed">?? Confirmed (Deposit Paid)</option>
-                <option value="completed">? Completed &amp; Fully Paid</option>
-                <option value="cancelled">?? Cancelled / Refunded</option>
+                <option value="inquiry">📝 Draft / Quote (Unpaid)</option>
+                <option value="confirmed">📅 Confirmed (Deposit Paid)</option>
+                <option value="completed">✅ Completed &amp; Fully Paid</option>
+                <option value="cancelled">🚫 Cancelled / Refunded</option>
               </select>
             </div>
             <div id="lead-status-container" class="hidden">
@@ -2485,35 +2489,6 @@
                 <option value="contacted">Contacted / Drafting</option>
                 <option value="quote_sent">Quote Sent</option>
               </select>
-            </div>
-          </div>
-          
-          <!-- Upcharge Allocation Container -->
-          <div id="upcharge-allocation-container" class="hidden mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-2">
-            <div class="font-bold text-amber-900 flex items-center justify-between">
-              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">trending_up</span> Custom Rate Upcharge Detected</span>
-              <span class="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-md font-mono">+$<span id="upcharge-entered-diff">0.00</span></span>
-            </div>
-            <div class="text-amber-800 text-[11px]">
-              Total price ($<span id="upcharge-entered-total">0.00</span>) is higher than standard rate ($<span id="upcharge-standard-total">0.00</span>). Allocate the custom cost below for receipt accuracy:
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block font-bold text-[10px] text-amber-900 mb-0.5">Yacht Charter Base ($)</label>
-                <input type="number" step="0.01" id="custom-boat-price" placeholder="Standard rate" class="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold text-amber-950 focus:ring-2 focus:ring-amber-500"/>
-              </div>
-              <div>
-                <label class="block font-bold text-[10px] text-amber-900 mb-0.5">Captain &amp; Crew Fee ($)</label>
-                <input type="number" step="0.01" id="custom-captain-price" placeholder="Standard fee" class="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold text-amber-950 focus:ring-2 focus:ring-amber-500"/>
-              </div>
-            </div>
-            <div class="flex gap-2 pt-1">
-              <button type="button" id="btn-auto-allocate-boat" class="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg font-bold text-[10px] transition-colors">
-                + Add Upcharge to Yacht
-              </button>
-              <button type="button" id="btn-auto-allocate-captain" class="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg font-bold text-[10px] transition-colors">
-                + Add Upcharge to Captain
-              </button>
             </div>
           </div>
 
@@ -2692,7 +2667,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260813v0013"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260813v1020"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
