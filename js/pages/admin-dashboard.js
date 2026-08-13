@@ -5454,8 +5454,8 @@ EXTRACTION RULES:
           .order('booking_date', { ascending: true })
           .order('start_time', { ascending: true });
 
-        if (error) throw error;
         bookingsCache = data || [];
+        window.bookingsCache = bookingsCache;
 
         try {
           const { data: cachedSetting } = await supabase.from('site_settings').select('value, updated_at').eq('key', 'cached_ical_events').single();
@@ -8194,10 +8194,17 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   loadQuoSettings();
 });
 
-window.openRefundModalByBookingId = (id) => {
-  const b = (bookingsCache || []).find(x => x.id === id);
+window.openRefundModalByBookingId = async (id) => {
+  let cache = window.bookingsCache || (typeof bookingsCache !== 'undefined' ? bookingsCache : []);
+  let b = cache.find(x => x.id === id);
+  if (!b && typeof supabase !== 'undefined') {
+    const { data } = await supabase.from('bookings').select('*').eq('id', id).single();
+    b = data;
+  }
   if (b && typeof window.openRefundModal === 'function') {
     window.openRefundModal(b);
+  } else if (!b) {
+    window.showToast('Could not locate booking details.', true);
   }
 };
 
@@ -8258,8 +8265,13 @@ window.openRefundModal = (booking) => {
       const reason = document.getElementById('refund-reason').value;
 
       try {
-        const b = bookingsCache.find(x => x.id === bookingId);
-        if (!b) throw new Error('Booking not found in cache.');
+        let cache = window.bookingsCache || (typeof bookingsCache !== 'undefined' ? bookingsCache : []);
+        let b = cache.find(x => x.id === bookingId);
+        if (!b && typeof supabase !== 'undefined') {
+          const { data } = await supabase.from('bookings').select('*').eq('id', bookingId).single();
+          b = data;
+        }
+        if (!b) throw new Error('Booking record not found.');
 
         if (b.stripe_session_id) {
           // Stripe Refund
