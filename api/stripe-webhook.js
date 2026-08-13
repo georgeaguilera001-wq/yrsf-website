@@ -89,7 +89,9 @@ module.exports = async (req, res) => {
         return res.status(404).send('Booking not found');
       }
 
-      let updateData = {};
+      let updateData = {
+        stripe_session_id: session.id
+      };
       if (paymentType === 'deposit') {
         updateData.status = 'confirmed';
         updateData.payment_method = 'stripe';

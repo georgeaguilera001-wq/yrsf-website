@@ -8444,6 +8444,13 @@ window.openRefundModal = (booking) => {
               Max Available Refund: <span id="refund-max-avail" class="font-bold text-green-600"></span>
             </div>
             <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Refund Method *</label>
+              <select id="refund-method" required class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-lg text-sm">
+                <option value="stripe">💳 Stripe Card Refund (Automatic)</option>
+                <option value="manual">💵 Offline / Bookkeeping Refund (Cash, Zelle)</option>
+              </select>
+            </div>
+            <div>
               <label class="block font-label text-xs font-bold text-on-surface mb-1">Refund Amount ($) *</label>
               <input type="number" id="refund-amount" required step="0.01" min="0.01" class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-lg text-sm focus:ring-2 focus:ring-purple-500"/>
               <div class="flex gap-2 mt-2">
@@ -8478,6 +8485,7 @@ window.openRefundModal = (booking) => {
       btn.disabled = true;
 
       const bookingId = document.getElementById('refund-booking-id').value;
+      const method = document.getElementById('refund-method').value;
       const amount = parseFloat(document.getElementById('refund-amount').value);
       const reason = document.getElementById('refund-reason').value;
 
@@ -8490,17 +8498,17 @@ window.openRefundModal = (booking) => {
         }
         if (!b) throw new Error('Booking record not found.');
 
-        if (b.stripe_session_id) {
-          // Stripe Refund
+        if (method === 'stripe') {
+          // Stripe Card Refund
           const res = await fetch('/api/refund', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ booking_id: bookingId, amount, reason })
           });
           const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Refund failed');
+          if (!res.ok) throw new Error(data.error || 'Stripe refund failed.');
         } else {
-          // Manual Refund (Cash, Zelle, etc.)
+          // Manual / Bookkeeping Refund (Cash, Zelle, etc.)
           const currentRefunded = parseFloat(b.refunded_amount) || 0;
           const newRefunded = currentRefunded + amount;
           const totPrice = parseFloat(b.total_price || b.amount || 0);
@@ -8518,6 +8526,8 @@ window.openRefundModal = (booking) => {
           }
 
           const { error } = await supabase.from('bookings').update(updatePayload).eq('id', bookingId);
+          if (error) throw new Error(error.message);
+        }
           if (error) throw new Error(error.message);
         }
         

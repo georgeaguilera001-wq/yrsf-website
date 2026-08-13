@@ -101,6 +101,9 @@ module.exports = async (req, res) => {
       }
     });
 
+    // Save stripe_session_id to booking record
+    await supabase.from('bookings').update({ stripe_session_id: session.id }).eq('id', booking.id);
+
     return res.status(200).json({ url: session.url });
 
   } catch (error) {

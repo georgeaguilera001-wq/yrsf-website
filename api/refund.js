@@ -43,8 +43,24 @@ module.exports = async (req, res) => {
       return res.status(404).json({ error: 'Booking not found.' });
     }
 
+    if (!booking.stripe_session_id && booking.customer_email) {
+      const { data: hold } = await supabase
+        .from('booking_holds')
+        .select('stripe_session_id')
+        .eq('customer_email', booking.customer_email)
+        .not('stripe_session_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (hold && hold.stripe_session_id) {
+        booking.stripe_session_id = hold.stripe_session_id;
+        await supabase.from('bookings').update({ stripe_session_id: hold.stripe_session_id }).eq('id', booking_id);
+      }
+    }
+
     if (!booking.stripe_session_id) {
-      return res.status(400).json({ error: 'This booking does not have an associated Stripe session.' });
+      return res.status(400).json({ error: 'This booking does not have a Stripe transaction ID linked. To process a card refund, the payment must have been made via a Stripe Checkout link.' });
     }
 
     const maxRefund = (parseFloat(booking.deposit_amount) || 0) - (parseFloat(booking.refunded_amount) || 0);
