@@ -186,7 +186,60 @@ return; // Redirect in progress
       console.warn('Failed to load staff permissions:', e);
     }
   }
-  // ----------------------------
+  // ─── GLOBAL REALTIME BACKGROUND SYNC ENGINE ────────────────────────────
+  window.initGlobalRealtimeSync = () => {
+    if (window.hasGlobalRealtimeSyncInitialized || typeof supabase === 'undefined') return;
+    window.hasGlobalRealtimeSyncInitialized = true;
+
+    try {
+      // 1. Supabase Realtime Subscriptions for Instant Postgres Changes
+      supabase
+        .channel('yrsf-global-live-sync')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
+          if (typeof loadBookings === 'function') loadBookings(true);
+          if (typeof window.loadDashStaffTimeclock === 'function') window.loadDashStaffTimeclock();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_users' }, async (payload) => {
+          if (typeof loadStaffUsers === 'function') await loadStaffUsers();
+          // If staff permission changed for logged in user, refresh permissions live in background!
+          if (user?.email && payload?.new?.email && payload.new.email.trim().toLowerCase() === user.email.trim().toLowerCase()) {
+            window.currentStaffPermissions = payload.new.permissions || {};
+            if (typeof window.refreshNavMenu === 'function') window.refreshNavMenu();
+            if (typeof showToast === 'function') showToast('⚡ Your access permissions were updated live!', 'info', 5000);
+          }
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_timecards' }, (payload) => {
+          if (typeof loadTimecards === 'function') loadTimecards();
+          if (typeof loadStaffUsers === 'function') loadStaffUsers();
+          if (typeof window.loadDashStaffTimeclock === 'function') window.loadDashStaffTimeclock();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'boats' }, (payload) => {
+          if (typeof loadBoats === 'function') loadBoats();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'charter_addons' }, (payload) => {
+          if (typeof loadAddons === 'function') loadAddons();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, (payload) => {
+          if (typeof loadSettings === 'function') loadSettings();
+        })
+        .subscribe((status) => {
+          console.log('⚡ YRSF Realtime Background Engine Status:', status);
+        });
+
+      // 2. Silent Heartbeat Polling Loop (Every 12s) - Keeps site 100% live continuously in background
+      setInterval(() => {
+        if (typeof window.loadDashStaffTimeclock === 'function') window.loadDashStaffTimeclock();
+        if (typeof loadBookings === 'function') loadBookings(false);
+      }, 12000);
+
+    } catch (e) {
+      console.warn('Global Realtime Sync Setup Error:', e);
+    }
+  };
+
+  // Start Realtime Background Sync Engine
+  window.initGlobalRealtimeSync();
+  // ----------------------------------------------------------------------
 
   // Display user email
   const emailEl = document.getElementById('admin-user-email');
