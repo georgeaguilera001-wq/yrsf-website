@@ -6889,8 +6889,8 @@ Write ONLY the summary sentence(s), no extra explanation.`;
         if (match) {
           const qty = parseInt(match[1]) || 1;
           const name = match[2];
-          const unitPrice = parseFloat(match[3]) || 0;
-          const lineTotal = unitPrice * qty;
+          const lineTotal = parseFloat(match[3]) || 0;
+          const unitPrice = qty > 0 ? (lineTotal / qty) : lineTotal;
           totalAddonsPrice += lineTotal;
           addonLineItemsHtml += `
             <tr>
@@ -6925,7 +6925,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const tax = price - subtotal;
     const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
     const refunded = parseFloat(b.refunded_amount || 0);
-    const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
+    const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid + refunded);
     
     let charterBaseSubtotal = subtotal - captainTotal - totalAddonsPrice;
     if (charterBaseSubtotal < 0) charterBaseSubtotal = Math.max(0, subtotal - captainTotal);
