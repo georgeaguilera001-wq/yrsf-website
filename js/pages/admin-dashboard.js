@@ -6821,10 +6821,10 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
     
     if (refundBtn) {
-      // Only show refund if it was paid via Stripe and hasn't been fully refunded yet
+      // Show refund if there is a deposit and it hasn't been fully refunded yet
       const deposit = parseFloat(b.deposit_amount) || 0;
       const refunded = parseFloat(b.refunded_amount) || 0;
-      if (b.stripe_session_id && deposit > 0 && refunded < deposit) {
+      if (deposit > 0 && refunded < deposit) {
         refundBtn.classList.remove('hidden');
         refundBtn.onclick = () => window.openRefundModal(b);
       } else {
@@ -7885,13 +7885,25 @@ window.openRefundModal = (booking) => {
       const reason = document.getElementById('refund-reason').value;
 
       try {
-        const res = await fetch('/api/refund', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ booking_id: bookingId, amount, reason })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Refund failed');
+        const b = bookingsCache.find(x => x.id === bookingId);
+        if (!b) throw new Error('Booking not found in cache.');
+
+        if (b.stripe_session_id) {
+          // Stripe Refund
+          const res = await fetch('/api/refund', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: bookingId, amount, reason })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Refund failed');
+        } else {
+          // Manual Refund (Cash, Zelle, etc.)
+          const currentRefunded = parseFloat(b.refunded_amount) || 0;
+          const newRefunded = currentRefunded + amount;
+          const { error } = await supabase.from('bookings').update({ refunded_amount: newRefunded }).eq('id', bookingId);
+          if (error) throw new Error(error.message);
+        }
         
         window.showToast('Refund processed successfully!', 'success');
         modal.classList.add('hidden');
