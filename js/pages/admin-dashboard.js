@@ -7489,11 +7489,11 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const b = bookingsCache.find(x => x.id === id);
     if (!b) return;
     
-    if (!settingsCache) settingsCache = await getAllSettings();
-    const settings = settingsCache;
+    const receiptUrl = `https://sfyachtrentals.com/api/receipt?id=${b.id}`;
+
     let template = settings.whatsapp_booking_template?.value;
     if (!template) {
-      template = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} at {time} is confirmed! Departure Location: {address}. We look forward to welcoming you aboard.";
+      template = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} at {time} is confirmed! Departure Location: {address}. Itemized Receipt: {receipt_url} We look forward to welcoming you aboard.";
     }
 
     const price = parseFloat(b.total_price || b.amount || 0);
@@ -7525,7 +7525,9 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       .replace(/{deposit}/g, '$' + paid.toLocaleString(undefined, {minimumFractionDigits: 2}))
       .replace(/{balance}/g, '$' + bal.toLocaleString(undefined, {minimumFractionDigits: 2}))
       .replace(/{addons}/g, b.special_requests || 'None')
-      .replace(/{address}/g, finalAddress);
+      .replace(/{address}/g, finalAddress)
+      .replace(/{receipt_url}/g, receiptUrl)
+      .replace(/{invoice_url}/g, receiptUrl);
 
     const modal = document.getElementById('message-preview-modal');
     const textArea = document.getElementById('preview-message-text');
