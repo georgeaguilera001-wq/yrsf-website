@@ -1911,13 +1911,13 @@
   </div>
 
   <!-- Add/Edit Staff Modal -->
-  <div id="staff-modal" class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 hidden animate-fade-in">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-outline-variant">
-      <div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-4">
-        <h3 class="font-headline text-lg font-bold text-on-surface" id="staff-modal-title">Add New Employee</h3>
-        <button type="button" class="close-staff-modal text-on-surface-variant hover:text-on-surface font-bold text-xl">&times;</button>
+  <div id="staff-modal" class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-2 sm:p-4 hidden animate-fade-in">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-outline-variant flex flex-col max-h-[92vh]">
+      <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-outline-variant mb-3 sm:mb-4 shrink-0">
+        <h3 class="font-headline text-base sm:text-lg font-bold text-on-surface" id="staff-modal-title">Add New Employee</h3>
+        <button type="button" class="close-staff-modal text-on-surface-variant hover:text-on-surface font-bold text-xl leading-none">&times;</button>
       </div>
-      <form id="staff-form" class="space-y-4">
+      <form id="staff-form" class="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
         <input type="hidden" id="staff-id" value="" />
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -1976,7 +1976,7 @@
             </div>
           </div>
 
-          <div class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1 border border-outline-variant/60 rounded-xl p-2.5 bg-surface-container-lowest/50" id="permissions-accordion-container">
+          <div class="space-y-2.5 max-h-[220px] sm:max-h-[300px] overflow-y-auto pr-1 border border-outline-variant/60 rounded-xl p-2.5 bg-surface-container-lowest/50 custom-scrollbar" id="permissions-accordion-container">
             
             <!-- 1. Dashboard -->
             <div class="bg-surface-container-low/70 border border-outline-variant rounded-xl p-3 transition-colors">
@@ -2233,9 +2233,9 @@
           </div>
         </div>
 
-        <div class="flex justify-end gap-3 pt-4 border-t border-outline-variant">
-          <button type="button" class="close-staff-modal px-4 py-2 border border-outline-variant rounded-lg text-xs font-bold hover:bg-surface-container transition-colors">Cancel</button>
-          <button type="submit" class="bg-secondary text-on-secondary px-6 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow">Save Employee</button>
+        <div class="sticky bottom-0 bg-white pt-3 pb-1 border-t border-outline-variant flex justify-end gap-3 shrink-0 z-10">
+          <button type="button" class="close-staff-modal px-4 py-2 border border-outline-variant rounded-xl text-xs font-bold hover:bg-surface-container transition-colors">Cancel</button>
+          <button type="submit" class="bg-secondary text-on-secondary px-6 py-2 rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-sm">Save Employee</button>
         </div>
       </form>
     </div>
@@ -2756,7 +2756,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260813v1619"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260813v1718"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
