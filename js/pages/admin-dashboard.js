@@ -8528,8 +8528,6 @@ window.openRefundModal = (booking) => {
           const { error } = await supabase.from('bookings').update(updatePayload).eq('id', bookingId);
           if (error) throw new Error(error.message);
         }
-          if (error) throw new Error(error.message);
-        }
         
         window.showToast('Refund processed successfully!', 'success');
         modal.classList.add('hidden');
