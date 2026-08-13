@@ -51,17 +51,19 @@ module.exports = async (req, res) => {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    // Calculate amount based on payment_type
-    let amountToCharge = 0;
-    let descriptionText = `Date: ${booking.booking_date}`;
-
-    if (payment_type === 'deposit') {
+    if (req.body.amount && parseFloat(req.body.amount) > 0) {
+      amountToCharge = parseFloat(req.body.amount);
+      descriptionText += ` | ${payment_type === 'balance' ? 'Remaining Balance' : 'Payment'}`;
+    } else if (payment_type === 'deposit') {
       amountToCharge = parseFloat(booking.deposit_amount || 0);
       descriptionText += ` | Deposit Payment`;
     } else if (payment_type === 'balance') {
       const tot = parseFloat(booking.total_price || 0);
       const dep = parseFloat(booking.deposit_amount || 0);
-      amountToCharge = Math.max(0, tot - dep);
+      const ref = parseFloat(booking.refunded_amount || 0);
+      amountToCharge = booking.remaining_balance !== undefined && booking.remaining_balance !== null
+        ? parseFloat(booking.remaining_balance)
+        : Math.max(0, tot - (dep - ref));
       descriptionText += ` | Remaining Balance`;
     } else {
       // default to full

@@ -94,8 +94,19 @@ module.exports = async (req, res) => {
         updateData.status = 'confirmed';
         updateData.payment_method = 'stripe';
       } else if (paymentType === 'balance' || paymentType === 'full') {
-        updateData.status = 'completed';
+        const balancePaid = session.amount_total ? (session.amount_total / 100) : 0;
+        const currentDeposit = parseFloat(booking.deposit_amount || 0);
+        const newDeposit = currentDeposit + balancePaid;
+        const totPrice = parseFloat(booking.total_price || booking.amount || 0);
+        const refAmount = parseFloat(booking.refunded_amount || 0);
+        const newRem = Math.max(0, totPrice - (newDeposit - refAmount));
+
+        updateData.deposit_amount = newDeposit;
+        updateData.remaining_balance = newRem;
         updateData.payment_method = 'stripe';
+        if (newRem <= 0.01) {
+          updateData.status = 'completed';
+        }
       }
 
       const { error: updateError } = await supabase

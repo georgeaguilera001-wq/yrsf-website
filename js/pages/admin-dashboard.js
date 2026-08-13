@@ -5680,6 +5680,11 @@ EXTRACTION RULES:
             <p class="line-clamp-2 italic leading-tight">${b.special_requests ? escapeHtml(b.special_requests) : '<span class="text-on-surface-variant/50 not-italic">No special notes</span>'}</p>
           </td>
           <td class="p-2 text-right whitespace-nowrap">
+            ${rem > 0.01 ? `
+              <button onclick="window.openChargeBalanceModalByBookingId('${b.id}')" class="p-1 text-green-700 bg-green-50 hover:bg-green-100 rounded transition-colors mr-0.5" title="Collect Balance / Payment Link">
+                <span class="material-symbols-outlined text-[14px]">point_of_sale</span>
+              </button>
+            ` : ''}
             ${(parseFloat(b.deposit_amount || 0) > 0 && parseFloat(b.refunded_amount || 0) < parseFloat(b.deposit_amount || 0)) ? `
               <button onclick="window.openRefundModalByBookingId('${b.id}')" class="p-1 text-purple-700 hover:bg-purple-50 rounded transition-colors mr-0.5" title="Issue Refund">
                 <span class="material-symbols-outlined text-[14px]">payments</span>
@@ -5775,6 +5780,11 @@ EXTRACTION RULES:
             </div>
 
             <div class="flex items-center justify-end gap-1 pt-1.5 border-t border-outline-variant mt-1">
+              ${rem > 0.01 ? `
+                <button onclick="event.stopPropagation(); window.openChargeBalanceModalByBookingId('${b.id}')" class="p-1 text-green-700 bg-green-50 hover:bg-green-100 rounded transition-colors" title="Collect Balance / Payment Link">
+                  <span class="material-symbols-outlined text-[14px]">point_of_sale</span>
+                </button>
+              ` : ''}
               ${canRefund ? `
                 <button onclick="event.stopPropagation(); window.openRefundModalByBookingId('${b.id}')" class="p-1 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded transition-colors" title="Issue Refund">
                   <span class="material-symbols-outlined text-[14px]">payments</span>
@@ -6871,6 +6881,30 @@ Write ONLY the summary sentence(s), no extra explanation.`;
         refundBtn.onclick = () => window.openRefundModal(b);
       } else {
         refundBtn.classList.add('hidden');
+      }
+    }
+
+    // Inject Charge Balance Button next to Delete/Refund Buttons
+    let chargeBtn = document.getElementById('charge-balance-modal-btn');
+    if (!chargeBtn && delBtn) {
+      chargeBtn = document.createElement('button');
+      chargeBtn.type = 'button';
+      chargeBtn.id = 'charge-balance-modal-btn';
+      chargeBtn.className = 'hidden sm:w-auto px-3 bg-green-50 text-green-700 border border-green-200 py-2 rounded-xl font-label text-xs font-bold hover:bg-green-100 transition-all flex items-center justify-center gap-1';
+      chargeBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">point_of_sale</span><span>Charge Balance</span>';
+      delBtn.parentNode.insertBefore(chargeBtn, delBtn);
+    }
+    
+    if (chargeBtn) {
+      const tot = parseFloat(b.total_price || b.amount || 0);
+      const dep = parseFloat(b.deposit_amount || 0);
+      const ref = parseFloat(b.refunded_amount || 0);
+      const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, tot - (dep - ref));
+      if (rem > 0.01) {
+        chargeBtn.classList.remove('hidden');
+        chargeBtn.onclick = () => window.openChargeBalanceModal(b);
+      } else {
+        chargeBtn.classList.add('hidden');
       }
     }
 
@@ -8212,6 +8246,170 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   updateZapierStatusPill();
   loadQuoSettings();
 });
+
+window.openChargeBalanceModalByBookingId = async (id) => {
+  let cache = window.bookingsCache || (typeof bookingsCache !== 'undefined' ? bookingsCache : []);
+  let b = cache.find(x => x.id === id);
+  if (!b && typeof supabase !== 'undefined') {
+    const { data } = await supabase.from('bookings').select('*').eq('id', id).single();
+    b = data;
+  }
+  if (b && typeof window.openChargeBalanceModal === 'function') {
+    window.openChargeBalanceModal(b);
+  } else if (!b) {
+    if (window.showToast) window.showToast('Could not locate booking details.', true);
+  }
+};
+
+window.openChargeBalanceModal = (booking) => {
+  let modal = document.getElementById('charge-balance-modal');
+  if (!modal) {
+    const html = `
+      <div id="charge-balance-modal" class="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 hidden animate-fade-in">
+        <div class="bg-surface-container-lowest text-on-surface rounded-3xl max-w-md w-full p-6 shadow-2xl border border-outline-variant">
+          <div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-4">
+            <h3 class="font-headline text-lg font-bold text-green-700 flex items-center gap-2">
+              <span class="material-symbols-outlined">point_of_sale</span> Collect Remaining Balance
+            </h3>
+            <button type="button" id="close-charge-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-xl">&times;</button>
+          </div>
+          
+          <div class="space-y-4">
+            <input type="hidden" id="charge-booking-id" />
+            <div class="text-sm font-body bg-surface-container-low p-3 rounded-xl border border-outline-variant/60">
+              <div class="font-bold text-on-surface text-base mb-1" id="charge-cust-name"></div>
+              <div class="text-xs text-on-surface-variant" id="charge-boat-info"></div>
+            </div>
+
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Amount to Collect ($)</label>
+              <input type="number" id="charge-amount" step="0.01" min="0.01" class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-lg text-lg font-bold font-mono text-green-800 focus:ring-2 focus:ring-green-500"/>
+            </div>
+
+            <div class="space-y-2 pt-2">
+              <button type="button" id="charge-btn-copy-link" class="w-full py-2.5 bg-secondary text-on-secondary rounded-xl font-label text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">link</span> Generate &amp; Copy Payment Link
+              </button>
+              <button type="button" id="charge-btn-open-stripe" class="w-full py-2.5 bg-green-600 text-white rounded-xl font-label text-xs font-bold hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">open_in_new</span> Open Stripe Checkout Now
+              </button>
+              <button type="button" id="charge-btn-cash" class="w-full py-2.5 bg-surface-variant text-on-surface rounded-xl font-label text-xs font-bold hover:bg-outline-variant transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">payments</span> Record Cash / Offline Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    modal = document.getElementById('charge-balance-modal');
+    document.getElementById('close-charge-modal').addEventListener('click', () => modal.classList.add('hidden'));
+
+    // Copy Link Action
+    document.getElementById('charge-btn-copy-link').addEventListener('click', async () => {
+      const bookingId = document.getElementById('charge-booking-id').value;
+      const amount = parseFloat(document.getElementById('charge-amount').value) || 0;
+      const btn = document.getElementById('charge-btn-copy-link');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ booking_id: bookingId, payment_type: 'balance', amount })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.error || 'Failed to create payment link');
+        
+        await navigator.clipboard.writeText(data.url);
+        if (window.showToast) window.showToast('💳 Payment link copied to clipboard!', 'success');
+        modal.classList.add('hidden');
+      } catch (err) {
+        alert('Error generating link: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // Open Stripe Checkout Action
+    document.getElementById('charge-btn-open-stripe').addEventListener('click', async () => {
+      const bookingId = document.getElementById('charge-booking-id').value;
+      const amount = parseFloat(document.getElementById('charge-amount').value) || 0;
+      const btn = document.getElementById('charge-btn-open-stripe');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ booking_id: bookingId, payment_type: 'balance', amount })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.error || 'Failed to create checkout session');
+        
+        window.open(data.url, '_blank');
+        modal.classList.add('hidden');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // Record Cash Payment Action
+    document.getElementById('charge-btn-cash').addEventListener('click', async () => {
+      const bookingId = document.getElementById('charge-booking-id').value;
+      const amount = parseFloat(document.getElementById('charge-amount').value) || 0;
+      if (amount <= 0) return alert('Please enter a valid amount');
+      
+      const btn = document.getElementById('charge-btn-cash');
+      btn.disabled = true;
+      try {
+        let cache = window.bookingsCache || [];
+        let b = cache.find(x => x.id === bookingId);
+        if (!b && typeof supabase !== 'undefined') {
+          const { data } = await supabase.from('bookings').select('*').eq('id', bookingId).single();
+          b = data;
+        }
+        if (!b) throw new Error('Booking not found');
+
+        const currentDep = parseFloat(b.deposit_amount || 0);
+        const newDep = currentDep + amount;
+        const totPrice = parseFloat(b.total_price || b.amount || 0);
+        const refAmount = parseFloat(b.refunded_amount || 0);
+        const newRem = Math.max(0, totPrice - (newDep - refAmount));
+
+        const updateData = {
+          deposit_amount: newDep,
+          remaining_balance: newRem,
+          payment_method: b.payment_method ? `${b.payment_method}, cash/offline` : 'cash/offline'
+        };
+        if (newRem <= 0.01) updateData.status = 'completed';
+
+        const { error } = await supabase.from('bookings').update(updateData).eq('id', bookingId);
+        if (error) throw error;
+
+        if (window.showToast) window.showToast('Offline payment recorded successfully!', 'success');
+        modal.classList.add('hidden');
+        setTimeout(() => window.location.reload(), 1000);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  const tot = parseFloat(booking.total_price || booking.amount || 0);
+  const dep = parseFloat(booking.deposit_amount || 0);
+  const ref = parseFloat(booking.refunded_amount || 0);
+  const rem = booking.remaining_balance !== undefined && booking.remaining_balance !== null ? parseFloat(booking.remaining_balance) : Math.max(0, tot - (dep - ref));
+
+  document.getElementById('charge-booking-id').value = booking.id;
+  document.getElementById('charge-cust-name').textContent = booking.customer_name || 'Guest';
+  document.getElementById('charge-boat-info').textContent = `${booking.boat_name || 'Fleet Yacht'} • Date: ${booking.booking_date || 'TBD'}`;
+  document.getElementById('charge-amount').value = rem.toFixed(2);
+
+  modal.classList.remove('hidden');
+};
 
 window.openRefundModalByBookingId = async (id) => {
   let cache = window.bookingsCache || (typeof bookingsCache !== 'undefined' ? bookingsCache : []);
