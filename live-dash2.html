@@ -636,16 +636,16 @@
 
         <!-- Sub-navigation Tabs -->
         <div class="flex border-b border-outline-variant mb-4 sm:mb-6 gap-3 sm:gap-6 overflow-x-auto custom-scrollbar">
-          <button id="tab-btn-calendar" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-secondary font-label text-[11px] sm:text-sm font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
+          <button id="tab-btn-calendar" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-transparent font-label text-[11px] sm:text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 sm:gap-2 transition-colors">
             <span class="material-symbols-outlined text-sm sm:text-base">calendar_month</span> Monthly Calendar Grid
           </button>
-          <button id="tab-btn-manifest" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-transparent font-label text-[11px] sm:text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 sm:gap-2 transition-colors">
+          <button id="tab-btn-manifest" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-secondary font-label text-[11px] sm:text-sm font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
             <span class="material-symbols-outlined text-sm sm:text-base">format_list_bulleted</span> Daily Manifest List
           </button>
         </div>
 
         <!-- TAB 1: Manifest View -->
-        <div id="view-manifest" class="hidden">
+        <div id="view-manifest" class="">
           <!-- Filter Bar -->
           <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mb-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-2">
@@ -698,7 +698,7 @@
         </div>
 
         <!-- TAB 2: Calendar View -->
-        <div id="view-calendar">
+        <div id="view-calendar" class="hidden">
           <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
             <!-- Calendar Source Tabs -->
             <div class="flex items-center gap-2 bg-surface-container p-1 rounded-xl border border-outline-variant w-fit mb-4">
