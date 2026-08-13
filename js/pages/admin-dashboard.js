@@ -5778,7 +5778,7 @@ EXTRACTION RULES:
                 </div>
                 <div class="flex justify-between text-on-surface-variant">
                   <span>📞 Phone:</span>
-                  <span>${escapeHtml(b.customer_phone || '-')}</span>
+                  <span>${b.customer_phone ? `<a href="tel:${escapeHtml(b.customer_phone)}" onclick="event.stopPropagation()" class="font-mono text-secondary font-bold hover:underline hover:text-primary transition-colors">${escapeHtml(b.customer_phone)}</a>` : '-'}</span>
                 </div>
                 <div class="flex justify-between text-on-surface-variant">
                   <span>👥 Passengers:</span>
