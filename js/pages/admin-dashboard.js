@@ -6744,16 +6744,16 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     if (cPriceEl) cPriceEl.value = '';
 
     if (notes) {
-      const lines = notes.split('\\n');
+      const lines = notes.split('\n');
       const remainingNotes = [];
       lines.forEach(line => {
-        const match = line.match(/^\[Addon: (\\d+)x (.*?)(?: \\(\\$([0-9.]+)\\))?\]$/);
-        const customMatch = line.match(/^\[Custom Addon: (.*?)(?: \\(\\$([0-9.]+)\\))?\]$/);
+        const match = line.match(/^\[Addon: (\d+)x (.*?)(?: \(\$([0-9.]+)\))?\]$/);
+        const customMatch = line.match(/^\[Custom Addon: (.*?)(?: \(\$([0-9.]+)\))?\]$/);
         
         if (match) {
           const qty = match[1];
           const name = match[2];
-          const cb = document.querySelector(`.addon-cb[data-name="${name.replace(/"/g, '\\\\\"')}"]`);
+          const cb = document.querySelector(`.addon-cb[data-name="${name.replace(/"/g, '\\"')}"]`);
           if (cb) {
              cb.checked = true;
              const row = cb.closest('.dynamic-addon-row');
@@ -6775,7 +6775,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       });
       // Remove trailing empty lines and re-join
       while(remainingNotes.length > 0 && remainingNotes[remainingNotes.length - 1].trim() === '') remainingNotes.pop();
-      notes = remainingNotes.join('\\n');
+      notes = remainingNotes.join('\n');
     }
     document.getElementById('book-notes').value = notes;
 
