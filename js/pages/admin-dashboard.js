@@ -78,40 +78,89 @@ return; // Redirect in progress
   }
 
   // --- ENFORCE PERMISSIONS ---
+  window.isSuperAdminUser = false;
+  window.currentStaffPermissions = null;
+
+  window.hasPermission = (moduleName, actionName = 'access') => {
+    if (window.isSuperAdminUser || !window.currentStaffPermissions) return true;
+
+    const modPerm = window.currentStaffPermissions[moduleName];
+    if (!modPerm) return false;
+
+    if (actionName === 'access') {
+      return typeof modPerm === 'object' ? Boolean(modPerm.access) : Boolean(modPerm);
+    }
+
+    if (typeof modPerm === 'object') {
+      return Boolean(modPerm[actionName]);
+    }
+
+    return Boolean(modPerm);
+  };
+
   if (user?.email) {
     try {
-      const { data: staffUser, error } = await supabase.from('staff_users').select('permissions, role').eq('email', user.email).single();
-      if (!error && staffUser) {
-        const role = (staffUser.role || '').toLowerCase();
-        // Owners and Admins bypass permission checks
-        if (role !== 'owner' && role !== 'admin' && role !== 'superadmin') {
-          const perms = staffUser.permissions || {};
-          let firstVisibleBtn = null;
-          
-          // Hide sidebar items user lacks access to
-          document.querySelectorAll('.admin-sidebar li[data-nav-id]').forEach(li => {
-            const mod = li.getAttribute('data-nav-id');
-            const accessObj = perms[mod];
-            const hasAccess = typeof accessObj === 'object' ? accessObj?.access : (accessObj === true);
-            
-            if (!hasAccess) {
-              li.style.display = 'none'; 
-            } else if (!firstVisibleBtn) {
-              firstVisibleBtn = li.querySelector('button.admin-nav-btn');
-            }
-          });
-          
-          // Auto-redirect if they don't have access to the default Dashboard view
-          setTimeout(() => {
-            const dashboardAccess = perms['dashboard']?.access;
-            if (firstVisibleBtn && !dashboardAccess) {
-              firstVisibleBtn.click();
-            }
-          }, 100);
+      const userEmailClean = user.email.trim().toLowerCase();
+      const isAuthSuper = user.role === 'admin' || user.user_metadata?.role === 'admin' || user.app_metadata?.role === 'admin' || userEmailClean === 'pay@sfyachtrentals.com' || userEmailClean === 'admin@sfyachtrentals.com';
+
+      const { data: staffUsers } = await supabase.from('staff_users').select('*');
+      const staffUser = (staffUsers || []).find(s => s.email && s.email.trim().toLowerCase() === userEmailClean);
+
+      if (isAuthSuper && !staffUser) {
+        window.isSuperAdminUser = true;
+        window.currentStaffPermissions = null;
+      } else if (staffUser) {
+        window.isSuperAdminUser = false;
+        window.currentStaffPermissions = staffUser.permissions || {};
+      } else {
+        window.isSuperAdminUser = isAuthSuper;
+        window.currentStaffPermissions = isAuthSuper ? null : {};
+      }
+
+      // Hide sidebar & mobile items user lacks access to
+      if (!window.isSuperAdminUser && window.currentStaffPermissions) {
+        let firstVisibleMod = null;
+
+        document.querySelectorAll('.admin-sidebar li[data-nav-id]').forEach(li => {
+          const mod = li.getAttribute('data-nav-id');
+          const hasAcc = window.hasPermission(mod, 'access');
+          if (!hasAcc) {
+            li.style.display = 'none';
+          } else if (!firstVisibleMod) {
+            firstVisibleMod = mod;
+          }
+        });
+
+        document.querySelectorAll('.mobile-bottom-nav-item').forEach(item => {
+          const mod = item.dataset.bottomSection;
+          if (mod && !window.hasPermission(mod, 'access')) {
+            item.style.display = 'none';
+          }
+        });
+
+        // Hide action buttons user lacks sub-permissions for
+        if (!window.hasPermission('bookings', 'create_edit')) {
+          document.querySelectorAll('#add-booking-btn, #day-events-add-booking-btn').forEach(b => b?.classList.add('hidden'));
         }
+        if (!window.hasPermission('fleet', 'create_edit')) {
+          document.querySelectorAll('#add-boat-btn').forEach(b => b?.classList.add('hidden'));
+        }
+        if (!window.hasPermission('addons', 'create_edit')) {
+          document.querySelectorAll('#add-addon-btn').forEach(b => b?.classList.add('hidden'));
+        }
+        if (!window.hasPermission('staff', 'create_edit')) {
+          document.querySelectorAll('#add-staff-btn').forEach(b => b?.classList.add('hidden'));
+        }
+
+        // Auto-redirect if default dashboard section is disallowed
+        setTimeout(() => {
+          if (firstVisibleMod && !window.hasPermission('dashboard', 'access')) {
+            window.showAdminSection(firstVisibleMod);
+          }
+        }, 100);
       }
     } catch (e) {
-      console.warn('Failed to load permissions:', e);
+      console.warn('Failed to load staff permissions:', e);
     }
   }
   // ----------------------------
@@ -214,6 +263,19 @@ return; // Redirect in progress
   });
 
   function showSection(sectionId) {
+    if (sectionId && !window.hasPermission(sectionId, 'access')) {
+      showToast(`⛔ Access Denied: You do not have permission to view the ${sectionId.toUpperCase()} module.`, true);
+      
+      const firstAllowed = Array.from(document.querySelectorAll('.admin-sidebar li[data-nav-id]'))
+        .map(li => li.getAttribute('data-nav-id'))
+        .find(mod => window.hasPermission(mod, 'access'));
+
+      if (firstAllowed && firstAllowed !== sectionId) {
+        showSection(firstAllowed);
+      }
+      return;
+    }
+
     sections.forEach(s => s.classList.add('hidden'));
     document.querySelectorAll('.admin-nav-btn').forEach(b => {
       b.classList.remove('bg-secondary-container', 'text-on-secondary-container');
