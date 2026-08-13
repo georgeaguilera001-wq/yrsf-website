@@ -3792,6 +3792,32 @@ EXTRACTION RULES:
     loadTimecards();
   }
 
+  window.isSuperAdmin = () => {
+    if (!user) return true;
+    if (user.role === 'admin' || user.user_metadata?.role === 'admin' || user.app_metadata?.role === 'admin') return true;
+    if (user.email === 'pay@sfyachtrentals.com' || user.email === 'admin@sfyachtrentals.com') return true;
+    
+    if (staffUsersCache && staffUsersCache.length > 0) {
+      const isStaff = staffUsersCache.some(s => s.email && user.email && s.email.toLowerCase() === user.email.toLowerCase());
+      if (!isStaff) return true;
+    }
+    
+    return false;
+  };
+
+  window.canClockInForStaff = (staffId) => {
+    if (window.isSuperAdmin()) return true;
+
+    const targetStaff = (staffUsersCache || []).find(s => s.id === staffId);
+    if (!targetStaff) return false;
+
+    if (user?.email && targetStaff.email && user.email.toLowerCase() === targetStaff.email.toLowerCase()) {
+      return true;
+    }
+
+    return false;
+  };
+
   window.loadDashStaffTimeclock = async () => {
     const grid = document.getElementById('dash-staff-timeclock-grid');
     const workingBadge = document.getElementById('dash-working-staff-count');
@@ -3800,6 +3826,7 @@ EXTRACTION RULES:
     try {
       const { data: users, error } = await supabase.from('staff_users').select('*').order('name', { ascending: true });
       if (error) throw error;
+      staffUsersCache = users || [];
 
       const { data: openCards } = await supabase.from('staff_timecards').select('staff_id, clock_in, notes').is('clock_out', null);
       const activeStaffIds = new Set((openCards || []).map(c => c.staff_id));
@@ -3811,14 +3838,16 @@ EXTRACTION RULES:
         return;
       }
 
-      grid.innerHTML = users.map(user => {
-        const isWorking = activeStaffIds.has(user.id);
+      grid.innerHTML = users.map(userItem => {
+        const isWorking = activeStaffIds.has(userItem.id);
+        const canManage = window.canClockInForStaff(userItem.id);
+
         return `
           <div class="bg-surface-container-low border border-outline-variant/60 rounded-xl p-3 flex flex-col justify-between gap-2 shadow-2xs hover:border-outline-variant transition-all">
             <div class="flex items-center justify-between gap-1">
               <div class="min-w-0 flex-1">
-                <h4 class="font-bold text-xs text-on-surface truncate">${escapeHtml(user.name)}</h4>
-                <p class="text-[10px] text-on-surface-variant truncate">${escapeHtml(user.role || 'Staff')}</p>
+                <h4 class="font-bold text-xs text-on-surface truncate">${escapeHtml(userItem.name)}</h4>
+                <p class="text-[10px] text-on-surface-variant truncate">${escapeHtml(userItem.role || 'Staff')}</p>
               </div>
               <span class="px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0 ${isWorking ? 'bg-green-100 text-green-800 animate-pulse' : 'bg-surface-container text-on-surface-variant'}">
                 ${isWorking ? '🟢 Working' : '⚪ Off Duty'}
@@ -3826,12 +3855,14 @@ EXTRACTION RULES:
             </div>
 
             <div class="pt-1 border-t border-outline-variant/30">
-              ${isWorking ? `
-                <button onclick="window.quickClockOutStaff('${user.id}', '${escapeHtml(user.name)}')" class="w-full py-1.5 px-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs">
+              ${!canManage ? `
+                <span class="w-full py-1.5 px-2 bg-surface-container text-on-surface-variant/60 rounded-lg text-[11px] font-bold text-center block opacity-60 cursor-not-allowed" title="Only Super Admin can clock in for co-workers">🔒 Self Only</span>
+              ` : isWorking ? `
+                <button onclick="window.quickClockOutStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="w-full py-1.5 px-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs">
                   <span class="material-symbols-outlined text-[14px]">logout</span> Clock Out
                 </button>
               ` : `
-                <button onclick="window.quickClockInStaff('${user.id}', '${escapeHtml(user.name)}')" class="w-full py-1.5 px-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs">
+                <button onclick="window.quickClockInStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="w-full py-1.5 px-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs">
                   <span class="material-symbols-outlined text-[14px]">schedule</span> Clock In
                 </button>
               `}
@@ -3845,6 +3876,11 @@ EXTRACTION RULES:
   };
 
   window.quickClockInStaff = async (staffId, staffName) => {
+    if (!window.canClockInForStaff(staffId)) {
+      showToast(`⛔ Permission Denied: You can only clock in for yourself!`, true);
+      return;
+    }
+
     try {
       const { error } = await supabase.from('staff_timecards').insert([{
         staff_id: staffId,
@@ -3867,6 +3903,11 @@ EXTRACTION RULES:
   };
 
   window.quickClockOutStaff = async (staffId, staffName) => {
+    if (!window.canClockInForStaff(staffId)) {
+      showToast(`⛔ Permission Denied: You can only clock out for yourself!`, true);
+      return;
+    }
+
     try {
       const now = new Date();
       const { data: openCards, error: cardErr } = await supabase
@@ -3925,8 +3966,21 @@ EXTRACTION RULES:
       if (statWorking) statWorking.textContent = `${activeStaffIds.size} Staff`;
 
       if (select) {
+        const isSuper = window.isSuperAdmin();
+        const myStaff = (staffUsersCache || []).find(s => user?.email && s.email && s.email.toLowerCase() === user.email.toLowerCase());
+
         select.innerHTML = '<option value="">-- Choose Your Name --</option>' + 
           staffUsersCache.map(u => `<option value="${u.id}">${u.name} (${u.role})</option>`).join('');
+
+        if (!isSuper && myStaff) {
+          select.value = myStaff.id;
+          select.disabled = true;
+          select.classList.add('bg-surface-container', 'cursor-not-allowed');
+          setTimeout(() => select.dispatchEvent(new Event('change')), 50);
+        } else {
+          select.disabled = false;
+          select.classList.remove('bg-surface-container', 'cursor-not-allowed');
+        }
       }
 
       if (staffUsersCache.length === 0) {
@@ -3934,9 +3988,10 @@ EXTRACTION RULES:
         return;
       }
 
-      tbody.innerHTML = staffUsersCache.map(user => {
-        const isWorking = activeStaffIds.has(user.id);
-        const perms = user.permissions || {};
+      tbody.innerHTML = staffUsersCache.map(userItem => {
+        const isWorking = activeStaffIds.has(userItem.id);
+        const canManage = window.canClockInForStaff(userItem.id);
+        const perms = userItem.permissions || {};
         let grantedMods = 0;
         let totalSubGranted = 0;
         Object.keys(MODULE_SUBPERMS).forEach(mod => {
@@ -3951,23 +4006,23 @@ EXTRACTION RULES:
             }
           }
         });
-        const permBadges = user.role === 'admin'
+        const permBadges = userItem.role === 'admin'
           ? '<span class="bg-primary text-on-primary px-2 py-0.5 rounded text-xs font-bold">Full Access</span>'
           : `<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs font-medium">${grantedMods} Modules (${totalSubGranted} Actions)</span>`;
 
         return `
           <tr class="hover:bg-surface-container-low/50 transition-colors">
             <td class="p-4">
-              <p class="font-bold text-on-surface">${escapeHtml(user.name)}</p>
-              <p class="text-xs text-on-surface-variant">${escapeHtml(user.email || '')}</p>
+              <p class="font-bold text-on-surface">${escapeHtml(userItem.name)}</p>
+              <p class="text-xs text-on-surface-variant">${escapeHtml(userItem.email || '')}</p>
             </td>
             <td class="p-4">
-              <span class="font-medium text-on-surface">${escapeHtml(user.role || 'Staff')}</span>
-              ${user.pay_type === 'commission'
-                ? `<p class="text-xs font-mono text-amber-700 font-bold">🤝 ${user.commission_rate || 0}% Comm.</p>`
-                : user.pay_type === 'both'
-                ? `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(user.hourly_rate || 0).toFixed(2)}/hr + <span class="text-amber-700">${user.commission_rate || 0}% Comm.</span></p>`
-                : `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(user.hourly_rate || 0).toFixed(2)}/hr</p>`}
+              <span class="font-medium text-on-surface">${escapeHtml(userItem.role || 'Staff')}</span>
+              ${userItem.pay_type === 'commission'
+                ? `<p class="text-xs font-mono text-amber-700 font-bold">🤝 ${userItem.commission_rate || 0}% Comm.</p>`
+                : userItem.pay_type === 'both'
+                ? `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(userItem.hourly_rate || 0).toFixed(2)}/hr + <span class="text-amber-700">${userItem.commission_rate || 0}% Comm.</span></p>`
+                : `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(userItem.hourly_rate || 0).toFixed(2)}/hr</p>`}
             </td>
             <td class="p-4">
               ${isWorking 
@@ -3976,19 +4031,21 @@ EXTRACTION RULES:
             </td>
             <td class="p-4 flex flex-wrap gap-1 max-w-sm">${permBadges}</td>
             <td class="p-4 text-right whitespace-nowrap">
-              ${isWorking ? `
-                <button onclick="window.quickClockOutStaff('${user.id}', '${escapeHtml(user.name)}')" class="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5" title="Clock Out ${escapeHtml(user.name)}">
+              ${!canManage ? `
+                <span class="px-2.5 py-1.5 bg-surface-container text-on-surface-variant/60 rounded-lg text-xs font-bold inline-block opacity-60 cursor-not-allowed mr-1.5" title="Only Super Admin can clock in for co-workers">🔒 Self Only</span>
+              ` : isWorking ? `
+                <button onclick="window.quickClockOutStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5" title="Clock Out ${escapeHtml(userItem.name)}">
                   <span class="material-symbols-outlined text-[16px]">logout</span> Clock Out
                 </button>
               ` : `
-                <button onclick="window.quickClockInStaff('${user.id}', '${escapeHtml(user.name)}')" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5" title="Clock In ${escapeHtml(user.name)}">
+                <button onclick="window.quickClockInStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5" title="Clock In ${escapeHtml(userItem.name)}">
                   <span class="material-symbols-outlined text-[16px]">schedule</span> Clock In
                 </button>
               `}
-              <button onclick="window.editStaffUser('${user.id}')" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors" title="Edit Staff & Permissions">
+              <button onclick="window.editStaffUser('${userItem.id}')" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors" title="Edit Staff & Permissions">
                 <span class="material-symbols-outlined text-[18px]">edit</span>
               </button>
-              <button onclick="window.deleteStaffUser('${user.id}', '${escapeHtml(user.name)}')" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1" title="Delete Employee">
+              <button onclick="window.deleteStaffUser('${userItem.id}', '${escapeHtml(userItem.name)}')" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1" title="Delete Employee">
                 <span class="material-symbols-outlined text-[18px]">delete</span>
               </button>
             </td>
