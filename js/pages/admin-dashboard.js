@@ -4691,6 +4691,7 @@ EXTRACTION RULES:
         await window.loadBookingAddons();
         window.selectBoatOption('', '');
         window.renderBoatDropdownOptions('');
+        if (typeof window.setBookingModalMode === 'function') window.setBookingModalMode('edit');
         modal.classList.remove('hidden');
       });
       [closeBtn, cancelBtn].forEach(btn => btn?.addEventListener('click', () => modal.classList.add('hidden')));
@@ -5672,8 +5673,8 @@ EXTRACTION RULES:
             <button onclick="window.openMessagePreview('${b.id}')" class="p-1 text-on-surface-variant hover:text-green-600 hover:bg-green-50 rounded transition-colors ml-0.5" title="Send WhatsApp Confirmation">
               <span class="material-symbols-outlined text-[14px]">chat</span>
             </button>
-            <button onclick="window.editBooking('${b.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-colors ml-0.5" title="Edit Booking">
-              <span class="material-symbols-outlined text-[14px]">edit</span>
+            <button onclick="window.editBooking('${b.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-colors ml-0.5" title="View Details">
+              <span class="material-symbols-outlined text-[14px]">visibility</span>
             </button>
             <button onclick="window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors ml-0.5" title="Cancel & Delete">
               <span class="material-symbols-outlined text-[14px]">delete</span>
@@ -5742,7 +5743,7 @@ EXTRACTION RULES:
                 <span class="material-symbols-outlined text-[14px]">chat</span>
               </button>
               <button onclick="event.stopPropagation(); window.editBooking('${b.id}')" class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-[10px] font-bold text-on-surface flex items-center gap-0.5 transition-colors">
-                <span class="material-symbols-outlined text-[12px]">edit</span> Edit
+                <span class="material-symbols-outlined text-[12px]">visibility</span> View
               </button>
               <button onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="px-2 py-1 text-error hover:bg-error-container rounded text-[10px] font-bold transition-colors">
                 Cancel
@@ -6830,6 +6831,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
 
     if (typeof window.updateEndTime === 'function') window.updateEndTime();
+    if (typeof window.setBookingModalMode === 'function') window.setBookingModalMode('view');
     document.getElementById('booking-modal')?.classList.remove('hidden');
   };
 
@@ -7920,6 +7922,56 @@ window.openRefundModal = (booking) => {
 
   modal.classList.remove('hidden');
 };
+
+window.setBookingModalMode = (mode) => {
+  const form = document.getElementById('booking-form');
+  if (!form) return;
+  const els = form.querySelectorAll('input, select, textarea');
+  
+  // Inject Edit button if missing
+  let editBtn = document.getElementById('toggle-edit-mode-btn');
+  const saveBtn = form.querySelector('button[type="submit"]');
+  const cancelBtn = document.getElementById('cancel-booking-btn');
+  
+  if (!editBtn && saveBtn) {
+    editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.id = 'toggle-edit-mode-btn';
+    editBtn.className = 'w-full sm:w-auto px-6 py-3 rounded-xl font-label text-sm font-bold transition-all bg-secondary-container text-on-secondary-container hover:bg-secondary hover:text-on-secondary flex items-center justify-center gap-2';
+    editBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">edit</span><span>Make Changes</span>';
+    editBtn.onclick = () => window.setBookingModalMode('edit');
+    saveBtn.parentNode.insertBefore(editBtn, saveBtn);
+  }
+
+  if (mode === 'view') {
+    els.forEach(el => { if (el.type !== 'hidden') el.disabled = true; });
+    if (saveBtn) saveBtn.classList.add('hidden');
+    if (cancelBtn) cancelBtn.classList.add('hidden');
+    if (editBtn) editBtn.classList.remove('hidden');
+    const title = document.getElementById('booking-modal-title');
+    if (title) title.textContent = 'View Charter Details';
+    
+    // Hide payment link stuff
+    const genLink = document.getElementById('generate-link-btn');
+    const copyLink = document.getElementById('copy-payment-link-btn');
+    if(genLink) genLink.classList.add('hidden');
+    if(copyLink) copyLink.classList.add('hidden');
+  } else {
+    els.forEach(el => el.disabled = false);
+    if (saveBtn) saveBtn.classList.remove('hidden');
+    if (cancelBtn) cancelBtn.classList.remove('hidden');
+    if (editBtn) editBtn.classList.add('hidden');
+    const title = document.getElementById('booking-modal-title');
+    if (title) title.textContent = document.getElementById('booking-id').value ? 'Edit Charter Booking' : 'Schedule Charter Booking';
+    
+    // Show payment link stuff
+    const genLink = document.getElementById('generate-link-btn');
+    const copyLink = document.getElementById('copy-payment-link-btn');
+    if(genLink) genLink.classList.remove('hidden');
+    if(copyLink) copyLink.classList.remove('hidden');
+  }
+};
+
 
 
 
