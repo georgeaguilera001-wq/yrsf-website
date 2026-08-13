@@ -5669,6 +5669,11 @@ EXTRACTION RULES:
             <p class="line-clamp-2 italic leading-tight">${b.special_requests ? escapeHtml(b.special_requests) : '<span class="text-on-surface-variant/50 not-italic">No special notes</span>'}</p>
           </td>
           <td class="p-2 text-right whitespace-nowrap">
+            ${(parseFloat(b.deposit_amount || 0) > 0 && parseFloat(b.refunded_amount || 0) < parseFloat(b.deposit_amount || 0)) ? `
+              <button onclick="window.openRefundModalByBookingId('${b.id}')" class="p-1 text-purple-700 hover:bg-purple-50 rounded transition-colors mr-0.5" title="Issue Refund">
+                <span class="material-symbols-outlined text-[14px]">payments</span>
+              </button>
+            ` : ''}
             <button onclick="window.printBookingInvoice('${b.id}')" class="p-1 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Generate PDF Invoice">
               <span class="material-symbols-outlined text-[14px]">receipt_long</span>
             </button>
@@ -5691,41 +5696,54 @@ EXTRACTION RULES:
       cardsGrid.innerHTML = filtered.map(b => {
         const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         const isToday = b.booking_date === todayStr;
-        let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">🟢 Confirmed</span>`;
-        if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold">✓ Completed</span>`;
-        if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">🔴 Cancelled</span>`;
+        let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">✓ Confirmed</span>`;
+        if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold">🏁 Completed</span>`;
+        if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">🛑 Cancelled</span>`;
 
-        const tot = parseFloat(b.total_price || 0);
+        const total = parseFloat(b.total_price || b.amount || 0);
         const dep = parseFloat(b.deposit_amount || 0);
-        const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, tot - dep);
+        const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, total - dep);
+        const canRefund = dep > 0 && parseFloat(b.refunded_amount || 0) < dep;
 
         return `
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${isToday ? 'ring-1 ring-amber-400 bg-amber-50/20' : ''}">
+          <div class="bg-surface-container-lowest border ${isToday ? 'border-secondary ring-1 ring-secondary/30' : 'border-outline-variant'} rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden">
+            ${isToday ? '<div class="absolute top-0 right-0 bg-secondary text-on-secondary text-[9px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">DEPARTING TODAY</div>' : ''}
             <div>
-              <div class="flex items-center justify-between pb-1.5 border-b border-outline-variant mb-1.5">
-                <div>
-                  <span class="inline-flex items-center gap-1 text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container">
-                    🕒 ${b.start_time}
-                  </span>
-                  <span class="text-[10px] font-mono text-on-surface-variant ml-1">${dateFormatted}</span>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-secondary text-lg">directions_boat</span>
+                  <h3 class="font-headline font-bold text-sm text-on-surface truncate max-w-[160px]">${escapeHtml(b.boat_name || 'Fleet Yacht')}</h3>
                 </div>
-                ${statusBadge.replace('px-2.5 py-1 text-xs', 'px-1.5 py-0.5 text-[10px]')}
+                ${statusBadge}
               </div>
-              <h4 class="font-headline text-sm font-bold text-secondary mb-0.5">${escapeHtml(b.boat_name || '')}</h4>
-              <p class="text-[11px] font-bold text-on-surface mb-1.5 flex items-center gap-1">
-                <span class="material-symbols-outlined text-[12px] text-on-surface-variant">person</span> ${escapeHtml(b.customer_name || '')}
-                <span class="text-on-surface-variant font-normal">(${b.guest_count}g • ${b.duration_hours}h)</span>
-              </p>
 
-              <!-- Financial Breakdown Card -->
-              <div class="bg-amber-50/60 border border-amber-200/80 rounded-lg p-2 my-1.5 space-y-1 font-mono text-[10px] shadow-inner">
-                <div class="flex justify-between text-on-surface font-bold">
-                  <span class="font-sans text-[9px] text-on-surface-variant">Total:</span>
-                  <span class="text-[11px] text-green-700">$${tot.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              <div class="space-y-1 mb-3 bg-surface-container-low p-2.5 rounded-xl border border-outline-variant/50 text-xs">
+                <div class="flex justify-between text-on-surface font-semibold">
+                  <span>📅 Date &amp; Time:</span>
+                  <span class="font-mono text-secondary">${dateFormatted} @ ${escapeHtml(b.start_time || 'TBD')}</span>
                 </div>
-                <div class="flex justify-between text-blue-700 border-t border-amber-200/50 pt-1">
-                  <span class="font-sans text-[9px] text-on-surface-variant">Deposit:</span>
-                  <span class="font-bold">-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                <div class="flex justify-between text-on-surface-variant">
+                  <span>👤 Guest:</span>
+                  <span class="font-bold text-on-surface">${escapeHtml(b.customer_name || 'Guest')}</span>
+                </div>
+                <div class="flex justify-between text-on-surface-variant">
+                  <span>📞 Phone:</span>
+                  <span>${escapeHtml(b.customer_phone || '-')}</span>
+                </div>
+                <div class="flex justify-between text-on-surface-variant">
+                  <span>👥 Passengers:</span>
+                  <span>${b.guests || 1} Guests (${b.duration_hours || 4} hrs)</span>
+                </div>
+              </div>
+
+              <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2 mb-3 text-xs space-y-1">
+                <div class="flex justify-between text-amber-900 font-bold">
+                  <span>Total Charter Price:</span>
+                  <span>$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div class="flex justify-between text-amber-800 text-[11px]">
+                  <span>Deposit Paid:</span>
+                  <span>$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div class="flex justify-between border-t border-amber-200 pt-1 ${rem > 0.01 ? 'text-red-700 font-bold bg-red-100/60 px-1 rounded' : 'text-green-800 font-bold bg-green-100/60 px-1 rounded'}">
                   <span class="font-sans text-[9px]">${rem > 0.01 ? 'Balance:' : 'Status:'}</span>
@@ -5738,6 +5756,11 @@ EXTRACTION RULES:
             </div>
 
             <div class="flex items-center justify-end gap-1 pt-1.5 border-t border-outline-variant mt-1">
+              ${canRefund ? `
+                <button onclick="event.stopPropagation(); window.openRefundModalByBookingId('${b.id}')" class="p-1 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded transition-colors" title="Issue Refund">
+                  <span class="material-symbols-outlined text-[14px]">payments</span>
+                </button>
+              ` : ''}
               <button onclick="event.stopPropagation(); window.printBookingInvoice('${b.id}')" class="p-1 bg-surface-container hover:bg-green-50 hover:text-green-700 rounded transition-colors" title="Print Invoice">
                 <span class="material-symbols-outlined text-[14px]">receipt_long</span>
               </button>
@@ -8120,6 +8143,13 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   updateZapierStatusPill();
   loadQuoSettings();
 });
+
+window.openRefundModalByBookingId = (id) => {
+  const b = (bookingsCache || []).find(x => x.id === id);
+  if (b && typeof window.openRefundModal === 'function') {
+    window.openRefundModal(b);
+  }
+};
 
 window.openRefundModal = (booking) => {
   let modal = document.getElementById('refund-modal');
