@@ -7927,6 +7927,7 @@ window.setBookingModalMode = (mode) => {
   const form = document.getElementById('booking-form');
   if (!form) return;
   const els = form.querySelectorAll('input, select, textarea');
+  const buttons = form.querySelectorAll('button:not([type="submit"]):not(#toggle-edit-mode-btn):not(#cancel-booking-btn):not(#close-booking-modal):not(#refund-booking-btn)');
   
   // Inject Edit button if missing
   let editBtn = document.getElementById('toggle-edit-mode-btn');
@@ -7944,27 +7945,40 @@ window.setBookingModalMode = (mode) => {
   }
 
   if (mode === 'view') {
-    els.forEach(el => { if (el.type !== 'hidden') el.disabled = true; });
+    els.forEach(el => { 
+      if (el.type !== 'hidden') {
+        el.classList.add('pointer-events-none', 'opacity-70');
+        if (el.tagName === 'INPUT' && ['text', 'number', 'email', 'date', 'time'].includes(el.type)) el.readOnly = true;
+        if (el.tagName === 'TEXTAREA') el.readOnly = true;
+      }
+    });
+    buttons.forEach(btn => btn.classList.add('hidden'));
+
     if (saveBtn) saveBtn.classList.add('hidden');
     if (cancelBtn) cancelBtn.classList.add('hidden');
     if (editBtn) editBtn.classList.remove('hidden');
     const title = document.getElementById('booking-modal-title');
     if (title) title.textContent = 'View Charter Details';
     
-    // Hide payment link stuff
+    // Hide payment link stuff explicitly
     const genLink = document.getElementById('generate-link-btn');
     const copyLink = document.getElementById('copy-payment-link-btn');
     if(genLink) genLink.classList.add('hidden');
     if(copyLink) copyLink.classList.add('hidden');
   } else {
-    els.forEach(el => el.disabled = false);
+    els.forEach(el => {
+      el.classList.remove('pointer-events-none', 'opacity-70');
+      el.readOnly = false;
+    });
+    buttons.forEach(btn => btn.classList.remove('hidden'));
+
     if (saveBtn) saveBtn.classList.remove('hidden');
     if (cancelBtn) cancelBtn.classList.remove('hidden');
     if (editBtn) editBtn.classList.add('hidden');
     const title = document.getElementById('booking-modal-title');
     if (title) title.textContent = document.getElementById('booking-id').value ? 'Edit Charter Booking' : 'Schedule Charter Booking';
     
-    // Show payment link stuff
+    // Show payment link stuff explicitly
     const genLink = document.getElementById('generate-link-btn');
     const copyLink = document.getElementById('copy-payment-link-btn');
     if(genLink) genLink.classList.remove('hidden');
