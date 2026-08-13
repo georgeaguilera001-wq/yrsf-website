@@ -668,6 +668,7 @@ return; // Redirect in progress
 
       // Load bookings for the Upcoming Reservations widget
       await loadBookings();
+      if (typeof window.loadDashStaffTimeclock === 'function') window.loadDashStaffTimeclock();
 
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
@@ -3791,12 +3792,64 @@ EXTRACTION RULES:
     loadTimecards();
   }
 
+  window.loadDashStaffTimeclock = async () => {
+    const grid = document.getElementById('dash-staff-timeclock-grid');
+    const workingBadge = document.getElementById('dash-working-staff-count');
+    if (!grid) return;
+
+    try {
+      const { data: users, error } = await supabase.from('staff_users').select('*').order('name', { ascending: true });
+      if (error) throw error;
+
+      const { data: openCards } = await supabase.from('staff_timecards').select('staff_id, clock_in, notes').is('clock_out', null);
+      const activeStaffIds = new Set((openCards || []).map(c => c.staff_id));
+
+      if (workingBadge) workingBadge.textContent = `${activeStaffIds.size} On Duty`;
+
+      if (!users || users.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-4 text-xs text-on-surface-variant">No staff members found. Add staff in the Staff section.</div>`;
+        return;
+      }
+
+      grid.innerHTML = users.map(user => {
+        const isWorking = activeStaffIds.has(user.id);
+        return `
+          <div class="bg-surface-container-low border border-outline-variant/60 rounded-xl p-3 flex flex-col justify-between gap-2 shadow-2xs hover:border-outline-variant transition-all">
+            <div class="flex items-center justify-between gap-1">
+              <div class="min-w-0 flex-1">
+                <h4 class="font-bold text-xs text-on-surface truncate">${escapeHtml(user.name)}</h4>
+                <p class="text-[10px] text-on-surface-variant truncate">${escapeHtml(user.role || 'Staff')}</p>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0 ${isWorking ? 'bg-green-100 text-green-800 animate-pulse' : 'bg-surface-container text-on-surface-variant'}">
+                ${isWorking ? '🟢 Working' : '⚪ Off Duty'}
+              </span>
+            </div>
+
+            <div class="pt-1 border-t border-outline-variant/30">
+              ${isWorking ? `
+                <button onclick="window.quickClockOutStaff('${user.id}', '${escapeHtml(user.name)}')" class="w-full py-1.5 px-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs">
+                  <span class="material-symbols-outlined text-[14px]">logout</span> Clock Out
+                </button>
+              ` : `
+                <button onclick="window.quickClockInStaff('${user.id}', '${escapeHtml(user.name)}')" class="w-full py-1.5 px-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span> Clock In
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch(err) {
+      console.error('Error loading dashboard timeclock widget:', err);
+    }
+  };
+
   window.quickClockInStaff = async (staffId, staffName) => {
     try {
       const { error } = await supabase.from('staff_timecards').insert([{
         staff_id: staffId,
         clock_in: new Date().toISOString(),
-        notes: 'Quick Clock In from Staff List'
+        notes: 'Quick Clock In'
       }]);
 
       if (error) {
@@ -3807,6 +3860,7 @@ EXTRACTION RULES:
       showToast(`🟢 ${staffName} is now Clocked In! Have a great shift!`);
       if (typeof loadStaffUsers === 'function') loadStaffUsers();
       if (typeof loadTimecards === 'function') loadTimecards();
+      if (typeof window.loadDashStaffTimeclock === 'function') window.loadDashStaffTimeclock();
     } catch(err) {
       showToast('Error clocking in: ' + err.message, true);
     }
@@ -3847,6 +3901,7 @@ EXTRACTION RULES:
       showToast(`🛑 ${staffName} Clocked Out! Shift logged: ${durationHours} hrs.`);
       if (typeof loadStaffUsers === 'function') loadStaffUsers();
       if (typeof loadTimecards === 'function') loadTimecards();
+      if (typeof window.loadDashStaffTimeclock === 'function') window.loadDashStaffTimeclock();
     } catch(err) {
       showToast('Error clocking out: ' + err.message, true);
     }
