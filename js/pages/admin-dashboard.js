@@ -4296,13 +4296,13 @@ EXTRACTION RULES:
     const boatSearchContainer = document.getElementById('book-boat-search-container');
 
     let _dynamicPriceTimeout = null;
-    const updateDynamicPrice = () => {
+    const updateDynamicPrice = (forceRecalculateTotal = false) => {
       clearTimeout(_dynamicPriceTimeout);
       _dynamicPriceTimeout = setTimeout(() => {
-        _updateDynamicPrice();
-      }, 200);
+        _updateDynamicPrice(forceRecalculateTotal);
+      }, 50);
     };
-    const _updateDynamicPrice = () => {
+    const _updateDynamicPrice = (forceRecalculateTotal = false) => {
       const boatId = document.getElementById('book-boat-select')?.value;
       const duration = document.getElementById('book-duration')?.value;
       const priceInput = document.getElementById('book-price');
