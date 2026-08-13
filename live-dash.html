@@ -1,4 +1,4 @@
-﻿?<!DOCTYPE html>
+?<!DOCTYPE html>
 <html class="light" lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -656,10 +656,10 @@
             </div>
             <div class="flex items-center gap-3 flex-wrap">
               <div class="flex items-center bg-surface-container rounded-lg p-0.5 border border-outline-variant">
-                <button id="view-mode-table" class="px-2.5 py-1 rounded-md text-on-surface-variant hover:text-on-surface text-xs font-bold flex items-center gap-1 transition-all">
+                <button id="view-mode-table" class="px-2.5 py-1 rounded-md bg-white text-on-surface shadow-sm text-xs font-bold flex items-center gap-1 transition-all">
                   <span class="material-symbols-outlined text-sm">table_rows</span> Table
                 </button>
-                <button id="view-mode-cards" class="px-2.5 py-1 rounded-md bg-white text-on-surface shadow-sm text-xs font-bold flex items-center gap-1 transition-all">
+                <button id="view-mode-cards" class="px-2.5 py-1 rounded-md text-on-surface-variant hover:text-on-surface text-xs font-bold flex items-center gap-1 transition-all">
                   <span class="material-symbols-outlined text-sm">grid_view</span> Cards
                 </button>
               </div>
@@ -672,7 +672,7 @@
           </div>
 
           <!-- Manifest Table -->
-          <div id="manifest-table-wrapper" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm hidden">
+          <div id="manifest-table-wrapper" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
               <table class="w-full">
                 <thead class="bg-surface-container text-left text-xs font-label uppercase text-on-surface-variant tracking-wider">
@@ -694,7 +694,7 @@
           </div>
 
           <!-- Manifest Cards Grid -->
-          <div id="manifest-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+          <div id="manifest-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
         </div>
 
         <!-- TAB 2: Calendar View -->
