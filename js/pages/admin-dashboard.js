@@ -7077,7 +7077,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     
     const captainHourly = boat ? (parseFloat(boat.captain_hourly_rate) || 0) : 0;
     const duration = parseInt(b.duration_hours) || 4;
-    const captainTotal = captainHourly * duration;
+    let captainTotal = captainHourly * duration;
 
     let customBoatOverride = null;
     let customCaptainOverride = null;
@@ -7128,7 +7128,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       });
     }
 
-    let captainTotal = customCaptainOverride !== null ? customCaptainOverride : (captainHourly * duration);
+    if (customCaptainOverride !== null) captainTotal = customCaptainOverride;
     const price = parseFloat(b.total_price || b.amount || 0);
     const subtotal = price / 1.07;
     const tax = price - subtotal;
