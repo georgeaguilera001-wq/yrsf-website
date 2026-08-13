@@ -8319,10 +8319,13 @@ window.openChargeBalanceModal = (booking) => {
             </div>
 
             <div class="space-y-2 pt-2">
-              <button type="button" id="charge-btn-copy-link" class="w-full py-2.5 bg-secondary text-on-secondary rounded-xl font-label text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-sm">
-                <span class="material-symbols-outlined text-[18px]">link</span> Generate &amp; Copy Payment Link
+              <button type="button" id="charge-btn-send-quo" class="w-full py-2.5 bg-green-600 text-white rounded-xl font-label text-xs font-bold hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">sms</span> Send Payment Link via Quo SMS
               </button>
-              <button type="button" id="charge-btn-open-stripe" class="w-full py-2.5 bg-green-600 text-white rounded-xl font-label text-xs font-bold hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-sm">
+              <button type="button" id="charge-btn-copy-link" class="w-full py-2.5 bg-secondary text-on-secondary rounded-xl font-label text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">content_copy</span> Copy Message Template to Clipboard
+              </button>
+              <button type="button" id="charge-btn-open-stripe" class="w-full py-2.5 bg-surface-container-high text-on-surface rounded-xl font-label text-xs font-bold hover:bg-surface-container transition-all flex items-center justify-center gap-2 border border-outline-variant">
                 <span class="material-symbols-outlined text-[18px]">open_in_new</span> Open Stripe Checkout Now
               </button>
               <button type="button" id="charge-btn-cash" class="w-full py-2.5 bg-surface-variant text-on-surface rounded-xl font-label text-xs font-bold hover:bg-outline-variant transition-all flex items-center justify-center gap-2">
@@ -8336,6 +8339,49 @@ window.openChargeBalanceModal = (booking) => {
     document.body.insertAdjacentHTML('beforeend', html);
     modal = document.getElementById('charge-balance-modal');
     document.getElementById('close-charge-modal').addEventListener('click', () => modal.classList.add('hidden'));
+
+    // Send Payment Link via Quo SMS Action
+    document.getElementById('charge-btn-send-quo').addEventListener('click', async () => {
+      const bookingId = document.getElementById('charge-booking-id').value;
+      const amount = parseFloat(document.getElementById('charge-amount').value) || 0;
+      const btn = document.getElementById('charge-btn-send-quo');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white mr-1"></span> Sending SMS...';
+      
+      try {
+        let cache = window.bookingsCache || [];
+        let b = cache.find(x => x.id === bookingId);
+        if (!b && typeof supabase !== 'undefined') {
+          const { data } = await supabase.from('bookings').select('*').eq('id', bookingId).single();
+          b = data;
+        }
+        if (!b) throw new Error('Booking record not found.');
+        if (!b.customer_phone) throw new Error('No customer phone number recorded for this booking.');
+
+        const res = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ booking_id: bookingId, payment_type: 'balance', amount })
+        });
+        const data = await res.json();
+        if (!res.ok || (!data.short_url && !data.url)) throw new Error(data.error || 'Failed to create payment link.');
+
+        const payUrl = data.short_url || data.url;
+        const amtStr = `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const messageTemplate = `Thank-you for choosing Yacht Rentals of South Florida! Here is the Payment link for your remaining balance.\n\nRemaining Balance: ${amtStr}\n\n${payUrl}\n\nNote: This Payment link will be valid for only 5 minutes. If you need more time, please let us know so that we can resend you a new one!`;
+
+        const sent = await window.sendQuoSMS(b.customer_phone, messageTemplate);
+        if (sent) {
+          modal.classList.add('hidden');
+        }
+      } catch (err) {
+        alert('Error sending SMS: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    });
 
     // Copy Link Action
     document.getElementById('charge-btn-copy-link').addEventListener('click', async () => {
