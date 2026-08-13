@@ -16,6 +16,9 @@ import { initSocialHub } from '../components/social-hub.js';
 import { calculateCharterPricing } from '../utils/pricing.js';
 import { clearCache } from '../utils/cache.js';
 
+// Expose showToast globally
+window.showToast = showToast;
+
 // Nested Action-Level Sub-Permissions Configuration
 const MODULE_SUBPERMS = {
   dashboard: ['view', 'shortcuts'],
