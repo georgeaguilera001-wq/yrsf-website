@@ -78,8 +78,11 @@ return; // Redirect in progress
   }
 
   // --- ENFORCE PERMISSIONS ---
-  window.isSuperAdminUser = false;
-  window.currentStaffPermissions = null;
+  const userEmailInit = (user?.email || '').trim().toLowerCase();
+  const isInitialSuper = !user || user.role === 'admin' || user.user_metadata?.role === 'admin' || user.app_metadata?.role === 'admin' || userEmailInit === 'pay@sfyachtrentals.com' || userEmailInit === 'admin@sfyachtrentals.com';
+
+  window.isSuperAdminUser = isInitialSuper;
+  window.currentStaffPermissions = isInitialSuper ? null : {};
 
   window.hasPermission = (moduleName, actionName = 'access') => {
     if (window.isSuperAdminUser || !window.currentStaffPermissions) return true;
@@ -106,15 +109,19 @@ return; // Redirect in progress
       const { data: staffUsers } = await supabase.from('staff_users').select('*');
       const staffUser = (staffUsers || []).find(s => s.email && s.email.trim().toLowerCase() === userEmailClean);
 
-      if (isAuthSuper && !staffUser) {
+      const isStaffAdminRole = staffUser && (
+        (staffUser.role || '').toLowerCase() === 'admin' || 
+        (staffUser.role || '').toLowerCase() === 'owner' || 
+        (staffUser.role || '').toLowerCase() === 'superadmin' ||
+        (staffUser.role || '').toLowerCase() === 'super admin'
+      );
+
+      if (isAuthSuper || isStaffAdminRole || !staffUser) {
         window.isSuperAdminUser = true;
         window.currentStaffPermissions = null;
-      } else if (staffUser) {
+      } else {
         window.isSuperAdminUser = false;
         window.currentStaffPermissions = staffUser.permissions || {};
-      } else {
-        window.isSuperAdminUser = isAuthSuper;
-        window.currentStaffPermissions = isAuthSuper ? null : {};
       }
 
       // Refresh nav menu DOM and hide forbidden items
