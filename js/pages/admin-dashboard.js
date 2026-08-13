@@ -7700,8 +7700,8 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
     if (!boatLoc && b.boat_id) {
       try {
-        const { data } = await supabase.from('boats').select('location, departure_point').eq('id', b.boat_id).single();
-        if (data) boatLoc = data.location || data.departure_point || '';
+        const { data } = await supabase.from('boats').select('location').eq('id', b.boat_id).single();
+        if (data) boatLoc = data.location || '';
       } catch(e) {}
     }
 
