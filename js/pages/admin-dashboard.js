@@ -4195,30 +4195,56 @@ EXTRACTION RULES:
           const captainRate = parseFloat(boat.captain_hourly_rate) || 0;
           const dur = parseInt(duration) || 4;
           
+          const bookDateStr = document.getElementById('book-date')?.value;
+          let dayKey = 'price';
+          if (bookDateStr) {
+            const parts = bookDateStr.split('-');
+            if (parts.length === 3) {
+              const dObj = new Date(parts[0], parts[1]-1, parts[2]);
+              const day = dObj.getDay();
+              const dayKeys = ['price_sun', 'price_mon', 'price_tue', 'price_wed', 'price_thu', 'price_fri', 'price_sat'];
+              dayKey = dayKeys[day];
+            }
+          }
+
           let hasTieredPrice = false;
           if (boat.boat_prices && boat.boat_prices.length > 0) {
             const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(duration));
-            if (matchingPrice && matchingPrice.price) {
-              baseBoatPrice = parseFloat(matchingPrice.price);
+            if (matchingPrice) {
+              const specificDayPrice = matchingPrice[dayKey] ? parseFloat(matchingPrice[dayKey]) : 0;
+              const defaultPrice = matchingPrice.price ? parseFloat(matchingPrice.price) : 0;
+              const effectivePrice = specificDayPrice > 0 ? specificDayPrice : defaultPrice;
+
+              if (effectivePrice > 0) {
+                baseBoatPrice = effectivePrice;
+                captainPrice = (captainRate * dur);
+                boatMatch = true;
+                hasTieredPrice = true;
+              }
+            }
+          }
+
+          // Check direct column pricing if tiered boat_prices object wasn't found
+          if (!hasTieredPrice) {
+            let columnPrice = 0;
+            if (dur === 2 && boat.price_2hr) columnPrice = parseFloat(boat.price_2hr);
+            else if (dur === 3 && boat.price_3hr) columnPrice = parseFloat(boat.price_3hr);
+            else if (dur === 4 && (boat.price_4hr || boat.price_half_day)) columnPrice = parseFloat(boat.price_4hr || boat.price_half_day);
+            else if (dur === 6 && boat.price_6hr) columnPrice = parseFloat(boat.price_6hr);
+            else if (dur === 8 && (boat.price_8hr || boat.price_full_day)) columnPrice = parseFloat(boat.price_8hr || boat.price_full_day);
+
+            if (columnPrice > 0) {
+              baseBoatPrice = columnPrice;
               captainPrice = (captainRate * dur);
               boatMatch = true;
               hasTieredPrice = true;
             }
           }
-          
+
+          // Fallback to hourly rate
           if (!hasTieredPrice && (boatRate > 0 || captainRate > 0)) {
-            let multiplier = 1.0;
-            const bookDateStr = document.getElementById('book-date')?.value;
-            if (bookDateStr) {
-              const parts = bookDateStr.split('-');
-              if (parts.length === 3) {
-                const dObj = new Date(parts[0], parts[1]-1, parts[2]);
-                const day = dObj.getDay();
-                if (day === 0 || day === 6) multiplier = 1.10; // Sat & Sun
-              }
-            }
-            baseBoatPrice = boatRate * multiplier * dur;
-            captainPrice = captainRate * multiplier * dur;
+            baseBoatPrice = boatRate * dur;
+            captainPrice = captainRate * dur;
             boatMatch = true;
           }
         }
@@ -4419,10 +4445,25 @@ EXTRACTION RULES:
           if (boat && boat.boat_prices && boat.boat_prices.length > 0) {
             const sortedPrices = [...boat.boat_prices].sort((a, b) => a.duration_hours - b.duration_hours);
             const capRate = parseFloat(boat.captain_hourly_rate) || 0;
+            const bookDateStr = document.getElementById('book-date')?.value;
+            let dayKey = 'price';
+            if (bookDateStr) {
+              const parts = bookDateStr.split('-');
+              if (parts.length === 3) {
+                const dObj = new Date(parts[0], parts[1]-1, parts[2]);
+                const day = dObj.getDay();
+                const dayKeys = ['price_sun', 'price_mon', 'price_tue', 'price_wed', 'price_thu', 'price_fri', 'price_sat'];
+                dayKey = dayKeys[day];
+              }
+            }
+
             durationEl.innerHTML = sortedPrices.map(p => {
+              const specP = p[dayKey] ? parseFloat(p[dayKey]) : 0;
+              const defP = p.price ? parseFloat(p.price) : 0;
+              const boatP = specP > 0 ? specP : defP;
               const capTotal = capRate * p.duration_hours;
               const capText = capRate > 0 ? ` (Captain: $${capRate}/hr · $${capTotal} total)` : ' ⚠️ Captain Rate Missing';
-              return `<option value="${p.duration_hours}">${escapeHtml(p.duration_label)} - Boat: $${parseFloat(p.price).toLocaleString()}${capText}</option>`;
+              return `<option value="${p.duration_hours}">${escapeHtml(p.duration_label)} - Boat: $${boatP.toLocaleString()}${capText}</option>`;
             }).join('');
           } else {
             durationEl.innerHTML = '<option value="4">4 Hours (Default) - Custom Pricing</option>';
