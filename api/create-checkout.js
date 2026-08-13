@@ -51,6 +51,10 @@ module.exports = async (req, res) => {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
+    // Calculate amount based on payment_type
+    let amountToCharge = 0;
+    let descriptionText = `Date: ${booking.booking_date || 'TBD'}`;
+
     if (req.body.amount && parseFloat(req.body.amount) > 0) {
       amountToCharge = parseFloat(req.body.amount);
       descriptionText += ` | ${payment_type === 'balance' ? 'Remaining Balance' : 'Payment'}`;
