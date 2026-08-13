@@ -7078,6 +7078,9 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const duration = parseInt(b.duration_hours) || 4;
     let captainTotal = captainHourly * duration;
 
+    let addonLineItemsHtml = '';
+    let totalAddonsPrice = 0;
+    let otherNotes = [];
     let customBoatOverride = null;
     let customCaptainOverride = null;
     let explicitDiscountOverride = 0;
