@@ -5582,6 +5582,8 @@ EXTRACTION RULES:
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
     const weekOut = new Date(now); weekOut.setDate(weekOut.getDate() + 7);
     const weekOutStr = weekOut.toISOString().split('T')[0];
+    const thirtyDaysOut = new Date(now); thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
+    const thirtyDaysOutStr = thirtyDaysOut.toISOString().split('T')[0];
 
     const filtered = bookingsCache.filter(b => {
       if (b.status === 'inquiry') return false;
@@ -5590,7 +5592,7 @@ EXTRACTION RULES:
       if (currentManifestFilter === 'tomorrow' && b.booking_date !== tomorrowStr) return false;
       if (currentManifestFilter === 'week' && (b.booking_date < todayStr || b.booking_date > weekOutStr)) return false;
       if (currentManifestFilter === 'date' && b.booking_date !== currentManifestDate) return false;
-      if (currentManifestFilter === 'all' && b.booking_date < todayStr && b.status !== 'confirmed') return false; // Hide past completed in all
+      if (currentManifestFilter === 'all' && (b.booking_date < todayStr || b.booking_date > thirtyDaysOutStr)) return false;
 
       // Search Filter
       if (query) {
