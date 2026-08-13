@@ -5460,6 +5460,38 @@ EXTRACTION RULES:
         bookingsCache = data || [];
         window.bookingsCache = bookingsCache;
 
+        // Setup Realtime Listener for Instant Payment Reflections when payment is actually completed
+        if (!window.hasBookingsRealtimeListener && typeof supabase !== 'undefined') {
+          window.hasBookingsRealtimeListener = true;
+          try {
+            supabase
+              .channel('public:bookings')
+              .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bookings' }, (payload) => {
+                if (payload && payload.new) {
+                  const idx = (window.bookingsCache || []).findIndex(x => x.id === payload.new.id);
+                  if (idx !== -1) {
+                    window.bookingsCache[idx] = payload.new;
+                    bookingsCache = window.bookingsCache;
+                  } else {
+                    window.bookingsCache.push(payload.new);
+                    bookingsCache = window.bookingsCache;
+                  }
+                  if (typeof renderManifestTable === 'function') renderManifestTable();
+                  if (typeof renderCalendar === 'function') renderCalendar();
+                  
+                  if (payload.old && payload.new.deposit_amount > payload.old.deposit_amount) {
+                    const diff = payload.new.deposit_amount - payload.old.deposit_amount;
+                    const name = payload.new.customer_name || 'Guest';
+                    if (window.showToast) window.showToast(`💰 Payment Confirmed: Received $${diff.toFixed(2)} from ${name}!`, 'success', 6000);
+                  }
+                }
+              })
+              .subscribe();
+          } catch(e) {
+            console.warn('Realtime setup error:', e);
+          }
+        }
+
         try {
           const { data: cachedSetting } = await supabase.from('site_settings').select('value, updated_at').eq('key', 'cached_ical_events').single();
           if (cachedSetting && cachedSetting.value && Array.isArray(cachedSetting.value) && cachedSetting.value.length > 0) {
