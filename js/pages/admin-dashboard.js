@@ -8371,7 +8371,72 @@ window.openChargeBalanceModal = (booking) => {
         const amtStr = `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         const messageTemplate = `Thank-you for choosing Yacht Rentals of South Florida! Here is the Payment link for your remaining balance.\n\nRemaining Balance: ${amtStr}\n\n${payUrl}\n\nNote: This Payment link will be valid for only 5 minutes. If you need more time, please let us know so that we can resend you a new one!`;
 
-        const sent = await window.sendQuoSMS(b.customer_phone, messageTemplate);
+        modal.classList.add('hidden');
+        window.openSmsPreviewModal(b.customer_phone, messageTemplate);
+      } catch (err) {
+        alert('Error generating link: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    });
+
+window.openSmsPreviewModal = (phone, initialMessageText) => {
+  let modal = document.getElementById('sms-preview-modal');
+  if (!modal) {
+    const html = `
+      <div id="sms-preview-modal" class="fixed inset-0 bg-black/60 z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+        <div class="bg-surface-container-lowest text-on-surface rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-outline-variant">
+          <div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-4">
+            <h3 class="font-headline text-lg font-bold text-green-700 flex items-center gap-2">
+              <span class="material-symbols-outlined">sms</span> Preview SMS Message (Quo)
+            </h3>
+            <button type="button" id="close-sms-preview-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-xl">&times;</button>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Recipient Phone Number</label>
+              <input type="tel" id="sms-preview-phone" class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-lg font-mono text-sm focus:ring-2 focus:ring-green-500"/>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Message Text (Editable)</label>
+              <textarea id="sms-preview-body" rows="7" class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-lg font-mono text-xs focus:ring-2 focus:ring-green-500 leading-relaxed"></textarea>
+            </div>
+            <div class="flex gap-2 pt-2">
+              <button type="button" id="btn-sms-send-quo" class="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-label text-xs font-bold hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">send</span> Send SMS Now via Quo
+              </button>
+              <button type="button" id="btn-sms-copy" class="py-2.5 px-4 bg-surface-variant text-on-surface rounded-xl font-label text-xs font-bold hover:bg-outline-variant transition-all flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[18px]">content_copy</span> Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    modal = document.getElementById('sms-preview-modal');
+    document.getElementById('close-sms-preview-modal').addEventListener('click', () => modal.classList.add('hidden'));
+
+    document.getElementById('btn-sms-copy').addEventListener('click', () => {
+      const text = document.getElementById('sms-preview-body').value;
+      navigator.clipboard.writeText(text);
+      if (window.showToast) window.showToast('📋 Message copied to clipboard!', 'success');
+    });
+
+    document.getElementById('btn-sms-send-quo').addEventListener('click', async () => {
+      const phone = document.getElementById('sms-preview-phone').value.trim();
+      const text = document.getElementById('sms-preview-body').value;
+      if (!phone) return alert('Please enter a valid phone number.');
+      if (!text) return alert('Message cannot be empty.');
+
+      const btn = document.getElementById('btn-sms-send-quo');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white mr-1"></span> Sending...';
+
+      try {
+        const sent = await window.sendQuoSMS(phone, text);
         if (sent) {
           modal.classList.add('hidden');
         }
@@ -8382,6 +8447,12 @@ window.openChargeBalanceModal = (booking) => {
         btn.innerHTML = originalHtml;
       }
     });
+  }
+
+  document.getElementById('sms-preview-phone').value = phone || '';
+  document.getElementById('sms-preview-body').value = initialMessageText || '';
+  modal.classList.remove('hidden');
+};
 
     // Copy Link Action
     document.getElementById('charge-btn-copy-link').addEventListener('click', async () => {
