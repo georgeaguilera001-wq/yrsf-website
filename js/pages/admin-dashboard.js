@@ -4357,8 +4357,6 @@ EXTRACTION RULES:
       }
 
       if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
-    };
-
       if (typeof invalidateHold === 'function') invalidateHold();
     };
 
