@@ -3791,6 +3791,67 @@ EXTRACTION RULES:
     loadTimecards();
   }
 
+  window.quickClockInStaff = async (staffId, staffName) => {
+    try {
+      const { error } = await supabase.from('staff_timecards').insert([{
+        staff_id: staffId,
+        clock_in: new Date().toISOString(),
+        notes: 'Quick Clock In from Staff List'
+      }]);
+
+      if (error) {
+        showToast('Error clocking in: ' + error.message, true);
+        return;
+      }
+
+      showToast(`🟢 ${staffName} is now Clocked In! Have a great shift!`);
+      if (typeof loadStaffUsers === 'function') loadStaffUsers();
+      if (typeof loadTimecards === 'function') loadTimecards();
+    } catch(err) {
+      showToast('Error clocking in: ' + err.message, true);
+    }
+  };
+
+  window.quickClockOutStaff = async (staffId, staffName) => {
+    try {
+      const now = new Date();
+      const { data: openCards, error: cardErr } = await supabase
+        .from('staff_timecards')
+        .select('id, clock_in')
+        .eq('staff_id', staffId)
+        .is('clock_out', null)
+        .order('clock_in', { ascending: false });
+
+      if (cardErr || !openCards || openCards.length === 0) {
+        showToast('No active clock-in session found for ' + staffName, true);
+        return;
+      }
+
+      const activeCard = openCards[0];
+      const inDate = new Date(activeCard.clock_in);
+      const durationHours = parseFloat(((now - inDate) / (1000 * 60 * 60)).toFixed(2));
+
+      const { error } = await supabase
+        .from('staff_timecards')
+        .update({
+          clock_out: now.toISOString(),
+          duration_hours: durationHours
+        })
+        .eq('id', activeCard.id);
+
+      if (error) {
+        showToast('Error clocking out: ' + error.message, true);
+        return;
+      }
+
+      showToast(`🛑 ${staffName} Clocked Out! Shift logged: ${durationHours} hrs.`);
+      if (typeof loadStaffUsers === 'function') loadStaffUsers();
+      if (typeof loadTimecards === 'function') loadTimecards();
+    } catch(err) {
+      showToast('Error clocking out: ' + err.message, true);
+    }
+  };
+
   async function loadStaffUsers() {
     const tbody = document.getElementById('staff-table-body');
     const select = document.getElementById('timeclock-staff-select');
@@ -3842,11 +3903,11 @@ EXTRACTION RULES:
         return `
           <tr class="hover:bg-surface-container-low/50 transition-colors">
             <td class="p-4">
-              <p class="font-bold text-on-surface">${user.name}</p>
-              <p class="text-xs text-on-surface-variant">${user.email}</p>
+              <p class="font-bold text-on-surface">${escapeHtml(user.name)}</p>
+              <p class="text-xs text-on-surface-variant">${escapeHtml(user.email || '')}</p>
             </td>
             <td class="p-4">
-              <span class="font-medium text-on-surface">${user.role}</span>
+              <span class="font-medium text-on-surface">${escapeHtml(user.role || 'Staff')}</span>
               ${user.pay_type === 'commission'
                 ? `<p class="text-xs font-mono text-amber-700 font-bold">🤝 ${user.commission_rate || 0}% Comm.</p>`
                 : user.pay_type === 'both'
@@ -3860,10 +3921,19 @@ EXTRACTION RULES:
             </td>
             <td class="p-4 flex flex-wrap gap-1 max-w-sm">${permBadges}</td>
             <td class="p-4 text-right whitespace-nowrap">
+              ${isWorking ? `
+                <button onclick="window.quickClockOutStaff('${user.id}', '${escapeHtml(user.name)}')" class="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5" title="Clock Out ${escapeHtml(user.name)}">
+                  <span class="material-symbols-outlined text-[16px]">logout</span> Clock Out
+                </button>
+              ` : `
+                <button onclick="window.quickClockInStaff('${user.id}', '${escapeHtml(user.name)}')" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5" title="Clock In ${escapeHtml(user.name)}">
+                  <span class="material-symbols-outlined text-[16px]">schedule</span> Clock In
+                </button>
+              `}
               <button onclick="window.editStaffUser('${user.id}')" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors" title="Edit Staff & Permissions">
                 <span class="material-symbols-outlined text-[18px]">edit</span>
               </button>
-              <button onclick="window.deleteStaffUser('${user.id}', '${user.name}')" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1" title="Delete Employee">
+              <button onclick="window.deleteStaffUser('${user.id}', '${escapeHtml(user.name)}')" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1" title="Delete Employee">
                 <span class="material-symbols-outlined text-[18px]">delete</span>
               </button>
             </td>
