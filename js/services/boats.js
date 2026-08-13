@@ -328,7 +328,7 @@ export async function getAllBoats() {
   let { data, error } = await supabase
     .from('boats')
     .select(`
-      id, name, slug, vessel_id, manufacturer, length_ft, capacity,
+      id, name, slug, vessel_id, manufacturer, length_ft, capacity, location, departure_point,
       status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(url, alt_text, is_primary),
@@ -341,7 +341,7 @@ export async function getAllBoats() {
     const fallback = await supabase
       .from('boats')
       .select(`
-        id, name, slug, vessel_id, manufacturer, length_ft, capacity,
+        id, name, slug, vessel_id, manufacturer, length_ft, capacity, location, departure_point,
         status, is_featured, is_best_seller, sort_order, ical_feed_url, ical_feed_label,
         boat_hourly_rate, captain_hourly_rate, minimum_charter_duration,
         boat_images(url, alt_text, is_primary)

@@ -7482,6 +7482,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
   window.openMessagePreview = async (id) => {
     if (!bookingsCache || bookingsCache.length === 0) await loadBookings();
+    if (!fleetCache || fleetCache.length === 0) await loadFleet();
     const b = bookingsCache.find(x => x.id === id);
     if (!b) return;
     
@@ -7489,12 +7490,26 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const settings = settingsCache;
     let template = settings.whatsapp_booking_template?.value;
     if (!template) {
-      template = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} is confirmed! We look forward to welcoming you aboard.";
+      template = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} at {time} is confirmed! Departure Location: {address}. We look forward to welcoming you aboard.";
     }
 
     const price = parseFloat(b.total_price || b.amount || 0);
     const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
     const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
+
+    let boatLoc = '';
+    const boat = (fleetCache || []).find(x => (b.boat_id && x.id === b.boat_id) || (b.boat_name && x.name && x.name.toLowerCase() === b.boat_name.toLowerCase()));
+    if (boat) {
+      boatLoc = boat.location || boat.departure_point || boat.dock_address || '';
+    }
+    if (!boatLoc && b.boat_id) {
+      try {
+        const { data } = await supabase.from('boats').select('location, departure_point').eq('id', b.boat_id).single();
+        if (data) boatLoc = data.location || data.departure_point || '';
+      } catch(e) {}
+    }
+
+    const finalAddress = boatLoc || settings.business_address?.value || '201 NW South River Dr, Miami, FL 33128';
 
     const text = template
       .replace(/{customer_name}/g, b.customer_name || 'Guest')
@@ -7507,13 +7522,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       .replace(/{deposit}/g, '$' + paid.toLocaleString(undefined, {minimumFractionDigits: 2}))
       .replace(/{balance}/g, '$' + bal.toLocaleString(undefined, {minimumFractionDigits: 2}))
       .replace(/{addons}/g, b.special_requests || 'None')
-      .replace(/{address}/g, () => {
-        if (b.boat_id && typeof fleetCache !== 'undefined') {
-          const boat = fleetCache.find(x => x.id === b.boat_id);
-          if (boat && boat.location) return boat.location;
-        }
-        return 'Miami Marina';
-      });
+      .replace(/{address}/g, finalAddress);
 
     const modal = document.getElementById('message-preview-modal');
     const textArea = document.getElementById('preview-message-text');
