@@ -1,4 +1,16 @@
 {
+  "redirects": [
+    {
+      "source": "/boats",
+      "destination": "/ourfleet",
+      "permanent": true
+    },
+    {
+      "source": "/boats.html",
+      "destination": "/ourfleet",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/ourfleet",
