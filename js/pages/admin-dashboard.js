@@ -5782,7 +5782,7 @@ EXTRACTION RULES:
                 </div>
                 <div class="flex justify-between text-on-surface-variant">
                   <span>👥 Passengers:</span>
-                  <span>${b.guests || 1} Guests (${b.duration_hours || 4} hrs)</span>
+                  <span>${b.guest_count || b.guests || b.passengers || 1} Guests (${b.duration_hours || 4} hrs)</span>
                 </div>
               </div>
 
