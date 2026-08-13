@@ -6841,7 +6841,6 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const { data: b } = await supabase.from('bookings').select('*').eq('id', id).single();
     if (!b) return;
     
-    // Look up the boat to get the current captain rate
     if (!fleetCache || fleetCache.length === 0) await loadFleet();
     let boat = (fleetCache || []).find(x => x.id === b.boat_id);
     if (!boat && b.boat_id) {
@@ -6857,34 +6856,328 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const subtotal = price / 1.07;
     const tax = price - subtotal;
     const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
+    const refunded = parseFloat(b.refunded_amount || 0);
     const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
-    
-    const boatSubtotal = subtotal - captainTotal;
+    const boatSubtotal = (subtotal - captainTotal) < 0 ? subtotal : (subtotal - captainTotal);
     
     let specialHtml = '';
     if (b.special_requests) {
-      specialHtml = `<tr><td colspan="2"><strong>Add-ons / Special Requests:</strong><br><span style="white-space: pre-wrap;">${escapeHtml(b.special_requests)}</span></td></tr>`;
+      specialHtml = `
+        <div class="special-notes-box">
+          <div class="special-notes-title">Included Add-ons & Notes</div>
+          <div class="special-notes-body">${escapeHtml(b.special_requests)}</div>
+        </div>
+      `;
     }
+
+    const dateFormatted = b.booking_date ? new Date(b.booking_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+    const invoiceId = b.id ? b.id.slice(0, 8).toUpperCase() : 'INV-001';
 
     const win = window.open('', '_blank');
     win.document.write(`
-      <html><head><title>Invoice - ${b.customer_name}</title>
-      <style>body{font-family:sans-serif;padding:40px;color:#111}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}.hdr{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:20px}</style>
-      </head><body>
-      <div class="hdr"><div><h1 style="margin:0">YACHT RENTALS OF SOUTH FLORIDA</h1><p>Miami, FL | (305) 990-2192</p></div><h2>CHARTER INVOICE</h2></div>
-      <p><strong>Customer:</strong> ${b.customer_name}<br><strong>Phone:</strong> ${b.customer_phone || '-'}<br><strong>Date:</strong> ${b.booking_date}</p>
-      <table><tr><th>Description</th><th>Amount</th></tr>
-      <tr><td>Yacht Charter: ${b.boat_name || 'Fleet Yacht'} (${duration} Hours) & Add-ons</td><td>$${boatSubtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
-      ${captainTotal > 0 ? `<tr><td>Captain & Crew Services (${duration} Hours)</td><td>$${captainTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>` : ''}
-      ${specialHtml}
-      <tr><td>Taxes & Fees (7%)</td><td>$${tax.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
-      <tr style="font-size:1.1em; border-top:2px solid #222;"><th>Total Price</th><th>$${price.toLocaleString(undefined, {minimumFractionDigits: 2})}</th></tr>
-      <tr><td>Deposit Paid</td><td>-$${paid.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>
-      <tr style="font-size:1.2em"><th>Balance Due</th><th>$${bal.toLocaleString(undefined, {minimumFractionDigits: 2})}</th></tr>
-      </table>
-      <p style="margin-top:40px;color:#666;font-size:0.9em">Thank you for yachting with YRSF!</p>
-      <script>window.print()</script>
-      </body></html>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>Charter Receipt #${invoiceId} - ${escapeHtml(b.customer_name || 'Guest')}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            padding: 40px 20px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .invoice-card {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border: 1px solid #e2e8f0;
+          }
+          .brand-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 32px;
+            border-bottom: 2px solid #f1f5f9;
+          }
+          .company-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #0284c7;
+            text-transform: uppercase;
+          }
+          .company-sub {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+            font-weight: 500;
+          }
+          .invoice-title-block {
+            text-align: right;
+          }
+          .invoice-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: #f0f9ff;
+            color: #0369a1;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+          }
+          .invoice-id {
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            margin-top: 6px;
+            font-family: monospace;
+          }
+          .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin: 32px 0;
+            padding: 24px;
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 1px solid #f1f5f9;
+          }
+          .meta-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            margin-bottom: 4px;
+          }
+          .meta-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+          }
+          .meta-sub {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 2px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 32px 0 24px 0;
+          }
+          th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            border-bottom: 2px solid #e2e8f0;
+            background: #fafafa;
+          }
+          th.text-right, td.text-right { text-align: right; }
+          td {
+            padding: 16px;
+            font-size: 14px;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+          }
+          .item-name { font-weight: 700; color: #0f172a; }
+          .item-desc { font-size: 12px; color: #64748b; margin-top: 2px; }
+          
+          .summary-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 24px;
+          }
+          .summary-table {
+            width: 340px;
+          }
+          .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #475569;
+          }
+          .summary-row.bold {
+            font-weight: 700;
+            color: #0f172a;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 12px;
+            margin-top: 4px;
+          }
+          .summary-row.total-due {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-top: 12px;
+            font-weight: 800;
+            font-size: 16px;
+          }
+          .summary-row.total-paid {
+            background: #f0fdf4;
+            color: #166534;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-top: 6px;
+            font-weight: 700;
+            font-size: 13px;
+          }
+          .summary-row.total-refunded {
+            background: #faf5ff;
+            color: #6b21a8;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-top: 6px;
+            font-weight: 700;
+            font-size: 13px;
+          }
+          .special-notes-box {
+            margin-top: 32px;
+            padding: 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+          }
+          .special-notes-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+          }
+          .special-notes-body {
+            font-size: 13px;
+            color: #334155;
+            white-space: pre-wrap;
+            line-height: 1.5;
+          }
+          .footer {
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid #f1f5f9;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+          }
+          @media print {
+            body { background: none; padding: 0; }
+            .invoice-card { border: none; box-shadow: none; padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-card">
+          <div class="brand-header">
+            <div>
+              <div class="company-title">Yacht Rentals of South Florida</div>
+              <div class="company-sub">Miami, FL &bull; (305) 990-2192 &bull; info@yrsf.com</div>
+            </div>
+            <div class="invoice-title-block">
+              <span class="invoice-badge">Charter Receipt</span>
+              <div class="invoice-id">#${invoiceId}</div>
+            </div>
+          </div>
+
+          <div class="details-grid">
+            <div>
+              <div class="meta-label">Billed To</div>
+              <div class="meta-value">${escapeHtml(b.customer_name || 'Guest')}</div>
+              <div class="meta-sub">${escapeHtml(b.customer_phone || '-')}</div>
+              ${b.customer_email ? `<div class="meta-sub">${escapeHtml(b.customer_email)}</div>` : ''}
+            </div>
+            <div>
+              <div class="meta-label">Charter Reservation</div>
+              <div class="meta-value">${escapeHtml(b.boat_name || 'Fleet Yacht')}</div>
+              <div class="meta-sub">Date: ${dateFormatted}</div>
+              <div class="meta-sub">Time: ${escapeHtml(b.start_time || 'TBD')} (${duration} Hours)</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th class="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="item-name">Yacht Charter &amp; Vessel Service</div>
+                  <div class="item-desc">${escapeHtml(b.boat_name || 'Fleet Yacht')} &bull; ${duration} Hours Duration</div>
+                </td>
+                <td class="text-right">$${(boatSubtotal > 0 ? boatSubtotal : subtotal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+              </tr>
+              ${captainTotal > 0 ? `
+              <tr>
+                <td>
+                  <div class="item-name">Captain &amp; Crew Services</div>
+                  <div class="item-desc">Licensed Maritime Captain &bull; ${duration} Hours</div>
+                </td>
+                <td class="text-right">$${captainTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+              </tr>
+              ` : ''}
+              <tr>
+                <td>
+                  <div class="item-name">7% FL Sales Tax &amp; Port Fees</div>
+                </td>
+                <td class="text-right">$${tax.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="summary-container">
+            <div class="summary-table">
+              <div class="summary-row bold">
+                <span>Total Charter Price</span>
+                <span>$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              </div>
+              <div class="summary-row total-paid">
+                <span>Deposit / Payments Received</span>
+                <span>-$${paid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              </div>
+              ${refunded > 0 ? `
+              <div class="summary-row total-refunded">
+                <span>Refunded Amount</span>
+                <span>+$${refunded.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              </div>
+              ` : ''}
+              <div class="summary-row total-due">
+                <span>Remaining Balance Due</span>
+                <span>$${bal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              </div>
+            </div>
+          </div>
+
+          ${specialHtml}
+
+          <div class="footer">
+            Thank you for chartering with Yacht Rentals of South Florida!<br/>
+            For questions or modifications, please reach out to support@yrsf.com
+          </div>
+        </div>
+
+        <script>
+          window.onload = () => { setTimeout(() => window.print(), 400); };
+        </script>
+      </body>
+      </html>
     `);
     win.document.close();
   };
