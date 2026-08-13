@@ -155,7 +155,6 @@ module.exports = async (req, res) => {
         customer_name: payload.customer_name || null,
         customer_phone: payload.customer_phone || null,
         customer_email: payload.customer_email || null,
-        guest_count: parseInt(payload.guest_count, 10) || 1,
         total_price: parseFloat(payload.total_price),
         deposit_amount: amountToCharge,
         stripe_session_id: session.id,
