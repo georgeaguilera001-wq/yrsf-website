@@ -40,7 +40,7 @@ export function renderNavbar(activePage = '') {
   return `
     <header class="fixed top-0 left-0 w-full z-50 glass-nav border-b border-outline-variant transition-shadow" id="main-nav">
       <nav class="flex justify-between items-center w-full px-lg py-3 md:py-4 max-w-container-max mx-auto">
-        <a href="/index.html" id="nav-logo" class="flex items-center">
+        <a href="/" id="nav-logo" class="flex items-center">
           <div class="h-[52px] sm:h-14 w-[150px] sm:w-[200px]"></div>
         </a>
         
