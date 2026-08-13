@@ -5072,7 +5072,11 @@ EXTRACTION RULES:
             }
 
             // Check Supabase
-            const { data: holdInfo } = await supabase.from('booking_holds').select('status').eq('id', currentHoldId).single();
+            const { data: holdInfo, error: holdErr } = await supabase.from('booking_holds').select('status').eq('id', currentHoldId).single();
+            if (holdErr) {
+              console.error('Hold polling error:', holdErr);
+              // don't stop polling on a single network blip, but log it
+            }
             if (holdInfo) {
               if (holdInfo.status === 'paid') {
                 stopHoldPolling();
@@ -5251,6 +5255,15 @@ EXTRACTION RULES:
         const lead_status = document.getElementById('book-lead-status')?.value || 'new';
 
         const payload = { boat_id, boat_name, booking_date, start_time, duration_hours, customer_name, customer_phone, customer_email, guest_count, total_price, deposit_amount, remaining_balance, payment_method, status, special_requests, lead_status, updated_at: new Date().toISOString() };
+        
+        if (typeof currentHoldId !== 'undefined' && currentHoldId) {
+          try {
+            const { data: holdData } = await supabase.from('booking_holds').select('stripe_session_id').eq('id', currentHoldId).single();
+            if (holdData && holdData.stripe_session_id) {
+              payload.stripe_session_id = holdData.stripe_session_id;
+            }
+          } catch(e) { console.error('Error fetching stripe session for booking', e); }
+        }
 
         try {
           if (id) {
@@ -6792,6 +6805,30 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
 
     if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+    
+    // Inject Refund Button next to Delete Button if Stripe payment
+    let refundBtn = document.getElementById('refund-booking-btn');
+    if (!refundBtn && delBtn) {
+      refundBtn = document.createElement('button');
+      refundBtn.type = 'button';
+      refundBtn.id = 'refund-booking-btn';
+      refundBtn.className = 'hidden sm:w-auto px-3 bg-purple-50 text-purple-700 border border-purple-200 py-2 rounded-xl font-label text-xs font-bold hover:bg-purple-100 transition-all flex items-center justify-center gap-1';
+      refundBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">payments</span><span>Refund</span>';
+      delBtn.parentNode.insertBefore(refundBtn, delBtn);
+    }
+    
+    if (refundBtn) {
+      // Only show refund if it was paid via Stripe and hasn't been fully refunded yet
+      const deposit = parseFloat(b.deposit_amount) || 0;
+      const refunded = parseFloat(b.refunded_amount) || 0;
+      if (b.stripe_session_id && deposit > 0 && refunded < deposit) {
+        refundBtn.classList.remove('hidden');
+        refundBtn.onclick = () => window.openRefundModal(b);
+      } else {
+        refundBtn.classList.add('hidden');
+      }
+    }
+
     if (typeof window.updateEndTime === 'function') window.updateEndTime();
     document.getElementById('booking-modal')?.classList.remove('hidden');
   };
@@ -7787,8 +7824,102 @@ Write ONLY the summary sentence(s), no extra explanation.`;
   loadQuoSettings();
 });
 
+window.openRefundModal = (booking) => {
+  let modal = document.getElementById('refund-modal');
+  if (!modal) {
+    const html = `
+      <div id="refund-modal" class="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 hidden animate-fade-in">
+        <div class="bg-surface-container-lowest text-on-surface rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-outline-variant">
+          <div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-4">
+            <h3 class="font-headline text-lg font-bold text-purple-700 flex items-center gap-2">
+              <span class="material-symbols-outlined">payments</span> Issue Refund
+            </h3>
+            <button type="button" id="close-refund-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-xl">&times;</button>
+          </div>
+          <form id="refund-form" class="space-y-4">
+            <input type="hidden" id="refund-booking-id" />
+            <div class="text-sm font-body text-on-surface-variant">
+              Customer: <span id="refund-cust-name" class="font-bold text-on-surface"></span><br/>
+              Max Available Refund: <span id="refund-max-avail" class="font-bold text-green-600"></span>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Refund Amount ($) *</label>
+              <input type="number" id="refund-amount" required step="0.01" min="0.01" class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-lg text-sm focus:ring-2 focus:ring-purple-500"/>
+              <div class="flex gap-2 mt-2">
+                <button type="button" id="refund-btn-full" class="flex-1 py-1 bg-surface-variant text-on-surface-variant rounded-lg text-xs font-bold hover:bg-outline-variant transition-colors">Full Refund</button>
+              </div>
+            </div>
+            <div>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Reason *</label>
+              <select id="refund-reason" required class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-lg text-sm">
+                <option value="requested_by_customer">Requested by customer</option>
+                <option value="fraudulent">Fraudulent</option>
+                <option value="duplicate">Duplicate</option>
+              </select>
+            </div>
+            <button type="submit" id="refund-submit-btn" class="w-full py-3 bg-purple-600 text-white rounded-xl font-label text-sm font-bold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
+              <span>Process Refund</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    modal = document.getElementById('refund-modal');
+    
+    document.getElementById('close-refund-modal').addEventListener('click', () => modal.classList.add('hidden'));
+    
+    document.getElementById('refund-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('refund-submit-btn');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white"></span>';
+      btn.disabled = true;
 
+      const bookingId = document.getElementById('refund-booking-id').value;
+      const amount = parseFloat(document.getElementById('refund-amount').value);
+      const reason = document.getElementById('refund-reason').value;
 
+      try {
+        const res = await fetch('/api/refund', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ booking_id: bookingId, amount, reason })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Refund failed');
+        
+        window.showToast('Refund processed successfully!', 'success');
+        modal.classList.add('hidden');
+        document.getElementById('booking-modal').classList.add('hidden');
+        
+        // Reload page to refresh UI and state
+        setTimeout(() => window.location.reload(), 1000);
+      } catch(err) {
+        window.showToast('Error: ' + err.message, true);
+      } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+    });
+  }
+
+  const deposit = parseFloat(booking.deposit_amount) || 0;
+  const refunded = parseFloat(booking.refunded_amount) || 0;
+  const maxRefund = Math.max(0, deposit - refunded);
+
+  document.getElementById('refund-booking-id').value = booking.id;
+  document.getElementById('refund-cust-name').textContent = booking.customer_name || 'N/A';
+  document.getElementById('refund-max-avail').textContent = `$${maxRefund.toFixed(2)}`;
+  document.getElementById('refund-amount').value = maxRefund.toFixed(2);
+  document.getElementById('refund-amount').max = maxRefund.toFixed(2);
+
+  document.getElementById('refund-btn-full').onclick = () => {
+    document.getElementById('refund-amount').value = maxRefund.toFixed(2);
+  };
+
+  modal.classList.remove('hidden');
+};
 
 
 
