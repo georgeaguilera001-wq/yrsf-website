@@ -6895,6 +6895,196 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     if (tabManifest) tabManifest.click();
   };
 
+  window.switchBookingModalTab = (tab) => {
+    const detailsTab = document.getElementById('booking-details-tab');
+    const activityTab = document.getElementById('booking-activity-tab');
+    const btnDetails = document.getElementById('tab-btn-booking-details');
+    const btnActivity = document.getElementById('tab-btn-booking-activity');
+
+    if (tab === 'activity') {
+      if (detailsTab) detailsTab.classList.add('hidden');
+      if (activityTab) activityTab.classList.remove('hidden');
+      if (btnDetails) {
+        btnDetails.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1.5';
+      }
+      if (btnActivity) {
+        btnActivity.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white text-secondary shadow-xs flex items-center justify-center gap-1.5';
+      }
+    } else {
+      if (activityTab) activityTab.classList.add('hidden');
+      if (detailsTab) detailsTab.classList.remove('hidden');
+      if (btnActivity) {
+        btnActivity.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1.5';
+      }
+      if (btnDetails) {
+        btnDetails.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white text-secondary shadow-xs flex items-center justify-center gap-1.5';
+      }
+    }
+  };
+
+  window.populateBookingActivitySheet = (b) => {
+    if (!b) return;
+
+    // Record ID
+    const actIdEl = document.getElementById('act-booking-id');
+    if (actIdEl) actIdEl.textContent = `ID: ${b.id ? b.id.slice(0, 8).toUpperCase() : '-'}`;
+
+    // Timestamps
+    const formatTs = (tsStr) => {
+      if (!tsStr) return 'N/A';
+      try {
+        const d = new Date(tsStr);
+        if (isNaN(d.getTime())) return tsStr;
+        return d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+      } catch(e) { return tsStr; }
+    };
+
+    const createdEl = document.getElementById('act-created-at');
+    if (createdEl) createdEl.textContent = formatTs(b.created_at || b.created_date || b.booking_date);
+
+    const updatedEl = document.getElementById('act-updated-at');
+    if (updatedEl) updatedEl.textContent = formatTs(b.updated_at || b.created_at);
+
+    // Status
+    const statusEl = document.getElementById('act-status');
+    if (statusEl) {
+      let stColor = 'text-green-700';
+      if (b.status === 'cancelled') stColor = 'text-red-700';
+      if (b.status === 'completed') stColor = 'text-gray-700';
+      statusEl.className = `block font-bold capitalize mt-0.5 ${stColor}`;
+      statusEl.textContent = b.status || 'Confirmed';
+    }
+
+    // Lead stage
+    const leadEl = document.getElementById('act-lead-stage');
+    if (leadEl) leadEl.textContent = b.lead_status || 'Confirmed Charter';
+
+    // Financial Breakdown
+    const finContainer = document.getElementById('act-financial-breakdown');
+    if (finContainer) {
+      const tot = parseFloat(b.total_price || b.amount || 0);
+      const dep = parseFloat(b.deposit_amount || 0);
+      const ref = parseFloat(b.refunded_amount || 0);
+      const netPaid = Math.max(0, dep - ref);
+      const rem = Math.max(0, tot - netPaid);
+
+      finContainer.innerHTML = `
+        <div class="flex justify-between py-1 border-b border-outline-variant/40">
+          <span class="font-sans text-on-surface-variant">Total Price:</span>
+          <span class="font-bold text-on-surface">$${tot.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-outline-variant/40 text-blue-800">
+          <span class="font-sans">Deposit Received:</span>
+          <span class="font-bold">-$${dep.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+        </div>
+        ${b.payment_method ? `
+        <div class="flex justify-between py-1 border-b border-outline-variant/40 text-on-surface-variant text-[10px]">
+          <span class="font-sans">Payment Method:</span>
+          <span class="font-semibold">${escapeHtml(b.payment_method)}</span>
+        </div>
+        ` : ''}
+        ${b.stripe_session_id ? `
+        <div class="flex justify-between py-1 border-b border-outline-variant/40 text-on-surface-variant text-[10px]">
+          <span class="font-sans">Stripe Ref:</span>
+          <span class="font-mono text-[9px] truncate max-w-[180px]">${escapeHtml(b.stripe_session_id)}</span>
+        </div>
+        ` : ''}
+        ${ref > 0 ? `
+        <div class="flex justify-between py-1 border-b border-outline-variant/40 text-purple-800 font-bold">
+          <span class="font-sans">Refund Issued:</span>
+          <span>+$${ref.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+        </div>
+        ` : ''}
+        <div class="flex justify-between py-1.5 px-2 rounded-lg font-bold text-xs ${rem > 0.01 ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-green-50 text-green-800 border border-green-200'}">
+          <span class="font-sans">${rem > 0.01 ? 'Remaining Balance Due:' : 'Payment Status:'}</span>
+          <span>${rem > 0.01 ? `$${rem.toLocaleString('en-US', {minimumFractionDigits: 2})}` : '✓ FULLY PAID'}</span>
+        </div>
+      `;
+    }
+
+    // Audit Trail
+    const auditContainer = document.getElementById('act-audit-trail');
+    if (auditContainer) {
+      const logs = [];
+
+      // Initial creation event
+      logs.push({
+        icon: 'add_circle',
+        color: 'text-blue-600',
+        title: 'Booking Created',
+        desc: `Charter scheduled for ${escapeHtml(b.customer_name || 'Guest')} on ${b.booking_date} @ ${b.start_time || 'TBD'}`
+      });
+
+      // Special requests / add-ons / custom overrides
+      if (b.special_requests) {
+        const lines = b.special_requests.split('\n');
+        lines.forEach(line => {
+          const match = line.match(/^\[Addon: (\d+)x (.*?)(?: \(\$([0-9.]+)\))?\]$/);
+          const customMatch = line.match(/^\[Custom Addon: (.*?)(?: \(\$([0-9.]+)\))?\]$/);
+          const customBoatMatch = line.match(/^\[CustomBoat: \$([0-9.]+)\]$/);
+          const customCapMatch = line.match(/^\[CustomCaptain: \$([0-9.]+)\]$/);
+          const discountMatch = line.match(/^\[Discount: -\$([0-9.]+)\]$/);
+
+          if (discountMatch) {
+            logs.push({ icon: 'sell', color: 'text-red-600', title: 'Discount Applied', desc: `-$${parseFloat(discountMatch[1]).toFixed(2)} special rate adjustment` });
+          } else if (customBoatMatch) {
+            logs.push({ icon: 'tune', color: 'text-amber-600', title: 'Custom Boat Fee Override', desc: `$${parseFloat(customBoatMatch[1]).toFixed(2)} base boat rate set` });
+          } else if (customCapMatch) {
+            logs.push({ icon: 'tune', color: 'text-amber-600', title: 'Custom Captain Fee Override', desc: `$${parseFloat(customCapMatch[1]).toFixed(2)} captain fee set` });
+          } else if (match) {
+            logs.push({ icon: 'extension', color: 'text-green-600', title: 'Add-on Selected', desc: `${match[1]}x ${escapeHtml(match[2])}${match[3] ? ` ($${parseFloat(match[3]).toFixed(2)})` : ''}` });
+          } else if (customMatch) {
+            logs.push({ icon: 'extension', color: 'text-green-600', title: 'Custom Add-on Added', desc: `${escapeHtml(customMatch[1])}${customMatch[2] ? ` ($${parseFloat(customMatch[2]).toFixed(2)})` : ''}` });
+          } else if (line.trim()) {
+            logs.push({ icon: 'sticky_note_2', color: 'text-gray-600', title: 'Note / Request Recorded', desc: escapeHtml(line) });
+          }
+        });
+      }
+
+      // Payments
+      if (parseFloat(b.deposit_amount || 0) > 0) {
+        logs.push({
+          icon: 'task_alt',
+          color: 'text-green-600',
+          title: 'Deposit Received',
+          desc: `$${parseFloat(b.deposit_amount).toFixed(2)} deposit logged (${escapeHtml(b.payment_method || 'Payment Received')})`
+        });
+      }
+
+      if (parseFloat(b.refunded_amount || 0) > 0) {
+        logs.push({
+          icon: 'settings_backup_restore',
+          color: 'text-purple-600',
+          title: 'Refund Processed',
+          desc: `+$${parseFloat(b.refunded_amount).toFixed(2)} refunded`
+        });
+      }
+
+      auditContainer.innerHTML = logs.map(l => `
+        <div class="flex items-start gap-2 bg-white p-2.5 rounded-xl border border-outline-variant/60">
+          <span class="material-symbols-outlined ${l.color} text-base shrink-0 mt-0.5">${l.icon}</span>
+          <div>
+            <div class="font-bold text-on-surface text-[11px]">${l.title}</div>
+            <div class="text-[10px] text-on-surface-variant leading-tight mt-0.5">${l.desc}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Charter Specifications
+    const custInfoEl = document.getElementById('act-cust-info');
+    if (custInfoEl) custInfoEl.textContent = `${b.customer_name || 'Guest'} (${b.customer_phone || b.customer_email || 'No contact info'})`;
+
+    const boatNameEl = document.getElementById('act-boat-name');
+    if (boatNameEl) boatNameEl.textContent = b.boat_name || 'Fleet Yacht';
+
+    const depEl = document.getElementById('act-departure');
+    if (depEl) depEl.textContent = `${b.booking_date} @ ${b.start_time || 'TBD'}`;
+
+    const partyEl = document.getElementById('act-party-specs');
+    if (partyEl) partyEl.textContent = `${b.guest_count || b.guests || 1} Passengers • ${b.duration_hours || 4} Hours Charter`;
+  };
+
   window.editBooking = async (id) => {
     if (typeof window.initBookingsSection === 'function') window.initBookingsSection();
     if (!fleetCache || fleetCache.length === 0) await loadFleet();
@@ -6904,6 +7094,9 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       b = data;
     }
     if (!b) return;
+
+    window.switchBookingModalTab('details');
+    window.populateBookingActivitySheet(b);
 
     document.getElementById('booking-modal-title').textContent = 'Edit Charter Booking';
     document.getElementById('booking-id').value = b.id;

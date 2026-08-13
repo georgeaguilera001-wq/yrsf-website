@@ -2336,260 +2336,320 @@
         <button type="button" id="close-booking-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-2xl leading-none">&times;</button>
       </div>
 
-      <form id="booking-form" class="space-y-4">
-        <input type="hidden" id="booking-id" value=""/>
+      <!-- Modal Navigation Tabs -->
+      <div id="booking-modal-tabs" class="flex border-b border-outline-variant mb-4 bg-surface-container-low p-1 rounded-xl gap-1 sticky top-12 bg-white z-10">
+        <button type="button" id="tab-btn-booking-details" onclick="window.switchBookingModalTab('details')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white text-secondary shadow-xs flex items-center justify-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">edit_note</span> Booking Details
+        </button>
+        <button type="button" id="tab-btn-booking-activity" onclick="window.switchBookingModalTab('activity')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">history</span> Activity Sheet
+        </button>
+      </div>
 
-        <div class="relative" id="book-boat-search-container">
-          <label class="block font-label text-xs font-bold text-on-surface mb-1">Select Yacht / Vessel *</label>
-          <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">directions_boat</span>
-            <input type="text" id="book-boat-search-input" placeholder="Type to search yacht name..." autocomplete="off" class="w-full pl-9 pr-10 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl text-sm font-bold text-secondary focus:ring-2 focus:ring-secondary"/>
-            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer" id="book-boat-dropdown-toggle">expand_more</span>
-          </div>
-          <!-- Hidden real select for form validation and compatibility -->
-          <select id="book-boat-select" required class="sr-only" tabindex="-1">
-            <option value="">-- Select Boat --</option>
-          </select>
-          <!-- Dropdown Options List -->
-          <div id="book-boat-options-list" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto hidden divide-y divide-surface-container"></div>
-        </div>
+      <!-- Tab 1: Booking Details & Form -->
+      <div id="booking-details-tab">
+        <form id="booking-form" class="space-y-4">
+          <input type="hidden" id="booking-id" value=""/>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-label text-xs font-bold text-on-surface mb-1">Departure Date *</label>
-            <input type="date" id="book-date" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
-          </div>
-          <div>
-            <label class="block font-label text-xs font-bold text-on-surface mb-1">Start Time *</label>
-            <select id="book-time" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
-              <option value="08:00 AM">08:00 AM</option>
-              <option value="09:00 AM">09:00 AM</option>
-              <option value="10:00 AM" selected>10:00 AM</option>
-              <option value="11:00 AM">11:00 AM</option>
-              <option value="12:00 PM">12:00 PM (Noon)</option>
-              <option value="01:00 PM">01:00 PM</option>
-              <option value="02:00 PM">02:00 PM</option>
-              <option value="03:00 PM">03:00 PM</option>
-              <option value="04:00 PM">04:00 PM</option>
-              <option value="05:00 PM">05:00 PM (Sunset)</option>
-              <option value="06:00 PM">06:00 PM</option>
+          <div class="relative" id="book-boat-search-container">
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Select Yacht / Vessel *</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">directions_boat</span>
+              <input type="text" id="book-boat-search-input" placeholder="Type to search yacht name..." autocomplete="off" class="w-full pl-9 pr-10 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl text-sm font-bold text-secondary focus:ring-2 focus:ring-secondary"/>
+              <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer" id="book-boat-dropdown-toggle">expand_more</span>
+            </div>
+            <!-- Hidden real select for form validation and compatibility -->
+            <select id="book-boat-select" required class="sr-only" tabindex="-1">
+              <option value="">-- Select Boat --</option>
             </select>
+            <!-- Dropdown Options List -->
+            <div id="book-boat-options-list" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto hidden divide-y divide-surface-container"></div>
           </div>
-          <div>
-            <label class="block font-label text-xs font-bold text-on-surface mb-1">Duration *</label>
-            <select id="book-duration" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
-              <option value="">-- Select Yacht First --</option>
-            </select>
-          </div>
-          <div>
-            <label class="block font-label text-xs font-bold text-on-surface mb-1">End Time</label>
-            <div class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-xs font-bold text-on-surface-variant flex items-center justify-between">
-              <span id="book-end-time-display">--:--</span>
-              <span class="material-symbols-outlined text-[16px] text-on-surface-variant/60">schedule</span>
-            </div>
-          </div>
-        </div>
 
-        <div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant space-y-3">
-          <p class="font-label text-xs font-bold text-secondary uppercase tracking-wider">Customer / Passenger Info</p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block font-label text-xs text-on-surface mb-1">Full Name *</label>
-              <input type="text" id="book-cust-name" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary"/>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Departure Date *</label>
+              <input type="date" id="book-date" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
             </div>
             <div>
-              <label class="block font-label text-xs text-on-surface mb-1">Phone Number *</label>
-              <input type="tel" id="book-cust-phone" required placeholder="(305) 555-0199" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary"/>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Start Time *</label>
+              <select id="book-time" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+                <option value="08:00 AM">08:00 AM</option>
+                <option value="09:00 AM">09:00 AM</option>
+                <option value="10:00 AM" selected>10:00 AM</option>
+                <option value="11:00 AM">11:00 AM</option>
+                <option value="12:00 PM">12:00 PM (Noon)</option>
+                <option value="01:00 PM">01:00 PM</option>
+                <option value="02:00 PM">02:00 PM</option>
+                <option value="03:00 PM">03:00 PM</option>
+                <option value="04:00 PM">04:00 PM</option>
+                <option value="05:00 PM">05:00 PM (Sunset)</option>
+                <option value="06:00 PM">06:00 PM</option>
+              </select>
             </div>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block font-label text-xs text-on-surface mb-1">Email Address (Optional)</label>
-              <input type="email" id="book-cust-email" placeholder="john@example.com" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary"/>
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">Duration *</label>
+              <select id="book-duration" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+                <option value="">-- Select Yacht First --</option>
+              </select>
             </div>
             <div>
-              <label class="block font-label text-xs text-on-surface mb-1">Total Guests *</label>
-              <input type="number" min="1" max="100" id="book-guests" required value="8" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs font-bold focus:ring-2 focus:ring-secondary"/>
-            </div>
-          </div>
-        </div>
-
-        <div class="mb-3 bg-surface-container-low p-3 rounded-xl border border-outline-variant">
-          <button type="button" class="w-full flex items-center justify-between font-label text-xs font-bold text-secondary uppercase tracking-wider group" onclick="const w = document.getElementById('addons-collapsible-wrapper'); w.classList.toggle('hidden'); const i = this.querySelector('.toggle-icon'); i.textContent = w.classList.contains('hidden') ? 'expand_more' : 'expand_less';">
-            <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">add_box</span> Included Services & Add-ons</span>
-            <span class="material-symbols-outlined toggle-icon text-on-surface-variant group-hover:text-secondary transition-colors">expand_more</span>
-          </button>
-          
-          <div id="addons-collapsible-wrapper" class="hidden mt-3 space-y-2">
-            <div class="flex flex-col gap-2" id="dynamic-addons-container">
-              <!-- Populated via JS -->
-              <div class="text-xs text-on-surface-variant animate-pulse">Loading add-ons...</div>
-            </div>
-            
-            <!-- Custom Addon Row -->
-            <div class="flex gap-2 items-center mt-2 p-2 rounded-xl bg-white border border-outline-variant">
-              <span class="material-symbols-outlined text-on-surface-variant text-sm pl-1">add_circle</span>
-              <input type="text" id="custom-addon-name" placeholder="Custom Add-on Name..." class="flex-1 bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 px-1 py-1 placeholder:text-on-surface-variant/50">
-              <div class="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant rounded-lg px-2 py-1">
-                <span class="text-on-surface-variant text-xs font-bold">$</span>
-                <input type="number" id="custom-addon-price" placeholder="0.00" class="w-16 bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 p-0 text-right">
+              <label class="block font-label text-xs font-bold text-on-surface mb-1">End Time</label>
+              <div class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-xs font-bold text-on-surface-variant flex items-center justify-between">
+                <span id="book-end-time-display">--:--</span>
+                <span class="material-symbols-outlined text-[16px] text-on-surface-variant/60">schedule</span>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 space-y-3">
-          <p class="font-label text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-[16px]">payments</span> Financial Details &amp; Balance
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            <div>
-              <label class="block font-label text-xs font-bold text-on-surface mb-1">Total Price ($) *</label>
-              <input type="number" step="0.01" min="0" id="book-price" required placeholder="2500.00" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold text-on-surface focus:ring-2 focus:ring-secondary"/>
-            </div>
-            <div>
-              <label class="block font-label text-xs font-bold text-on-surface mb-1">Discount ($)</label>
-              <input type="number" step="0.01" min="0" id="book-discount" placeholder="0.00" value="0" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold text-red-600 focus:ring-2 focus:ring-red-500"/>
-            </div>
-            <div>
-              <label class="block font-label text-xs font-bold text-on-surface mb-1">Deposit Paid ($)</label>
-              <input type="number" step="0.01" min="0" id="book-deposit" placeholder="500.00" value="0" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold text-blue-700 focus:ring-2 focus:ring-secondary"/>
-            </div>
-            <div>
-              <label class="block font-label text-xs font-bold text-on-surface mb-1">Remaining Balance ($)</label>
-              <input type="text" id="book-balance-display" readonly value="$0.00" class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-sm font-bold text-red-600 cursor-not-allowed"/>
-              <input type="hidden" id="book-balance" value="0"/>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            <div>
-              <label class="block font-label text-xs font-bold text-on-surface mb-1">Payment Method *</label>
-              <select id="book-pay-method" required class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
-                <option value="none">-- Select Method --</option>
-                <option value="stripe">💳 Credit Card (Stripe Portal)</option>
-                <option value="zelle">📱 Zelle</option>
-                <option value="cashapp">💵 CashApp</option>
-                <option value="cash">💵 Cash (At Dock)</option>
-                <option value="other">Other / Manual</option>
-              </select>
-            </div>
-            <div>
-              <label class="block font-label text-xs font-bold text-on-surface mb-1">Booking Status</label>
-              <select id="book-status" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
-                <option value="inquiry">📝 Draft / Quote (Unpaid)</option>
-                <option value="confirmed">📅 Confirmed (Deposit Paid)</option>
-                <option value="completed">✅ Completed &amp; Fully Paid</option>
-                <option value="cancelled">🚫 Cancelled / Refunded</option>
-              </select>
-            </div>
-            <div id="lead-status-container" class="hidden">
-              <label class="block font-label text-xs font-bold text-blue-700 mb-1">CRM Stage</label>
-              <select id="book-lead-status" class="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold text-blue-900 focus:ring-2 focus:ring-secondary">
-                <option value="new">New Lead (Web)</option>
-                <option value="contacted">Contacted / Drafting</option>
-                <option value="quote_sent">Quote Sent</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Itemized Breakdown -->
-          <div id="itemized-breakdown" class="hidden flex flex-col gap-1 mt-3 mb-3 p-3 bg-white rounded-lg border border-outline-variant text-xs font-mono">
-             <div class="flex justify-between text-on-surface"><span>Boat charter (<span id="ib-duration">4</span> hours)</span><span id="ib-boat-price">$0.00</span></div>
-             <div class="flex justify-between text-on-surface" id="ib-captain-row"><span>Captain fee</span><span id="ib-captain-price">$0.00</span></div>
-             <div id="ib-addons-container"></div>
-             <div class="flex justify-between text-red-600 font-bold hidden" id="ib-discount-row"><span>Special Discount / Adjustment</span><span id="ib-discount-price">-$0.00</span></div>
-             <div class="border-t border-outline-variant my-1"></div>
-             <div class="flex justify-between text-on-surface font-bold"><span>Subtotal</span><span id="ib-subtotal">$0.00</span></div>
-             <div class="flex justify-between text-on-surface"><span>Taxes (7.00%)</span><span id="ib-taxes">$0.00</span></div>
-             <div class="border-t border-outline-variant my-1"></div>
-             <div class="flex justify-between text-on-surface font-bold text-sm"><span>Total cost</span><span id="ib-total">$0.00</span></div>
-             <div class="flex justify-between text-blue-700 font-bold mt-1"><span>Required deposit</span><span id="ib-deposit">$0.00</span></div>
-             <div class="flex justify-between text-green-700 font-bold"><span>Amount paid</span><span id="ib-paid">$0.00</span></div>
-             <div class="flex justify-between text-red-600 font-bold"><span>Remaining balance</span><span id="ib-balance">$0.00</span></div>
-          </div>
-
-          <!-- Stripe Payment Portal UI -->
-          <div id="stripe-portal-container" class="hidden mt-3 p-4 rounded-xl bg-white border border-indigo-200 shadow-sm relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="font-bold text-indigo-900 text-xs flex items-center gap-1"><span class="material-symbols-outlined text-sm">link</span> Generate Payment Link</span>
-              <div class="flex gap-1">
-                <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-100">STRIPE</span>
+          <div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant space-y-3">
+            <p class="font-label text-xs font-bold text-secondary uppercase tracking-wider">Customer / Passenger Info</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-label text-xs text-on-surface mb-1">Full Name *</label>
+                <input type="text" id="book-cust-name" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary"/>
+              </div>
+              <div>
+                <label class="block font-label text-xs text-on-surface mb-1">Phone Number *</label>
+                <input type="tel" id="book-cust-phone" required placeholder="(305) 555-0199" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary"/>
               </div>
             </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-label text-xs text-on-surface mb-1">Email Address (Optional)</label>
+                <input type="email" id="book-cust-email" placeholder="john@example.com" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary"/>
+              </div>
+              <div>
+                <label class="block font-label text-xs text-on-surface mb-1">Total Guests *</label>
+                <input type="number" min="1" max="100" id="book-guests" required value="8" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs font-bold focus:ring-2 focus:ring-secondary"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3 bg-surface-container-low p-3 rounded-xl border border-outline-variant">
+            <button type="button" class="w-full flex items-center justify-between font-label text-xs font-bold text-secondary uppercase tracking-wider group" onclick="const w = document.getElementById('addons-collapsible-wrapper'); w.classList.toggle('hidden'); const i = this.querySelector('.toggle-icon'); i.textContent = w.classList.contains('hidden') ? 'expand_more' : 'expand_less';">
+              <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">add_box</span> Included Services & Add-ons</span>
+              <span class="material-symbols-outlined toggle-icon text-on-surface-variant group-hover:text-secondary transition-colors">expand_more</span>
+            </button>
             
-            <div class="flex flex-col gap-3">
-              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <button type="button" id="generate-stripe-link-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-3 rounded-lg shadow transition-colors flex items-center justify-center gap-1 shrink-0 w-full sm:w-auto">
-                  <span class="material-symbols-outlined text-sm">magic_button</span> Generate Link for 5-Min Hold
-                </button>
-                <div id="hold-status-display" class="hidden text-xs font-bold px-2 py-1.5 rounded-lg border flex-1 text-center sm:text-left">
-                  <span id="hold-status-text">Generating secure payment link...</span>
-                  <span id="hold-countdown" class="ml-2 font-mono text-indigo-600 hidden"></span>
+            <div id="addons-collapsible-wrapper" class="hidden mt-3 space-y-2">
+              <div class="flex flex-col gap-2" id="dynamic-addons-container">
+                <!-- Populated via JS -->
+                <div class="text-xs text-on-surface-variant animate-pulse">Loading add-ons...</div>
+              </div>
+              
+              <!-- Custom Addon Row -->
+              <div class="flex gap-2 items-center mt-2 p-2 rounded-xl bg-white border border-outline-variant">
+                <span class="material-symbols-outlined text-on-surface-variant text-sm pl-1">add_circle</span>
+                <input type="text" id="custom-addon-name" placeholder="Custom Add-on Name..." class="flex-1 bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 px-1 py-1 placeholder:text-on-surface-variant/50">
+                <div class="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant rounded-lg px-2 py-1">
+                  <span class="text-on-surface-variant text-xs font-bold">$</span>
+                  <input type="number" id="custom-addon-price" placeholder="0.00" class="w-16 bg-transparent border-none text-xs font-bold text-on-surface focus:ring-0 p-0 text-right">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 space-y-3">
+            <p class="font-label text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px]">payments</span> Financial Details &amp; Balance
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div>
+                <label class="block font-label text-xs font-bold text-on-surface mb-1">Total Price ($) *</label>
+                <input type="number" step="0.01" min="0" id="book-price" required placeholder="2500.00" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold text-on-surface focus:ring-2 focus:ring-secondary"/>
+              </div>
+              <div>
+                <label class="block font-label text-xs font-bold text-on-surface mb-1">Discount ($)</label>
+                <input type="number" step="0.01" min="0" id="book-discount" placeholder="0.00" value="0" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold text-red-600 focus:ring-2 focus:ring-red-500"/>
+              </div>
+              <div>
+                <label class="block font-label text-xs font-bold text-on-surface mb-1">Deposit Paid ($)</label>
+                <input type="number" step="0.01" min="0" id="book-deposit" placeholder="500.00" value="0" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold text-blue-700 focus:ring-2 focus:ring-secondary"/>
+              </div>
+              <div>
+                <label class="block font-label text-xs font-bold text-on-surface mb-1">Remaining Balance ($)</label>
+                <input type="text" id="book-balance-display" readonly value="$0.00" class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-sm font-bold text-red-600 cursor-not-allowed"/>
+                <input type="hidden" id="book-balance" value="0"/>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              <div>
+                <label class="block font-label text-xs font-bold text-on-surface mb-1">Payment Method *</label>
+                <select id="book-pay-method" required class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+                  <option value="none">-- Select Method --</option>
+                  <option value="stripe">💳 Credit Card (Stripe Portal)</option>
+                  <option value="zelle">📱 Zelle</option>
+                  <option value="cashapp">💵 CashApp</option>
+                  <option value="cash">💵 Cash (At Dock)</option>
+                  <option value="other">Other / Manual</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-label text-xs font-bold text-on-surface mb-1">Booking Status</label>
+                <select id="book-status" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+                  <option value="inquiry">📝 Draft / Quote (Unpaid)</option>
+                  <option value="confirmed">📅 Confirmed (Deposit Paid)</option>
+                  <option value="completed">✅ Completed &amp; Fully Paid</option>
+                  <option value="cancelled">🚫 Cancelled / Refunded</option>
+                </select>
+              </div>
+              <div id="lead-status-container" class="hidden">
+                <label class="block font-label text-xs font-bold text-blue-700 mb-1">CRM Stage</label>
+                <select id="book-lead-status" class="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold text-blue-900 focus:ring-2 focus:ring-secondary">
+                  <option value="new">New Lead (Web)</option>
+                  <option value="contacted">Contacted / Drafting</option>
+                  <option value="quote_sent">Quote Sent</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Itemized Breakdown -->
+            <div id="itemized-breakdown" class="hidden flex flex-col gap-1 mt-3 mb-3 p-3 bg-white rounded-lg border border-outline-variant text-xs font-mono">
+               <div class="flex justify-between text-on-surface"><span>Boat charter (<span id="ib-duration">4</span> hours)</span><span id="ib-boat-price">$0.00</span></div>
+               <div class="flex justify-between text-on-surface" id="ib-captain-row"><span>Captain fee</span><span id="ib-captain-price">$0.00</span></div>
+               <div id="ib-addons-container"></div>
+               <div class="flex justify-between text-red-600 font-bold hidden" id="ib-discount-row"><span>Special Discount / Adjustment</span><span id="ib-discount-price">-$0.00</span></div>
+               <div class="border-t border-outline-variant my-1"></div>
+               <div class="flex justify-between text-on-surface font-bold"><span>Subtotal</span><span id="ib-subtotal">$0.00</span></div>
+               <div class="flex justify-between text-on-surface"><span>Taxes (7.00%)</span><span id="ib-taxes">$0.00</span></div>
+               <div class="border-t border-outline-variant my-1"></div>
+               <div class="flex justify-between text-on-surface font-bold text-sm"><span>Total cost</span><span id="ib-total">$0.00</span></div>
+               <div class="flex justify-between text-blue-700 font-bold mt-1"><span>Required deposit</span><span id="ib-deposit">$0.00</span></div>
+               <div class="flex justify-between text-green-700 font-bold"><span>Amount paid</span><span id="ib-paid">$0.00</span></div>
+               <div class="flex justify-between text-red-600 font-bold"><span>Remaining balance</span><span id="ib-balance">$0.00</span></div>
+            </div>
+
+            <!-- Stripe Payment Portal UI -->
+            <div id="stripe-portal-container" class="hidden mt-3 p-4 rounded-xl bg-white border border-indigo-200 shadow-sm relative overflow-hidden">
+              <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="font-bold text-indigo-900 text-xs flex items-center gap-1"><span class="material-symbols-outlined text-sm">link</span> Generate Payment Link</span>
+                <div class="flex gap-1">
+                  <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-100">STRIPE</span>
                 </div>
               </div>
               
-              <div id="stripe-link-result-container" class="hidden flex-col gap-3 mt-2 border-t border-indigo-100 pt-3">
-                <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">Customer Message</label>
-                  <textarea id="customer-message-template" readonly rows="4" class="w-full text-xs p-2 bg-indigo-50 border border-indigo-100 rounded-lg focus:outline-none resize-none font-mono"></textarea>
-                </div>
-                <div class="flex items-center gap-2">
-                  <input type="text" id="stripe-generated-link" readonly class="w-full px-2 py-2 bg-green-50 border border-green-200 rounded-lg text-[10px] sm:text-xs text-green-900 font-mono focus:outline-none"/>
-                  <button type="button" id="copy-stripe-link-btn" class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg shadow transition-colors flex items-center justify-center shrink-0" title="Copy Short Link Only">
-                    <span class="material-symbols-outlined text-[16px]">link</span>
+              <div class="flex flex-col gap-3">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <button type="button" id="generate-stripe-link-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-3 rounded-lg shadow transition-colors flex items-center justify-center gap-1 shrink-0 w-full sm:w-auto">
+                    <span class="material-symbols-outlined text-sm">magic_button</span> Generate Link for 5-Min Hold
                   </button>
-                  <button type="button" id="copy-message-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg shadow transition-colors flex items-center justify-center shrink-0" title="Copy Full Message">
-                    <span class="material-symbols-outlined text-[16px]">content_copy</span>
-                  </button>
+                  <div id="hold-status-display" class="hidden text-xs font-bold px-2 py-1.5 rounded-lg border flex-1 text-center sm:text-left">
+                    <span id="hold-status-text">Generating secure payment link...</span>
+                    <span id="hold-countdown" class="ml-2 font-mono text-indigo-600 hidden"></span>
+                  </div>
                 </div>
+                
+                <div id="stripe-link-result-container" class="hidden flex-col gap-3 mt-2 border-t border-indigo-100 pt-3">
+                  <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">Customer Message</label>
+                    <textarea id="customer-message-template" readonly rows="4" class="w-full text-xs p-2 bg-indigo-50 border border-indigo-100 rounded-lg focus:outline-none resize-none font-mono"></textarea>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="text" id="stripe-generated-link" readonly class="w-full px-2 py-2 bg-green-50 border border-green-200 rounded-lg text-[10px] sm:text-xs text-green-900 font-mono focus:outline-none"/>
+                    <button type="button" id="copy-stripe-link-btn" class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg shadow transition-colors flex items-center justify-center shrink-0" title="Copy Short Link Only">
+                      <span class="material-symbols-outlined text-[16px]">link</span>
+                    </button>
+                    <button type="button" id="copy-message-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg shadow transition-colors flex items-center justify-center shrink-0" title="Copy Full Message">
+                      <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                    </button>
+                  </div>
+                </div>
+                <p id="stripe-link-error" class="hidden text-[10px] text-red-600 font-bold"></p>
               </div>
-              <p id="stripe-link-error" class="hidden text-[10px] text-red-600 font-bold"></p>
             </div>
-          </div> <!-- Close stripe-portal-container -->
+          </div>
 
-        <div>
-          <label class="block font-label text-xs font-bold text-on-surface mb-1">Additional Notes / Special Requests</label>
-          <textarea id="book-notes" rows="2" placeholder="e.g. Needs Champagne, Birthday celebration..." class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"></textarea>
-        </div>
-
-        <div class="flex flex-col sm:flex-row gap-2 pt-3 border-t border-outline-variant">
-          <button type="button" id="delete-booking-btn" class="hidden sm:w-auto px-3 bg-red-50 text-red-700 border border-red-200 py-2 rounded-xl font-label text-xs font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-1" title="Delete Booking/Quote">
-            <span class="material-symbols-outlined text-sm">delete</span>
-          </button>
-          <button type="button" id="cancel-booking-btn" class="sm:w-auto px-4 bg-surface-container text-on-surface py-2.5 rounded-xl font-label text-xs font-bold hover:bg-surface-container-high transition-all">
-            Cancel
-          </button>
-          <button type="button" id="save-draft-btn" class="flex-1 bg-blue-50 text-blue-800 py-2.5 rounded-xl font-label text-xs font-bold shadow-sm hover:bg-blue-100 transition-all flex items-center justify-center gap-1 border border-blue-200">
-            <span class="material-symbols-outlined text-sm">edit_document</span> Save Draft
-          </button>
-          <button type="button" id="generate-pdf-quote-btn" class="flex-1 bg-indigo-50 text-indigo-800 py-2.5 rounded-xl font-label text-xs font-bold shadow-sm hover:bg-indigo-100 transition-all flex items-center justify-center gap-1 border border-indigo-200">
-            <span class="material-symbols-outlined text-sm">picture_as_pdf</span> PDF Quote
-          </button>
-          <button type="submit" class="flex-1 bg-secondary text-on-secondary py-2.5 rounded-xl font-label text-xs font-bold shadow hover:opacity-90 transition-all flex items-center justify-center gap-1">
-            <span class="material-symbols-outlined text-sm">check_circle</span> Save Booking
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-  <!-- Day Events Modal -->
-  <div id="day-events-modal" class="fixed inset-0 bg-black/60 z-[9999] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-surface border border-outline-variant rounded-3xl p-6 max-w-xl w-full shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
-      <div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-4 shrink-0">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-secondary text-2xl">event_note</span>
           <div>
-            <h3 id="day-events-modal-title" class="font-headline text-lg font-bold text-on-surface">Scheduled Events</h3>
-            <p id="day-events-modal-subtitle" class="font-body text-xs text-on-surface-variant">All charters and external sync items for this date</p>
+            <label class="block font-label text-xs font-bold text-on-surface mb-1">Additional Notes / Special Requests</label>
+            <textarea id="book-notes" rows="2" placeholder="e.g. Needs Champagne, Birthday celebration..." class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"></textarea>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-2 pt-3 border-t border-outline-variant">
+            <button type="button" id="delete-booking-btn" class="hidden sm:w-auto px-3 bg-red-50 text-red-700 border border-red-200 py-2 rounded-xl font-label text-xs font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-1" title="Delete Booking/Quote">
+              <span class="material-symbols-outlined text-sm">delete</span>
+            </button>
+            <button type="button" id="cancel-booking-btn" class="sm:w-auto px-4 bg-surface-container text-on-surface py-2.5 rounded-xl font-label text-xs font-bold hover:bg-surface-container-high transition-all">
+              Cancel
+            </button>
+            <button type="button" id="save-draft-btn" class="flex-1 bg-blue-50 text-blue-800 py-2.5 rounded-xl font-label text-xs font-bold shadow-sm hover:bg-blue-100 transition-all flex items-center justify-center gap-1 border border-blue-200">
+              <span class="material-symbols-outlined text-sm">edit_document</span> Save Draft
+            </button>
+            <button type="button" id="generate-pdf-quote-btn" class="flex-1 bg-indigo-50 text-indigo-800 py-2.5 rounded-xl font-label text-xs font-bold shadow-sm hover:bg-indigo-100 transition-all flex items-center justify-center gap-1 border border-indigo-200">
+              <span class="material-symbols-outlined text-sm">picture_as_pdf</span> PDF Quote
+            </button>
+            <button type="submit" class="flex-1 bg-secondary text-on-secondary py-2.5 rounded-xl font-label text-xs font-bold shadow hover:opacity-90 transition-all flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-sm">check_circle</span> Save Booking
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tab 2: Activity Sheet & Audit Trail -->
+      <div id="booking-activity-tab" class="hidden space-y-4 font-sans text-xs">
+        <!-- Overview & Metadata -->
+        <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-blue-200/80 pb-2">
+            <span class="font-bold text-blue-900 flex items-center gap-1.5 text-xs">
+              <span class="material-symbols-outlined text-base">info</span> Charter Record Meta
+            </span>
+            <span id="act-booking-id" class="font-mono text-[10px] bg-blue-200 text-blue-950 px-2 py-0.5 rounded-md">ID: -</span>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div><span class="text-blue-700 font-semibold">Created Date:</span> <span id="act-created-at" class="font-mono font-bold text-blue-950 block mt-0.5">-</span></div>
+            <div><span class="text-blue-700 font-semibold">Last Updated:</span> <span id="act-updated-at" class="font-mono font-bold text-blue-950 block mt-0.5">-</span></div>
+            <div><span class="text-blue-700 font-semibold">Booking Status:</span> <span id="act-status" class="block font-bold text-blue-900 mt-0.5">-</span></div>
+            <div><span class="text-blue-700 font-semibold">CRM Lead Stage:</span> <span id="act-lead-stage" class="block font-bold text-blue-900 mt-0.5">-</span></div>
           </div>
         </div>
-        <button id="close-day-events-modal" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
-          <span class="material-symbols-outlined text-sm">close</span>
-        </button>
+
+        <!-- Financial & Payment Activity Log -->
+        <div class="bg-surface-container-low border border-outline-variant rounded-2xl p-4 space-y-3">
+          <h4 class="font-bold text-on-surface flex items-center gap-1.5 text-xs">
+            <span class="material-symbols-outlined text-green-700 text-base">payments</span> Financial &amp; Payment History
+          </h4>
+          <div id="act-financial-breakdown" class="space-y-2 font-mono text-[11px]">
+            <!-- Dynamic payments breakdown -->
+          </div>
+        </div>
+
+        <!-- Modifications, Add-ons & Change Log -->
+        <div class="bg-surface-container-low border border-outline-variant rounded-2xl p-4 space-y-3">
+          <h4 class="font-bold text-on-surface flex items-center gap-1.5 text-xs">
+            <span class="material-symbols-outlined text-amber-700 text-base">history_toggle_off</span> Audit Trail &amp; Modifications
+          </h4>
+          <div id="act-audit-trail" class="space-y-2">
+            <!-- Dynamic log of changes, add-ons, overrides -->
+          </div>
+        </div>
+
+        <!-- Customer & Charter Specifications -->
+        <div class="bg-surface-container-low border border-outline-variant rounded-2xl p-4 space-y-2 text-[11px]">
+          <h4 class="font-bold text-on-surface flex items-center gap-1.5 text-xs mb-2">
+            <span class="material-symbols-outlined text-secondary text-base">directions_boat</span> Charter Specifications
+          </h4>
+          <div class="flex justify-between border-b border-outline-variant/40 pb-1">
+            <span class="text-on-surface-variant">Customer:</span>
+            <span id="act-cust-info" class="font-bold text-on-surface">-</span>
+          </div>
+          <div class="flex justify-between border-b border-outline-variant/40 pb-1">
+            <span class="text-on-surface-variant">Vessel / Yacht:</span>
+            <span id="act-boat-name" class="font-bold text-on-surface">-</span>
+          </div>
+          <div class="flex justify-between border-b border-outline-variant/40 pb-1">
+            <span class="text-on-surface-variant">Departure:</span>
+            <span id="act-departure" class="font-bold font-mono text-secondary">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Party Size &amp; Duration:</span>
+            <span id="act-party-specs" class="font-bold text-on-surface">-</span>
+          </div>
+        </div>
       </div>
+    </div>
+  </div>
       <div id="day-events-modal-content" class="overflow-y-auto space-y-3 pr-1 flex-1">
         <!-- Event items injected dynamically -->
       </div>
@@ -2667,7 +2727,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260813v1224"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260813v1353"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
