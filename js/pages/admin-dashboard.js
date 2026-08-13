@@ -8318,10 +8318,14 @@ window.openChargeBalanceModal = (booking) => {
           body: JSON.stringify({ booking_id: bookingId, payment_type: 'balance', amount })
         });
         const data = await res.json();
-        if (!res.ok || !data.url) throw new Error(data.error || 'Failed to create payment link');
+        if (!res.ok || (!data.short_url && !data.url)) throw new Error(data.error || 'Failed to create payment link');
         
-        await navigator.clipboard.writeText(data.url);
-        if (window.showToast) window.showToast('💳 Payment link copied to clipboard!', 'success');
+        const payUrl = data.short_url || data.url;
+        const amtStr = `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const messageTemplate = `Thank-you for choosing Yacht Rentals of South Florida! Here is the Payment link for your remaining balance.\n\nRemaining Balance: ${amtStr}\n\n${payUrl}\n\nNote: This Payment link will be valid for only 5 minutes. If you need more time, please let us know so that we can resend you a new one!`;
+
+        await navigator.clipboard.writeText(messageTemplate);
+        if (window.showToast) window.showToast('📋 Payment message copied to clipboard!', 'success');
         modal.classList.add('hidden');
       } catch (err) {
         alert('Error generating link: ' + err.message);

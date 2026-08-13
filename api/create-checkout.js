@@ -105,10 +105,41 @@ module.exports = async (req, res) => {
       }
     });
 
+    const crypto = require('crypto');
+    let shortToken = crypto.randomBytes(3).toString('hex');
+    const expiresAt = new Date(Date.now() + 5 * 60000); // 5 minutes
+    const holdId = crypto.randomUUID();
+
+    // Insert into booking_holds so /pay/:token works with 5-minute expiry
+    await supabase.from('booking_holds').insert({
+      id: holdId,
+      short_token: shortToken,
+      boat_id: booking.boat_id || null,
+      booking_date: booking.booking_date,
+      start_time: booking.start_time || 'TBD',
+      duration_hours: booking.duration_hours || 4,
+      customer_name: booking.customer_name,
+      customer_phone: booking.customer_phone,
+      customer_email: booking.customer_email,
+      total_price: parseFloat(booking.total_price || 0),
+      deposit_amount: amountToCharge,
+      stripe_session_id: session.id,
+      stripe_session_url: session.url,
+      status: 'pending_payment',
+      expires_at: expiresAt.toISOString()
+    });
+
     // Save stripe_session_id to booking record
     await supabase.from('bookings').update({ stripe_session_id: session.id }).eq('id', booking.id);
 
-    return res.status(200).json({ url: session.url });
+    const shortUrl = `${origin}/pay/${shortToken}`;
+
+    return res.status(200).json({
+      url: session.url,
+      short_url: shortUrl,
+      short_token: shortToken,
+      amount: amountToCharge
+    });
 
   } catch (error) {
     console.error('Error creating checkout session:', error);
