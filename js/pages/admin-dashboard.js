@@ -5623,9 +5623,11 @@ EXTRACTION RULES:
       if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">🔴 Cancelled</span>`;
       if (b.status === 'inquiry') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">📝 Quote / Draft</span>`;
 
-      const tot = parseFloat(b.total_price || 0);
+      const tot = parseFloat(b.total_price || b.amount || 0);
       const dep = parseFloat(b.deposit_amount || 0);
-      const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, tot - dep);
+      const ref = parseFloat(b.refunded_amount || 0);
+      const netPaid = Math.max(0, dep - ref);
+      const rem = Math.max(0, tot - netPaid);
 
       return `
         <tr class="hover:bg-surface-container-low/50 transition-colors ${isToday ? 'bg-amber-50/50' : ''}">
@@ -5651,7 +5653,7 @@ EXTRACTION RULES:
             </span>
           </td>
           <td class="p-2 whitespace-nowrap">
-            <div class="bg-surface-container-lowest p-1.5 rounded-lg border border-outline-variant/80 space-y-0.5 w-40 shadow-sm font-mono text-[10px]">
+            <div class="bg-surface-container-lowest p-1.5 rounded-lg border border-outline-variant/80 space-y-0.5 w-44 shadow-sm font-mono text-[10px]">
               <div class="flex justify-between font-bold text-on-surface">
                 <span class="text-[9px] text-on-surface-variant font-sans">Total:</span>
                 <span class="text-green-700">$${tot.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -5660,6 +5662,12 @@ EXTRACTION RULES:
                 <span class="text-[9px] text-on-surface-variant font-sans">Deposit:</span>
                 <span class="font-bold">-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
+              ${ref > 0 ? `
+              <div class="flex justify-between text-purple-700 border-t border-outline-variant/30 pt-0.5">
+                <span class="text-[9px] text-on-surface-variant font-sans">Refunded:</span>
+                <span class="font-bold">+$${ref.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : ''}
               <div class="flex justify-between font-bold border-t border-outline-variant/40 pt-0.5 ${rem > 0.01 ? 'text-red-600 bg-red-50/80 px-1 py-0 rounded' : 'text-green-700 bg-green-50/80 px-1 py-0 rounded'}">
                 <span class="text-[9px] font-sans">${rem > 0.01 ? 'Bal Due:' : 'Status:'}</span>
                 <span>${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
@@ -5705,8 +5713,10 @@ EXTRACTION RULES:
 
         const total = parseFloat(b.total_price || b.amount || 0);
         const dep = parseFloat(b.deposit_amount || 0);
-        const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, total - dep);
-        const canRefund = dep > 0 && parseFloat(b.refunded_amount || 0) < dep;
+        const ref = parseFloat(b.refunded_amount || 0);
+        const netPaid = Math.max(0, dep - ref);
+        const rem = Math.max(0, total - netPaid);
+        const canRefund = dep > 0 && ref < dep;
 
         return `
           <div class="bg-surface-container-lowest border ${isToday ? 'border-secondary ring-1 ring-secondary/30' : 'border-outline-variant'} rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden">
@@ -5739,17 +5749,23 @@ EXTRACTION RULES:
                 </div>
               </div>
 
-              <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2 mb-3 text-xs space-y-1">
+              <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2 mb-3 text-xs space-y-1 font-mono">
                 <div class="flex justify-between text-amber-900 font-bold">
-                  <span>Total Charter Price:</span>
+                  <span class="font-sans">Total Charter Price:</span>
                   <span>$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div class="flex justify-between text-amber-800 text-[11px]">
-                  <span>Deposit Paid:</span>
-                  <span>$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span class="font-sans">Deposit Paid:</span>
+                  <span>-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
+                ${ref > 0 ? `
+                <div class="flex justify-between text-purple-800 text-[11px] font-bold">
+                  <span class="font-sans">Refunded:</span>
+                  <span>+$${ref.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+                ` : ''}
                 <div class="flex justify-between border-t border-amber-200 pt-1 ${rem > 0.01 ? 'text-red-700 font-bold bg-red-100/60 px-1 rounded' : 'text-green-800 font-bold bg-green-100/60 px-1 rounded'}">
-                  <span class="font-sans text-[9px]">${rem > 0.01 ? 'Balance:' : 'Status:'}</span>
+                  <span class="font-sans text-[9px]">${rem > 0.01 ? 'Balance Due:' : 'Status:'}</span>
                   <span class="text-[11px]">${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
                 </div>
                 ${b.payment_method ? `<div class="text-[9px] font-sans text-on-surface-variant italic pt-0.5 border-t border-amber-200/40">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
@@ -8289,7 +8305,21 @@ window.openRefundModal = (booking) => {
           // Manual Refund (Cash, Zelle, etc.)
           const currentRefunded = parseFloat(b.refunded_amount) || 0;
           const newRefunded = currentRefunded + amount;
-          const { error } = await supabase.from('bookings').update({ refunded_amount: newRefunded }).eq('id', bookingId);
+          const totPrice = parseFloat(b.total_price || b.amount || 0);
+          const depAmount = parseFloat(b.deposit_amount) || 0;
+          const newRemBalance = Math.max(0, totPrice - (depAmount - newRefunded));
+          const isFullRefund = Math.abs(newRefunded - depAmount) < 0.01;
+
+          const updatePayload = {
+            refunded_amount: newRefunded,
+            remaining_balance: newRemBalance
+          };
+
+          if (isFullRefund) {
+            updatePayload.status = 'cancelled';
+          }
+
+          const { error } = await supabase.from('bookings').update(updatePayload).eq('id', bookingId);
           if (error) throw new Error(error.message);
         }
         

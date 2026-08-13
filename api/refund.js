@@ -69,10 +69,14 @@ module.exports = async (req, res) => {
 
     // 4. Update the database
     const newRefundedAmount = (parseFloat(booking.refunded_amount) || 0) + amount;
-    const isFullRefund = Math.abs(newRefundedAmount - parseFloat(booking.deposit_amount)) < 0.01;
+    const depAmount = parseFloat(booking.deposit_amount) || 0;
+    const totPrice = parseFloat(booking.total_price || booking.amount || 0);
+    const newRemBalance = Math.max(0, totPrice - (depAmount - newRefundedAmount));
+    const isFullRefund = Math.abs(newRefundedAmount - depAmount) < 0.01;
     
     const updatePayload = {
-      refunded_amount: newRefundedAmount
+      refunded_amount: newRefundedAmount,
+      remaining_balance: newRemBalance
     };
 
     if (isFullRefund) {
