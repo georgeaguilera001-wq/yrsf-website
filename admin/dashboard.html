@@ -2760,7 +2760,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260813v1723"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260813v1727"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
@@ -2820,6 +2820,10 @@
         let isHidingChildren = false;
         
         navList.innerHTML = navConfig.map((item, index) => {
+          if (typeof window.hasPermission === 'function' && !window.hasPermission(item.id, 'access')) {
+            return '';
+          }
+
           const isSub = item.level > 0;
           if (!isSub) {
             isHidingChildren = !!item.collapsed;
@@ -2867,6 +2871,8 @@
            window.showAdminSection(getActiveSection());
         }
       }
+
+      window.refreshNavMenu = () => renderNav();
 
       function escapeHtml(str) {
         return (str || '').replace(/[&<>"']/g, function(m) {

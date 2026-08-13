@@ -117,24 +117,47 @@ return; // Redirect in progress
         window.currentStaffPermissions = isAuthSuper ? null : {};
       }
 
-      // Hide sidebar & mobile items user lacks access to
+      // Refresh nav menu DOM and hide forbidden items
+      if (typeof window.refreshNavMenu === 'function') {
+        window.refreshNavMenu();
+      }
+
       if (!window.isSuperAdminUser && window.currentStaffPermissions) {
         let firstVisibleMod = null;
 
+        // Hide Edit Menu button for non-super-admins
+        const editMenuBtn = document.getElementById('toggle-menu-edit-btn');
+        if (editMenuBtn) editMenuBtn.style.display = 'none';
+
+        // Hide desktop sidebar items
         document.querySelectorAll('.admin-sidebar li[data-nav-id]').forEach(li => {
           const mod = li.getAttribute('data-nav-id');
           const hasAcc = window.hasPermission(mod, 'access');
           if (!hasAcc) {
             li.style.display = 'none';
+            li.remove();
           } else if (!firstVisibleMod) {
             firstVisibleMod = mod;
           }
         });
 
+        // Hide mobile bottom nav items
         document.querySelectorAll('.mobile-bottom-nav-item').forEach(item => {
           const mod = item.dataset.bottomSection;
           if (mod && !window.hasPermission(mod, 'access')) {
             item.style.display = 'none';
+          }
+        });
+
+        // Hide buttons in #mobile-menu-modal
+        document.querySelectorAll('#mobile-menu-modal button[onclick*="showAdminSection"]').forEach(btn => {
+          const onclickStr = btn.getAttribute('onclick') || '';
+          const match = onclickStr.match(/showAdminSection\(['"]([^'"]+)['"]\)/);
+          if (match && match[1]) {
+            const mod = match[1];
+            if (!window.hasPermission(mod, 'access')) {
+              btn.style.display = 'none';
+            }
           }
         });
 
