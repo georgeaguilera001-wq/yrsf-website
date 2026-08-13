@@ -7385,7 +7385,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
             <div>
               <img src="/img/logo-wide.png" alt="Yacht Rentals of South Florida" style="height: 48px; width: auto; display: block; margin-bottom: 8px;" onerror="this.onerror=null; this.src='https://yachtrentalsofsouthflorida.com/img/logo-wide.png';" />
               <div class="company-title">Yacht Rentals of South Florida</div>
-              <div class="company-sub">Miami, FL &bull; (305) 990-2192 &bull; info@yrsf.com</div>
+              <div class="company-sub">Miami, FL &bull; (305) 990-2192 &bull; pay@sfyachtrentals.com</div>
             </div>
             <div class="invoice-title-block">
               <span class="invoice-badge">Charter Receipt</span>
@@ -7470,7 +7470,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
           <div class="footer">
             Thank you for chartering with Yacht Rentals of South Florida!<br/>
-            For questions or modifications, please reach out to support@yrsf.com
+            For questions or modifications, please reach out to pay@sfyachtrentals.com
           </div>
         </div>
 
