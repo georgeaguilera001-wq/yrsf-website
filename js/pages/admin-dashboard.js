@@ -78,8 +78,9 @@ return; // Redirect in progress
   }
 
   // --- ENFORCE PERMISSIONS ---
+  const SUPER_ADMIN_EMAILS = ['georgeaguilera001@gmail.com', 'pay@sfyachtrentals.com', 'admin@sfyachtrentals.com'];
   const userEmailInit = (user?.email || '').trim().toLowerCase();
-  const isInitialSuper = !user || user.role === 'admin' || user.user_metadata?.role === 'admin' || user.app_metadata?.role === 'admin' || userEmailInit === 'pay@sfyachtrentals.com' || userEmailInit === 'admin@sfyachtrentals.com';
+  const isInitialSuper = !user || user.role === 'admin' || user.user_metadata?.role === 'admin' || user.app_metadata?.role === 'admin' || SUPER_ADMIN_EMAILS.includes(userEmailInit);
 
   window.isSuperAdminUser = isInitialSuper;
   window.currentStaffPermissions = isInitialSuper ? null : {};
@@ -104,7 +105,7 @@ return; // Redirect in progress
   if (user?.email) {
     try {
       const userEmailClean = user.email.trim().toLowerCase();
-      const isAuthSuper = user.role === 'admin' || user.user_metadata?.role === 'admin' || user.app_metadata?.role === 'admin' || userEmailClean === 'pay@sfyachtrentals.com' || userEmailClean === 'admin@sfyachtrentals.com';
+      const isAuthSuper = user.role === 'admin' || user.user_metadata?.role === 'admin' || user.app_metadata?.role === 'admin' || SUPER_ADMIN_EMAILS.includes(userEmailClean);
 
       const { data: staffUsers } = await supabase.from('staff_users').select('*');
       const staffUser = (staffUsers || []).find(s => s.email && s.email.trim().toLowerCase() === userEmailClean);
@@ -3939,8 +3940,9 @@ EXTRACTION RULES:
 
   window.isSuperAdmin = () => {
     if (!user) return true;
+    const emailClean = (user.email || '').trim().toLowerCase();
     if (user.role === 'admin' || user.user_metadata?.role === 'admin' || user.app_metadata?.role === 'admin') return true;
-    if (user.email === 'pay@sfyachtrentals.com' || user.email === 'admin@sfyachtrentals.com') return true;
+    if (SUPER_ADMIN_EMAILS.includes(emailClean)) return true;
     
     if (staffUsersCache && staffUsersCache.length > 0) {
       const isStaff = staffUsersCache.some(s => s.email && user.email && s.email.toLowerCase() === user.email.toLowerCase());
