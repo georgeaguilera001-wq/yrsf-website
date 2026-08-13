@@ -172,8 +172,6 @@ module.exports = async (req, res) => {
         guest_count: parseInt(payload.guest_count, 10) || 1,
         total_price: parseFloat(payload.total_price),
         deposit_amount: amountToCharge,
-        addons: payload.addons || [],
-        pricing_snapshot: payload.pricing_snapshot || {},
         stripe_session_id: session.id,
         stripe_session_url: session.url,
         status: 'pending_payment',
