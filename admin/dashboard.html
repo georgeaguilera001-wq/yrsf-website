@@ -2487,11 +2487,42 @@
               </select>
             </div>
           </div>
+          
+          <!-- Upcharge Allocation Container -->
+          <div id="upcharge-allocation-container" class="hidden mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-2">
+            <div class="font-bold text-amber-900 flex items-center justify-between">
+              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">trending_up</span> Custom Rate Upcharge Detected</span>
+              <span class="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-md font-mono">+$<span id="upcharge-entered-diff">0.00</span></span>
+            </div>
+            <div class="text-amber-800 text-[11px]">
+              Total price ($<span id="upcharge-entered-total">0.00</span>) is higher than standard rate ($<span id="upcharge-standard-total">0.00</span>). Allocate the custom cost below for receipt accuracy:
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block font-bold text-[10px] text-amber-900 mb-0.5">Yacht Charter Base ($)</label>
+                <input type="number" step="0.01" id="custom-boat-price" placeholder="Standard rate" class="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold text-amber-950 focus:ring-2 focus:ring-amber-500"/>
+              </div>
+              <div>
+                <label class="block font-bold text-[10px] text-amber-900 mb-0.5">Captain &amp; Crew Fee ($)</label>
+                <input type="number" step="0.01" id="custom-captain-price" placeholder="Standard fee" class="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold text-amber-950 focus:ring-2 focus:ring-amber-500"/>
+              </div>
+            </div>
+            <div class="flex gap-2 pt-1">
+              <button type="button" id="btn-auto-allocate-boat" class="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg font-bold text-[10px] transition-colors">
+                + Add Upcharge to Yacht
+              </button>
+              <button type="button" id="btn-auto-allocate-captain" class="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg font-bold text-[10px] transition-colors">
+                + Add Upcharge to Captain
+              </button>
+            </div>
+          </div>
+
           <!-- Itemized Breakdown -->
           <div id="itemized-breakdown" class="hidden flex flex-col gap-1 mt-3 mb-3 p-3 bg-white rounded-lg border border-outline-variant text-xs font-mono">
              <div class="flex justify-between text-on-surface"><span>Boat charter (<span id="ib-duration">4</span> hours)</span><span id="ib-boat-price">$0.00</span></div>
              <div class="flex justify-between text-on-surface" id="ib-captain-row"><span>Captain fee</span><span id="ib-captain-price">$0.00</span></div>
              <div id="ib-addons-container"></div>
+             <div class="flex justify-between text-red-600 font-bold hidden" id="ib-discount-row"><span>Special Discount / Adjustment</span><span id="ib-discount-price">-$0.00</span></div>
              <div class="border-t border-outline-variant my-1"></div>
              <div class="flex justify-between text-on-surface font-bold"><span>Subtotal</span><span id="ib-subtotal">$0.00</span></div>
              <div class="flex justify-between text-on-surface"><span>Taxes (7.00%)</span><span id="ib-taxes">$0.00</span></div>
@@ -2661,7 +2692,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260813v0010"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260813v0011"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------

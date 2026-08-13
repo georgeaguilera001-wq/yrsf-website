@@ -4249,49 +4249,115 @@ EXTRACTION RULES:
         addonsHtml += `<div class="flex justify-between text-on-surface"><span>Custom: ${escapeHtml(customNameInput.value)}</span><span>$${customTotal.toFixed(2)}</span></div>`;
       }
 
-      // Update Total
-      if (boatMatch || addonsTotal > 0 || customTotal > 0) {
-        const subtotal = baseBoatPrice + captainPrice + addonsTotal + customTotal;
-        const tax = subtotal * 0.07;
-        const newTotal = subtotal + tax;
-        priceInput.value = newTotal.toFixed(2);
-        
-        // Pre-fill deposit to 50%
-        const depositEl = document.getElementById('book-deposit');
-        if (depositEl) {
-          depositEl.value = (newTotal * 0.5).toFixed(2);
-        }
-        
-        if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+      // 4. Calculate Standard vs User-Entered Total
+      const standardSubtotal = baseBoatPrice + captainPrice + addonsTotal + customTotal;
+      const standardTax = standardSubtotal * 0.07;
+      const standardTotal = standardSubtotal + standardTax;
 
-        // Update Itemized Breakdown UI
-        const ibEl = document.getElementById('itemized-breakdown');
-        if (ibEl) {
-          ibEl.classList.remove('hidden');
-          const dur = parseInt(duration) || 4;
-          document.getElementById('ib-duration').textContent = dur;
-          document.getElementById('ib-boat-price').textContent = '$' + baseBoatPrice.toFixed(2);
-          document.getElementById('ib-captain-price').textContent = '$' + captainPrice.toFixed(2);
-          document.getElementById('ib-addons-container').innerHTML = addonsHtml;
-          document.getElementById('ib-subtotal').textContent = '$' + subtotal.toFixed(2);
-          document.getElementById('ib-taxes').textContent = '$' + tax.toFixed(2);
-          document.getElementById('ib-total').textContent = '$' + newTotal.toFixed(2);
-          document.getElementById('ib-deposit').textContent = '$' + (depositEl ? depositEl.value : '0.00');
-          // Paid and Balance are handled in updateBalanceCalc
+      let userEnteredPrice = parseFloat(priceInput ? priceInput.value : '0') || 0;
+
+      // Pre-fill if empty or 0
+      if (!priceInput.value || (userEnteredPrice === 0 && standardTotal > 0)) {
+        userEnteredPrice = standardTotal;
+        priceInput.value = userEnteredPrice.toFixed(2);
+        const depositEl = document.getElementById('book-deposit');
+        if (depositEl && (!depositEl.value || parseFloat(depositEl.value) === 0)) {
+          depositEl.value = (userEnteredPrice * 0.5).toFixed(2);
         }
-        
-        // Animation
-        priceInput.classList.add('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
-        if (depositEl) depositEl.classList.add('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
-        
-        setTimeout(() => {
-          priceInput.classList.remove('bg-green-50', 'text-green-800', 'ring-2', 'ring-green-500');
-          if (depositEl) depositEl.classList.remove('bg-blue-50', 'text-blue-800', 'ring-2', 'ring-blue-500');
-        }, 1000);
-      } else {
-        const ibEl = document.getElementById('itemized-breakdown');
-        if (ibEl) ibEl.classList.add('hidden');
       }
+
+      const upchargeContainer = document.getElementById('upcharge-allocation-container');
+      const customBoatInput = document.getElementById('custom-boat-price');
+      const customCaptainInput = document.getElementById('custom-captain-price');
+
+      let finalBoatPrice = baseBoatPrice;
+      let finalCaptainPrice = captainPrice;
+      let discountAmount = 0;
+
+      const diff = userEnteredPrice - standardTotal;
+
+      if (diff > 0.01) {
+        // UPCHARGE CASE: total entered is higher than standard rate
+        if (upchargeContainer) {
+          upchargeContainer.classList.remove('hidden');
+          const enteredDiffEl = document.getElementById('upcharge-entered-diff');
+          const enteredTotEl = document.getElementById('upcharge-entered-total');
+          const stdTotEl = document.getElementById('upcharge-standard-total');
+          if (enteredDiffEl) enteredDiffEl.textContent = diff.toFixed(2);
+          if (enteredTotEl) enteredTotEl.textContent = userEnteredPrice.toFixed(2);
+          if (stdTotEl) stdTotEl.textContent = standardTotal.toFixed(2);
+        }
+
+        const userBoat = parseFloat(customBoatInput?.value);
+        const userCap = parseFloat(customCaptainInput?.value);
+
+        if (!isNaN(userBoat) && userBoat > 0) {
+          finalBoatPrice = userBoat;
+        } else {
+          finalBoatPrice = baseBoatPrice + (diff / 1.07);
+          if (customBoatInput && document.activeElement !== customBoatInput) {
+            customBoatInput.value = finalBoatPrice.toFixed(2);
+          }
+        }
+
+        if (!isNaN(userCap) && userCap >= 0) {
+          finalCaptainPrice = userCap;
+        } else {
+          if (customCaptainInput && document.activeElement !== customCaptainInput) {
+            customCaptainInput.value = finalCaptainPrice.toFixed(2);
+          }
+        }
+
+      } else if (diff < -0.01) {
+        // DISCOUNT CASE: total entered is lower than standard rate
+        if (upchargeContainer) upchargeContainer.classList.add('hidden');
+        if (customBoatInput && document.activeElement !== customBoatInput) customBoatInput.value = '';
+        if (customCaptainInput && document.activeElement !== customCaptainInput) customCaptainInput.value = '';
+
+        const totalDiscount = Math.abs(diff);
+        discountAmount = totalDiscount / 1.07; // pre-tax discount amount
+
+      } else {
+        // EXACT MATCH CASE
+        if (upchargeContainer) upchargeContainer.classList.add('hidden');
+        if (customBoatInput && document.activeElement !== customBoatInput) customBoatInput.value = '';
+        if (customCaptainInput && document.activeElement !== customCaptainInput) customCaptainInput.value = '';
+      }
+
+      // Update Breakdown UI
+      const ibEl = document.getElementById('itemized-breakdown');
+      if (ibEl) {
+        ibEl.classList.remove('hidden');
+        const durVal = parseInt(duration) || 4;
+        document.getElementById('ib-duration').textContent = durVal;
+        document.getElementById('ib-boat-price').textContent = '$' + finalBoatPrice.toFixed(2);
+        document.getElementById('ib-captain-price').textContent = '$' + finalCaptainPrice.toFixed(2);
+        document.getElementById('ib-addons-container').innerHTML = addonsHtml;
+
+        const discRow = document.getElementById('ib-discount-row');
+        const discPriceEl = document.getElementById('ib-discount-price');
+        if (discRow && discPriceEl) {
+          if (discountAmount > 0) {
+            discRow.classList.remove('hidden');
+            discPriceEl.textContent = '-$' + discountAmount.toFixed(2);
+          } else {
+            discRow.classList.add('hidden');
+          }
+        }
+
+        const calcSubtotal = Math.max(0, finalBoatPrice + finalCaptainPrice + addonsTotal + customTotal - discountAmount);
+        const calcTax = calcSubtotal * 0.07;
+
+        document.getElementById('ib-subtotal').textContent = '$' + calcSubtotal.toFixed(2);
+        document.getElementById('ib-taxes').textContent = '$' + calcTax.toFixed(2);
+        document.getElementById('ib-total').textContent = '$' + userEnteredPrice.toFixed(2);
+        
+        const depositEl = document.getElementById('book-deposit');
+        document.getElementById('ib-deposit').textContent = '$' + (depositEl ? parseFloat(depositEl.value || 0).toFixed(2) : '0.00');
+      }
+
+      if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
+    };
 
       if (typeof invalidateHold === 'function') invalidateHold();
     };
@@ -4936,8 +5002,53 @@ EXTRACTION RULES:
       }
     }
 
-    if (bookPrice) bookPrice.addEventListener('input', updateBalanceCalc);
+    if (bookPrice) {
+      bookPrice.addEventListener('input', () => {
+        updateBalanceCalc();
+        updateDynamicPrice();
+      });
+    }
     if (bookDeposit) bookDeposit.addEventListener('input', updateBalanceCalc);
+
+    // Listeners for custom upcharge allocation
+    const customBoatInput = document.getElementById('custom-boat-price');
+    const customCaptainInput = document.getElementById('custom-captain-price');
+    const btnAllocBoat = document.getElementById('btn-auto-allocate-boat');
+    const btnAllocCap = document.getElementById('btn-auto-allocate-captain');
+
+    if (customBoatInput) customBoatInput.addEventListener('input', updateDynamicPrice);
+    if (customCaptainInput) customCaptainInput.addEventListener('input', updateDynamicPrice);
+
+    if (btnAllocBoat) {
+      btnAllocBoat.addEventListener('click', () => {
+        if (customBoatInput) customBoatInput.value = '';
+        if (customCaptainInput) customCaptainInput.value = '';
+        updateDynamicPrice();
+      });
+    }
+
+    if (btnAllocCap) {
+      btnAllocCap.addEventListener('click', () => {
+        const userTotal = parseFloat(bookPrice?.value || 0);
+        const boatSelect = document.getElementById('book-boat');
+        const boatMatch = (window.fleetCache || []).find(b => b.id === (boatSelect?.value || ''));
+        const durationSelect = document.getElementById('book-duration');
+        const dur = parseInt(durationSelect?.value || '4') || 4;
+        let stdBoat = 0;
+        if (boatMatch) {
+          if (dur === 2 && boatMatch.price_2hr) stdBoat = parseFloat(boatMatch.price_2hr);
+          else if (dur === 3 && boatMatch.price_3hr) stdBoat = parseFloat(boatMatch.price_3hr);
+          else if (dur === 6 && boatMatch.price_6hr) stdBoat = parseFloat(boatMatch.price_6hr);
+          else if (dur === 8 && boatMatch.price_8hr) stdBoat = parseFloat(boatMatch.price_8hr);
+          else stdBoat = parseFloat(boatMatch.price_4hr || boatMatch.price_half_day || 0);
+        }
+        const subtotalWanted = userTotal / 1.07;
+        const newCap = Math.max(0, subtotalWanted - stdBoat);
+        if (customBoatInput) customBoatInput.value = stdBoat.toFixed(2);
+        if (customCaptainInput) customCaptainInput.value = newCap.toFixed(2);
+        updateDynamicPrice();
+      });
+    }
 
     // Listeners for custom addon row
     const customAddonPriceInput = document.getElementById('custom-addon-price');
@@ -5246,6 +5357,16 @@ EXTRACTION RULES:
         if (customName) {
           const priceStr = customPrice > 0 ? ` ($${customPrice.toFixed(2)})` : '';
           selectedAddons.push(`[Custom Addon: ${customName}${priceStr}]`);
+        }
+
+        // Add Custom Upcharge Rates if present
+        const customBoatVal = parseFloat(document.getElementById('custom-boat-price')?.value);
+        const customCapVal = parseFloat(document.getElementById('custom-captain-price')?.value);
+        if (!isNaN(customBoatVal) && customBoatVal > 0) {
+          selectedAddons.push(`[CustomBoat: $${customBoatVal.toFixed(2)}]`);
+        }
+        if (!isNaN(customCapVal) && customCapVal >= 0) {
+          selectedAddons.push(`[CustomCaptain: $${customCapVal.toFixed(2)}]`);
         }
 
         // Prepend to notes
@@ -6960,18 +7081,22 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const duration = parseInt(b.duration_hours) || 4;
     const captainTotal = captainHourly * duration;
 
-    // Parse Add-ons into separate line items
-    let addonLineItemsHtml = '';
-    let totalAddonsPrice = 0;
-    let otherNotes = [];
+    let customBoatOverride = null;
+    let customCaptainOverride = null;
 
     if (b.special_requests) {
       const lines = b.special_requests.split('\n');
       lines.forEach(line => {
         const match = line.match(/^\[Addon: (\d+)x (.*?)(?: \(\$([0-9.]+)\))?\]$/);
         const customMatch = line.match(/^\[Custom Addon: (.*?)(?: \(\$([0-9.]+)\))?\]$/);
-        
-        if (match) {
+        const customBoatMatch = line.match(/^\[CustomBoat: \$([0-9.]+)\]$/);
+        const customCapMatch = line.match(/^\[CustomCaptain: \$([0-9.]+)\]$/);
+
+        if (customBoatMatch) {
+          customBoatOverride = parseFloat(customBoatMatch[1]) || 0;
+        } else if (customCapMatch) {
+          customCaptainOverride = parseFloat(customCapMatch[1]) || 0;
+        } else if (match) {
           const qty = parseInt(match[1]) || 1;
           const name = match[2];
           const lineTotal = parseFloat(match[3]) || 0;
@@ -7005,6 +7130,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       });
     }
 
+    let captainTotal = customCaptainOverride !== null ? customCaptainOverride : (captainHourly * duration);
     const price = parseFloat(b.total_price || b.amount || 0);
     const subtotal = price / 1.07;
     const tax = price - subtotal;
@@ -7012,8 +7138,22 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const refunded = parseFloat(b.refunded_amount || 0);
     const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid + refunded);
     
-    let charterBaseSubtotal = subtotal - captainTotal - totalAddonsPrice;
-    if (charterBaseSubtotal < 0) charterBaseSubtotal = Math.max(0, subtotal - captainTotal);
+    let charterBaseSubtotal = customBoatOverride !== null ? customBoatOverride : Math.max(0, subtotal - captainTotal - totalAddonsPrice);
+    
+    const stdSubtotalCalculated = charterBaseSubtotal + captainTotal + totalAddonsPrice;
+    let discountLineHtml = '';
+    if (subtotal < stdSubtotalCalculated - 0.01) {
+      const discVal = stdSubtotalCalculated - subtotal;
+      discountLineHtml = `
+        <tr>
+          <td>
+            <div class="item-name" style="color: #dc2626; font-weight: 700;">Special Rate Discount / Adjustment</div>
+            <div class="item-desc">Discount applied to standard charter rate</div>
+          </td>
+          <td class="text-right" style="color: #dc2626; font-weight: 700;">-$${discVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        </tr>
+      `;
+    }
     
     let specialHtml = '';
     if (otherNotes.length > 0) {
@@ -7291,6 +7431,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
               </tr>
               ` : ''}
               ${addonLineItemsHtml}
+              ${discountLineHtml}
               <tr>
                 <td>
                   <div class="item-name">7% FL Sales Tax &amp; Port Fees</div>
