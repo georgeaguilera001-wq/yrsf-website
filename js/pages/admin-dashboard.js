@@ -5125,8 +5125,9 @@ EXTRACTION RULES:
           customer_phone: document.getElementById('book-cust-phone')?.value.trim() || '',
           customer_email: document.getElementById('book-cust-email')?.value.trim() || '',
           guest_count: document.getElementById('book-guests')?.value || 1,
-          total_price: document.getElementById('book-price')?.value || 0,
           deposit_amount: deposit,
+          allow_double_booking: true,
+          ignore_overlap: true,
           addons: []
         };
         

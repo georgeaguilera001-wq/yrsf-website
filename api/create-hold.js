@@ -48,48 +48,55 @@ module.exports = async (req, res) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 1. Atomic Availability Check
-    const newStartMins = timeToMins(payload.start_time);
-    const newEndMins = newStartMins + (parseInt(payload.duration_hours, 10) * 60);
+    // 1. Availability & Multi-Unit Check
+    const allowDoubleBooking = payload.allow_double_booking || payload.ignore_overlap || false;
 
-    // Fetch existing bookings for this boat and date
-    const { data: bookings, error: bookingsErr } = await supabase
-      .from('bookings')
-      .select('start_time, duration_hours, status')
-      .eq('boat_id', payload.boat_id)
-      .eq('booking_date', payload.booking_date)
-      .neq('status', 'cancelled');
+    if (!allowDoubleBooking) {
+      // Check boat record to see if multi-unit quantity or double-booking is enabled
+      const { data: boatRec } = await supabase.from('boats').select('quantity, allow_double_booking').eq('id', payload.boat_id).single();
+      const maxAllowed = boatRec ? (parseInt(boatRec.quantity, 10) || (boatRec.allow_double_booking ? 99 : 1)) : 1;
 
-    if (bookingsErr) throw bookingsErr;
+      if (maxAllowed <= 1) {
+        // Fetch existing bookings for this boat and date
+        const { data: bookings, error: bookingsErr } = await supabase
+          .from('bookings')
+          .select('start_time, duration_hours, status')
+          .eq('boat_id', payload.boat_id)
+          .eq('booking_date', payload.booking_date)
+          .neq('status', 'cancelled');
 
-    for (const b of bookings || []) {
-      const bStart = timeToMins(b.start_time);
-      const bEnd = bStart + ((parseInt(b.duration_hours, 10) || 4) * 60);
-      if (newStartMins < bEnd && newEndMins > bStart) {
-        return res.status(409).json({ error: 'Slot overlaps with an existing confirmed booking.' });
-      }
-    }
+        if (bookingsErr) throw bookingsErr;
 
-    // Fetch active holds
-    const { data: holds, error: holdsErr } = await supabase
-      .from('booking_holds')
-      .select('start_time, duration_hours, expires_at, status')
-      .eq('boat_id', payload.boat_id)
-      .eq('booking_date', payload.booking_date)
-      .in('status', ['pending_payment', 'paid']); // Paid holds block until finalized
+        for (const b of bookings || []) {
+          const bStart = timeToMins(b.start_time);
+          const bEnd = bStart + ((parseInt(b.duration_hours, 10) || 4) * 60);
+          if (newStartMins < bEnd && newEndMins > bStart) {
+            return res.status(409).json({ error: 'Slot overlaps with an existing confirmed booking.' });
+          }
+        }
 
-    if (holdsErr) throw holdsErr;
+        // Fetch active holds
+        const { data: holds, error: holdsErr } = await supabase
+          .from('booking_holds')
+          .select('start_time, duration_hours, expires_at, status')
+          .eq('boat_id', payload.boat_id)
+          .eq('booking_date', payload.booking_date)
+          .in('status', ['pending_payment', 'paid']);
 
-    const now = new Date();
-    for (const h of holds || []) {
-      const expiresAt = new Date(h.expires_at);
-      if (h.status === 'pending_payment' && expiresAt <= now) {
-        continue; // Expired holds do not block
-      }
-      const hStart = timeToMins(h.start_time);
-      const hEnd = hStart + ((parseInt(h.duration_hours, 10) || 4) * 60);
-      if (newStartMins < hEnd && newEndMins > hStart) {
-        return res.status(409).json({ error: 'Slot is currently temporarily held by another pending transaction.' });
+        if (holdsErr) throw holdsErr;
+
+        const now = new Date();
+        for (const h of holds || []) {
+          const expiresAt = new Date(h.expires_at);
+          if (h.status === 'pending_payment' && expiresAt <= now) {
+            continue;
+          }
+          const hStart = timeToMins(h.start_time);
+          const hEnd = hStart + ((parseInt(h.duration_hours, 10) || 4) * 60);
+          if (newStartMins < hEnd && newEndMins > hStart) {
+            return res.status(409).json({ error: 'Slot is currently temporarily held by another pending transaction.' });
+          }
+        }
       }
     }
 
