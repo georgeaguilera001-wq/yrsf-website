@@ -143,19 +143,6 @@ module.exports = async (req, res) => {
     // 4. Insert into booking_holds
     const expiresAt = new Date(Date.now() + 5 * 60000); // 5 minutes
 
-    // Need to calculate end_time string for the db record
-    let endH = Math.floor(newEndMins / 60);
-    const endM = newEndMins % 60;
-    let endAp = 'AM';
-    if (endH >= 24) endH -= 24; // next day
-    if (endH >= 12) {
-      endAp = 'PM';
-      if (endH > 12) endH -= 12;
-    } else if (endH === 0) {
-      endH = 12;
-    }
-    const endTimeStr = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')} ${endAp}`;
-
     const { error: insertErr } = await supabase
       .from('booking_holds')
       .insert({
@@ -165,7 +152,6 @@ module.exports = async (req, res) => {
         booking_date: payload.booking_date,
         start_time: payload.start_time,
         duration_hours: payload.duration_hours,
-        end_time: endTimeStr,
         customer_name: payload.customer_name || null,
         customer_phone: payload.customer_phone || null,
         customer_email: payload.customer_email || null,
