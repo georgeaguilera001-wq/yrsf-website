@@ -6875,20 +6875,67 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const duration = parseInt(b.duration_hours) || 4;
     const captainTotal = captainHourly * duration;
 
+    // Parse Add-ons into separate line items
+    let addonLineItemsHtml = '';
+    let totalAddonsPrice = 0;
+    let otherNotes = [];
+
+    if (b.special_requests) {
+      const lines = b.special_requests.split('\n');
+      lines.forEach(line => {
+        const match = line.match(/^\[Addon: (\d+)x (.*?)(?: \(\$([0-9.]+)\))?\]$/);
+        const customMatch = line.match(/^\[Custom Addon: (.*?)(?: \(\$([0-9.]+)\))?\]$/);
+        
+        if (match) {
+          const qty = parseInt(match[1]) || 1;
+          const name = match[2];
+          const unitPrice = parseFloat(match[3]) || 0;
+          const lineTotal = unitPrice * qty;
+          totalAddonsPrice += lineTotal;
+          addonLineItemsHtml += `
+            <tr>
+              <td>
+                <div class="item-name">Add-on: ${escapeHtml(name)}</div>
+                <div class="item-desc">Quantity: ${qty}${unitPrice > 0 ? ` &bull; $${unitPrice.toFixed(2)} each` : ''}</div>
+              </td>
+              <td class="text-right">$${lineTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            </tr>
+          `;
+        } else if (customMatch) {
+          const name = customMatch[1];
+          const lineTotal = parseFloat(customMatch[2]) || 0;
+          totalAddonsPrice += lineTotal;
+          addonLineItemsHtml += `
+            <tr>
+              <td>
+                <div class="item-name">Add-on: ${escapeHtml(name)}</div>
+                <div class="item-desc">Custom Add-on Service</div>
+              </td>
+              <td class="text-right">$${lineTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            </tr>
+          `;
+        } else if (line.trim()) {
+          otherNotes.push(line);
+        }
+      });
+    }
+
     const price = parseFloat(b.total_price || b.amount || 0);
     const subtotal = price / 1.07;
     const tax = price - subtotal;
     const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
     const refunded = parseFloat(b.refunded_amount || 0);
     const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
-    const boatSubtotal = (subtotal - captainTotal) < 0 ? subtotal : (subtotal - captainTotal);
+    
+    let charterBaseSubtotal = subtotal - captainTotal - totalAddonsPrice;
+    if (charterBaseSubtotal < 0) charterBaseSubtotal = Math.max(0, subtotal - captainTotal);
     
     let specialHtml = '';
-    if (b.special_requests) {
+    if (otherNotes.length > 0) {
       specialHtml = `
         <div class="special-notes-box">
-          <div class="special-notes-title">Included Add-ons & Notes</div>
-          <div class="special-notes-body">${escapeHtml(b.special_requests)}</div>
+          <div class="special-notes-title">Additional Notes &amp; Requests</div>
+          <div class="special-notes-body">${escapeHtml(otherNotes.join('\n'))}</div>
         </div>
       `;
     }
@@ -6933,11 +6980,12 @@ Write ONLY the summary sentence(s), no extra explanation.`;
             border-bottom: 2px solid #f1f5f9;
           }
           .company-title {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: 800;
             letter-spacing: -0.02em;
             color: #0284c7;
             text-transform: uppercase;
+            margin-top: 4px;
           }
           .company-sub {
             font-size: 13px;
@@ -7108,6 +7156,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
         <div class="invoice-card">
           <div class="brand-header">
             <div>
+              <img src="/img/logo-wide.png" alt="Yacht Rentals of South Florida" style="height: 48px; width: auto; display: block; margin-bottom: 8px;" onerror="this.onerror=null; this.src='https://yachtrentalsofsouthflorida.com/img/logo-wide.png';" />
               <div class="company-title">Yacht Rentals of South Florida</div>
               <div class="company-sub">Miami, FL &bull; (305) 990-2192 &bull; info@yrsf.com</div>
             </div>
@@ -7145,7 +7194,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
                   <div class="item-name">Yacht Charter &amp; Vessel Service</div>
                   <div class="item-desc">${escapeHtml(b.boat_name || 'Fleet Yacht')} &bull; ${duration} Hours Duration</div>
                 </td>
-                <td class="text-right">$${(boatSubtotal > 0 ? boatSubtotal : subtotal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="text-right">$${charterBaseSubtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
               </tr>
               ${captainTotal > 0 ? `
               <tr>
@@ -7156,6 +7205,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
                 <td class="text-right">$${captainTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
               </tr>
               ` : ''}
+              ${addonLineItemsHtml}
               <tr>
                 <td>
                   <div class="item-name">7% FL Sales Tax &amp; Port Fees</div>
