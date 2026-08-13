@@ -4401,31 +4401,35 @@ EXTRACTION RULES:
       }
 
       // 4. Calculate Subtotal, Tax, and Itemization
-      const standardSubtotal = baseBoatPrice + captainPrice + addonsTotal + customTotal;
-      const standardTax = standardSubtotal * 0.07;
-      const standardTotal = standardSubtotal + standardTax;
+      const grossSubtotal = baseBoatPrice + captainPrice + addonsTotal + customTotal;
+      const explicitDiscount = parseFloat(document.getElementById('book-discount')?.value || 0) || 0;
 
-      let userEnteredPrice = parseFloat(priceInput ? priceInput.value : '0') || 0;
+      const netSubtotal = Math.max(0, grossSubtotal - explicitDiscount);
+      const netTax = netSubtotal * 0.07;
+      const netTotal = netSubtotal + netTax;
 
-      // Pre-fill total price if empty or 0
-      if (!priceInput.value || (userEnteredPrice === 0 && standardTotal > 0)) {
-        userEnteredPrice = standardTotal;
-        priceInput.value = userEnteredPrice.toFixed(2);
+      // If priceInput is empty, 0, autoCalculated, OR forceRecalculateTotal is true (e.g. discount input changed)
+      if (forceRecalculateTotal || !priceInput.value || parseFloat(priceInput.value) === 0 || priceInput.dataset.autoCalculated === 'true') {
+        priceInput.value = netTotal.toFixed(2);
+        priceInput.dataset.autoCalculated = 'true';
         const depositEl = document.getElementById('book-deposit');
-        if (depositEl && (!depositEl.value || parseFloat(depositEl.value) === 0)) {
-          depositEl.value = (userEnteredPrice * 0.5).toFixed(2);
+        if (depositEl && (!depositEl.value || parseFloat(depositEl.value) === 0 || depositEl.dataset.autoCalculated === 'true')) {
+          depositEl.value = (netTotal * 0.5).toFixed(2);
+          depositEl.dataset.autoCalculated = 'true';
         }
       }
 
-      // Explicit discount from Discount ($) input field
-      const explicitDiscount = parseFloat(document.getElementById('book-discount')?.value || 0) || 0;
+      let userEnteredPrice = parseFloat(priceInput ? priceInput.value : '0') || netTotal;
 
       // Calculate pre-tax subtotal and 7% tax from final price
       const calcSubtotal = Math.max(0, userEnteredPrice / 1.07);
       const calcTax = Math.max(0, userEnteredPrice - calcSubtotal);
 
-      // Base boat price absorbs remainder after captain, add-ons, and explicit discount
-      const finalBoatPrice = Math.max(0, calcSubtotal - captainPrice - addonsTotal - customTotal + explicitDiscount);
+      // Base boat price absorbs remainder ONLY IF user manually typed a custom total price that differs from netTotal
+      let finalBoatPrice = baseBoatPrice;
+      if (Math.abs(userEnteredPrice - netTotal) > 0.02) {
+        finalBoatPrice = Math.max(0, calcSubtotal - captainPrice - addonsTotal - customTotal + explicitDiscount);
+      }
 
       // Update Itemized Breakdown UI
       const ibEl = document.getElementById('itemized-breakdown');
@@ -5117,14 +5121,15 @@ EXTRACTION RULES:
 
     if (bookPrice) {
       bookPrice.addEventListener('input', () => {
+        bookPrice.dataset.autoCalculated = 'false';
         updateBalanceCalc();
-        updateDynamicPrice();
+        updateDynamicPrice(false);
       });
     }
     const bookDiscountInput = document.getElementById('book-discount');
     if (bookDiscountInput) {
       bookDiscountInput.addEventListener('input', () => {
-        updateDynamicPrice();
+        updateDynamicPrice(true);
       });
     }
     if (bookDeposit) bookDeposit.addEventListener('input', updateBalanceCalc);
