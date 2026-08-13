@@ -52,6 +52,9 @@ module.exports = async (req, res) => {
     const allowDoubleBooking = payload.allow_double_booking || payload.ignore_overlap || false;
 
     if (!allowDoubleBooking) {
+      const newStartMins = timeToMins(payload.start_time);
+      const newEndMins = newStartMins + (parseInt(payload.duration_hours, 10) * 60);
+
       // Check boat record to see if multi-unit quantity or double-booking is enabled
       const { data: boatRec } = await supabase.from('boats').select('quantity, allow_double_booking').eq('id', payload.boat_id).single();
       const maxAllowed = boatRec ? (parseInt(boatRec.quantity, 10) || (boatRec.allow_double_booking ? 99 : 1)) : 1;
