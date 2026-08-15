@@ -7118,8 +7118,28 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
   }
 
+  window.toggleAiFleetPanel = (forceOpen = false) => {
+    const body = document.getElementById('ai-fleet-body');
+    const chevron = document.getElementById('ai-fleet-chevron');
+    const btn = document.getElementById('ai-fleet-toggle-btn');
+    if (!body || !chevron) return;
+
+    const isHidden = body.classList.contains('hidden');
+    if (isHidden || forceOpen) {
+      body.classList.remove('hidden');
+      chevron.style.transform = 'rotate(0deg)';
+      btn?.setAttribute('aria-expanded', 'true');
+    } else {
+      body.classList.add('hidden');
+      chevron.style.transform = 'rotate(-90deg)';
+      btn?.setAttribute('aria-expanded', 'false');
+    }
+  };
+
   // ─── AI Fleet & Charter Assistant Engine ─────────────────────────────────────
   window.queryAiFleet = async (userPromptStr) => {
+    window.toggleAiFleetPanel(true);
+
     const inputEl = document.getElementById('ai-fleet-input');
     const containerEl = document.getElementById('ai-fleet-response-container');
     const clearBtn = document.getElementById('ai-fleet-clear-btn');
