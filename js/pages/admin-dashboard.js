@@ -7147,15 +7147,39 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
     matchedBoats.sort((a, b) => b.freeHrs - a.freeHrs);
 
-    // 6. Generate summary & Render HTML
-    const boatCardsHtml = matchedBoats.length === 0
-      ? `
+    // 6. Check if user requested grouping by marina / location
+    const isMarinaGroupPrompt = /marina|dock|bunch|group|same place|location|where/i.test(queryText);
+
+    let boatCardsHtml = '';
+
+    if (matchedBoats.length === 0) {
+      boatCardsHtml = `
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center space-y-1">
           <p class="font-bold text-xs text-amber-950">⚠️ No matching yachts with a continuous ${reqDurationHrs}-hour open window on ${dateLabel} (${targetDateStr}).</p>
           <p class="text-[11px] text-amber-800">Try adjusting your requested charter duration or date filter.</p>
         </div>
-      `
-      : matchedBoats.map(m => {
+      `;
+    } else if (isMarinaGroupPrompt) {
+      // Group matched boats by marina
+      const marinaMap = {};
+      matchedBoats.forEach(m => {
+        const rawLoc = (m.boat.marina || m.boat.location || m.boat.departure_point || m.boat.dock_address || 'Other Marina / Dock Location').trim();
+        let key = rawLoc;
+        const low = rawLoc.toLowerCase();
+        if (low.includes('river landing') || low.includes('201 nw south river')) key = '📍 River Landing Marina (Miami River)';
+        else if (low.includes('fontainebleau') || low.includes('4441 collins')) key = '📍 Fontainebleau Marina (Miami Beach)';
+        else if (low.includes('sea isle') || low.includes('venetian')) key = '📍 Sea Isle Marina (Downtown)';
+        else if (low.includes('bayshore') || low.includes('coconut grove')) key = '📍 Bayshore Marina (Coconut Grove)';
+        else if (low.includes('haulover')) key = '📍 Haulover Marine Center';
+        else if (!key.startsWith('📍')) key = `📍 ${key}`;
+
+        if (!marinaMap[key]) marinaMap[key] = [];
+        marinaMap[key].push(m);
+      });
+
+      boatCardsHtml = Object.keys(marinaMap).map(marinaName => {
+        const items = marinaMap[marinaName];
+        const cards = items.map(m => {
           const b = m.boat;
           const winStr = `${minsToTimeStr(m.bestWindow.startMins)} – ${minsToTimeStr(m.bestWindow.endMins)}`;
           const startTimeInput = minsToTimeStr(m.bestWindow.startMins);
@@ -7180,6 +7204,51 @@ Write ONLY the summary sentence(s), no extra explanation.`;
             </div>
           `;
         }).join('');
+
+        return `
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center justify-between bg-purple-100/80 border border-purple-200 px-3 py-1.5 rounded-lg">
+              <span class="font-headline font-bold text-xs text-purple-950 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-purple-700">location_on</span> ${escapeHtml(marinaName)}
+              </span>
+              <span class="px-2 py-0.5 rounded-full bg-purple-200 text-purple-950 font-mono text-[10px] font-black">${items.length} yacht(s) at this location</span>
+            </div>
+            <div class="space-y-2 pl-1 sm:pl-3">
+              ${cards}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } else {
+      boatCardsHtml = matchedBoats.map(m => {
+        const b = m.boat;
+        const winStr = `${minsToTimeStr(m.bestWindow.startMins)} – ${minsToTimeStr(m.bestWindow.endMins)}`;
+        const startTimeInput = minsToTimeStr(m.bestWindow.startMins);
+        const loc = b.marina || b.location || b.departure_point || b.dock_address;
+
+        return `
+          <div class="bg-white border border-purple-200 hover:border-purple-500 rounded-xl p-3 shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
+            <div class="space-y-1 min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-headline font-black text-sm text-purple-950">${escapeHtml(b.name)}</span>
+                ${b.length ? `<span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-mono text-[10px] font-bold">${escapeHtml(b.length)} ft</span>` : ''}
+                ${b.capacity ? `<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label text-[10px] font-bold">👥 Up to ${b.capacity} guests</span>` : ''}
+                ${m.hourlyRate ? `<span class="px-2 py-0.5 rounded-md bg-green-100 text-green-850 font-mono text-[10px] font-bold">$${m.hourlyRate}/hr</span>` : ''}
+                ${loc ? `<span class="px-2 py-0.5 rounded-md bg-violet-50 text-purple-900 text-[10px] font-bold border border-purple-200 truncate max-w-[200px]" title="${escapeHtml(loc)}">📍 ${escapeHtml(loc)}</span>` : ''}
+              </div>
+              <p class="text-xs text-purple-900 font-semibold flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-green-600">check_circle</span> 
+                Open Window: <span class="font-mono font-bold text-green-700">${winStr}</span> (${m.freeHrs} hrs free)
+              </p>
+            </div>
+            <button onclick="window.quickBookFromAi('${b.id}', '${targetDateStr}', '${startTimeInput}', ${reqDurationHrs})" class="bg-purple-600 hover:bg-purple-700 text-white px-3.5 py-2 rounded-xl font-label text-xs font-bold transition-all shadow-xs flex items-center gap-1 shrink-0 cursor-pointer">
+              <span class="material-symbols-outlined text-sm">add_circle</span> Book This Yacht
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
 
     let aiIntroText = `Found **${matchedBoats.length} available yacht(s)** matching your request for **${dateLabel} (${targetDateStr})** with at least **${reqDurationHrs} hours** open:`;
 
