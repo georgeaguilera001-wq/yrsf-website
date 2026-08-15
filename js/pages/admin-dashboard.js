@@ -7056,6 +7056,18 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     return `${startStr} - ${computedEndTime}`;
   };
 
+  window.closeDayEventsModal = () => {
+    const modal = document.getElementById('day-events-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+    const availPanel = document.getElementById('avail-panel');
+    if (availPanel) {
+      availPanel.remove();
+    }
+  };
+
   // ─── Day Events Modal ────────────────────────────────────────────────────────
   window.showDayEventsModal = async (dateStr) => {
     const modal = document.getElementById('day-events-modal');
