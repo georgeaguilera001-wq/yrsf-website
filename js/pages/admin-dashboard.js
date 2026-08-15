@@ -6922,18 +6922,42 @@ EXTRACTION RULES:
   const CHARTER_START_MINS = 10 * 60;       // 10:00 AM in minutes
   const CHARTER_END_MINS   = (24 + 2) * 60; // 2:00 AM next day in minutes (26:00)
 
-  function timeStrToMins(str) {
-    if (!str || str === 'All Day') return null;
+  function timeStrToMins(str, customerName = null) {
+    if (!str) return null;
+    if (typeof str === 'string' && (str.toLowerCase() === 'all day' || str.toLowerCase().includes('all day'))) {
+      return { isAllDay: true };
+    }
+
+    if (customerName && typeof window.extractTimeRangeFromTitle === 'function') {
+      const titleOverride = window.extractTimeRangeFromTitle(customerName);
+      if (titleOverride) {
+        str = titleOverride.displayTime;
+      }
+    }
+
     const clean = str.replace(/\s*(AM|PM)\s*/gi, m => m.trim()).trim();
-    const m = clean.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (!m) return null;
-    let h = parseInt(m[1]); const min = parseInt(m[2]); const ap = m[3].toUpperCase();
+    const m = clean.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
+    if (!m) {
+      if (typeof window.extractTimeRangeFromTitle === 'function') {
+        const range = window.extractTimeRangeFromTitle(str);
+        if (range) {
+          return timeStrToMins(range.startTimeFormatted);
+        }
+      }
+      return null;
+    }
+
+    let h = parseInt(m[1], 10);
+    const min = m[2] ? parseInt(m[2], 10) : 0;
+    const ap = m[3].toUpperCase();
+
     if (ap === 'PM' && h !== 12) h += 12;
     if (ap === 'AM' && h === 12) h = 0;
+
     let total = h * 60 + min;
-    // Times between 12:00AM and 2:00AM are "next day" — add 24hrs
     if (total < 3 * 60) total += 24 * 60;
-    return total;
+
+    return { totalMins: total, isAllDay: false };
   }
 
   function minsToTimeStr(mins) {
@@ -6946,21 +6970,67 @@ EXTRACTION RULES:
   }
 
   function calcBoatAvailability(dateStr, boatId) {
+    // Ensure external events cache is populated from localStorage if empty
+    if (!window.externalIcsEvents || window.externalIcsEvents.length === 0) {
+      try {
+        const saved = localStorage.getItem('yrsf_external_ics_events');
+        if (saved && saved !== 'undefined') {
+          try { window.externalIcsEvents = JSON.parse(saved); } catch(e) {}
+        }
+      } catch (e) {}
+      if (!window.externalIcsEvents) window.externalIcsEvents = [];
+    }
+
     // Collect all blocked intervals for this boat on this date
     const bookings = (bookingsCache || []).filter(b => b.booking_date === dateStr && (!boatId || boatId === 'all' || b.boat_id === boatId));
     const external = (window.externalIcsEvents || []).filter(e => e.booking_date === dateStr && (!boatId || boatId === 'all' || e.boat_id === boatId));
 
     const blocked = [];
     [...bookings, ...external].forEach(ev => {
-      const startMins = timeStrToMins(ev.start_time?.split(' - ')[0]);
-      if (startMins === null) return;
-      const durHrs = ev.duration_hours || 4;
-      // For external events try to parse end from "X:XX AM - Y:YY PM"
-      let endMins;
-      if (ev.start_time && ev.start_time.includes(' - ')) {
-        endMins = timeStrToMins(ev.start_time.split(' - ')[1]);
+      let effectiveStartTime = ev.start_time;
+      let effectiveEndTime = null;
+
+      if (ev.customer_name && typeof window.extractTimeRangeFromTitle === 'function') {
+        const titleRange = window.extractTimeRangeFromTitle(ev.customer_name);
+        if (titleRange) {
+          effectiveStartTime = titleRange.startTimeFormatted;
+          effectiveEndTime = titleRange.endTimeFormatted;
+        }
       }
+
+      const startRes = timeStrToMins(effectiveStartTime, ev.customer_name);
+      
+      // If event is "All Day", block entire operating window (10:00 AM – 2:00 AM)!
+      if (startRes && startRes.isAllDay) {
+        blocked.push({
+          startMins: CHARTER_START_MINS,
+          endMins: CHARTER_END_MINS,
+          label: ev.customer_name || ev.boat_name,
+          boat: ev.boat_name,
+          isAllDay: true
+        });
+        return;
+      }
+
+      if (!startRes || startRes.totalMins === undefined) return;
+
+      const startMins = startRes.totalMins;
+      const durHrs = ev.duration_hours || 4;
+      let endMins;
+
+      if (effectiveEndTime) {
+        const endRes = timeStrToMins(effectiveEndTime);
+        if (endRes && endRes.totalMins !== undefined) endMins = endRes.totalMins;
+      }
+
+      if (!endMins && ev.start_time && ev.start_time.includes(' - ')) {
+        const endStr = ev.start_time.split(' - ')[1];
+        const endRes = timeStrToMins(endStr);
+        if (endRes && endRes.totalMins !== undefined) endMins = endRes.totalMins;
+      }
+
       if (!endMins) endMins = startMins + durHrs * 60;
+
       blocked.push({ startMins, endMins, label: ev.customer_name || ev.boat_name, boat: ev.boat_name });
     });
 
