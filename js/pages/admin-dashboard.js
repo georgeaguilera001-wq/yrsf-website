@@ -7202,8 +7202,12 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       }
     }
 
-    // 4. Collect active fleet boats
-    const activeFleet = (fleetCache || []).filter(b => b.status === 'active' || !b.status);
+    // 4. Collect active fleet boats that have a connected iCal feed URL
+    const activeFleet = (fleetCache || []).filter(b => {
+      const isActive = b.status === 'active' || !b.status;
+      const hasIcalFeed = b.ical_feed_url && typeof b.ical_feed_url === 'string' && b.ical_feed_url.trim().length > 0;
+      return isActive && hasIcalFeed;
+    });
 
     // 5. Evaluate availability for each boat
     const matchedBoats = [];
