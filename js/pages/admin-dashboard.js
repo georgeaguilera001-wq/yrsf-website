@@ -5850,7 +5850,6 @@ EXTRACTION RULES:
       autoSyncTimer = setInterval(checkAndPerformSync, AUTO_SYNC_INTERVAL_MS);
       setTimeout(checkAndPerformSync, 1000);
     }
-    }
 
     startAutoSync();
 
