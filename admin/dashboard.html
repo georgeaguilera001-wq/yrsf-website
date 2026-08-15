@@ -733,6 +733,55 @@
               <button id="cal-source-internal-btn" class="px-3 py-1 rounded-md text-on-surface-variant text-[11px] hover:text-on-surface text-xs font-bold transition-all flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-sm text-secondary">sailing</span> Internal Charter Bookings Only
               </button>
+            <!-- AI Fleet Assistant & Natural Language Search Bar -->
+            <div class="mb-4 bg-gradient-to-r from-violet-50 via-purple-50 to-indigo-50 border border-purple-200/90 rounded-2xl p-3 sm:p-4 shadow-sm space-y-3">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center shadow-xs">
+                    <span class="material-symbols-outlined text-base animate-pulse">auto_awesome</span>
+                  </span>
+                  <div>
+                    <h3 class="font-headline font-bold text-xs sm:text-sm text-purple-950 flex items-center gap-1.5">
+                      AI Charter &amp; Fleet Assistant
+                      <span class="px-1.5 py-0.5 rounded-full bg-purple-200 text-purple-900 text-[9px] font-extrabold uppercase">Live Fleet Intelligence</span>
+                    </h3>
+                    <p class="text-[10px] sm:text-[11px] text-purple-800">Ask any fleet availability question in plain English (e.g. "what boat is available around 50ft for 6 hours today")</p>
+                  </div>
+                </div>
+              </div>
+
+              <form id="ai-fleet-search-form" onsubmit="event.preventDefault(); window.queryAiFleet();" class="relative flex items-center gap-2">
+                <div class="relative flex-1">
+                  <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-600 text-lg">search_spark</span>
+                  <input type="text" id="ai-fleet-input"
+                    placeholder="e.g. Hey what boat is available around 50ft for 6 hours today?"
+                    class="w-full pl-10 pr-10 py-2.5 bg-white border-2 border-purple-200 focus:border-purple-600 focus:ring-4 focus:ring-purple-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold text-purple-950 placeholder:text-purple-400/80 shadow-inner transition-all" />
+                  <button type="button" id="ai-fleet-clear-btn" onclick="document.getElementById('ai-fleet-input').value=''; document.getElementById('ai-fleet-response-container').classList.add('hidden'); this.classList.add('hidden');" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-700 font-bold text-sm leading-none">&times;</button>
+                </div>
+                <button type="submit" id="ai-fleet-submit-btn" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-4 sm:px-5 py-2.5 rounded-xl sm:rounded-2xl font-label text-xs font-black shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
+                  <span class="material-symbols-outlined text-sm">auto_awesome</span> Ask AI
+                </button>
+              </form>
+
+              <!-- Quick Chip Prompts -->
+              <div class="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-purple-900">
+                <span class="text-purple-700 font-medium mr-1">Quick Prompts:</span>
+                <button type="button" onclick="window.queryAiFleet('What 50ft+ boats are open for 6 hours today?')" class="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-purple-200 hover:border-purple-400 text-purple-900 transition-all shadow-2xs cursor-pointer">
+                  ⛵ 50ft+ open 6hrs today
+                </button>
+                <button type="button" onclick="window.queryAiFleet('What boats are available tomorrow at 2pm?')" class="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-purple-200 hover:border-purple-400 text-purple-900 transition-all shadow-2xs cursor-pointer">
+                  📅 Tomorrow at 2:00 PM
+                </button>
+                <button type="button" onclick="window.queryAiFleet('What is the cheapest boat available for 4 hours today?')" class="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-purple-200 hover:border-purple-400 text-purple-900 transition-all shadow-2xs cursor-pointer">
+                  💲 Cheapest boat for 4hrs
+                </button>
+                <button type="button" onclick="window.queryAiFleet('Show me all open boats for this weekend')" class="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-purple-200 hover:border-purple-400 text-purple-900 transition-all shadow-2xs cursor-pointer">
+                  🚤 Weekend Availability
+                </button>
+              </div>
+
+              <!-- Dynamic AI Answer Card Container -->
+              <div id="ai-fleet-response-container" class="hidden animate-fade-in pt-2 border-t border-purple-200/60"></div>
             </div>
 
             <!-- Calendar Header -->
@@ -2770,7 +2819,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260815v1250"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260815v1255"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------

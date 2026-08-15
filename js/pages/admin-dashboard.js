@@ -7048,6 +7048,199 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
   }
 
+  // ─── AI Fleet & Charter Assistant Engine ─────────────────────────────────────
+  window.queryAiFleet = async (userPromptStr) => {
+    const inputEl = document.getElementById('ai-fleet-input');
+    const containerEl = document.getElementById('ai-fleet-response-container');
+    const clearBtn = document.getElementById('ai-fleet-clear-btn');
+    if (!containerEl) return;
+
+    const queryText = (userPromptStr || (inputEl ? inputEl.value : '')).trim();
+    if (!queryText) return;
+
+    if (inputEl) inputEl.value = queryText;
+    if (clearBtn) clearBtn.classList.remove('hidden');
+
+    containerEl.classList.remove('hidden');
+    containerEl.innerHTML = `
+      <div class="bg-white/90 border border-purple-200 rounded-xl p-4 text-center space-y-2 shadow-xs">
+        <span class="material-symbols-outlined text-2xl text-purple-600 animate-spin">auto_awesome</span>
+        <p class="font-bold text-xs text-purple-950">Analyzing live fleet availability and schedule...</p>
+        <p class="text-[11px] text-purple-800 italic">"Searching for matching yachts and open charter windows"</p>
+      </div>
+    `;
+
+    // 1. Parse target date
+    const now = new Date();
+    let targetDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    let dateLabel = 'Today';
+
+    const lower = queryText.toLowerCase();
+    if (lower.includes('tomorrow')) {
+      const tomorrow = new Date();
+      tomorrow.setDate(now.getDate() + 1);
+      targetDateStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+      dateLabel = 'Tomorrow';
+    } else if (lower.includes('weekend') || lower.includes('saturday')) {
+      const sat = new Date();
+      const dist = (6 - sat.getDay() + 7) % 7 || 7;
+      sat.setDate(sat.getDate() + dist);
+      targetDateStr = `${sat.getFullYear()}-${String(sat.getMonth() + 1).padStart(2, '0')}-${String(sat.getDate()).padStart(2, '0')}`;
+      dateLabel = 'This Saturday';
+    }
+
+    // 2. Parse requested duration in hours
+    let reqDurationHrs = 4;
+    const durMatch = queryText.match(/(\d{1,2})\s*(?:hr|hour|hrs|hours)/i);
+    if (durMatch) {
+      reqDurationHrs = parseInt(durMatch[1], 10);
+    } else if (lower.includes('half day')) {
+      reqDurationHrs = 4;
+    } else if (lower.includes('full day')) {
+      reqDurationHrs = 8;
+    }
+
+    // 3. Parse requested boat length (e.g. 50ft, 50 ft, 50', 60ft, 40ft)
+    let reqLengthFeet = null;
+    const lenMatch = queryText.match(/(\d{2,3})\s*(?:ft|feet|'|foot)/i);
+    if (lenMatch) {
+      reqLengthFeet = parseInt(lenMatch[1], 10);
+    } else {
+      const numMatch = queryText.match(/(?:around|about|near|size|length|\bft\b)?\s*(\d{2})\b/i);
+      if (numMatch && parseInt(numMatch[1], 10) >= 30 && parseInt(numMatch[1], 10) <= 120) {
+        reqLengthFeet = parseInt(numMatch[1], 10);
+      }
+    }
+
+    // 4. Collect active fleet boats
+    const activeFleet = (fleetCache || []).filter(b => b.status === 'active' || !b.status);
+
+    // 5. Evaluate availability for each boat
+    const matchedBoats = [];
+    activeFleet.forEach(boat => {
+      const boatLenNum = parseFloat(boat.length || boat.capacity || '0') || 0;
+
+      if (reqLengthFeet) {
+        const diff = Math.abs(boatLenNum - reqLengthFeet);
+        if (boatLenNum > 0 && diff > 10 && !boat.name.toLowerCase().includes(`${reqLengthFeet}`)) {
+          return;
+        }
+      }
+
+      const avail = calcBoatAvailability(targetDateStr, boat.id);
+      const validWindows = avail.freeWindows.filter(w => (w.endMins - w.startMins) >= reqDurationHrs * 60);
+
+      if (validWindows.length > 0) {
+        const bestWin = validWindows.reduce((a, b) => (b.endMins - b.startMins) > (a.endMins - a.startMins) ? b : a);
+        const freeHrs = Math.round((bestWin.endMins - bestWin.startMins) / 60 * 10) / 10;
+
+        matchedBoats.push({
+          boat,
+          bestWindow: bestWin,
+          freeHrs,
+          totalFreeHrs: avail.totalFreeHrs,
+          allWindows: validWindows,
+          hourlyRate: boat.hourly_rate || boat.price_per_hour || 0
+        });
+      }
+    });
+
+    matchedBoats.sort((a, b) => b.freeHrs - a.freeHrs);
+
+    // 6. Generate summary & Render HTML
+    const boatCardsHtml = matchedBoats.length === 0
+      ? `
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center space-y-1">
+          <p class="font-bold text-xs text-amber-950">⚠️ No matching yachts with a continuous ${reqDurationHrs}-hour open window on ${dateLabel} (${targetDateStr}).</p>
+          <p class="text-[11px] text-amber-800">Try adjusting your requested charter duration or date filter.</p>
+        </div>
+      `
+      : matchedBoats.map(m => {
+          const b = m.boat;
+          const winStr = `${minsToTimeStr(m.bestWindow.startMins)} – ${minsToTimeStr(m.bestWindow.endMins)}`;
+          const startTimeInput = minsToTimeStr(m.bestWindow.startMins);
+
+          return `
+            <div class="bg-white border border-purple-200 hover:border-purple-500 rounded-xl p-3 shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
+              <div class="space-y-1 min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-headline font-black text-sm text-purple-950">${escapeHtml(b.name)}</span>
+                  ${b.length ? `<span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-mono text-[10px] font-bold">${escapeHtml(b.length)} ft</span>` : ''}
+                  ${b.capacity ? `<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label text-[10px] font-bold">👥 Up to ${b.capacity} guests</span>` : ''}
+                  ${m.hourlyRate ? `<span class="px-2 py-0.5 rounded-md bg-green-100 text-green-850 font-mono text-[10px] font-bold">$${m.hourlyRate}/hr</span>` : ''}
+                </div>
+                <p class="text-xs text-purple-900 font-semibold flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm text-green-600">check_circle</span> 
+                  Open Window: <span class="font-mono font-bold text-green-700">${winStr}</span> (${m.freeHrs} hrs free)
+                </p>
+              </div>
+              <button onclick="window.quickBookFromAi('${b.id}', '${targetDateStr}', '${startTimeInput}', ${reqDurationHrs})" class="bg-purple-600 hover:bg-purple-700 text-white px-3.5 py-2 rounded-xl font-label text-xs font-bold transition-all shadow-xs flex items-center gap-1 shrink-0 cursor-pointer">
+                <span class="material-symbols-outlined text-sm">add_circle</span> Book This Yacht
+              </button>
+            </div>
+          `;
+        }).join('');
+
+    let aiIntroText = `Found **${matchedBoats.length} available yacht(s)** matching your request for **${dateLabel} (${targetDateStr})** with at least **${reqDurationHrs} hours** open:`;
+
+    try {
+      const { data: setting } = await supabase.from('site_settings').select('value').eq('key', 'gemini_api_key').single();
+      const apiKey = setting?.value?.key || setting?.value;
+      if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY') {
+        const boatSummaryStr = matchedBoats.map(m => `- ${m.boat.name} (${m.boat.length || 50}ft): ${minsToTimeStr(m.bestWindow.startMins)} to ${minsToTimeStr(m.bestWindow.endMins)} (${m.freeHrs} hrs free)`).join('\n');
+        const prompt = `User prompt: "${queryText}"
+Target Date: ${targetDateStr} (${dateLabel})
+Requested Duration: ${reqDurationHrs} hours
+Available Boats:\n${boatSummaryStr || 'None'}
+
+Write a friendly 1-2 sentence recommendation directly addressing the user.`;
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const txt = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+          if (txt) aiIntroText = txt;
+        }
+      }
+    } catch (e) {}
+
+    containerEl.innerHTML = `
+      <div class="bg-white/95 border border-purple-200 rounded-xl sm:rounded-2xl p-4 shadow-md space-y-3">
+        <div class="flex items-start justify-between gap-2 border-b border-purple-100 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-md bg-purple-600 text-white flex items-center justify-center text-xs">✨</span>
+            <p class="font-headline font-bold text-xs sm:text-sm text-purple-950">${aiIntroText}</p>
+          </div>
+          <button onclick="document.getElementById('ai-fleet-response-container').classList.add('hidden')" class="text-purple-400 hover:text-purple-800 font-bold text-base leading-none">&times;</button>
+        </div>
+        <div class="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+          ${boatCardsHtml}
+        </div>
+      </div>
+    `;
+  };
+
+  window.quickBookFromAi = (boatId, dateStr, startTimeStr, durationHrs) => {
+    const createBtn = document.getElementById('add-booking-btn');
+    if (createBtn) createBtn.click();
+
+    setTimeout(() => {
+      const boatSelect = document.getElementById('book-boat-id');
+      const dateInput  = document.getElementById('book-date');
+      const startInput = document.getElementById('book-start-time');
+      const durSelect  = document.getElementById('book-duration');
+
+      if (boatSelect && boatId) { boatSelect.value = boatId; boatSelect.dispatchEvent(new Event('change')); }
+      if (dateInput && dateStr) dateInput.value = dateStr;
+      if (startInput && startTimeStr) startInput.value = startTimeStr;
+      if (durSelect && durationHrs) durSelect.value = String(durationHrs);
+    }, 100);
+  };
+
   window.extractTimeRangeFromTitle = (title) => {
     if (!title || typeof title !== 'string') return null;
 
