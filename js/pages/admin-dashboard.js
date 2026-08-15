@@ -6629,6 +6629,17 @@ EXTRACTION RULES:
                 startTimeFormatted = formatIcsTime(startMatch[2]);
                 if (endMatch && endMatch[2]) {
                   endTimeFormatted = formatIcsTime(endMatch[2]);
+                } else {
+                  // Fallback: Calculate 4-hour default end time if end match is absent
+                  const sMins = timeStringToMinutes(startTimeFormatted);
+                  if (sMins !== null) {
+                    const eMins = (sMins + 4 * 60) % (24 * 60);
+                    const h24 = Math.floor(eMins / 60);
+                    const m = eMins % 60;
+                    const suffix = h24 >= 12 ? 'PM' : 'AM';
+                    const h12 = h24 % 12 || 12;
+                    endTimeFormatted = `${h12}:${String(m).padStart(2, '0')} ${suffix}`;
+                  }
                 }
               }
               const displayTime = endTimeFormatted ? `${startTimeFormatted} - ${endTimeFormatted}` : startTimeFormatted;
@@ -7027,6 +7038,24 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
   }
 
+  window.formatTimeRange = (startStr, durationHrs = 4) => {
+    if (!startStr) return 'All Day';
+    if (startStr.includes(' - ')) return startStr;
+
+    const startMins = timeStringToMinutes(startStr);
+    if (startMins === null || isNaN(startMins)) return startStr;
+
+    const endMins = startMins + (durationHrs || 4) * 60;
+    const normalMins = endMins % (24 * 60);
+    const h24 = Math.floor(normalMins / 60);
+    const m = normalMins % 60;
+    const suffix = h24 >= 12 ? 'PM' : 'AM';
+    const h12 = h24 % 12 || 12;
+    const computedEndTime = `${h12}:${String(m).padStart(2, '0')} ${suffix}`;
+
+    return `${startStr} - ${computedEndTime}`;
+  };
+
   // ─── Day Events Modal ────────────────────────────────────────────────────────
   window.showDayEventsModal = async (dateStr) => {
     const modal = document.getElementById('day-events-modal');
@@ -7073,6 +7102,8 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       `;
     } else {
       contentEl.innerHTML = allEvents.map(ev => {
+        const timeRangeStr = window.formatTimeRange(ev.start_time, ev.duration_hours || 4);
+
         if (ev.status === 'external') {
           return `
             <div class="p-4 bg-blue-50/70 border border-blue-200 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -7083,7 +7114,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
                 </div>
                 <h4 class="font-headline font-bold text-sm text-blue-950">${escapeHtml(ev.customer_name)}</h4>
                 <p class="text-xs text-blue-800 flex items-center gap-1.5 font-semibold">
-                  <span class="material-symbols-outlined text-sm">schedule</span> ${escapeHtml(ev.start_time)}
+                  <span class="material-symbols-outlined text-sm">schedule</span> <span class="font-extrabold text-blue-950">${escapeHtml(timeRangeStr)}</span>
                 </p>
               </div>
             </div>
@@ -7099,7 +7130,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
                 </div>
                 <h4 class="font-headline font-bold text-sm text-on-surface">${escapeHtml(ev.customer_name)} ${ev.customer_phone ? `(${escapeHtml(ev.customer_phone)})` : ''}</h4>
                 <p class="text-xs text-on-surface-variant flex items-center gap-1.5 font-semibold">
-                  <span class="material-symbols-outlined text-sm">schedule</span> ${escapeHtml(ev.start_time)} (${ev.duration_hours || 4} hrs) • Guests: ${ev.guest_count || 1}
+                  <span class="material-symbols-outlined text-sm">schedule</span> <span class="font-extrabold text-on-surface">${escapeHtml(timeRangeStr)}</span> (${ev.duration_hours || 4} hrs) • Guests: ${ev.guest_count || 1}
                 </p>
               </div>
               <button onclick="document.getElementById('day-events-modal').classList.add('hidden'); window.editBooking('${ev.id}')" class="px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface transition-colors shrink-0 flex items-center gap-1">
