@@ -5768,45 +5768,38 @@ EXTRACTION RULES:
     if (calFilter) calFilter.addEventListener('change', () => { renderCalendar(); });
     if (calSyncBtn) calSyncBtn.addEventListener('click', () => { syncAllIcalFeeds(true); });
 
-    // Auto-sync every 5 minutes silently (no notification toast)
-    const AUTO_SYNC_INTERVAL_MS = 1 * 60 * 1000; // 1 minute
+    // Auto-sync every 2 minutes silently (no notification toast)
+    const AUTO_SYNC_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
     let autoSyncTimer = null;
 
     function startAutoSync() {
       if (autoSyncTimer) clearInterval(autoSyncTimer);
       
-      const checkSyncHealth = async () => {
+      const checkAndPerformSync = async () => {
         try {
-          const { data } = await supabase.from('site_settings').select('updated_at').eq('key', 'cached_ical_events').single();
-          if (data && data.updated_at) {
-            window.lastIcalSyncTime = new Date(data.updated_at);
-          }
+          // 1. SILENTLY EXECUTE REAL LIVE ICAL SYNC IN THE BROWSER!
+          await syncAllIcalFeeds(false);
+          window.lastIcalSyncTime = new Date();
           
-          // Check for new notifications
+          // 2. Check for new notifications
           const { data: notifData } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
           if (notifData && notifData.value && Array.isArray(notifData.value)) {
             let localNotifs = []; try { const rawN = localStorage.getItem('yrsf_admin_notifications'); if (rawN && rawN !== 'undefined') localNotifs = JSON.parse(rawN); } catch(e) {}
             let addedNew = false;
             
-            // Loop backwards so newest gets unshifted properly
             for (let i = notifData.value.length - 1; i >= 0; i--) {
               const n = notifData.value[i];
               if (!localNotifs.find(ln => ln.id === n.id)) {
                 localNotifs.unshift(n);
                 addedNew = true;
-                
-                // Show desktop notification if permission granted
                 if ('Notification' in window && Notification.permission === 'granted') {
                   new Notification(n.title, { body: n.message });
                 }
               }
             }
 
-            // After reconciling the local store, check for unread notifications
-            // and show persistent toasts for those that haven't been dismissed
             const unreadNotifs = localNotifs.filter(n => !n.read);
             unreadNotifs.forEach(n => {
-              // Ensure we don't pop up the same toast if it's already on screen
               if (!window.activePersistentToasts) window.activePersistentToasts = new Set();
               if (!window.activePersistentToasts.has(n.id)) {
                 window.activePersistentToasts.add(n.id);
@@ -5815,18 +5808,11 @@ EXTRACTION RULES:
                     onDismiss: async () => {
                       window.activePersistentToasts.delete(n.id);
                       n.read = true;
-                      
-                      // 1. Update localStorage instantly
                       localStorage.setItem('yrsf_admin_notifications', JSON.stringify(localNotifs));
-                      if (typeof window.updateGlobalNotifications === 'function') {
-                        window.updateGlobalNotifications(localNotifs);
-                      }
-
-                      // 2. Clear from backend so it doesn't pop up on other devices/refreshes
                       try {
-                        const { data: dbData } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
-                        if (dbData && Array.isArray(dbData.value)) {
-                          const updatedList = dbData.value.map(dbN => dbN.id === n.id ? { ...dbN, read: true } : dbN);
+                        const { data: currentDb } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
+                        if (currentDb && currentDb.value) {
+                          const updatedList = currentDb.value.map(dbN => dbN.id === n.id ? { ...dbN, read: true } : dbN);
                           await supabase.from('site_settings').update({ value: updatedList }).eq('key', 'admin_notifications');
                         }
                       } catch (err) {
@@ -5846,35 +5832,24 @@ EXTRACTION RULES:
               }
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn('⚠️ [AutoSync] Error during background iCal sync:', e);
+        }
 
-        const calView = document.getElementById('booking-calendar-view');
-        if (calView && !calView.classList.contains('hidden')) {
-          const badge = document.getElementById('cal-last-synced-badge');
-          if (badge && window.lastIcalSyncTime) {
-            const minutesSinceSync = (new Date() - window.lastIcalSyncTime) / 60000;
-            if (minutesSinceSync > 20) {
-              badge.className = 'text-[11px] font-extrabold text-red-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 bg-red-500/10 border border-red-500/20 rounded-2xl shadow-2xs';
-              badge.innerHTML = `<span class="material-symbols-outlined text-[14px]">error</span> Sync Failed (${Math.round(minutesSinceSync)}m ago)`;
-              
-              // Only show toast once every 5 minutes if it fails to avoid spam
-              if (!window.lastToastTime || (new Date() - window.lastToastTime) / 60000 > 5) {
-                showToast(`Background calendar sync hasn't run in ${Math.round(minutesSinceSync)} minutes. Please check your cron job.`, 'error');
-                window.lastToastTime = new Date();
-              }
-            } else {
-              const timeString = window.lastIcalSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-              const dateString = window.lastIcalSyncTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
-              badge.className = 'text-[11px] font-extrabold text-emerald-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl shadow-2xs';
-              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Auto-syncing &bull; Last: ${dateString} ${timeString}`;
-            }
-          }
+        const badge = document.getElementById('cal-last-synced-badge');
+        if (badge) {
+          const syncTime = window.lastIcalSyncTime || new Date();
+          const timeString = syncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const dateString = syncTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
+          badge.className = 'text-[11px] font-extrabold text-emerald-800 hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl shadow-2xs';
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Live Auto-Sync Active &bull; Last: ${dateString} ${timeString}`;
         }
       };
 
-      // Run health check every 5 minutes
-      autoSyncTimer = setInterval(checkSyncHealth, AUTO_SYNC_INTERVAL_MS);
-      setTimeout(checkSyncHealth, 2000); // Initial check after 2 seconds
+      // Run health check / sync immediately on page load and every 2 minutes
+      autoSyncTimer = setInterval(checkAndPerformSync, AUTO_SYNC_INTERVAL_MS);
+      setTimeout(checkAndPerformSync, 1000);
+    }
     }
 
     startAutoSync();
