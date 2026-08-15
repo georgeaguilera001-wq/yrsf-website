@@ -6745,7 +6745,8 @@ EXTRACTION RULES:
 
     const firstDayIndex = new Date(year, month, 1).getDay();
     const totalDays = new Date(year, month + 1, 0).getDate();
-    const todayStr = new Date().toISOString().split('T')[0];
+    const nowObj = new Date();
+    const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
 
     // O(N) Hash Map Optimization for Calendar Rendering
     const bookingsByDate = {};
@@ -6770,9 +6771,9 @@ EXTRACTION RULES:
 
     for (let i = 0; i < firstDayIndex; i++) {
       if (isMobileView) {
-        cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl aspect-square w-full opacity-40" style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important;"></div>`;
+        cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl aspect-square w-full opacity-40"></div>`;
       } else {
-        cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl lg:rounded-2xl aspect-square style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important; overflow: hidden !important;" p-1 lg:p-2 opacity-40"></div>`;
+        cellsHtml += `<div class="bg-surface-container-lowest/30 border border-outline-variant/30 rounded-xl lg:rounded-2xl aspect-square p-1 lg:p-2 opacity-40"></div>`;
       }
     }
 
@@ -6808,7 +6809,7 @@ EXTRACTION RULES:
 
       if (isMobileView) {
         cellsHtml += `
-          <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl aspect-square w-full p-1 flex items-center justify-center transition-all duration-200 cursor-pointer group/cell relative overflow-hidden min-w-0" style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important; display: flex !important; align-items: center !important; justify-content: center !important; overflow: hidden !important;">
+          <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl aspect-square w-full p-1 flex items-center justify-center transition-all duration-200 cursor-pointer group/cell relative overflow-hidden min-w-0">
             <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl font-label text-sm font-black transition-transform group-hover/cell:scale-110 flex-shrink-0 ${dayNumBg}">
               ${day}
             </span>
@@ -6830,7 +6831,7 @@ EXTRACTION RULES:
               <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="px-1.5 py-1 rounded-lg border border-blue-200/80 bg-gradient-to-r from-blue-50 to-indigo-50/70 hover:from-blue-100 hover:to-indigo-100 text-blue-900 shadow-2xs hover:shadow-sm transition-all mb-1 group/badge cursor-pointer flex items-center justify-between gap-1 min-w-0 overflow-hidden leading-none" title="[${escapeHtml(b.source_label)}] ${escapeHtml(b.customer_name)}">
                 <div class="flex items-center gap-1 min-w-0 flex-1">
                   <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-600 flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
-                  <span class="font-mono text-[9px] font-extrabold text-blue-700 bg-blue-100/90 px-1 py-0.5 rounded shrink-0">${escapeHtml(b.start_time.split(' - ')[0] || b.start_time)}</span>
+                  <span class="font-mono text-[9px] font-extrabold text-blue-700 bg-blue-100/90 px-1 py-0.5 rounded shrink-0">${escapeHtml((b.start_time || '').split(' - ')[0] || b.start_time)}</span>
                   <span class="font-bold text-[10px] text-on-surface truncate">${escapeHtml(b.customer_name || 'Charter Booking')}</span>
                 </div>
                 <span class="text-[8px] font-extrabold text-blue-600 bg-blue-200/50 px-1 py-0.5 rounded shrink-0 flex items-center gap-0.5"><span class="material-symbols-outlined text-[9px]">event</span> iCal</span>
@@ -6858,7 +6859,7 @@ EXTRACTION RULES:
             <div onclick="event.stopPropagation(); window.showDayEventsModal('${dateStr}')" class="px-1.5 py-1 rounded-lg border text-[10px] font-bold transition-all mb-1 shadow-2xs hover:shadow-sm cursor-pointer flex items-center justify-between gap-1 min-w-0 overflow-hidden leading-none group/badge ${bgClass}" title="${b.start_time} - ${b.boat_name} (${b.customer_name})">
               <div class="flex items-center gap-1 min-w-0 flex-1">
                 <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${dotColor} flex-shrink-0 group-hover/badge:scale-125 transition-transform"></span>
-                <span class="font-mono text-[9px] font-extrabold bg-white/90 px-1 py-0.5 rounded shrink-0 shadow-2xs text-on-surface">${b.start_time.split(' ')[0]}</span>
+                <span class="font-mono text-[9px] font-extrabold bg-white/90 px-1 py-0.5 rounded shrink-0 shadow-2xs text-on-surface">${(b.start_time || '').split(' ')[0]}</span>
                 <span class="font-bold text-[10px] truncate">${escapeHtml(b.customer_name || b.boat_name)}</span>
               </div>
               <span class="text-[8px] uppercase tracking-wider font-extrabold px-1 py-0.5 rounded shrink-0 ${statusBadge}">${statusText}</span>
@@ -6867,7 +6868,7 @@ EXTRACTION RULES:
         }).join('');
 
         cellsHtml += `
-          <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl lg:rounded-2xl aspect-square style="aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; max-height: none !important; overflow: hidden !important;" p-1 lg:p-2 flex flex-col items-center justify-center lg:items-stretch lg:justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
+          <div onclick="window.showDayEventsModal('${dateStr}')" class="${tileBg} rounded-xl lg:rounded-2xl aspect-square p-1 lg:p-2 flex flex-col items-center justify-center lg:items-stretch lg:justify-between transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group/cell relative overflow-hidden min-w-0">
             <div class="min-w-0 flex-1 flex flex-col items-center justify-center lg:items-stretch lg:justify-between w-full">
               <div class="flex items-center justify-between gap-1 min-w-0 w-full">
                 <div class="flex items-center justify-center lg:justify-start gap-1 min-w-0 w-full lg:w-auto">
@@ -7036,6 +7037,9 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     const closeBtn2 = document.getElementById('day-events-close-btn');
 
     if (!modal || !contentEl) return;
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
 
     const parts = dateStr.split('-');
     const dateObj = new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
