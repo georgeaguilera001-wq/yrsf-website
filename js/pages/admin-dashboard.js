@@ -7133,7 +7133,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
                   <span class="material-symbols-outlined text-sm">schedule</span> <span class="font-extrabold text-on-surface">${escapeHtml(timeRangeStr)}</span> (${ev.duration_hours || 4} hrs) • Guests: ${ev.guest_count || 1}
                 </p>
               </div>
-              <button onclick="document.getElementById('day-events-modal').classList.add('hidden'); window.editBooking('${ev.id}')" class="px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface transition-colors shrink-0 flex items-center gap-1">
+              <button onclick="window.closeDayEventsModal(); window.editBooking('${ev.id}')" class="px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface transition-colors shrink-0 flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">edit</span> Edit / View details
               </button>
             </div>
@@ -7231,8 +7231,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
 
     if (addBtn) {
       addBtn.onclick = () => {
-        modal.classList.add('hidden');
-        document.getElementById('avail-panel')?.remove();
+        window.closeDayEventsModal();
         const createBtn = document.getElementById('add-booking-btn');
         if (createBtn) {
           createBtn.click();
@@ -7245,11 +7244,11 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
 
     [closeBtn, closeBtn2].forEach(btn => {
-      if (btn) btn.onclick = () => { modal.classList.add('hidden'); document.getElementById('avail-panel')?.remove(); };
+      if (btn) btn.onclick = () => window.closeDayEventsModal();
     });
 
     modal.onclick = (e) => {
-      if (e.target === modal) { modal.classList.add('hidden'); document.getElementById('avail-panel')?.remove(); }
+      if (e.target === modal) window.closeDayEventsModal();
     };
   };
 

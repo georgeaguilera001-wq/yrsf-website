@@ -2689,7 +2689,7 @@
     <div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-outline-variant flex flex-col max-h-[90vh]">
       <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4 shrink-0">
         <h3 class="font-headline text-base sm:text-lg font-bold text-on-surface" id="day-events-modal-title">📅 Schedule for Day</h3>
-        <button type="button" id="close-day-events-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-xl leading-none">&times;</button>
+        <button type="button" id="close-day-events-modal" onclick="window.closeDayEventsModal()" class="text-on-surface-variant hover:text-on-surface font-bold text-xl leading-none px-2 py-1 cursor-pointer">&times;</button>
       </div>
       
       <div id="day-events-modal-content" class="overflow-y-auto space-y-3 pr-1 flex-1 custom-scrollbar">
@@ -2700,7 +2700,7 @@
         <button id="day-events-add-booking-btn" class="bg-secondary text-on-secondary px-4 py-2.5 rounded-xl font-label text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm">
           <span class="material-symbols-outlined text-sm">add_circle</span> Add Booking for This Day
         </button>
-        <button id="day-events-close-btn" class="bg-surface-container hover:bg-surface-container-high text-on-surface px-5 py-2.5 rounded-xl font-label text-xs font-bold transition-colors">
+        <button id="day-events-close-btn" onclick="window.closeDayEventsModal()" class="bg-surface-container hover:bg-surface-container-high text-on-surface px-5 py-2.5 rounded-xl font-label text-xs font-bold transition-colors cursor-pointer">
           Close
         </button>
       </div>
@@ -2770,7 +2770,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260815v1240"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260815v1242"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
