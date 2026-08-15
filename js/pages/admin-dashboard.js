@@ -6642,7 +6642,16 @@ EXTRACTION RULES:
                   }
                 }
               }
-              const displayTime = endTimeFormatted ? `${startTimeFormatted} - ${endTimeFormatted}` : startTimeFormatted;
+              let displayTime = endTimeFormatted ? `${startTimeFormatted} - ${endTimeFormatted}` : startTimeFormatted;
+
+              // Smart Reader: Check if event title/summary contains a written time range (e.g. "11am-3pm", "Booked 2-6pm", "11:30 to 3:30 PM")
+              let titleOverride = null;
+              if (typeof window.extractTimeRangeFromTitle === 'function') {
+                titleOverride = window.extractTimeRangeFromTitle(summaryText);
+                if (titleOverride) {
+                  displayTime = titleOverride.displayTime;
+                }
+              }
 
               for (const dateFormatted of datesToPush) {
                 if (dateFormatted < cutoffDateStr) continue;
@@ -6661,6 +6670,7 @@ EXTRACTION RULES:
                   boat_name: boat.name,
                   booking_date: dateFormatted,
                   start_time: displayTime,
+                  is_title_override: !!titleOverride,
                   status: 'external',
                   customer_name: custName,
                   source_label: filterKeyword ? 'TimeTree Sync' : (boat.ical_feed_label || 'External iCal')
@@ -7038,7 +7048,105 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
   }
 
-  window.formatTimeRange = (startStr, durationHrs = 4) => {
+  window.extractTimeRangeFromTitle = (title) => {
+    if (!title || typeof title !== 'string') return null;
+
+    const parseSingleTime = (hStr, mStr, apStr, defaultAp = null) => {
+      let h = parseInt(hStr, 10);
+      if (isNaN(h)) return null;
+      const m = mStr ? parseInt(mStr, 10) : 0;
+      let ap = apStr ? apStr.toUpperCase() : defaultAp;
+
+      if (!ap) {
+        if (h >= 1 && h <= 8) ap = 'PM';
+        else if (h >= 9 && h <= 11) ap = 'AM';
+        else if (h === 12) ap = 'PM';
+      }
+
+      if (ap === 'PM' && h < 12) h += 12;
+      if (ap === 'AM' && h === 12) h = 0;
+
+      const totalMins = h * 60 + m;
+      const normalMins = totalMins % (24 * 60);
+      const h24 = Math.floor(normalMins / 60);
+      const min = normalMins % 60;
+      const suffix = h24 >= 12 ? 'PM' : 'AM';
+      const h12 = h24 % 12 || 12;
+      const formatted = `${h12}:${String(min).padStart(2, '0')} ${suffix}`;
+
+      return { totalMins, formatted };
+    };
+
+    // Range pattern: "11am-3pm", "11:30am - 3:30pm", "Booked 2-6pm", "10am to 2pm", "11:00 AM - 3:00 PM", "11-3pm"
+    const rangeRegex = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:-|–|—|\bto\b)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i;
+    const match = title.match(rangeRegex);
+
+    if (match) {
+      const [, startH, startM, startAP, endH, endM, endAP] = match;
+
+      let defaultStartAP = startAP ? startAP.toUpperCase() : null;
+      let defaultEndAP = endAP ? endAP.toUpperCase() : null;
+
+      if (!defaultStartAP && defaultEndAP) {
+        const sH = parseInt(startH, 10);
+        const eH = parseInt(endH, 10);
+        if (sH >= 9 && sH <= 11 && eH >= 1 && eH <= 8 && defaultEndAP === 'PM') {
+          defaultStartAP = 'AM';
+        } else {
+          defaultStartAP = defaultEndAP;
+        }
+      } else if (defaultStartAP && !defaultEndAP) {
+        const sH = parseInt(startH, 10);
+        const eH = parseInt(endH, 10);
+        if (sH >= 9 && sH <= 11 && defaultStartAP === 'AM' && eH >= 1 && eH <= 8) {
+          defaultEndAP = 'PM';
+        } else {
+          defaultEndAP = defaultStartAP;
+        }
+      }
+
+      const startObj = parseSingleTime(startH, startM, startAP, defaultStartAP);
+      const endObj = parseSingleTime(endH, endM, endAP, defaultEndAP);
+
+      if (startObj && endObj) {
+        return {
+          startTimeFormatted: startObj.formatted,
+          endTimeFormatted: endObj.formatted,
+          displayTime: `${startObj.formatted} - ${endObj.formatted}`
+        };
+      }
+    }
+
+    // Single pattern: "Charter at 11am", "Booked 2pm", "11:30 AM charter"
+    const singleRegex = /(?:@|\bat\b|\bfrom\b|\bbooked\b)?\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i;
+    const singleMatch = title.match(singleRegex);
+    if (singleMatch) {
+      const [, hStr, mStr, apStr] = singleMatch;
+      const startObj = parseSingleTime(hStr, mStr, apStr);
+      if (startObj) {
+        const endMins = (startObj.totalMins + 4 * 60) % (24 * 60);
+        const h24 = Math.floor(endMins / 60);
+        const min = endMins % 60;
+        const suffix = h24 >= 12 ? 'PM' : 'AM';
+        const h12 = h24 % 12 || 12;
+        const endFormatted = `${h12}:${String(min).padStart(2, '0')} ${suffix}`;
+
+        return {
+          startTimeFormatted: startObj.formatted,
+          endTimeFormatted: endFormatted,
+          displayTime: `${startObj.formatted} - ${endFormatted}`
+        };
+      }
+    }
+
+    return null;
+  };
+
+  window.formatTimeRange = (startStr, durationHrs = 4, titleText = null) => {
+    if (titleText) {
+      const titleOverride = window.extractTimeRangeFromTitle(titleText);
+      if (titleOverride) return titleOverride.displayTime;
+    }
     if (!startStr) return 'All Day';
     if (startStr.includes(' - ')) return startStr;
 
@@ -7114,7 +7222,8 @@ Write ONLY the summary sentence(s), no extra explanation.`;
       `;
     } else {
       contentEl.innerHTML = allEvents.map(ev => {
-        const timeRangeStr = window.formatTimeRange(ev.start_time, ev.duration_hours || 4);
+        const titleOverride = window.extractTimeRangeFromTitle(ev.customer_name);
+        const timeRangeStr = titleOverride ? titleOverride.displayTime : window.formatTimeRange(ev.start_time, ev.duration_hours || 4, ev.customer_name);
 
         if (ev.status === 'external') {
           return `
@@ -7123,6 +7232,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
                 <div class="flex items-center gap-2">
                   <span class="px-2 py-0.5 rounded-md bg-blue-600 text-white font-label text-[10px] font-bold uppercase tracking-wider">🔵 ${escapeHtml(ev.source_label || 'TimeTree Sync')}</span>
                   <span class="font-bold text-xs text-blue-900">${escapeHtml(ev.boat_name)}</span>
+                  ${(titleOverride || ev.is_title_override) ? `<span class="px-1.5 py-0.5 rounded bg-violet-100 text-purple-900 font-extrabold text-[9px] border border-purple-200" title="Time range detected & overridden from event title">✨ Smart-Title Override</span>` : ''}
                 </div>
                 <h4 class="font-headline font-bold text-sm text-blue-950">${escapeHtml(ev.customer_name)}</h4>
                 <p class="text-xs text-blue-800 flex items-center gap-1.5 font-semibold">
