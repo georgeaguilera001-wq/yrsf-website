@@ -5231,7 +5231,7 @@ EXTRACTION RULES:
 
           const opt = {
             margin:       0.3,
-            filename:     `YRSF_Charter_Quote_${custName.replace(/\s+/g, '_')}.pdf`,
+            filename:     `Quote_${custName.replace(/\s+/g, '_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, logging: false },
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -5241,100 +5241,17 @@ EXTRACTION RULES:
             if (typeof html2pdf !== 'undefined') {
               html2pdf().set(opt).from(element).save().then(() => {
                 cleanup();
-                if (typeof showToast === 'function') showToast('✓ PDF Quote downloaded successfully!', 'success');
+                if (typeof showToast === 'function') showToast('✓ Quote downloaded successfully!', 'success');
               }).catch(err => {
                 cleanup();
                 console.error('html2pdf export error:', err);
-                if (typeof showToast === 'function') showToast('PDF Export Error: ' + err.message, 'error');
+                if (typeof showToast === 'function') showToast('Quote Export Error: ' + err.message, 'error');
               });
             } else {
               cleanup();
-              alert('⚠️ PDF library is initializing. Please click PDF Quote again in 2 seconds.');
+              alert('⚠️ PDF library is initializing. Please click Quote again in 2 seconds.');
             }
           }, 250);
-        });
-      }
-
-      const webQuoteBtn = document.getElementById('copy-web-quote-btn');
-      if (webQuoteBtn) {
-        webQuoteBtn.addEventListener('click', async (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-
-          let bookingId = document.getElementById('booking-id')?.value;
-          const custName = document.getElementById('book-cust-name')?.value?.trim() || 'Guest';
-          const custPhone = document.getElementById('book-cust-phone')?.value?.trim() || '';
-          const custEmail = document.getElementById('book-cust-email')?.value?.trim() || '';
-          
-          const boatSearchInput = document.getElementById('book-boat-search-input');
-          const boatSelect = document.getElementById('book-boat-select');
-          let boatId = boatSelect?.value || '';
-          let boatName = boatSearchInput?.value?.trim() || '';
-
-          const booking_date = document.getElementById('book-date')?.value || new Date().toISOString().split('T')[0];
-          const start_time = document.getElementById('book-time')?.value || '12:00 PM';
-          const duration_hours = parseInt(document.getElementById('book-duration')?.value, 10) || 4;
-          const guest_count = parseInt(document.getElementById('book-guests')?.value, 10) || 1;
-          const total_price = parseFloat(document.getElementById('book-price')?.value) || 0;
-          const deposit_amount = parseFloat(document.getElementById('book-deposit')?.value) || (total_price * 0.25);
-          const remaining_balance = Math.max(0, total_price - deposit_amount);
-
-          const payload = {
-            boat_id: boatId || null,
-            boat_name: boatName || 'Luxury Yacht',
-            booking_date,
-            start_time,
-            duration_hours,
-            customer_name: custName,
-            customer_phone: custPhone,
-            customer_email: custEmail,
-            guest_count,
-            total_price,
-            deposit_amount,
-            remaining_balance,
-            status: 'inquiry',
-            lead_status: document.getElementById('book-lead-status')?.value || 'quote_sent',
-            updated_at: new Date().toISOString()
-          };
-
-          try {
-            if (typeof showToast === 'function') showToast('💾 Saving quote proposal...', 'info');
-
-            if (!bookingId) {
-              const { data: newRec, error: insertErr } = await supabase.from('bookings').insert([{ ...payload, created_at: new Date().toISOString() }]).select('id').single();
-              if (insertErr) throw insertErr;
-              if (newRec) {
-                bookingId = newRec.id;
-                document.getElementById('booking-id').value = bookingId;
-              }
-            } else {
-              const { error: updateErr } = await supabase.from('bookings').update(payload).eq('id', bookingId);
-              if (updateErr) throw updateErr;
-            }
-
-            const quoteUrl = `${window.location.origin}/quote.html?id=${bookingId}`;
-            
-            try {
-              await navigator.clipboard.writeText(quoteUrl);
-            } catch(e) {}
-
-            if (typeof showToast === 'function') {
-              showToast(`✓ Interactive Quote Link Copied!`, 'success', 5000);
-            }
-
-            const cleanPhone = custPhone.replace(/\D/g, '');
-            const waPhone = cleanPhone ? (cleanPhone.length === 10 ? `1${cleanPhone}` : cleanPhone) : '';
-            const waMsg = encodeURIComponent(`Hi ${custName}! Here is your official private charter proposal & pricing for the ${boatName} on ${booking_date}: ${quoteUrl}`);
-            const waUrl = waPhone ? `https://wa.me/${waPhone}?text=${waMsg}` : `https://wa.me/?text=${waMsg}`;
-
-            const choice = confirm(`✨ Interactive Web Quote Link Created & Copied to Clipboard!\n\nLink: ${quoteUrl}\n\nClick OK to open WhatsApp chat with ${custName}, or Cancel to keep link in clipboard.`);
-            if (choice) {
-              window.open(waUrl, '_blank');
-            }
-          } catch(err) {
-            console.error('Error creating web quote link:', err);
-            showToast('Error generating web quote link: ' + err.message, 'error');
-          }
         });
       }
     }
