@@ -5212,46 +5212,47 @@ EXTRACTION RULES:
             return;
           }
 
-          if (typeof showToast === 'function') showToast('📄 Generating & Downloading PDF Quote...', 'info');
+          if (typeof showToast === 'function') showToast('📄 Generating Quote PDF...', 'info');
 
-          // Render element in visible DOM layer for html2canvas measurement
-          element.style.display = 'block';
-          element.style.position = 'fixed';
-          element.style.top = '0px';
-          element.style.left = '0px';
-          element.style.width = '800px';
-          element.style.zIndex = '99999';
-          element.style.opacity = '1';
+          // Create temporary clean print container with full opacity for crisp canvas snapshot
+          const clone = element.cloneNode(true);
+          clone.id = 'pdf-quote-active-clone';
+          clone.style.display = 'block';
+          clone.style.position = 'fixed';
+          clone.style.top = '0px';
+          clone.style.left = '0px';
+          clone.style.width = '790px';
+          clone.style.opacity = '1';
+          clone.style.zIndex = '999999';
+          clone.style.background = '#ffffff';
+          clone.style.color = '#111827';
+          clone.style.pointerEvents = 'none';
 
-          const cleanup = () => {
-            element.style.display = 'none';
-            element.style.opacity = '0';
-            element.style.zIndex = '-9999';
-          };
+          document.body.appendChild(clone);
 
           const opt = {
-            margin:       0.3,
+            margin:       [0.3, 0.3, 0.3, 0.3],
             filename:     `Quote_${custName.replace(/\s+/g, '_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
+            html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0 },
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
           };
 
           setTimeout(() => {
             if (typeof html2pdf !== 'undefined') {
-              html2pdf().set(opt).from(element).save().then(() => {
-                cleanup();
+              html2pdf().set(opt).from(clone).save().then(() => {
+                if (clone.parentNode) clone.parentNode.removeChild(clone);
                 if (typeof showToast === 'function') showToast('✓ Quote downloaded successfully!', 'success');
               }).catch(err => {
-                cleanup();
+                if (clone.parentNode) clone.parentNode.removeChild(clone);
                 console.error('html2pdf export error:', err);
                 if (typeof showToast === 'function') showToast('Quote Export Error: ' + err.message, 'error');
               });
             } else {
-              cleanup();
+              if (clone.parentNode) clone.parentNode.removeChild(clone);
               alert('⚠️ PDF library is initializing. Please click Quote again in 2 seconds.');
             }
-          }, 250);
+          }, 350);
         });
       }
     }
