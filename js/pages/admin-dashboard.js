@@ -5168,9 +5168,9 @@ EXTRACTION RULES:
           const tbody = document.getElementById('pdf-line-items');
           if (tbody) {
             let itemsHtml = `
-              <tr class="border-b border-gray-100">
-                <td class="py-3 px-4 text-sm font-semibold text-gray-900">${duration}-Hour Private Charter (${escapeHtml(boatName)})</td>
-                <td class="py-3 px-4 text-sm font-bold text-gray-900 text-right">$${parseFloat(total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 12px 16px; font-size: 13px; font-weight: 700; color: #0f172a;">${duration}-Hour Private Charter (${escapeHtml(boatName)})</td>
+                <td style="padding: 12px 16px; font-size: 13px; font-weight: 800; color: #0f172a; text-align: right;">$${parseFloat(total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
               </tr>
             `;
             
@@ -5183,9 +5183,9 @@ EXTRACTION RULES:
                 const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
                 if (price > 0) {
                   itemsHtml += `
-                    <tr class="border-b border-gray-100">
-                      <td class="py-3 px-4 text-sm text-gray-700">${escapeHtml(cb.dataset.name)} (x${qtyVal})</td>
-                      <td class="py-3 px-4 text-sm font-semibold text-gray-800 text-right">$${(price * qtyVal).toFixed(2)}</td>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                      <td style="padding: 12px 16px; font-size: 13px; color: #334155;">${escapeHtml(cb.dataset.name)} (x${qtyVal})</td>
+                      <td style="padding: 12px 16px; font-size: 13px; font-weight: 700; color: #0f172a; text-align: right;">$${(price * qtyVal).toFixed(2)}</td>
                     </tr>
                   `;
                 }
@@ -5196,9 +5196,9 @@ EXTRACTION RULES:
             const customPrice = parseFloat(document.getElementById('custom-addon-price')?.value) || 0;
             if (customName && customPrice > 0) {
               itemsHtml += `
-                <tr class="border-b border-gray-100">
-                  <td class="py-3 px-4 text-sm text-gray-700">Custom: ${escapeHtml(customName)}</td>
-                  <td class="py-3 px-4 text-sm font-semibold text-gray-800 text-right">$${customPrice.toFixed(2)}</td>
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 12px 16px; font-size: 13px; color: #334155;">Custom: ${escapeHtml(customName)}</td>
+                  <td style="padding: 12px 16px; font-size: 13px; font-weight: 700; color: #0f172a; text-align: right;">$${customPrice.toFixed(2)}</td>
                 </tr>
               `;
             }
@@ -5214,19 +5214,18 @@ EXTRACTION RULES:
 
           if (typeof showToast === 'function') showToast('📄 Generating Quote PDF...', 'info');
 
-          // Create temporary clean print container with full opacity for crisp canvas snapshot
+          // Render clone off-screen (top: -9999px) with explicit white background to prevent screen flash & blank PDF
           const clone = element.cloneNode(true);
           clone.id = 'pdf-quote-active-clone';
           clone.style.display = 'block';
-          clone.style.position = 'fixed';
-          clone.style.top = '0px';
+          clone.style.position = 'absolute';
+          clone.style.top = '-9999px';
           clone.style.left = '0px';
-          clone.style.width = '790px';
+          clone.style.width = '794px';
           clone.style.opacity = '1';
-          clone.style.zIndex = '999999';
+          clone.style.visibility = 'visible';
           clone.style.background = '#ffffff';
-          clone.style.color = '#111827';
-          clone.style.pointerEvents = 'none';
+          clone.style.color = '#1e293b';
 
           document.body.appendChild(clone);
 
@@ -5234,7 +5233,7 @@ EXTRACTION RULES:
             margin:       [0.3, 0.3, 0.3, 0.3],
             filename:     `Quote_${custName.replace(/\s+/g, '_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0 },
+            html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0, windowWidth: 800 },
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
           };
 
@@ -5242,7 +5241,7 @@ EXTRACTION RULES:
             if (typeof html2pdf !== 'undefined') {
               html2pdf().set(opt).from(clone).save().then(() => {
                 if (clone.parentNode) clone.parentNode.removeChild(clone);
-                if (typeof showToast === 'function') showToast('✓ Quote downloaded successfully!', 'success');
+                if (typeof showToast === 'function') showToast('✓ Quote saved to Documents!', 'success');
               }).catch(err => {
                 if (clone.parentNode) clone.parentNode.removeChild(clone);
                 console.error('html2pdf export error:', err);
@@ -5252,7 +5251,7 @@ EXTRACTION RULES:
               if (clone.parentNode) clone.parentNode.removeChild(clone);
               alert('⚠️ PDF library is initializing. Please click Quote again in 2 seconds.');
             }
-          }, 350);
+          }, 300);
         });
       }
     }
