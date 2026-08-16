@@ -5293,7 +5293,7 @@ EXTRACTION RULES:
             deposit_amount,
             remaining_balance,
             status: 'inquiry',
-            lead_status: 'quoted',
+            lead_status: document.getElementById('book-lead-status')?.value || 'quote_sent',
             updated_at: new Date().toISOString()
           };
 
