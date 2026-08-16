@@ -5107,46 +5107,70 @@ EXTRACTION RULES:
       if (statusEl) {
         statusEl.addEventListener('change', () => {
           const leadContainer = document.getElementById('lead-status-container');
+          // Keep PDF Quote button always visible on reservation modal
           const pdfBtn = document.getElementById('generate-pdf-quote-btn');
+          if (pdfBtn) {
+            pdfBtn.classList.remove('hidden');
+            pdfBtn.style.display = 'flex';
+          }
           if (statusEl.value === 'inquiry') {
             if (leadContainer) leadContainer.classList.remove('hidden');
-            if (pdfBtn) pdfBtn.classList.remove('hidden');
           } else {
             if (leadContainer) leadContainer.classList.add('hidden');
-            if (pdfBtn) pdfBtn.classList.add('hidden');
           }
         });
       }
 
       const pdfBtn = document.getElementById('generate-pdf-quote-btn');
       if (pdfBtn) {
-        pdfBtn.addEventListener('click', () => {
-          // Populate the hidden template
-          const custName = document.getElementById('book-cust-name').value || 'Guest';
-          const custEmail = document.getElementById('book-cust-email').value || '';
-          const custPhone = document.getElementById('book-cust-phone').value || '';
-          const boatName = document.getElementById('book-boat-select')?.options[document.getElementById('book-boat-select').selectedIndex]?.text || 'TBD';
-          const date = document.getElementById('book-date').value || 'TBD';
-          const time = document.getElementById('book-time').value || 'TBD';
-          const duration = document.getElementById('book-duration').value || '4';
-          const guests = document.getElementById('book-guests').value || '1';
-          const total = document.getElementById('book-price').value || '0';
+        pdfBtn.classList.remove('hidden');
+        pdfBtn.style.display = 'flex';
+        
+        pdfBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
 
-          document.getElementById('pdf-date-issued').textContent = `Issued: ${new Date().toISOString().split('T')[0]}`;
-          document.getElementById('pdf-cust-name').textContent = custName;
-          document.getElementById('pdf-cust-contact').textContent = `${custPhone} ${custEmail ? '| ' + custEmail : ''}`;
-          document.getElementById('pdf-boat-name').textContent = boatName;
-          document.getElementById('pdf-charter-date').textContent = `${date} at ${time}`;
-          document.getElementById('pdf-duration').textContent = `${duration} Hours • ${guests} Guests`;
-          document.getElementById('pdf-total-price').textContent = `$${parseFloat(total).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+          const custName = document.getElementById('book-cust-name')?.value?.trim() || 'Valued Guest';
+          const custEmail = document.getElementById('book-cust-email')?.value?.trim() || '';
+          const custPhone = document.getElementById('book-cust-phone')?.value?.trim() || '';
+
+          const boatSearchInput = document.getElementById('book-boat-search-input');
+          const boatSelect = document.getElementById('book-boat-select');
+          let boatName = boatSearchInput?.value?.trim() || '';
+          if (!boatName && boatSelect && boatSelect.selectedIndex >= 0) {
+            boatName = boatSelect.options[boatSelect.selectedIndex]?.text || '';
+          }
+          if (!boatName || boatName === '-- Select Boat --') boatName = 'Luxury Yacht Charter';
+
+          const date = document.getElementById('book-date')?.value || new Date().toISOString().split('T')[0];
+          const time = document.getElementById('book-time')?.value || '12:00 PM';
+          const duration = document.getElementById('book-duration')?.value || '4';
+          const guests = document.getElementById('book-guests')?.value || '1';
+          const total = document.getElementById('book-price')?.value || '0';
+
+          const issuedEl = document.getElementById('pdf-date-issued');
+          const custNameEl = document.getElementById('pdf-cust-name');
+          const custContactEl = document.getElementById('pdf-cust-contact');
+          const boatNameEl = document.getElementById('pdf-boat-name');
+          const charterDateEl = document.getElementById('pdf-charter-date');
+          const durationEl = document.getElementById('pdf-duration');
+          const totalPriceEl = document.getElementById('pdf-total-price');
+
+          if (issuedEl) issuedEl.textContent = `Issued: ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+          if (custNameEl) custNameEl.textContent = custName;
+          if (custContactEl) custContactEl.textContent = `${custPhone} ${custEmail ? '| ' + custEmail : ''}`;
+          if (boatNameEl) boatNameEl.textContent = boatName;
+          if (charterDateEl) charterDateEl.textContent = `${date} at ${time}`;
+          if (durationEl) durationEl.textContent = `${duration} Hours • Up to ${guests} Guests`;
+          if (totalPriceEl) totalPriceEl.textContent = `$${parseFloat(total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
           // Line Items
           const tbody = document.getElementById('pdf-line-items');
           if (tbody) {
             let itemsHtml = `
-              <tr>
-                <td class="py-3 px-4 text-sm text-gray-800">${duration}-Hour Yacht Charter (${boatName})</td>
-                <td class="py-3 px-4 text-sm text-gray-800 text-right">Included</td>
+              <tr class="border-b border-gray-100">
+                <td class="py-3 px-4 text-sm font-semibold text-gray-900">${duration}-Hour Private Charter (${escapeHtml(boatName)})</td>
+                <td class="py-3 px-4 text-sm font-bold text-gray-900 text-right">$${parseFloat(total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
               </tr>
             `;
             
@@ -5159,22 +5183,22 @@ EXTRACTION RULES:
                 const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
                 if (price > 0) {
                   itemsHtml += `
-                    <tr>
-                      <td class="py-3 px-4 text-sm text-gray-800">${cb.dataset.name} (x${qtyVal})</td>
-                      <td class="py-3 px-4 text-sm text-gray-800 text-right">$${(price * qtyVal).toFixed(2)}</td>
+                    <tr class="border-b border-gray-100">
+                      <td class="py-3 px-4 text-sm text-gray-700">${escapeHtml(cb.dataset.name)} (x${qtyVal})</td>
+                      <td class="py-3 px-4 text-sm font-semibold text-gray-800 text-right">$${(price * qtyVal).toFixed(2)}</td>
                     </tr>
                   `;
                 }
               }
             });
 
-            const customName = document.getElementById('custom-addon-name')?.value.trim();
+            const customName = document.getElementById('custom-addon-name')?.value?.trim();
             const customPrice = parseFloat(document.getElementById('custom-addon-price')?.value) || 0;
             if (customName && customPrice > 0) {
               itemsHtml += `
-                <tr>
-                  <td class="py-3 px-4 text-sm text-gray-800">Custom: ${customName}</td>
-                  <td class="py-3 px-4 text-sm text-gray-800 text-right">$${customPrice.toFixed(2)}</td>
+                <tr class="border-b border-gray-100">
+                  <td class="py-3 px-4 text-sm text-gray-700">Custom: ${escapeHtml(customName)}</td>
+                  <td class="py-3 px-4 text-sm font-semibold text-gray-800 text-right">$${customPrice.toFixed(2)}</td>
                 </tr>
               `;
             }
@@ -5183,28 +5207,51 @@ EXTRACTION RULES:
           }
 
           const element = document.getElementById('pdf-quote-template');
-          element.classList.remove('hidden');
-          
+          if (!element) {
+            alert('⚠️ PDF Template missing from document.');
+            return;
+          }
+
+          if (typeof showToast === 'function') showToast('📄 Generating & Downloading PDF Quote...', 'info');
+
+          // Render element in visible DOM layer for html2canvas measurement
+          element.style.display = 'block';
+          element.style.position = 'fixed';
+          element.style.top = '0px';
+          element.style.left = '0px';
+          element.style.width = '800px';
+          element.style.zIndex = '99999';
+          element.style.opacity = '1';
+
+          const cleanup = () => {
+            element.style.display = 'none';
+            element.style.opacity = '0';
+            element.style.zIndex = '-9999';
+          };
+
           const opt = {
-            margin:       0,
-            filename:     `YRSF_Quote_${custName.replace(/\s+/g, '_')}.pdf`,
+            margin:       0.3,
+            filename:     `YRSF_Charter_Quote_${custName.replace(/\s+/g, '_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2 },
+            html2canvas:  { scale: 2, useCORS: true, logging: false },
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
           };
 
-          // Try to show toast if available
-          if (typeof showToast === 'function') showToast('Generating PDF Quote...', 'success');
-
-          // Ensure html2pdf is loaded
-          if (typeof html2pdf !== 'undefined') {
-            html2pdf().set(opt).from(element).save().then(() => {
-              element.classList.add('hidden');
-            });
-          } else {
-            console.error('html2pdf is not loaded');
-            element.classList.add('hidden');
-          }
+          setTimeout(() => {
+            if (typeof html2pdf !== 'undefined') {
+              html2pdf().set(opt).from(element).save().then(() => {
+                cleanup();
+                if (typeof showToast === 'function') showToast('✓ PDF Quote downloaded successfully!', 'success');
+              }).catch(err => {
+                cleanup();
+                console.error('html2pdf export error:', err);
+                if (typeof showToast === 'function') showToast('PDF Export Error: ' + err.message, 'error');
+              });
+            } else {
+              cleanup();
+              alert('⚠️ PDF library is initializing. Please click PDF Quote again in 2 seconds.');
+            }
+          }, 250);
         });
       }
     }
