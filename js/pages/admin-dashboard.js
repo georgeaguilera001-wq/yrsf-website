@@ -5377,7 +5377,7 @@ EXTRACTION RULES:
       }
 
       // Dynamic Multi-Boat Option Row Creator
-      window.addMultiBoatOptionRow = function(selectedBoatId = '', customPrice = '') {
+      window.addMultiBoatOptionRow = async function(selectedBoatId = '', customPrice = '') {
         const container = document.getElementById('multi-boat-options-container');
         if (!container) return;
         
@@ -5388,15 +5388,33 @@ EXTRACTION RULES:
           return;
         }
 
-        const boats = [...(window.fleetCache || [])].sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
-        
+        let boats = (typeof fleetCache !== 'undefined' && fleetCache.length > 0) ? fleetCache : (window.fleetCache || allAdminBoatsCache || []);
+        if (!boats || boats.length === 0) {
+          try {
+            await loadFleet();
+            boats = fleetCache || window.fleetCache || allAdminBoatsCache || [];
+          } catch(e) {}
+        }
+
+        // Fallback: If fleet array is still empty, parse options directly from #book-boat-select
+        if (!boats || boats.length === 0) {
+          const boatSelect = document.getElementById('book-boat-select');
+          if (boatSelect && boatSelect.options) {
+            boats = Array.from(boatSelect.options)
+              .filter(o => o.value)
+              .map(o => ({ id: o.value, name: o.text, length_ft: '' }));
+          }
+        }
+
+        const sortedBoats = [...(boats || [])].sort((a, b) => (parseFloat(a.length_ft) || 0) - (parseFloat(b.length_ft) || 0));
+
         const row = document.createElement('div');
         row.className = 'multi-boat-row flex items-center gap-2 p-2 bg-white border border-indigo-200 rounded-lg shadow-2xs transition-all';
         row.innerHTML = `
           <span class="font-bold text-indigo-900 text-xs w-16">Option ${optNum}:</span>
           <select class="multi-boat-select flex-1 px-2 py-1.5 bg-slate-50 border border-indigo-200 rounded-md text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-indigo-500">
             <option value="">-- Select Alternate Yacht --</option>
-            ${boats.map(b => `<option value="${b.id}" ${b.id === selectedBoatId ? 'selected' : ''}>${escapeHtml(b.name)} (${b.length_ft || ''} FT)</option>`).join('')}
+            ${sortedBoats.map(b => `<option value="${b.id}" ${b.id === selectedBoatId ? 'selected' : ''}>${escapeHtml(b.name)}${b.length_ft ? ' (' + b.length_ft + ' FT)' : ''}</option>`).join('')}
           </select>
           <div class="relative w-28">
             <span class="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
