@@ -5168,20 +5168,49 @@ EXTRACTION RULES:
           if (durationEl) durationEl.textContent = `${duration} Hours • Up to ${guests} Guests`;
           if (totalPriceEl) totalPriceEl.textContent = `$${parseFloat(total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
+          // Super Itemized Breakdown Math for Single Yacht
+          const durHours = parseInt(duration, 10) || 4;
+          const primaryBoatObj = (typeof fleetCache !== 'undefined' && fleetCache.length > 0) ? fleetCache.find(b => b.id === boatId) : (window.fleetCache || allAdminBoatsCache || []).find(b => b.id === boatId);
+          const captRate = parseFloat(primaryBoatObj?.captain_hourly_rate) || 75;
+          const captTotal = captRate * durHours;
+
+          const grossTotal = parseFloat(total || 0);
+          const preTaxTotal = grossTotal / 1.07;
+          const taxTotal = grossTotal - preTaxTotal;
+          let boatBasePrice = preTaxTotal - captTotal;
+          if (boatBasePrice < 0) boatBasePrice = Math.max(0, grossTotal - captTotal - taxTotal);
+
           // Line Items
           const tbody = document.getElementById('pdf-line-items');
           if (tbody) {
             let itemsHtml = `
               <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 12px 16px; font-size: 13px; font-weight: 700; color: #0f172a;">${duration}-Hour Private Charter (${escapeHtml(boatName)})</td>
-                <td style="padding: 12px 16px; font-size: 13px; font-weight: 800; color: #0f172a; text-align: right;">$${parseFloat(total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td style="padding: 12px 16px; font-size: 13px; color: #0f172a;">
+                  <strong>Yacht Rental: ${escapeHtml(boatName)}</strong>
+                  <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">${durHours}-Hour Private Charter &amp; Vessel Amenities</span>
+                </td>
+                <td style="padding: 12px 16px; font-size: 13px; font-weight: 700; color: #0f172a; text-align: right;">$${boatBasePrice.toFixed(2)}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 12px 16px; font-size: 13px; color: #0f172a;">
+                  <strong>USCG Licensed Captain &amp; Crew Service</strong>
+                  <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">$${captRate}/hr x ${durHours} Hours Professional Service</span>
+                </td>
+                <td style="padding: 12px 16px; font-size: 13px; font-weight: 700; color: #0f172a; text-align: right;">$${captTotal.toFixed(2)}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 12px 16px; font-size: 13px; color: #0f172a;">
+                  <strong>FL Sales &amp; Marine Operations Tax (7%)</strong>
+                  <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">State &amp; Local Port Operations Surcharge</span>
+                </td>
+                <td style="padding: 12px 16px; font-size: 13px; font-weight: 700; color: #0f172a; text-align: right;">$${taxTotal.toFixed(2)}</td>
               </tr>
             `;
             
-            document.querySelectorAll('.dynamic-addon-row').forEach(row => {
-              const cb = row.querySelector('.addon-cb');
-              const qty = row.querySelector('.addon-qty');
-              const priceInput = row.querySelector('.addon-price-input');
+            document.querySelectorAll('.dynamic-addon-row, .addon-cb').forEach(row => {
+              const cb = row.classList?.contains('addon-cb') ? row : row.querySelector('.addon-cb');
+              const qty = row.querySelector?.('.addon-qty') || { value: 1 };
+              const priceInput = row.querySelector?.('.addon-price-input');
               if (cb && cb.checked) {
                 const qtyVal = parseInt(qty.value, 10) || 1;
                 const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
@@ -5300,20 +5329,64 @@ EXTRACTION RULES:
             `;
 
             optionsList.forEach(opt => {
+              const optBoatObj = (typeof fleetCache !== 'undefined' && fleetCache.length > 0) ? fleetCache.find(b => b.id === opt.boatId) : (window.fleetCache || allAdminBoatsCache || []).find(b => b.id === opt.boatId);
+              const durH = parseInt(opt.duration, 10) || 4;
+              const cRate = parseFloat(optBoatObj?.captain_hourly_rate) || 75;
+              const cTotal = cRate * durH;
+
+              const gTotal = parseFloat(opt.totalPrice || 0);
+              const pTax = gTotal / 1.07;
+              const tTotal = gTotal - pTax;
+              let vPrice = pTax - cTotal;
+              if (vPrice < 0) vPrice = Math.max(0, gTotal - cTotal - tTotal);
+
               multiHtml += `
-                <div style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
-                  <div>
-                    <span style="background-color: #4f46e5; color: #ffffff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">OPTION ${opt.optionNum}</span>
-                    <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 6px 0 2px 0;">${escapeHtml(opt.boatName)}</h3>
-                    <p style="font-size: 12px; color: #475569; margin: 0;">${opt.duration} Hours • ${date} at ${opt.time} • Up to ${opt.guests} Guests</p>
+                <div style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 18px; margin-bottom: 14px;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                    <div>
+                      <span style="background-color: #4f46e5; color: #ffffff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">OPTION ${opt.optionNum}</span>
+                      <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 6px 0 2px 0;">${escapeHtml(opt.boatName)}</h3>
+                      <p style="font-size: 12px; color: #475569; margin: 0;">${opt.duration} Hours • ${date} at ${opt.time} • Up to ${opt.guests} Guests</p>
+                    </div>
+                    <div style="text-align: right;">
+                      <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block;">All-Inclusive Rate</span>
+                      <span style="font-size: 22px; font-weight: 800; color: #4f46e5;">$${gTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>
                   </div>
-                  <div style="text-align: right;">
-                    <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block;">All-Inclusive Rate</span>
-                    <span style="font-size: 22px; font-weight: 800; color: #4f46e5;">$${parseFloat(opt.totalPrice || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+
+                  <!-- Super Itemized Cost Breakdown -->
+                  <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; gap: 12px; font-size: 11px;">
+                    <div style="flex: 1;">
+                      <span style="color: #64748b; font-weight: 600; display: block; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;">Vessel Rental</span>
+                      <strong style="color: #0f172a; font-size: 13px;">$${vPrice.toFixed(2)}</strong>
+                    </div>
+                    <div style="flex: 1; border-left: 1px solid #f1f5f9; padding-left: 12px;">
+                      <span style="color: #64748b; font-weight: 600; display: block; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;">Captain &amp; Crew ($${cRate}/hr)</span>
+                      <strong style="color: #0f172a; font-size: 13px;">$${cTotal.toFixed(2)}</strong>
+                    </div>
+                    <div style="flex: 1; border-left: 1px solid #f1f5f9; padding-left: 12px; text-align: right;">
+                      <span style="color: #64748b; font-weight: 600; display: block; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;">Taxes &amp; Port Fees (7%)</span>
+                      <strong style="color: #0f172a; font-size: 13px;">$${tTotal.toFixed(2)}</strong>
+                    </div>
                   </div>
                 </div>
               `;
             });
+
+            multiHtml += `
+                </div>
+
+                <table style="width: 100%; text-align: left; margin-bottom: 24px; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background-color: #eef2ff; border-top: 1px solid #c7d2fe; border-bottom: 1px solid #c7d2fe;">
+                      <th style="padding: 10px 14px; font-weight: 700; font-size: 12px; color: #1e1b4b;">Option</th>
+                      <th style="padding: 10px 14px; font-weight: 700; font-size: 12px; color: #1e1b4b;">Yacht Name</th>
+                      <th style="padding: 10px 14px; font-weight: 700; font-size: 12px; color: #1e1b4b;">Duration</th>
+                      <th style="padding: 10px 14px; font-weight: 700; font-size: 12px; color: #1e1b4b; text-align: right;">Total Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+            `;
 
             multiHtml += `
                 </div>
