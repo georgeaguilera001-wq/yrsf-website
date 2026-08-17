@@ -5263,14 +5263,13 @@ EXTRACTION RULES:
 
           if (typeof showToast === 'function') showToast(isMultiYacht ? `📄 Generating Multi-Yacht Proposal (${optionsList.length} Boats)...` : '📄 Generating Quote PDF...', 'info');
 
-          // Render clone cleanly positioned at fixed top: 0, left: 0 (without CSS transform or overflow-y) so html2canvas renders 100% full content
+          // Render clone off-screen (left: -9999px) so the user never sees a 1-second popup flash on screen
           const clone = element.cloneNode(true);
           clone.id = 'pdf-quote-active-clone';
           clone.style.display = 'block';
           clone.style.position = 'fixed';
           clone.style.top = '0px';
-          clone.style.left = '0px';
-          clone.style.zIndex = '999999';
+          clone.style.left = '-9999px';
           clone.style.width = '794px';
           clone.style.height = 'auto';
           clone.style.background = '#ffffff';
@@ -5278,8 +5277,6 @@ EXTRACTION RULES:
           clone.style.padding = '40px';
           clone.style.margin = '0px';
           clone.style.boxSizing = 'border-box';
-          clone.style.transform = 'none';
-          clone.style.overflow = 'visible';
           clone.style.opacity = '1';
           clone.style.visibility = 'visible';
 
@@ -5366,7 +5363,26 @@ EXTRACTION RULES:
             margin:       [0.3, 0.3, 0.3, 0.3],
             filename:     fileName,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0, windowWidth: 800 },
+            html2canvas:  { 
+              scale: 2, 
+              useCORS: true, 
+              allowTaint: true, 
+              logging: false, 
+              scrollY: 0, 
+              scrollX: 0, 
+              windowWidth: 800,
+              onclone: (clonedDoc) => {
+                const clonedEl = clonedDoc.getElementById('pdf-quote-active-clone');
+                if (clonedEl) {
+                  clonedEl.style.display = 'block';
+                  clonedEl.style.position = 'relative';
+                  clonedEl.style.top = '0px';
+                  clonedEl.style.left = '0px';
+                  clonedEl.style.opacity = '1';
+                  clonedEl.style.visibility = 'visible';
+                }
+              }
+            },
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
           };
 
