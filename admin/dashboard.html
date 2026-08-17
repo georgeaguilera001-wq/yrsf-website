@@ -2460,6 +2460,23 @@
             <div id="book-boat-options-list" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto hidden divide-y divide-surface-container"></div>
           </div>
 
+          <!-- Multi-Yacht Option Comparison Section -->
+          <div class="p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="font-label text-xs font-bold text-indigo-950 flex items-center gap-1.5 cursor-pointer">
+                <span class="material-symbols-outlined text-sm text-indigo-600">view_carousel</span> Compare Multiple Yachts in 1 PDF Quote
+              </label>
+              <button type="button" id="add-multi-boat-opt-btn" class="px-2.5 py-1 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all flex items-center gap-1 cursor-pointer">
+                <span class="material-symbols-outlined text-xs">add</span> Add Yacht Option
+              </button>
+            </div>
+            
+            <div id="multi-boat-options-container" class="space-y-2">
+              <!-- Extra Yacht Option Rows appended via JS -->
+            </div>
+            <p class="text-[10px] text-indigo-700/80 italic">Tip: Add additional yacht options if the customer wants a single PDF quote comparing 2, 3, or 4 boats.</p>
+          </div>
+
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-label text-xs font-bold text-on-surface mb-1">Departure Date *</label>
@@ -2831,7 +2848,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260816v1034"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260817v0838"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------

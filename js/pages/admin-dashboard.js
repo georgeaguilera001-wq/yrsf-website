@@ -5206,13 +5206,57 @@ EXTRACTION RULES:
             tbody.innerHTML = itemsHtml;
           }
 
+          // Gather Multi-Yacht Options
+          const extraOptionRows = document.querySelectorAll('.multi-boat-row');
+          const optionsList = [];
+
+          // Primary Option 1
+          optionsList.push({
+            optionNum: 1,
+            boatName: boatName,
+            boatId: boatId,
+            date: date,
+            time: time,
+            duration: duration,
+            guests: guests,
+            totalPrice: parseFloat(total || 0)
+          });
+
+          // Extra Options (Option 2, Option 3, Option 4)
+          extraOptionRows.forEach((row, idx) => {
+            const sel = row.querySelector('.multi-boat-select');
+            const priceInput = row.querySelector('.multi-boat-price');
+            const optBoatId = sel?.value;
+            const optBoatObj = (window.fleetCache || []).find(b => b.id === optBoatId);
+            const optBoatName = optBoatObj ? `${optBoatObj.name} (${optBoatObj.length_ft || ''} FT)` : (sel?.options[sel.selectedIndex]?.text || `Alternate Yacht ${idx + 2}`);
+            let optPrice = parseFloat(priceInput?.value) || 0;
+            if (!optPrice && optBoatObj) {
+              optPrice = parseFloat(optBoatObj.half_day_price) || (parseFloat(optBoatObj.hourly_rate) * parseInt(duration, 10)) || parseFloat(total || 0);
+            }
+            
+            if (optBoatId || optPrice > 0) {
+              optionsList.push({
+                optionNum: idx + 2,
+                boatName: optBoatName,
+                boatId: optBoatId,
+                date: date,
+                time: time,
+                duration: duration,
+                guests: guests,
+                totalPrice: optPrice
+              });
+            }
+          });
+
+          const isMultiYacht = optionsList.length > 1;
+
           const element = document.getElementById('pdf-quote-template');
           if (!element) {
             alert('⚠️ PDF Template missing from document.');
             return;
           }
 
-          if (typeof showToast === 'function') showToast('📄 Generating Quote PDF...', 'info');
+          if (typeof showToast === 'function') showToast(isMultiYacht ? `📄 Generating Multi-Yacht Proposal (${optionsList.length} Boats)...` : '📄 Generating Quote PDF...', 'info');
 
           // Render clone off-screen (top: -9999px) with explicit white background to prevent screen flash & blank PDF
           const clone = element.cloneNode(true);
@@ -5227,11 +5271,88 @@ EXTRACTION RULES:
           clone.style.background = '#ffffff';
           clone.style.color = '#1e293b';
 
+          if (isMultiYacht) {
+            const h2 = clone.querySelector('h2');
+            if (h2) h2.textContent = 'MULTI-YACHT PROPOSAL';
+
+            const boatNameElClone = clone.querySelector('#pdf-boat-name');
+            if (boatNameElClone) boatNameElClone.textContent = `${optionsList.length} Yacht Comparison Options`;
+
+            const table = clone.querySelector('table');
+            if (table) table.style.display = 'none';
+
+            let multiHtml = `
+              <div style="margin-bottom: 24px;">
+                <p style="font-size: 13px; font-weight: 700; color: #4338ca; margin: 0 0 16px 0;">We are pleased to present the following ${optionsList.length} luxury yacht options for your charter on <strong>${date}</strong>:</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px;">
+            `;
+
+            optionsList.forEach(opt => {
+              multiHtml += `
+                <div style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <span style="background-color: #4f46e5; color: #ffffff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">OPTION ${opt.optionNum}</span>
+                    <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 6px 0 2px 0;">${escapeHtml(opt.boatName)}</h3>
+                    <p style="font-size: 12px; color: #475569; margin: 0;">${opt.duration} Hours • ${date} at ${opt.time} • Up to ${opt.guests} Guests</p>
+                  </div>
+                  <div style="text-align: right;">
+                    <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block;">All-Inclusive Rate</span>
+                    <span style="font-size: 22px; font-weight: 800; color: #4f46e5;">$${parseFloat(opt.totalPrice || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  </div>
+                </div>
+              `;
+            });
+
+            multiHtml += `
+                </div>
+
+                <table style="width: 100%; text-align: left; margin-bottom: 24px; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background-color: #eef2ff; border-top: 1px solid #c7d2fe; border-bottom: 1px solid #c7d2fe;">
+                      <th style="padding: 10px 14px; font-weight: 700; font-size: 12px; color: #1e1b4b;">Option</th>
+                      <th style="padding: 10px 14px; font-weight: 700; font-size: 12px; color: #1e1b4b;">Yacht Name</th>
+                      <th style="padding: 10px 14px; font-weight: 700; font-size: 12px; color: #1e1b4b;">Duration</th>
+                      <th style="padding: 10px 14px; font-weight: 700; font-size: 12px; color: #1e1b4b; text-align: right;">Total Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+            `;
+
+            optionsList.forEach(opt => {
+              multiHtml += `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 12px; font-weight: 800; color: #4f46e5;">Option ${opt.optionNum}</td>
+                  <td style="padding: 10px 14px; font-size: 12px; font-weight: 700; color: #0f172a;">${escapeHtml(opt.boatName)}</td>
+                  <td style="padding: 10px 14px; font-size: 12px; color: #475569;">${opt.duration} Hours (${opt.guests} Guests)</td>
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 800; color: #0f172a; text-align: right;">$${parseFloat(opt.totalPrice || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                </tr>
+              `;
+            });
+
+            multiHtml += `
+                  </tbody>
+                </table>
+              </div>
+            `;
+
+            const termsBox = clone.querySelector('div[style*="background-color: #f8fafc"]');
+            const multiDiv = document.createElement('div');
+            multiDiv.innerHTML = multiHtml;
+            if (termsBox) {
+              clone.insertBefore(multiDiv, termsBox);
+            } else {
+              clone.appendChild(multiDiv);
+            }
+          }
+
           document.body.appendChild(clone);
+
+          const fileName = isMultiYacht ? `Multi_Yacht_Quote_${custName.replace(/\s+/g, '_')}.pdf` : `Quote_${custName.replace(/\s+/g, '_')}.pdf`;
 
           const opt = {
             margin:       [0.3, 0.3, 0.3, 0.3],
-            filename:     `Quote_${custName.replace(/\s+/g, '_')}.pdf`,
+            filename:     fileName,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0, windowWidth: 800 },
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -5241,7 +5362,7 @@ EXTRACTION RULES:
             if (typeof html2pdf !== 'undefined') {
               html2pdf().set(opt).from(clone).save().then(() => {
                 if (clone.parentNode) clone.parentNode.removeChild(clone);
-                if (typeof showToast === 'function') showToast('✓ Quote saved to Documents!', 'success');
+                if (typeof showToast === 'function') showToast(isMultiYacht ? '✓ Multi-Yacht Quote saved to Documents!' : '✓ Quote saved to Documents!', 'success');
               }).catch(err => {
                 if (clone.parentNode) clone.parentNode.removeChild(clone);
                 console.error('html2pdf export error:', err);
@@ -5252,6 +5373,57 @@ EXTRACTION RULES:
               alert('⚠️ PDF library is initializing. Please click Quote again in 2 seconds.');
             }
           }, 300);
+        });
+      }
+
+      // Dynamic Multi-Boat Option Row Creator
+      window.addMultiBoatOptionRow = function(selectedBoatId = '', customPrice = '') {
+        const container = document.getElementById('multi-boat-options-container');
+        if (!container) return;
+        
+        const currentRows = container.querySelectorAll('.multi-boat-row');
+        const optNum = currentRows.length + 2;
+        if (optNum > 4) {
+          if (typeof showToast === 'function') showToast('Maximum 4 yacht options allowed per comparison quote.', 'warning');
+          return;
+        }
+
+        const boats = [...(window.fleetCache || [])].sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
+        
+        const row = document.createElement('div');
+        row.className = 'multi-boat-row flex items-center gap-2 p-2 bg-white border border-indigo-200 rounded-lg shadow-2xs transition-all';
+        row.innerHTML = `
+          <span class="font-bold text-indigo-900 text-xs w-16">Option ${optNum}:</span>
+          <select class="multi-boat-select flex-1 px-2 py-1.5 bg-slate-50 border border-indigo-200 rounded-md text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-indigo-500">
+            <option value="">-- Select Alternate Yacht --</option>
+            ${boats.map(b => `<option value="${b.id}" ${b.id === selectedBoatId ? 'selected' : ''}>${escapeHtml(b.name)} (${b.length_ft || ''} FT)</option>`).join('')}
+          </select>
+          <div class="relative w-28">
+            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
+            <input type="number" value="${customPrice}" placeholder="Rate" class="multi-boat-price w-full pl-5 pr-2 py-1.5 bg-slate-50 border border-indigo-200 rounded-md text-xs font-bold text-emerald-800 text-right" />
+          </div>
+          <button type="button" class="remove-multi-boat-btn text-red-500 hover:text-red-700 p-1 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">close</span>
+          </button>
+        `;
+
+        row.querySelector('.remove-multi-boat-btn').addEventListener('click', () => {
+          row.remove();
+          const rows = container.querySelectorAll('.multi-boat-row');
+          rows.forEach((r, idx) => {
+            const span = r.querySelector('span');
+            if (span) span.textContent = `Option ${idx + 2}:`;
+          });
+        });
+
+        container.appendChild(row);
+      };
+
+      const addMultiBtn = document.getElementById('add-multi-boat-opt-btn');
+      if (addMultiBtn && !addMultiBtn.dataset.bound) {
+        addMultiBtn.dataset.bound = 'true';
+        addMultiBtn.addEventListener('click', () => {
+          window.addMultiBoatOptionRow();
         });
       }
     }
