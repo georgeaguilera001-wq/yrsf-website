@@ -5380,7 +5380,8 @@ EXTRACTION RULES:
       // Auto Boat Pricing Calculator Helper
       window.calculateBoatPriceForDuration = function(boatId, durationHours = 4, bookDateStr = '') {
         if (!boatId) return 0;
-        const boat = (typeof fleetCache !== 'undefined' && fleetCache.length > 0) ? fleetCache : (window.fleetCache || allAdminBoatsCache || []).find(b => b.id === boatId);
+        const bList = (typeof fleetCache !== 'undefined' && fleetCache.length > 0) ? fleetCache : (allAdminBoatsCache || window.fleetCache || []);
+        const boat = bList.find(b => b.id === boatId);
         if (!boat) return 0;
 
         const dur = parseInt(durationHours, 10) || 4;
