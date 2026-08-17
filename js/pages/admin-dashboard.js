@@ -5262,20 +5262,23 @@ EXTRACTION RULES:
 
           if (typeof showToast === 'function') showToast(isMultiYacht ? `📄 Generating Multi-Yacht Proposal (${optionsList.length} Boats)...` : '📄 Generating Quote PDF...', 'info');
 
-          // Render clone off-screen behind viewport (z-index: -9999, position: fixed top 0) to ensure html2canvas captures full dimensions without screen flash or blank PDF
+          // Render clone in active viewport (z-index: 999999) to guarantee html2canvas captures 100% of text, styles & logos without blank canvas
           const clone = element.cloneNode(true);
           clone.id = 'pdf-quote-active-clone';
           clone.style.display = 'block';
           clone.style.position = 'fixed';
-          clone.style.top = '0px';
-          clone.style.left = '0px';
-          clone.style.zIndex = '-9999';
+          clone.style.top = '50%';
+          clone.style.left = '50%';
+          clone.style.transform = 'translate(-50%, -50%)';
+          clone.style.zIndex = '999999';
           clone.style.width = '794px';
-          clone.style.opacity = '1';
-          clone.style.visibility = 'visible';
+          clone.style.maxHeight = '90vh';
+          clone.style.overflowY = 'auto';
           clone.style.background = '#ffffff';
           clone.style.color = '#1e293b';
-          clone.style.pointerEvents = 'none';
+          clone.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.5)';
+          clone.style.borderRadius = '16px';
+          clone.style.padding = '40px';
 
           if (isMultiYacht) {
             const h2 = clone.querySelector('h2');
