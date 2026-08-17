@@ -834,23 +834,22 @@ return; // Redirect in progress
   });
 
   async function loadFleet(forceRefresh = false) {
-    const tbody = document.getElementById('fleet-table-body');
-    if (!tbody) return;
-
-    // 1. Instant local storage cache check so mobile NEVER shows empty spinner if boats were loaded previously
+    // 1. Instant local storage cache check
     if (!allAdminBoatsCache && !forceRefresh) {
       try {
         const localCached = localStorage.getItem('yrsf_admin_fleet_cache');
-        if (localCached) {
-          if (localCached && localCached !== 'undefined') { try { allAdminBoatsCache = JSON.parse(localCached); } catch(e) {} }
-          fleetCache = allAdminBoatsCache;
+        if (localCached && localCached !== 'undefined') {
+          try { allAdminBoatsCache = JSON.parse(localCached); } catch(e) {}
+          fleetCache = allAdminBoatsCache || [];
+          window.fleetCache = fleetCache;
           renderFleetTable();
         }
       } catch (e) {}
     }
 
     if (forceRefresh || !allAdminBoatsCache) {
-      if (!allAdminBoatsCache) {
+      const tbody = document.getElementById('fleet-table-body');
+      if (tbody && !allAdminBoatsCache) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center py-xl"><span class="admin-spinner"></span></td></tr>';
       }
       try {
@@ -858,23 +857,27 @@ return; // Redirect in progress
         if (fetched && fetched.length > 0) {
           allAdminBoatsCache = fetched;
           fleetCache = fetched;
+          window.fleetCache = fetched;
           try { localStorage.setItem('yrsf_admin_fleet_cache', JSON.stringify(fetched)); } catch(e) {}
         }
       } catch (error) {
         console.error('Error loading fleet:', error);
-        if (!allAdminBoatsCache) {
+        const tbody = document.getElementById('fleet-table-body');
+        if (tbody && !allAdminBoatsCache) {
           tbody.innerHTML = '<tr><td colspan="6" class="text-center py-xl text-error">Error loading fleet data.</td></tr>';
         }
         return;
       }
     } else {
       fleetCache = allAdminBoatsCache || [];
+      window.fleetCache = fleetCache;
       // Quietly refresh in background without clearing screen
       if (!forceRefresh) {
         getAllBoats().then(fetched => {
           if (fetched && fetched.length > 0) {
             allAdminBoatsCache = fetched;
             fleetCache = fetched;
+            window.fleetCache = fetched;
             try { localStorage.setItem('yrsf_admin_fleet_cache', JSON.stringify(fetched)); } catch(e) {}
             renderFleetTable();
           }
