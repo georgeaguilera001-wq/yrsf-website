@@ -5139,6 +5139,7 @@ EXTRACTION RULES:
 
           const boatSearchInput = document.getElementById('book-boat-search-input');
           const boatSelect = document.getElementById('book-boat-select');
+          const boatId = boatSelect?.value || '';
           let boatName = boatSearchInput?.value?.trim() || '';
           if (!boatName && boatSelect && boatSelect.selectedIndex >= 0) {
             boatName = boatSelect.options[boatSelect.selectedIndex]?.text || '';
