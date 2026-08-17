@@ -234,11 +234,8 @@ return; // Redirect in progress
           console.log('⚡ YRSF Realtime Background Engine Status:', status);
         });
 
-      // 2. Silent Heartbeat Polling Loop (Every 12s) - Keeps site 100% live continuously in background
-      setInterval(() => {
-        if (typeof window.loadDashStaffTimeclock === 'function') window.loadDashStaffTimeclock();
-        if (typeof loadBookings === 'function') loadBookings(false);
-      }, 12000);
+      // Removed redundant Silent Heartbeat Polling Loop to significantly reduce Supabase API calls.
+      // Realtime subscriptions above already handle all live UI updates instantly.
 
     } catch (e) {
       console.warn('Global Realtime Sync Setup Error:', e);
@@ -441,7 +438,10 @@ return; // Redirect in progress
   async function loadSectionData(section) {
     switch (section) {
       case 'dashboard':
-        await loadDashboard();
+        if (!loaded.dashboard) {
+          await loadDashboard();
+          loaded.dashboard = true;
+        }
         // Also load embedded modules inside the dashboard
         if (!loaded.dashboardContent) {
           await Promise.all([loadFAQs(), loadTestimonials(), initReviewsSection()]);
@@ -449,8 +449,11 @@ return; // Redirect in progress
         }
         break;
       case 'fleet':
-        await loadFleet();
-        await loadAdminAddons();
+        if (!loaded.fleet) {
+          await loadFleet();
+          await loadAdminAddons();
+          loaded.fleet = true;
+        }
         break;
       case 'bookings':
         if (!loaded.bookings) { window.initBookingsSection(); loaded.bookings = true; }
@@ -753,8 +756,7 @@ return; // Redirect in progress
           fetchAndRenderInquiries(true);
         }
       });
-      // Polling interval
-      setInterval(() => fetchAndRenderInquiries(true), 15000);
+      // Removed 15s polling loop; we now rely on the Realtime bookings subscription.
     }
   }
 
