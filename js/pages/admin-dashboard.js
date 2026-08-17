@@ -5207,17 +5207,18 @@ EXTRACTION RULES:
               </tr>
             `;
             
-            document.querySelectorAll('.dynamic-addon-row, .addon-cb').forEach(row => {
-              const cb = row.classList?.contains('addon-cb') ? row : row.querySelector('.addon-cb');
-              const qty = row.querySelector?.('.addon-qty') || { value: 1 };
-              const priceInput = row.querySelector?.('.addon-price-input');
+            document.querySelectorAll('.addon-cb').forEach(cb => {
               if (cb && cb.checked) {
-                const qtyVal = parseInt(qty.value, 10) || 1;
+                const row = cb.closest('.dynamic-addon-row') || cb.parentElement;
+                const qty = row ? row.querySelector('.addon-qty') : null;
+                const priceInput = row ? row.querySelector('.addon-price-input') : null;
+                const qtyVal = qty ? (parseInt(qty.value, 10) || 1) : 1;
                 const price = priceInput ? (parseFloat(priceInput.value) || 0) : (parseFloat(cb.dataset.price) || 0);
+                const name = cb.dataset.name || 'Add-on Option';
                 if (price > 0) {
                   itemsHtml += `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
-                      <td style="padding: 12px 16px; font-size: 13px; color: #334155;">${escapeHtml(cb.dataset.name)} (x${qtyVal})</td>
+                      <td style="padding: 12px 16px; font-size: 13px; color: #334155;">${escapeHtml(name)} (x${qtyVal})</td>
                       <td style="padding: 12px 16px; font-size: 13px; font-weight: 700; color: #0f172a; text-align: right;">$${(price * qtyVal).toFixed(2)}</td>
                     </tr>
                   `;
