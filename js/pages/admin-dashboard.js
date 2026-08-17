@@ -5376,7 +5376,56 @@ EXTRACTION RULES:
         });
       }
 
-      // Dynamic Multi-Boat Option Row Creator
+      // Auto Boat Pricing Calculator Helper
+      window.calculateBoatPriceForDuration = function(boatId, durationHours = 4, bookDateStr = '') {
+        if (!boatId) return 0;
+        const boat = (typeof fleetCache !== 'undefined' && fleetCache.length > 0) ? fleetCache : (window.fleetCache || allAdminBoatsCache || []).find(b => b.id === boatId);
+        if (!boat) return 0;
+
+        const dur = parseInt(durationHours, 10) || 4;
+        const boatRate = parseFloat(boat.boat_hourly_rate || boat.hourly_rate || boat.price_per_hour) || 0;
+        const captainRate = parseFloat(boat.captain_hourly_rate) || 0;
+
+        let dayKey = 'price';
+        if (bookDateStr) {
+          const parts = bookDateStr.split('-');
+          if (parts.length === 3) {
+            const dObj = new Date(parts[0], parts[1]-1, parts[2]);
+            const day = dObj.getDay();
+            const dayKeys = ['price_sun', 'price_mon', 'price_tue', 'price_wed', 'price_thu', 'price_fri', 'price_sat'];
+            dayKey = dayKeys[day];
+          }
+        }
+
+        let totalCalcPrice = 0;
+        if (boat.boat_prices && boat.boat_prices.length > 0) {
+          const matchingPrice = boat.boat_prices.find(p => String(p.duration_hours) === String(dur));
+          if (matchingPrice) {
+            const specificDayPrice = matchingPrice[dayKey] ? parseFloat(matchingPrice[dayKey]) : 0;
+            const defaultPrice = matchingPrice.price ? parseFloat(matchingPrice.price) : 0;
+            const effectivePrice = specificDayPrice > 0 ? specificDayPrice : defaultPrice;
+            if (effectivePrice > 0) {
+              totalCalcPrice = effectivePrice + (captainRate * dur);
+            }
+          }
+        }
+
+        if (totalCalcPrice === 0) {
+          if (boatRate > 0) {
+            totalCalcPrice = (boatRate + captainRate) * dur;
+          } else if (parseFloat(boat.price) > 0) {
+            totalCalcPrice = parseFloat(boat.price);
+          } else if (parseFloat(boat.half_day_price) > 0 && dur <= 4) {
+            totalCalcPrice = parseFloat(boat.half_day_price);
+          } else if (parseFloat(boat.full_day_price) > 0 && dur > 4) {
+            totalCalcPrice = parseFloat(boat.full_day_price);
+          }
+        }
+
+        return totalCalcPrice;
+      };
+
+      // Dynamic Multi-Boat Option Row Creator with Automatic Rate Lookup
       window.addMultiBoatOptionRow = async function(selectedBoatId = '', customPrice = '') {
         const container = document.getElementById('multi-boat-options-container');
         if (!container) return;
@@ -5408,6 +5457,14 @@ EXTRACTION RULES:
 
         const sortedBoats = [...(boats || [])].sort((a, b) => (parseFloat(a.length_ft) || 0) - (parseFloat(b.length_ft) || 0));
 
+        // Auto-calculate rate if not provided
+        if (!customPrice && selectedBoatId) {
+          const dur = document.getElementById('book-duration')?.value || '4';
+          const dStr = document.getElementById('book-date')?.value || '';
+          const autoP = window.calculateBoatPriceForDuration(selectedBoatId, dur, dStr);
+          if (autoP > 0) customPrice = autoP;
+        }
+
         const row = document.createElement('div');
         row.className = 'multi-boat-row flex items-center gap-2 p-2 bg-white border border-indigo-200 rounded-lg shadow-2xs transition-all';
         row.innerHTML = `
@@ -5424,6 +5481,20 @@ EXTRACTION RULES:
             <span class="material-symbols-outlined text-sm">close</span>
           </button>
         `;
+
+        const selectEl = row.querySelector('.multi-boat-select');
+        const priceInputEl = row.querySelector('.multi-boat-price');
+
+        // Automatically update price when yacht selection changes!
+        selectEl.addEventListener('change', () => {
+          const sId = selectEl.value;
+          const dur = document.getElementById('book-duration')?.value || '4';
+          const dStr = document.getElementById('book-date')?.value || '';
+          const autoP = window.calculateBoatPriceForDuration(sId, dur, dStr);
+          if (autoP > 0) {
+            priceInputEl.value = autoP;
+          }
+        });
 
         row.querySelector('.remove-multi-boat-btn').addEventListener('click', () => {
           row.remove();
