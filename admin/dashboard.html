@@ -2435,6 +2435,9 @@
         <button type="button" id="tab-btn-booking-details" onclick="window.switchBookingModalTab('details')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white text-secondary shadow-xs flex items-center justify-center gap-1.5">
           <span class="material-symbols-outlined text-[16px]">edit_note</span> Booking Details
         </button>
+        <button type="button" id="tab-btn-booking-quote" onclick="window.switchBookingModalTab('quote')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">request_quote</span> Quote
+        </button>
         <button type="button" id="tab-btn-booking-activity" onclick="window.switchBookingModalTab('activity')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1.5">
           <span class="material-symbols-outlined text-[16px]">history</span> Activity Sheet
         </button>
@@ -2458,23 +2461,6 @@
             </select>
             <!-- Dropdown Options List -->
             <div id="book-boat-options-list" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto hidden divide-y divide-surface-container"></div>
-          </div>
-
-          <!-- Multi-Yacht Option Comparison Section -->
-          <div class="p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="font-label text-xs font-bold text-indigo-950 flex items-center gap-1.5 cursor-pointer">
-                <span class="material-symbols-outlined text-sm text-indigo-600">view_carousel</span> Compare Multiple Yachts in 1 PDF Quote
-              </label>
-              <button type="button" id="add-multi-boat-opt-btn" class="px-2.5 py-1 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all flex items-center gap-1 cursor-pointer">
-                <span class="material-symbols-outlined text-xs">add</span> Add Yacht Option
-              </button>
-            </div>
-            
-            <div id="multi-boat-options-container" class="space-y-2">
-              <!-- Extra Yacht Option Rows appended via JS -->
-            </div>
-            <p class="text-[10px] text-indigo-700/80 italic">Tip: Add additional yacht options if the customer wants a single PDF quote comparing 2, 3, or 4 boats.</p>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -2697,7 +2683,83 @@
         </form>
       </div>
 
-      <!-- Tab 2: Activity Sheet & Audit Trail -->
+      <!-- Tab 2: Dedicated Quote Builder & Multi-Yacht Proposal -->
+      <div id="booking-quote-tab" class="hidden space-y-4 font-sans text-xs">
+        
+        <!-- Multi-Yacht Comparison Options Card -->
+        <div class="p-4 bg-indigo-50/70 border border-indigo-200 rounded-2xl space-y-3 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-bold text-xs text-indigo-950 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base text-indigo-600">view_carousel</span> Multi-Yacht Proposal Options
+              </h4>
+              <p class="text-[11px] text-indigo-700/80 mt-0.5">Compare up to 4 different yacht options inside 1 PDF quote for your customer.</p>
+            </div>
+            <button type="button" id="add-multi-boat-opt-btn" class="px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all flex items-center gap-1 cursor-pointer shadow-xs">
+              <span class="material-symbols-outlined text-sm">add</span> Add Yacht Option
+            </button>
+          </div>
+          
+          <div id="multi-boat-options-container" class="space-y-2">
+            <!-- Extra Yacht Option Rows appended via JS -->
+          </div>
+        </div>
+
+        <!-- Add-ons & Custom Line Items Card -->
+        <div class="p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl space-y-3">
+          <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-base text-secondary">extension</span> Custom Line Items &amp; Add-ons
+          </h4>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant/60 cursor-pointer hover:bg-surface-container transition-all">
+              <input type="checkbox" class="addon-cb rounded text-secondary" data-name="Jet Ski / Wave Runner" data-price="250" />
+              <span class="font-semibold text-on-surface">Jet Ski / Wave Runner</span>
+              <span class="ml-auto font-bold text-emerald-700">+$250</span>
+            </label>
+
+            <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant/60 cursor-pointer hover:bg-surface-container transition-all">
+              <input type="checkbox" class="addon-cb rounded text-secondary" data-name="Floating Water Island Mat" data-price="100" />
+              <span class="font-semibold text-on-surface">Water Island Mat</span>
+              <span class="ml-auto font-bold text-emerald-700">+$100</span>
+            </label>
+
+            <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant/60 cursor-pointer hover:bg-surface-container transition-all">
+              <input type="checkbox" class="addon-cb rounded text-secondary" data-name="Chef / Catering Service" data-price="450" />
+              <span class="font-semibold text-on-surface">Catering Service</span>
+              <span class="ml-auto font-bold text-emerald-700">+$450</span>
+            </label>
+
+            <label class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant/60 cursor-pointer hover:bg-surface-container transition-all">
+              <input type="checkbox" class="addon-cb rounded text-secondary" data-name="DJ &amp; Premium Sound Setup" data-price="350" />
+              <span class="font-semibold text-on-surface">DJ &amp; Sound Setup</span>
+              <span class="ml-auto font-bold text-emerald-700">+$350</span>
+            </label>
+          </div>
+
+          <!-- Custom Line Item Input -->
+          <div class="pt-2 border-t border-outline-variant/60 grid grid-cols-3 gap-2 items-center">
+            <input type="text" id="custom-addon-name" placeholder="Custom Add-on (e.g. Champagne Package)" class="col-span-2 px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs" />
+            <input type="number" id="custom-addon-price" placeholder="Price ($)" class="px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs font-bold text-emerald-800 text-right" />
+          </div>
+        </div>
+
+        <!-- Action Export Bar -->
+        <div class="p-4 bg-gradient-to-r from-indigo-900 to-slate-900 text-white rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+          <div>
+            <h4 class="font-bold text-sm text-white flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-base text-indigo-400">picture_as_pdf</span> Export Branded Proposal PDF
+            </h4>
+            <p class="text-[11px] text-indigo-200">Creates a high-converting PDF quote ready to send to your client.</p>
+          </div>
+          <button type="button" onclick="document.getElementById('generate-pdf-quote-btn').click()" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">request_quote</span> Download PDF Quote
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Tab 3: Activity Sheet & Audit Trail -->
       <div id="booking-activity-tab" class="hidden space-y-4 font-sans text-xs">
         <!-- Overview & Metadata -->
         <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 space-y-3">
@@ -2848,7 +2910,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260817v0841"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260817v0842"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------

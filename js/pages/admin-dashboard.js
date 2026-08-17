@@ -7954,28 +7954,33 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
 
   window.switchBookingModalTab = (tab) => {
     const detailsTab = document.getElementById('booking-details-tab');
+    const quoteTab = document.getElementById('booking-quote-tab');
     const activityTab = document.getElementById('booking-activity-tab');
+    
     const btnDetails = document.getElementById('tab-btn-booking-details');
+    const btnQuote = document.getElementById('tab-btn-booking-quote');
     const btnActivity = document.getElementById('tab-btn-booking-activity');
 
-    if (tab === 'activity') {
-      if (detailsTab) detailsTab.classList.add('hidden');
+    const activeClass = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white text-secondary shadow-xs flex items-center justify-center gap-1.5';
+    const inactiveClass = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1.5';
+
+    if (detailsTab) detailsTab.classList.add('hidden');
+    if (quoteTab) quoteTab.classList.add('hidden');
+    if (activityTab) activityTab.classList.add('hidden');
+
+    if (btnDetails) btnDetails.className = inactiveClass;
+    if (btnQuote) btnQuote.className = inactiveClass;
+    if (btnActivity) btnActivity.className = inactiveClass;
+
+    if (tab === 'quote') {
+      if (quoteTab) quoteTab.classList.remove('hidden');
+      if (btnQuote) btnQuote.className = activeClass;
+    } else if (tab === 'activity') {
       if (activityTab) activityTab.classList.remove('hidden');
-      if (btnDetails) {
-        btnDetails.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1.5';
-      }
-      if (btnActivity) {
-        btnActivity.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white text-secondary shadow-xs flex items-center justify-center gap-1.5';
-      }
+      if (btnActivity) btnActivity.className = activeClass;
     } else {
-      if (activityTab) activityTab.classList.add('hidden');
       if (detailsTab) detailsTab.classList.remove('hidden');
-      if (btnActivity) {
-        btnActivity.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1.5';
-      }
-      if (btnDetails) {
-        btnDetails.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white text-secondary shadow-xs flex items-center justify-center gap-1.5';
-      }
+      if (btnDetails) btnDetails.className = activeClass;
     }
   };
 
