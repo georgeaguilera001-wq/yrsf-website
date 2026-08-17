@@ -5262,18 +5262,20 @@ EXTRACTION RULES:
 
           if (typeof showToast === 'function') showToast(isMultiYacht ? `📄 Generating Multi-Yacht Proposal (${optionsList.length} Boats)...` : '📄 Generating Quote PDF...', 'info');
 
-          // Render clone off-screen (top: -9999px) with explicit white background to prevent screen flash & blank PDF
+          // Render clone off-screen behind viewport (z-index: -9999, position: fixed top 0) to ensure html2canvas captures full dimensions without screen flash or blank PDF
           const clone = element.cloneNode(true);
           clone.id = 'pdf-quote-active-clone';
           clone.style.display = 'block';
-          clone.style.position = 'absolute';
-          clone.style.top = '-9999px';
+          clone.style.position = 'fixed';
+          clone.style.top = '0px';
           clone.style.left = '0px';
+          clone.style.zIndex = '-9999';
           clone.style.width = '794px';
           clone.style.opacity = '1';
           clone.style.visibility = 'visible';
           clone.style.background = '#ffffff';
           clone.style.color = '#1e293b';
+          clone.style.pointerEvents = 'none';
 
           if (isMultiYacht) {
             const h2 = clone.querySelector('h2');
