@@ -5206,37 +5206,27 @@ EXTRACTION RULES:
             tbody.innerHTML = itemsHtml;
           }
 
-          // Gather Multi-Yacht Options
-          const extraOptionRows = document.querySelectorAll('.multi-boat-row');
+          // Gather Multi-Yacht Options (Option 1, Option 2, Option 3, Option 4)
+          const multiBoatRows = document.querySelectorAll('.multi-boat-row');
           const optionsList = [];
 
-          // Primary Option 1
-          optionsList.push({
-            optionNum: 1,
-            boatName: boatName,
-            boatId: boatId,
-            date: date,
-            time: time,
-            duration: duration,
-            guests: guests,
-            totalPrice: parseFloat(total || 0)
-          });
+          if (multiBoatRows && multiBoatRows.length > 0) {
+            multiBoatRows.forEach((row, idx) => {
+              const sel = row.querySelector('.multi-boat-select');
+              const priceInput = row.querySelector('.multi-boat-price');
+              const optBoatId = sel?.value;
+              const optBoatObj = (typeof fleetCache !== 'undefined' && fleetCache.length > 0) ? fleetCache.find(b => b.id === optBoatId) : (window.fleetCache || allAdminBoatsCache || []).find(b => b.id === optBoatId);
+              let optBoatName = optBoatObj ? `${optBoatObj.name}${optBoatObj.length_ft ? ' (' + optBoatObj.length_ft + ' FT)' : ''}` : (sel?.options[sel.selectedIndex]?.text || `Yacht Option ${idx + 1}`);
+              if (!optBoatName || optBoatName.includes('-- Select')) optBoatName = boatName || 'Luxury Yacht';
 
-          // Extra Options (Option 2, Option 3, Option 4)
-          extraOptionRows.forEach((row, idx) => {
-            const sel = row.querySelector('.multi-boat-select');
-            const priceInput = row.querySelector('.multi-boat-price');
-            const optBoatId = sel?.value;
-            const optBoatObj = (window.fleetCache || []).find(b => b.id === optBoatId);
-            const optBoatName = optBoatObj ? `${optBoatObj.name} (${optBoatObj.length_ft || ''} FT)` : (sel?.options[sel.selectedIndex]?.text || `Alternate Yacht ${idx + 2}`);
-            let optPrice = parseFloat(priceInput?.value) || 0;
-            if (!optPrice && optBoatObj) {
-              optPrice = parseFloat(optBoatObj.half_day_price) || (parseFloat(optBoatObj.hourly_rate) * parseInt(duration, 10)) || parseFloat(total || 0);
-            }
-            
-            if (optBoatId || optPrice > 0) {
+              let optPrice = parseFloat(priceInput?.value) || 0;
+              if (!optPrice && optBoatId) {
+                optPrice = window.calculateBoatPriceForDuration(optBoatId, duration, date);
+              }
+              if (!optPrice) optPrice = parseFloat(total || 0);
+
               optionsList.push({
-                optionNum: idx + 2,
+                optionNum: idx + 1,
                 boatName: optBoatName,
                 boatId: optBoatId,
                 date: date,
@@ -5245,8 +5235,19 @@ EXTRACTION RULES:
                 guests: guests,
                 totalPrice: optPrice
               });
-            }
-          });
+            });
+          } else {
+            optionsList.push({
+              optionNum: 1,
+              boatName: boatName,
+              boatId: boatId,
+              date: date,
+              time: time,
+              duration: duration,
+              guests: guests,
+              totalPrice: parseFloat(total || 0)
+            });
+          }
 
           const isMultiYacht = optionsList.length > 1;
 
@@ -5431,7 +5432,7 @@ EXTRACTION RULES:
         if (!container) return;
         
         const currentRows = container.querySelectorAll('.multi-boat-row');
-        const optNum = currentRows.length + 2;
+        const optNum = currentRows.length + 1;
         if (optNum > 4) {
           if (typeof showToast === 'function') showToast('Maximum 4 yacht options allowed per comparison quote.', 'warning');
           return;
@@ -5470,14 +5471,14 @@ EXTRACTION RULES:
         row.innerHTML = `
           <span class="font-bold text-indigo-900 text-xs w-16">Option ${optNum}:</span>
           <select class="multi-boat-select flex-1 px-2 py-1.5 bg-slate-50 border border-indigo-200 rounded-md text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-indigo-500">
-            <option value="">-- Select Alternate Yacht --</option>
+            <option value="">-- Select Yacht --</option>
             ${sortedBoats.map(b => `<option value="${b.id}" ${b.id === selectedBoatId ? 'selected' : ''}>${escapeHtml(b.name)}${b.length_ft ? ' (' + b.length_ft + ' FT)' : ''}</option>`).join('')}
           </select>
           <div class="relative w-28">
             <span class="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
-            <input type="number" value="${customPrice}" placeholder="Rate" class="multi-boat-price w-full pl-5 pr-2 py-1.5 bg-slate-50 border border-indigo-200 rounded-md text-xs font-bold text-emerald-800 text-right" />
+            <input type="number" value="${customPrice || ''}" placeholder="Rate" class="multi-boat-price w-full pl-5 pr-2 py-1.5 bg-slate-50 border border-indigo-200 rounded-md text-xs font-bold text-emerald-800 text-right" />
           </div>
-          <button type="button" class="remove-multi-boat-btn text-red-500 hover:text-red-700 p-1 cursor-pointer">
+          <button type="button" class="remove-multi-boat-btn text-red-500 hover:text-red-700 p-1 cursor-pointer" title="Remove Option">
             <span class="material-symbols-outlined text-sm">close</span>
           </button>
         `;
@@ -5501,7 +5502,7 @@ EXTRACTION RULES:
           const rows = container.querySelectorAll('.multi-boat-row');
           rows.forEach((r, idx) => {
             const span = r.querySelector('span');
-            if (span) span.textContent = `Option ${idx + 2}:`;
+            if (span) span.textContent = `Option ${idx + 1}:`;
           });
         });
 
@@ -8046,6 +8047,13 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     if (tab === 'quote') {
       if (quoteTab) quoteTab.classList.remove('hidden');
       if (btnQuote) btnQuote.className = activeClass;
+
+      const container = document.getElementById('multi-boat-options-container');
+      if (container && container.querySelectorAll('.multi-boat-row').length === 0) {
+        const primaryBoatId = document.getElementById('book-boat-select')?.value;
+        const primaryPrice = document.getElementById('book-price')?.value;
+        window.addMultiBoatOptionRow(primaryBoatId, primaryPrice);
+      }
     } else if (tab === 'activity') {
       if (activityTab) activityTab.classList.remove('hidden');
       if (btnActivity) btnActivity.className = activeClass;
