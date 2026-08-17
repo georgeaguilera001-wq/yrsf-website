@@ -5263,20 +5263,22 @@ EXTRACTION RULES:
 
           if (typeof showToast === 'function') showToast(isMultiYacht ? `📄 Generating Multi-Yacht Proposal (${optionsList.length} Boats)...` : '📄 Generating Quote PDF...', 'info');
 
-          // Render clone off-screen (left: -9999px) so the user never sees a 1-second popup flash on screen
+          // Render clone inside interactive Quote Preview Modal
           const clone = element.cloneNode(true);
           clone.id = 'pdf-quote-active-clone';
           clone.style.display = 'block';
-          clone.style.position = 'fixed';
+          clone.style.position = 'relative';
           clone.style.top = '0px';
-          clone.style.left = '-9999px';
-          clone.style.width = '794px';
-          clone.style.height = 'auto';
+          clone.style.left = '0px';
+          clone.style.width = '100%';
+          clone.style.maxWidth = '794px';
           clone.style.background = '#ffffff';
           clone.style.color = '#1e293b';
-          clone.style.padding = '40px';
-          clone.style.margin = '0px';
+          clone.style.padding = '36px';
+          clone.style.margin = '0 auto';
           clone.style.boxSizing = 'border-box';
+          clone.style.boxShadow = '0 10px 25px -5px rgba(0,0,0,0.1)';
+          clone.style.borderRadius = '12px';
           clone.style.opacity = '1';
           clone.style.visibility = 'visible';
 
@@ -5355,52 +5357,43 @@ EXTRACTION RULES:
             }
           }
 
-          document.body.appendChild(clone);
+          // Mount clone into preview modal body and open preview popup window!
+          const previewModal = document.getElementById('quote-preview-modal');
+          const previewBody = document.getElementById('quote-preview-body');
+          if (previewModal && previewBody) {
+            previewBody.innerHTML = '';
+            previewBody.appendChild(clone);
+            previewModal.classList.remove('hidden');
 
-          const fileName = isMultiYacht ? `Multi_Yacht_Quote_${custName.replace(/\s+/g, '_')}.pdf` : `Quote_${custName.replace(/\s+/g, '_')}.pdf`;
+            const fileName = isMultiYacht ? `Multi_Yacht_Quote_${custName.replace(/\s+/g, '_')}.pdf` : `Quote_${custName.replace(/\s+/g, '_')}.pdf`;
 
-          const opt = {
-            margin:       [0.3, 0.3, 0.3, 0.3],
-            filename:     fileName,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { 
-              scale: 2, 
-              useCORS: true, 
-              allowTaint: true, 
-              logging: false, 
-              scrollY: 0, 
-              scrollX: 0, 
-              windowWidth: 800,
-              onclone: (clonedDoc) => {
-                const clonedEl = clonedDoc.getElementById('pdf-quote-active-clone');
-                if (clonedEl) {
-                  clonedEl.style.display = 'block';
-                  clonedEl.style.position = 'relative';
-                  clonedEl.style.top = '0px';
-                  clonedEl.style.left = '0px';
-                  clonedEl.style.opacity = '1';
-                  clonedEl.style.visibility = 'visible';
+            // Wire up Download PDF Button inside Preview Window
+            const dlBtn = document.getElementById('download-quote-pdf-btn');
+            if (dlBtn) {
+              dlBtn.onclick = () => {
+                if (typeof showToast === 'function') showToast('📄 Downloading PDF Proposal File...', 'info');
+                
+                const opt = {
+                  margin:       [0.3, 0.3, 0.3, 0.3],
+                  filename:     fileName,
+                  image:        { type: 'jpeg', quality: 0.98 },
+                  html2canvas:  { scale: 2, useCORS: true, allowTaint: true, logging: false, scrollY: 0, scrollX: 0 },
+                  jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+
+                if (typeof html2pdf !== 'undefined') {
+                  html2pdf().set(opt).from(clone).save().then(() => {
+                    if (typeof showToast === 'function') showToast('✓ Quote saved to Documents!', 'success');
+                  }).catch(err => {
+                    console.error('html2pdf export error:', err);
+                    if (typeof showToast === 'function') showToast('Quote Export Error: ' + err.message, 'error');
+                  });
+                } else {
+                  alert('⚠️ PDF library is initializing. Please try downloading again in 2 seconds.');
                 }
-              }
-            },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-          };
-
-          setTimeout(() => {
-            if (typeof html2pdf !== 'undefined') {
-              html2pdf().set(opt).from(clone).save().then(() => {
-                if (clone.parentNode) clone.parentNode.removeChild(clone);
-                if (typeof showToast === 'function') showToast(isMultiYacht ? '✓ Multi-Yacht Quote saved to Documents!' : '✓ Quote saved to Documents!', 'success');
-              }).catch(err => {
-                if (clone.parentNode) clone.parentNode.removeChild(clone);
-                console.error('html2pdf export error:', err);
-                if (typeof showToast === 'function') showToast('Quote Export Error: ' + err.message, 'error');
-              });
-            } else {
-              if (clone.parentNode) clone.parentNode.removeChild(clone);
-              alert('⚠️ PDF library is initializing. Please click Quote again in 2 seconds.');
+              };
             }
-          }, 300);
+          }
         });
       }
 

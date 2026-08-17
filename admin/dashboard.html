@@ -2849,7 +2849,36 @@
 
   <div id="toast-container" class="toast-container"></div>
 
-  <!-- Hidden PDF Template for Quotes (Explicit Hex Styles to ensure html2canvas compatibility & prevent blank PDFs) -->
+  <!-- Interactive Quote Preview Modal -->
+  <div id="quote-preview-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-[99999] flex items-center justify-center p-3 sm:p-6 hidden animate-fade-in">
+    <div class="bg-white rounded-2xl max-w-4xl w-full flex flex-col max-h-[92vh] shadow-2xl border border-slate-200 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-lg">request_quote</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">YRSF Charter Proposal Preview</h3>
+            <p class="text-[11px] text-slate-400">Branded proposal document ready for client presentation</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" id="download-quote-pdf-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-base">download</span> Download PDF File
+          </button>
+          <button type="button" onclick="document.getElementById('quote-preview-modal').classList.add('hidden')" class="w-8 h-8 text-slate-400 hover:text-white rounded-lg flex items-center justify-center text-xl cursor-pointer">&times;</button>
+        </div>
+      </div>
+
+      <!-- Modal Body / Document Display -->
+      <div id="quote-preview-body" class="p-6 sm:p-8 overflow-y-auto flex-1 bg-slate-100 flex justify-center custom-scrollbar">
+        <!-- Rendered document clone inserted here dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden PDF Template for Quotes -->
   <div id="pdf-quote-template" style="display: none; position: absolute; top: -9999px; left: 0; width: 794px; background: #ffffff; color: #1e293b; padding: 40px; font-family: Arial, Helvetica, sans-serif; box-sizing: border-box;">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #4f46e5; padding-bottom: 24px; margin-bottom: 32px;">
       <div>
@@ -2910,7 +2939,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260817v0906"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260817v0925"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
