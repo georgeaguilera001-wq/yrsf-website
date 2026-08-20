@@ -6398,9 +6398,9 @@ EXTRACTION RULES:
       const isToday = b.booking_date === todayStr;
       const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
       
-      let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800">Confirmed</span>`;
-      if (b.status === 'completed') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container text-on-surface-variant">Completed</span>`;
-      if (b.status === 'inquiry') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">Quote</span>`;
+      let statusBadge = `<button onclick="event.stopPropagation(); window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 hover:opacity-80 transition-opacity">Confirmed</button>`;
+      if (b.status === 'completed') statusBadge = `<button onclick="event.stopPropagation(); window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container text-on-surface-variant hover:opacity-80 transition-opacity">Completed</button>`;
+      if (b.status === 'inquiry') statusBadge = `<button onclick="event.stopPropagation(); window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 hover:opacity-80 transition-opacity">Quote</button>`;
 
       return `
         <div class="flex items-center justify-between p-3 rounded-xl border border-outline-variant hover:border-secondary/50 transition-colors bg-white group cursor-pointer" onclick="document.querySelector('[data-section=bookings]').click(); setTimeout(() => window.editBooking('${b.id}'), 200)">
@@ -6427,6 +6427,30 @@ EXTRACTION RULES:
         </div>
       `;
     }).join('');
+  };
+
+  window.quickChangeBookingStatus = async (id, currentStatus) => {
+    const newStatus = prompt(`Change status for booking ${id} (current: ${currentStatus})\nOptions: confirmed, completed, cancelled, inquiry`, currentStatus);
+    if (!newStatus || newStatus === currentStatus) return;
+    const valid = ['confirmed', 'completed', 'cancelled', 'inquiry'];
+    if (!valid.includes(newStatus.toLowerCase().trim())) {
+      alert('Invalid status. Must be one of: ' + valid.join(', '));
+      return;
+    }
+    
+    // Optimistic update
+    const idx = bookingsCache.findIndex(x => x.id === id);
+    if (idx !== -1) bookingsCache[idx].status = newStatus.toLowerCase().trim();
+    
+    try {
+      const { error } = await supabase.from('bookings').update({ status: newStatus.toLowerCase().trim() }).eq('id', id);
+      if (error) throw error;
+      showToast('Status updated to ' + newStatus, 'success');
+      renderManifestTable();
+    } catch (e) {
+      alert('Error updating status: ' + e.message);
+      loadBookings(); // Revert on error
+    }
   };
 
   function renderManifestTable() {
@@ -6570,9 +6594,9 @@ EXTRACTION RULES:
       cardsGrid.innerHTML = filtered.map(b => {
         const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         const isToday = b.booking_date === todayStr;
-        let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">✓ Confirmed</span>`;
-        if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold">🏁 Completed</span>`;
-        if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">🛑 Cancelled</span>`;
+        let statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">✓ Confirmed</button>`;
+        if (b.status === 'completed') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">🏁 Completed</button>`;
+        if (b.status === 'cancelled') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">🛑 Cancelled</button>`;
 
         const total = parseFloat(b.total_price || b.amount || 0);
         const dep = parseFloat(b.deposit_amount || 0);
