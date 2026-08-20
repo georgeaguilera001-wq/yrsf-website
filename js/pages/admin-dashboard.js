@@ -8867,7 +8867,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
               ${discountLineHtml}
               <tr>
                 <td>
-                  <div class="item-name">7% FL Sales Tax &amp; Port Fees</div>
+                  <div class="item-name">Sales Tax (7%)</div>
                 </td>
                 <td class="text-right">$${tax.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
               </tr>
