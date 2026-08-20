@@ -185,21 +185,7 @@ return; // Redirect in progress
 
       } // End of !isSuperAdmin block
 
-      // Auto-redirect to last active module or default (applies to ALL users)
-      setTimeout(() => {
-        const lastMod = localStorage.getItem('adminLastModule');
-        if (lastMod && window.hasPermission(lastMod, 'access')) {
-          window.showAdminSection(lastMod);
-        } else if (!window.hasPermission('dashboard', 'access')) {
-           // Find the first nav item they have access to
-           const firstAllowed = Array.from(document.querySelectorAll('.admin-sidebar li[data-nav-id]'))
-             .map(li => li.getAttribute('data-nav-id'))
-             .find(mod => window.hasPermission(mod, 'access'));
-           if (firstAllowed) window.showAdminSection(firstAllowed);
-        } else {
-          window.showAdminSection('dashboard');
-        }
-      }, 100);
+      // Auto-redirect moved to the end of DOMContentLoaded to ensure all functions are defined
     } catch (e) {
       console.warn('Failed to load staff permissions:', e);
     }
@@ -9917,7 +9903,19 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     if (kInput && settings.quo_api_key) kInput.value = settings.quo_api_key.value || '0a17aaecd376f44708bc17d8e42e06acc4b215605f24451cce99a10a55bb5500';
     if (pInput && settings.quo_phone) pInput.value = settings.quo_phone.value || '';
   }
-  
+  // Auto-redirect to last active module or default
+  const lastMod = localStorage.getItem('adminLastModule');
+  if (lastMod && window.hasPermission && window.hasPermission(lastMod, 'access')) {
+    window.showAdminSection(lastMod);
+  } else if (window.hasPermission && !window.hasPermission('dashboard', 'access')) {
+    const firstAllowed = Array.from(document.querySelectorAll('.admin-sidebar li[data-nav-id]'))
+      .map(li => li.getAttribute('data-nav-id'))
+      .find(mod => window.hasPermission(mod, 'access'));
+    if (firstAllowed) window.showAdminSection(firstAllowed);
+  } else {
+    window.showAdminSection('dashboard');
+  }
+
   loadDashboard();
   loadCommissions();
   updateZapierStatusPill();
