@@ -6429,28 +6429,52 @@ EXTRACTION RULES:
     }).join('');
   };
 
-  window.quickChangeBookingStatus = async (id, currentStatus) => {
-    const newStatus = prompt(`Change status for booking ${id} (current: ${currentStatus})\nOptions: confirmed, completed, cancelled, inquiry`, currentStatus);
-    if (!newStatus || newStatus === currentStatus) return;
-    const valid = ['confirmed', 'completed', 'cancelled', 'inquiry'];
-    if (!valid.includes(newStatus.toLowerCase().trim())) {
-      alert('Invalid status. Must be one of: ' + valid.join(', '));
-      return;
+  window.quickChangeBookingStatus = (id, currentStatus) => {
+    let modal = document.getElementById('status-change-modal');
+    if (!modal) {
+      const html = `
+        <div id="status-change-modal" class="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 hidden animate-fade-in" onclick="if(event.target===this)this.classList.add('hidden')">
+          <div class="bg-surface-container-lowest text-on-surface rounded-3xl max-w-xs w-full p-6 shadow-2xl border border-outline-variant">
+            <h3 class="font-headline font-bold text-lg mb-4">Change Status</h3>
+            <select id="status-change-select" class="w-full bg-surface text-on-surface border border-outline-variant rounded-xl p-3 mb-6 focus:border-secondary focus:ring-1 focus:ring-secondary outline-none">
+              <option value="inquiry">Quote / Inquiry</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <div class="flex items-center justify-end gap-3">
+              <button onclick="document.getElementById('status-change-modal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl font-label font-bold text-on-surface-variant hover:bg-surface-container transition-colors">Cancel</button>
+              <button id="status-change-save" class="px-5 py-2.5 rounded-xl font-label font-bold bg-secondary text-on-secondary hover:opacity-90 transition-opacity shadow-md">Save</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', html);
+      modal = document.getElementById('status-change-modal');
     }
     
-    // Optimistic update
-    const idx = bookingsCache.findIndex(x => x.id === id);
-    if (idx !== -1) bookingsCache[idx].status = newStatus.toLowerCase().trim();
+    document.getElementById('status-change-select').value = currentStatus;
+    modal.classList.remove('hidden');
     
-    try {
-      const { error } = await supabase.from('bookings').update({ status: newStatus.toLowerCase().trim() }).eq('id', id);
-      if (error) throw error;
-      showToast('Status updated to ' + newStatus, 'success');
-      renderManifestTable();
-    } catch (e) {
-      alert('Error updating status: ' + e.message);
-      loadBookings(); // Revert on error
-    }
+    document.getElementById('status-change-save').onclick = async () => {
+      const newStatus = document.getElementById('status-change-select').value;
+      modal.classList.add('hidden');
+      
+      if (newStatus === currentStatus) return;
+      
+      const idx = bookingsCache.findIndex(x => x.id === id);
+      if (idx !== -1) bookingsCache[idx].status = newStatus;
+      
+      try {
+        const { error } = await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
+        if (error) throw error;
+        showToast('Status updated!', 'success');
+        renderManifestTable();
+      } catch (e) {
+        alert('Error updating status: ' + e.message);
+        loadBookings();
+      }
+    };
   };
 
   function renderManifestTable() {
