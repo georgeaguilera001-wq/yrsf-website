@@ -8849,8 +8849,8 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
             <tbody>
               <tr>
                 <td>
-                  <div class="item-name">Yacht Charter &amp; Vessel Service</div>
-                  <div class="item-desc">${escapeHtml(b.boat_name || 'Fleet Yacht')} &bull; ${duration} Hours Duration</div>
+                  <div class="item-name">${escapeHtml(b.boat_name || 'Fleet Yacht')}</div>
+                  <div class="item-desc">${duration} Hours Duration</div>
                 </td>
                 <td class="text-right">$${charterBaseSubtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
               </tr>
