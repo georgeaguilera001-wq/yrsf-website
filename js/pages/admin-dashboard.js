@@ -183,10 +183,15 @@ return; // Redirect in progress
           document.querySelectorAll('#add-staff-btn').forEach(b => b?.classList.add('hidden'));
         }
 
-        // Auto-redirect if default dashboard section is disallowed
+        // Auto-redirect to last active module or default
         setTimeout(() => {
-          if (firstVisibleMod && !window.hasPermission('dashboard', 'access')) {
+          const lastMod = localStorage.getItem('adminLastModule');
+          if (lastMod && window.hasPermission(lastMod, 'access')) {
+            window.showAdminSection(lastMod);
+          } else if (firstVisibleMod && !window.hasPermission('dashboard', 'access')) {
             window.showAdminSection(firstVisibleMod);
+          } else {
+            window.showAdminSection('dashboard');
           }
         }, 100);
       }
@@ -344,6 +349,7 @@ return; // Redirect in progress
   });
 
   function showSection(sectionId) {
+    if (sectionId) localStorage.setItem('adminLastModule', sectionId);
     if (sectionId && !window.hasPermission(sectionId, 'access')) {
       showToast(`⛔ Access Denied: You do not have permission to view the ${sectionId.toUpperCase()} module.`, true);
       
