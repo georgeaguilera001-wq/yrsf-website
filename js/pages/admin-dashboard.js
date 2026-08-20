@@ -183,18 +183,23 @@ return; // Redirect in progress
           document.querySelectorAll('#add-staff-btn').forEach(b => b?.classList.add('hidden'));
         }
 
-        // Auto-redirect to last active module or default
-        setTimeout(() => {
-          const lastMod = localStorage.getItem('adminLastModule');
-          if (lastMod && window.hasPermission(lastMod, 'access')) {
-            window.showAdminSection(lastMod);
-          } else if (firstVisibleMod && !window.hasPermission('dashboard', 'access')) {
-            window.showAdminSection(firstVisibleMod);
-          } else {
-            window.showAdminSection('dashboard');
-          }
-        }, 100);
-      }
+      } // End of !isSuperAdmin block
+
+      // Auto-redirect to last active module or default (applies to ALL users)
+      setTimeout(() => {
+        const lastMod = localStorage.getItem('adminLastModule');
+        if (lastMod && window.hasPermission(lastMod, 'access')) {
+          window.showAdminSection(lastMod);
+        } else if (!window.hasPermission('dashboard', 'access')) {
+           // Find the first nav item they have access to
+           const firstAllowed = Array.from(document.querySelectorAll('.admin-sidebar li[data-nav-id]'))
+             .map(li => li.getAttribute('data-nav-id'))
+             .find(mod => window.hasPermission(mod, 'access'));
+           if (firstAllowed) window.showAdminSection(firstAllowed);
+        } else {
+          window.showAdminSection('dashboard');
+        }
+      }, 100);
     } catch (e) {
       console.warn('Failed to load staff permissions:', e);
     }
