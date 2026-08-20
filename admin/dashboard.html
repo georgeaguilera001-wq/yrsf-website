@@ -3046,7 +3046,7 @@
         bindDragEvents();
         // Restore active selection style
         if (!isEditMode && typeof window.showAdminSection === 'function') {
-           window.showAdminSection(getActiveSection());
+           window.showAdminSection(localStorage.getItem('adminLastModule') || getActiveSection());
         }
       }
 
@@ -3152,7 +3152,7 @@
       window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           if (!isEditMode && typeof window.showAdminSection === 'function') {
-            window.showAdminSection(getActiveSection());
+            window.showAdminSection(localStorage.getItem('adminLastModule') || getActiveSection());
           }
         }, 200);
       });
