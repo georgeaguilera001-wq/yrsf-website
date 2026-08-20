@@ -8857,7 +8857,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
               ${captainTotal > 0 ? `
               <tr>
                 <td>
-                  <div class="item-name">Captain</div>
+                  <div class="item-name">Captain Cost</div>
                   <div class="item-desc">Licensed Maritime Captain &bull; ${duration} Hours</div>
                 </td>
                 <td class="text-right">$${captainTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
