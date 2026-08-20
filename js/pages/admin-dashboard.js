@@ -8922,6 +8922,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     
     const receiptUrl = `https://sfyachtrentals.com/api/receipt?id=${b.id}`;
 
+    const settings = await getAllSettings();
     let template = settings.whatsapp_booking_template?.value;
     if (!template) {
       template = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} at {time} is confirmed! Departure Location: {address}. Itemized Receipt: {receipt_url} We look forward to welcoming you aboard.";
