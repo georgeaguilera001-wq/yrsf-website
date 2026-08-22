@@ -8521,6 +8521,31 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       delBtn.parentNode.insertBefore(chargeBtn, delBtn);
     }
     
+    // Inject Send Portal Link Button next to Charge Balance Button
+    let portalBtn = document.getElementById('send-portal-link-btn');
+    if (!portalBtn && delBtn) {
+      portalBtn = document.createElement('button');
+      portalBtn.type = 'button';
+      portalBtn.id = 'send-portal-link-btn';
+      portalBtn.className = 'sm:w-auto px-3 bg-blue-50 text-blue-700 border border-blue-200 py-2 rounded-xl font-label text-xs font-bold hover:bg-blue-100 transition-all flex items-center justify-center gap-1';
+      portalBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">travel_explore</span><span>Send Portal</span>';
+      delBtn.parentNode.insertBefore(portalBtn, delBtn);
+    }
+    
+    if (portalBtn) {
+      portalBtn.onclick = () => {
+        const portalUrl = `${window.location.origin}/checkout.html?id=${b.id}`;
+        const template = `Hi ${b.customer_name || 'Guest'}, here is your secure booking portal to review your charter details, provide your guest info, and pay your deposit: \n\n${portalUrl}\n\nLet us know if you have any questions!`;
+        if (typeof window.openSmsPreviewModal === 'function') {
+          document.getElementById('booking-modal')?.classList.add('hidden');
+          window.openSmsPreviewModal(b.customer_phone || '', template);
+        } else {
+          navigator.clipboard.writeText(template);
+          alert('Portal link copied to clipboard!');
+        }
+      };
+    }
+    
     if (chargeBtn) {
       const tot = parseFloat(b.total_price || b.amount || 0);
       const dep = parseFloat(b.deposit_amount || 0);

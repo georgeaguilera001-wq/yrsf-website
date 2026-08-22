@@ -55,6 +55,18 @@ module.exports = async (req, res) => {
     let amountToCharge = 0;
     let descriptionText = `Date: ${booking.booking_date || 'TBD'}`;
 
+    // Optionally update customer info if provided in request
+    const { customer_name, customer_email, customer_phone, guest_count } = req.body;
+    let updateData = {};
+    if (customer_name) { updateData.customer_name = customer_name; booking.customer_name = customer_name; }
+    if (customer_email) { updateData.customer_email = customer_email; booking.customer_email = customer_email; }
+    if (customer_phone) { updateData.customer_phone = customer_phone; booking.customer_phone = customer_phone; }
+    if (guest_count) { updateData.guest_count = guest_count; booking.guest_count = guest_count; }
+
+    if (Object.keys(updateData).length > 0) {
+      await supabase.from('bookings').update(updateData).eq('id', booking_id);
+    }
+
     if (req.body.amount && parseFloat(req.body.amount) > 0) {
       amountToCharge = parseFloat(req.body.amount);
       descriptionText += ` | ${payment_type === 'balance' ? 'Remaining Balance' : 'Payment'}`;
