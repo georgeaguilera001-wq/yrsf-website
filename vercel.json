@@ -54,7 +54,11 @@
     },
     {
       "source": "/boats/:slug",
-      "destination": "/boat.html?slug=:slug"
+      "destination": "/api/boat-meta?slug=:slug"
+    },
+    {
+      "source": "/boat.html",
+      "destination": "/api/boat-meta"
     },
     {
       "source": "/pay/:token",
