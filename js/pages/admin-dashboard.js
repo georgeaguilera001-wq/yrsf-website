@@ -9141,7 +9141,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       updateNotificationUI();
       // Clear from database to prevent background sync from re-adding them
       try {
-        await fetch('/api/clear-notifs', { method: 'POST' });
+        await supabase.from('site_settings').upsert({ key: 'admin_notifications', value: [], updated_at: new Date().toISOString() });
       } catch (err) {
         console.error('Failed to clear notifications in DB', err);
       }
@@ -10027,7 +10027,7 @@ window.openChargeBalanceModal = (booking) => {
         if (!b) throw new Error('Booking record not found.');
         if (!b.customer_phone) throw new Error('No customer phone number recorded for this booking.');
 
-        const res = await fetch('/api/create-checkout', {
+        const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ booking_id: bookingId, payment_type: 'balance', amount })
@@ -10129,7 +10129,7 @@ window.openSmsPreviewModal = (phone, initialMessageText) => {
       const btn = document.getElementById('charge-btn-copy-link');
       btn.disabled = true;
       try {
-        const res = await fetch('/api/create-checkout', {
+        const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ booking_id: bookingId, payment_type: 'balance', amount })
@@ -10158,7 +10158,7 @@ window.openSmsPreviewModal = (phone, initialMessageText) => {
       const btn = document.getElementById('charge-btn-open-stripe');
       btn.disabled = true;
       try {
-        const res = await fetch('/api/create-checkout', {
+        const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ booking_id: bookingId, payment_type: 'balance', amount })

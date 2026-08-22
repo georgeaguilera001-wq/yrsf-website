@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let bookingData = null;
 
   try {
-    const res = await fetch(`/api/get-checkout-details?id=${bookingId}`);
+    const res = await fetch(`/api/checkout?id=${bookingId}`);
     const data = await res.json();
 
     if (!res.ok || !data.booking) {
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const custGuests = document.getElementById('cust-guests').value;
 
     try {
-      const res = await fetch('/api/create-checkout', {
+      const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
