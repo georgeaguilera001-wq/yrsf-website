@@ -10386,7 +10386,7 @@ window.setBookingModalMode = (mode) => {
   const form = document.getElementById('booking-form');
   if (!form) return;
   const els = form.querySelectorAll('input, select, textarea');
-  const buttons = form.querySelectorAll('button:not([type="submit"]):not(#toggle-edit-mode-btn):not(#cancel-booking-btn):not(#close-booking-modal):not(#refund-booking-btn)');
+  const buttons = form.querySelectorAll('button:not([type="submit"]):not(#toggle-edit-mode-btn):not(#cancel-booking-btn):not(#close-booking-modal):not(#refund-booking-btn):not(#charge-balance-modal-btn):not(#send-portal-link-btn):not(#delete-booking-btn)');
   
   // Inject Edit button if missing
   let editBtn = document.getElementById('toggle-edit-mode-btn');
