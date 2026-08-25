@@ -980,7 +980,7 @@ return; // Redirect in progress
           <td class="px-3 py-3 text-right whitespace-nowrap">
             <div class="flex items-center justify-end gap-1 row-actions">
               <button class="edit-boat-btn p-1.5 hover:bg-surface-container rounded-lg transition-colors" data-id="${boat.id}" title="Edit">
-                <span class="material-symbols-outlined text-[18px]">edit</span>
+                <span class="material-symbols-outlined text-[14px]">edit</span>
               </button>
               <button class="delete-boat-btn p-1.5 hover:bg-error-container rounded-lg transition-colors text-error" data-id="${boat.id}" data-name="${escapeHtml(boat.name)}" title="Delete">
                 <span class="material-symbols-outlined text-[18px]">delete</span>
@@ -4192,7 +4192,7 @@ EXTRACTION RULES:
                 </button>
               `}
               <button onclick="window.editStaffUser('${userItem.id}')" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors" title="Edit Staff & Permissions">
-                <span class="material-symbols-outlined text-[18px]">edit</span>
+                <span class="material-symbols-outlined text-[14px]">edit</span>
               </button>
               <button onclick="window.deleteStaffUser('${userItem.id}', '${escapeHtml(userItem.name)}')" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1" title="Delete Employee">
                 <span class="material-symbols-outlined text-[18px]">delete</span>
@@ -8493,8 +8493,8 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       refundBtn = document.createElement('button');
       refundBtn.type = 'button';
       refundBtn.id = 'refund-booking-btn';
-      refundBtn.className = 'hidden sm:w-auto px-3 bg-purple-50 text-purple-700 border border-purple-200 py-2 rounded-xl font-label text-xs font-bold hover:bg-purple-100 transition-all flex items-center justify-center gap-1';
-      refundBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">payments</span><span>Refund</span>';
+      refundBtn.className = 'hidden sm:w-auto px-2 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg font-label text-[11px] font-bold hover:bg-purple-100 transition-all flex items-center justify-center gap-1';
+      refundBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">payments</span><span>Refund</span>';
       delBtn.parentNode.insertBefore(refundBtn, delBtn);
     }
     
@@ -8516,8 +8516,8 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       chargeBtn = document.createElement('button');
       chargeBtn.type = 'button';
       chargeBtn.id = 'charge-balance-modal-btn';
-      chargeBtn.className = 'hidden sm:w-auto px-3 bg-green-50 text-green-700 border border-green-200 py-2 rounded-xl font-label text-xs font-bold hover:bg-green-100 transition-all flex items-center justify-center gap-1';
-      chargeBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">point_of_sale</span><span>Charge Balance</span>';
+      chargeBtn.className = 'hidden sm:w-auto px-2 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg font-label text-[11px] font-bold hover:bg-green-100 transition-all flex items-center justify-center gap-1';
+      chargeBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">point_of_sale</span><span>Charge Balance</span>';
       delBtn.parentNode.insertBefore(chargeBtn, delBtn);
     }
     
@@ -8527,8 +8527,8 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       portalBtn = document.createElement('button');
       portalBtn.type = 'button';
       portalBtn.id = 'send-portal-link-btn';
-      portalBtn.className = 'sm:w-auto px-3 bg-blue-50 text-blue-700 border border-blue-200 py-2 rounded-xl font-label text-xs font-bold hover:bg-blue-100 transition-all flex items-center justify-center gap-1';
-      portalBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">travel_explore</span><span>Send Portal</span>';
+      portalBtn.className = 'sm:w-auto px-2 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg font-label text-[11px] font-bold hover:bg-blue-100 transition-all flex items-center justify-center gap-1';
+      portalBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">travel_explore</span><span>Send Portal</span>';
       delBtn.parentNode.insertBefore(portalBtn, delBtn);
     }
     
@@ -10397,8 +10397,8 @@ window.setBookingModalMode = (mode) => {
     editBtn = document.createElement('button');
     editBtn.type = 'button';
     editBtn.id = 'toggle-edit-mode-btn';
-    editBtn.className = 'w-full sm:w-auto px-6 py-3 rounded-xl font-label text-sm font-bold transition-all bg-secondary-container text-on-secondary-container hover:bg-secondary hover:text-on-secondary flex items-center justify-center gap-2';
-    editBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">edit</span><span>Make Changes</span>';
+    editBtn.className = 'w-full sm:w-auto px-3 py-1.5 rounded-lg font-label text-[11px] font-bold transition-all bg-secondary-container text-on-secondary-container hover:bg-secondary hover:text-on-secondary flex items-center justify-center gap-1';
+    editBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">edit</span><span>Make Changes</span>';
     editBtn.onclick = () => window.setBookingModalMode('edit');
     saveBtn.parentNode.insertBefore(editBtn, saveBtn);
   }
