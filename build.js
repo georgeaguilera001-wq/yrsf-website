@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -6,7 +6,7 @@ async function build() {
   console.log('Starting static generation of index.html...');
 
   let supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  let supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  let supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     // Fallback: gracefully extract the public config used by the frontend so the build doesn't crash 
