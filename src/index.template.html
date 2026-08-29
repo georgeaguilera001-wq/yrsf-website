@@ -4,18 +4,39 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>YRSF | Miami's Trusted Choice for Boat & Yacht Rentals</title>
+<link rel="canonical" href="https://www.sfyachtrentals.com/" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://udacadmmeyvykiiptsvb.supabase.co">
 <meta name="description" content="{{HERO_DESCRIPTION}}" />
 <meta property="og:type" content="website" />
-<meta property="og:site_name" content="YRSF ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Yacht Rentals of South Florida" />
+<meta property="og:site_name" content="YRSF — Yacht Rentals of South Florida" />
 <meta property="og:title" content="{{HERO_TITLE}}" />
 <meta property="og:description" content="{{HERO_DESCRIPTION}}" />
 <meta property="og:image" content="{{HERO_IMAGE_SRC}}" />
 <meta property="og:image:width" content="1024" />
 <meta property="og:image:height" content="1024" />
 <meta name="twitter:card" content="summary_large_image" />
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Yacht Rentals of South Florida",
+    "url": "https://www.sfyachtrentals.com/",
+    "logo": "https://www.sfyachtrentals.com/images/favicon.png",
+    "image": "https://www.sfyachtrentals.com/images/miami-luxury-yacht.jpg",
+    "description": "Premium yacht charters and boat rentals in Miami, South Florida.",
+    "telephone": "+13059902192",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Miami",
+      "addressRegion": "FL",
+      "addressCountry": "US"
+    }
+  }
+</script>
+
 <meta name="twitter:title" content="Miami's #1 Boat &amp; Yacht Charters" />
 <meta name="twitter:description" content="Explore Miami's top yacht charters with transparent pricing and instant WhatsApp booking." />
 <meta name="twitter:image" content="https://www.sfyachtrentals.com/images/social_preview.jpg" />
@@ -44,8 +65,8 @@
     });
   }
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=block" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet"/>
 
 
 <script src="https://elfsightcdn.com/platform.js" defer></script>
@@ -84,12 +105,14 @@
 <!-- Hero Section -->
 <section class="relative min-h-[400px] h-[50vh] lg:min-h-[600px] lg:h-[600px] flex items-center overflow-hidden">
 <div class="absolute inset-0 z-0 bg-black">
-<img id="hero-bg-img" class="w-full h-full object-cover hidden" alt="Hero Background">
-<video id="hero-bg-video" class="w-full h-full object-cover hidden" loop muted playsinline>
-</video>
-<script>
-    let isVid = false;
-    let vidSrc = null;
+      <img id="hero-bg-img" class="w-full h-full object-cover {{HERO_IMAGE_DISPLAY}}" src="{{HERO_IMAGE_SRC}}" fetchpriority="high" alt="Hero Background">
+      <video id="hero-bg-video" class="w-full h-full object-cover {{HERO_VIDEO_DISPLAY}}" loop muted playsinline>
+        <source src="{{HERO_VIDEO_SRC}}" type="video/mp4">
+      </video>
+      <script>
+        // JS Fallback for video init if needed, though native HTML5 handles autoplay loop muted
+        let isVid = false;
+        let vidSrc = null;
     if (window.initialHeroSettings && window.initialHeroSettings.hero_bg_image && window.initialHeroSettings.hero_bg_image.value) {
       const firstUrl = window.initialHeroSettings.hero_bg_image.value.split(',')[0].trim();
       isVid = firstUrl.match(/\.(mp4|mov|webm)$/i) || firstUrl.includes('video/');
@@ -112,9 +135,9 @@
 </div>
 <div class="relative z-10 max-w-container-max mx-auto px-lg w-full">
 <div class="max-w-2xl">
-<span id="hero-tagline" class="bg-secondary text-on-secondary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block empty:hidden transition-opacity duration-300"></span>
-<h1 id="hero-title" class="font-display-lg text-3xl sm:text-4xl lg:text-display-lg font-bold text-on-surface mb-4 leading-tight empty:hidden transition-opacity duration-300"></h1>
-<p id="hero-description" class="font-body-lg text-base sm:text-lg lg:text-xl text-on-surface-variant mb-6 lg:mb-lg leading-relaxed max-w-xl empty:hidden transition-opacity duration-300"></p>
+<span id="hero-tagline" class="bg-secondary text-on-secondary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block empty:hidden transition-opacity duration-300">{{HERO_TAGLINE}}</span>
+<h1 id="hero-title" class="font-display-lg text-3xl sm:text-4xl lg:text-display-lg font-bold text-on-surface mb-4 leading-tight empty:hidden transition-opacity duration-300">{{HERO_TITLE}}</h1>
+<p id="hero-description" class="font-body-lg text-base sm:text-lg lg:text-xl text-on-surface-variant mb-6 lg:mb-lg leading-relaxed max-w-xl empty:hidden transition-opacity duration-300">{{HERO_DESCRIPTION}}</p>
 <script>
     if (window.initialHeroSettings) {
       if (window.initialHeroSettings.hero_tagline?.value) {
@@ -130,7 +153,7 @@
 </script>
 <div class="flex flex-wrap gap-3 lg:gap-md">
 <button class="bg-secondary text-on-secondary px-[22px] py-[11px] lg:px-8 lg:py-4 rounded-lg font-label-md text-[15px] lg:text-lg hover:shadow-lg transition-all flex items-center gap-2" onclick="window.location.href='/ourfleet'">
-                            Browse Our Fleet <span class="material-symbols-outlined text-[19px] lg:text-[24px]">anchor</span>
+                            Browse Our Fleet <svg class="w-5 h-5 lg:w-6 lg:h-6 fill-current" viewBox="0 -960 960 960"><path d="M440-122q-121-15-200.5-105.5T160-440q0-17 11.5-28.5T200-480q17 0 28.5 11.5T240-440q0 100 70 170t170 70v-240H320q-17 0-28.5-11.5T280-480q0-17 11.5-28.5T320-520h160v-200q-33-14-52.5-43.5T408-840q0-30 21-51t51-21q30 0 51 21t21 51q0 43-19.5 72.5T480-720v200h160q17 0 28.5 11.5T680-480q0 17-11.5 28.5T640-440H480v240q100 0 170-70t70-170q0-17 11.5-28.5T760-480q17 0 28.5 11.5T800-440q0 120-79.5 210.5T520-122v42q0 17-11.5 28.5T480-40q-17 0-28.5-11.5T440-80v-42ZM480-800q13 0 21.5-8.5T510-830q0-13-8.5-21.5T480-860q-13 0-21.5 8.5T450-830q0 13 8.5 21.5T480-800Z"/></svg>
 </button>
 <button class="bg-[#25D366] text-white px-[22px] py-[11px] lg:px-8 lg:py-4 rounded-lg font-label-md text-[15px] lg:text-lg hover:bg-[#128C7E] transition-all flex items-center gap-3 shadow-lg" onclick="window.location.href='https://wa.me/13059902192?text=Hi%20YRSF%20Team!%20I%20need%20help%20choosing%20the%20right%20boat%20for%20my%20event.'">
     <svg fill="currentColor" class="w-[19px] h-[19px] lg:w-6 lg:h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -139,7 +162,7 @@
     WhatsApp Us
 </button>
 <button class="bg-white/90 text-on-surface px-[22px] py-[11px] lg:px-8 lg:py-4 rounded-lg font-label-md text-[15px] lg:text-lg hover:bg-white transition-all flex items-center gap-2 shadow-lg border border-outline-variant" onclick="window.location.href='tel:3059902192'">
-    <span class="material-symbols-outlined text-secondary text-[19px] lg:text-[24px]">call</span> Call Us!
+    <svg class="w-5 h-5 lg:w-6 lg:h-6 fill-secondary" viewBox="0 -960 960 960"><path d="M798-120q-125 0-247-54.5T329-329Q229-429 174.5-551T120-798q0-18 12-30t30-12h162q14 0 25 9.5t13 22.5l26 140q2 16-1 27t-11 19l-97 98q20 37 47.5 71.5T387-386q31 31 65 57.5t72 48.5l94-94q9-9 23.5-13.5T670-390l138 28q14 4 23 14.5t9 23.5v162q0 18-12 30t-30 12ZM241-600l66-66-17-94h-89q5 41 14 81t26 79Zm358 358q39 17 79.5 27t81.5 13v-88l-94-19-67 67ZM241-600Zm358 358Z"/></svg> Call Us!
 </button>
 </div>
 </div>
