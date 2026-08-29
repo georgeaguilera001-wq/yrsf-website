@@ -16,7 +16,7 @@ export default async function handler(req) {
   try {
     const response = await fetch(deployHookUrl, { method: 'POST' });
     if (!response.ok) {
-      throw new Error(Deploy hook failed with status: );
+      throw new Error(`Deploy hook failed with status: ${response.status}`);
     }
     return new Response('Deploy triggered successfully.', { status: 200 });
   } catch (error) {
