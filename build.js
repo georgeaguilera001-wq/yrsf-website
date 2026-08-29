@@ -12,15 +12,15 @@ async function build() {
 
   try {
     const { data: settingsData, error } = await supabase
-      .from('homepage_settings')
-      .select('*');
+      .from('site_settings')
+      .select('key, value');
 
     if (error) throw error;
 
     const settings = {};
     settingsData.forEach(row => {
-      // The DB stores JSON objects in setting_value, e.g. { value: "...", type: "text" }
-      settings[row.setting_key] = row.setting_value?.value ?? row.setting_value;
+      // row.value is the JSONB object, e.g. { value: "...", type: "text" }
+      settings[row.key] = row.value?.value ?? row.value;
     });
 
     let indexPath = path.join(process.cwd(), 'index.html');
