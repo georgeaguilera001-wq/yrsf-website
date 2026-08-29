@@ -80,6 +80,7 @@ async function build() {
     }
 
     // Expert section replacements
+    html = html.replace('{{EXPERT_SECTION_DISPLAY}}', settings.expert_title ? '' : 'hidden');
     html = html.replace('{{EXPERT_TAGLINE}}', settings.expert_tagline ? String(settings.expert_tagline) : '');
     html = html.replace('{{EXPERT_TITLE}}', settings.expert_title ? String(settings.expert_title) : '');
     html = html.replace('{{EXPERT_DESCRIPTION}}', settings.expert_description ? String(settings.expert_description) : '');
