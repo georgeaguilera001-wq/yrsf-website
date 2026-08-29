@@ -27,17 +27,19 @@ async function build() {
 
     // Default Fallbacks if DB is empty
     const title = settings.hero_title || 'Rent a Boat in Miami & Experience Paradise';
-    const tagline = settings.hero_tagline || 'MIAMI\\'S #1 YACHT CHARTERS';
-    const description = settings.hero_description || 'Explore Miami\\'s sandbars, Biscayne Bay, and skyline with licensed captains, transparent pricing, and instant booking.';
+    const tagline = settings.hero_tagline || 'MIAMI\'S #1 YACHT CHARTERS';
+    const description = settings.hero_description || 'Explore Miami\'s sandbars, Biscayne Bay, and skyline with licensed captains, transparent pricing, and instant booking.';
     
     // Parse hero image/video
     let bgImageUrls = settings.hero_bg_image || '';
     let firstUrl = bgImageUrls.split(',')[0].trim();
     let isVid = firstUrl.match(/\.(mp4|mov|webm)$/i) || firstUrl.includes('video/');
     
-    // Replace Meta Tags
-    html = html.replace(/<title>.*?<\/title>/, <title>\ | YRSF</title>);
-    html = html.replace(/<meta name="description" content=".*?"\s*\/?>/, <meta name="description" content="\"/>);
+    // Replace Meta Tags safely using template literals
+    let plainTitle = title.replace(/<[^>]*>?/gm, '');
+    let plainDesc = description.replace(/"/g, '&quot;');
+    html = html.replace(/<title>.*?<\/title>/, `<title>${plainTitle} | YRSF</title>`);
+    html = html.replace(/<meta name="description" content=".*?"\s*\/?>/, `<meta name="description" content="${plainDesc}"/>`);
 
     // Replace Placeholders in HTML
     html = html.replace('{{HERO_TAGLINE}}', tagline);
@@ -57,13 +59,13 @@ async function build() {
       html = html.replace('{{HERO_VIDEO_SRC}}', '');
       html = html.replace('{{HERO_IMAGE_DISPLAY}}', 'block');
       html = html.replace('{{HERO_VIDEO_DISPLAY}}', 'hidden');
-      html = html.replace('{{HERO_PRELOAD}}', <link rel="preload" as="image" href="\" fetchpriority="high">);
+      html = html.replace('{{HERO_PRELOAD}}', `<link rel="preload" as="image" href="${safeImgUrl}" fetchpriority="high">`);
     }
 
     // Expert section replacements
     html = html.replace('{{EXPERT_TAGLINE}}', settings.expert_tagline || 'Personalized Service');
     html = html.replace('{{EXPERT_TITLE}}', settings.expert_title || 'Need Help Deciding?');
-    html = html.replace('{{EXPERT_DESCRIPTION}}', settings.expert_description || 'Our charter specialists personally know every boat in our fleet. We don\\'t just book rentals; we curate experiences tailored to your group, budget, and vision.');
+    html = html.replace('{{EXPERT_DESCRIPTION}}', settings.expert_description || 'Our charter specialists personally know every boat in our fleet. We don\'t just book rentals; we curate experiences tailored to your group, budget, and vision.');
     html = html.replace('{{EXPERT_BULLET_1}}', settings.expert_bullet_1 || '1-on-1 Planning Consultation');
     html = html.replace('{{EXPERT_BULLET_2}}', settings.expert_bullet_2 || 'Response time under 5 minutes');
     html = html.replace('{{EXPERT_IMG_1}}', settings.expert_image_1 || '');
