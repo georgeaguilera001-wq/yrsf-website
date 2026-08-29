@@ -5,12 +5,22 @@ const { createClient } = require('@supabase/supabase-js');
 async function build() {
   console.log('Starting static generation of index.html...');
 
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  // Use anon key since site_settings is publicly readable for the frontend anyway
-  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  let supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  let supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase URL or Key not provided in environment variables.');
+    // Fallback: gracefully extract the public config used by the frontend so the build doesn't crash 
+    // if Vercel env vars aren't perfectly configured yet.
+    try {
+      const configPath = path.join(process.cwd(), 'js/config/supabase.js');
+      const configContent = fs.readFileSync(configPath, 'utf8');
+      if (!supabaseUrl) supabaseUrl = configContent.match(/SUPABASE_URL\s*=\s*['"]([^'"]+)['"]/)?.[1];
+      if (!supabaseKey) supabaseKey = configContent.match(/SUPABASE_ANON_KEY\s*=\s*['"]([^'"]+)['"]/)?.[1];
+    } catch(e) {}
+  }
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase URL or Key not provided in environment variables and could not be extracted from config.');
   }
   
   const supabase = createClient(supabaseUrl, supabaseKey);
