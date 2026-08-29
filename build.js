@@ -19,19 +19,20 @@ async function build() {
 
     const settings = {};
     settingsData.forEach(row => {
-      settings[row.setting_key] = row.setting_value;
+      // The DB stores JSON objects in setting_value, e.g. { value: "...", type: "text" }
+      settings[row.setting_key] = row.setting_value?.value ?? row.setting_value;
     });
 
     let indexPath = path.join(process.cwd(), 'index.html');
     let html = fs.readFileSync(indexPath, 'utf8');
 
     // Default Fallbacks if DB is empty
-    const title = settings.hero_title || 'Rent a Boat in Miami & Experience Paradise';
-    const tagline = settings.hero_tagline || 'MIAMI\'S #1 YACHT CHARTERS';
-    const description = settings.hero_description || 'Explore Miami\'s sandbars, Biscayne Bay, and skyline with licensed captains, transparent pricing, and instant booking.';
+    const title = String(settings.hero_title || 'Rent a Boat in Miami & Experience Paradise');
+    const tagline = String(settings.hero_tagline || 'MIAMI\'S #1 YACHT CHARTERS');
+    const description = String(settings.hero_description || 'Explore Miami\'s sandbars, Biscayne Bay, and skyline with licensed captains, transparent pricing, and instant booking.');
     
     // Parse hero image/video
-    let bgImageUrls = settings.hero_bg_image || '';
+    let bgImageUrls = String(settings.hero_bg_image || '');
     let firstUrl = bgImageUrls.split(',')[0].trim();
     let isVid = firstUrl.match(/\.(mp4|mov|webm)$/i) || firstUrl.includes('video/');
     
@@ -63,13 +64,13 @@ async function build() {
     }
 
     // Expert section replacements
-    html = html.replace('{{EXPERT_TAGLINE}}', settings.expert_tagline || 'Personalized Service');
-    html = html.replace('{{EXPERT_TITLE}}', settings.expert_title || 'Need Help Deciding?');
-    html = html.replace('{{EXPERT_DESCRIPTION}}', settings.expert_description || 'Our charter specialists personally know every boat in our fleet. We don\'t just book rentals; we curate experiences tailored to your group, budget, and vision.');
-    html = html.replace('{{EXPERT_BULLET_1}}', settings.expert_bullet_1 || '1-on-1 Planning Consultation');
-    html = html.replace('{{EXPERT_BULLET_2}}', settings.expert_bullet_2 || 'Response time under 5 minutes');
-    html = html.replace('{{EXPERT_IMG_1}}', settings.expert_image_1 || '');
-    html = html.replace('{{EXPERT_IMG_2}}', settings.expert_image_2 || '');
+    html = html.replace('{{EXPERT_TAGLINE}}', String(settings.expert_tagline || 'Personalized Service'));
+    html = html.replace('{{EXPERT_TITLE}}', String(settings.expert_title || 'Need Help Deciding?'));
+    html = html.replace('{{EXPERT_DESCRIPTION}}', String(settings.expert_description || 'Our charter specialists personally know every boat in our fleet. We don\'t just book rentals; we curate experiences tailored to your group, budget, and vision.'));
+    html = html.replace('{{EXPERT_BULLET_1}}', String(settings.expert_bullet_1 || '1-on-1 Planning Consultation'));
+    html = html.replace('{{EXPERT_BULLET_2}}', String(settings.expert_bullet_2 || 'Response time under 5 minutes'));
+    html = html.replace('{{EXPERT_IMG_1}}', String(settings.expert_image_1 || ''));
+    html = html.replace('{{EXPERT_IMG_2}}', String(settings.expert_image_2 || ''));
 
     fs.writeFileSync(indexPath, html, 'utf8');
     console.log('Successfully generated static index.html with live DB settings.');
