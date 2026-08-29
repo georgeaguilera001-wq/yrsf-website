@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://udacadmmeyvykiiptsvb.supabase.co">
 <meta name="description" content="From affordable boats to luxury yachts, find the perfect vessel for your day on the Miami waters. Transparent pricing, captain included, and instant WhatsApp booking." />
 <meta property="og:type" content="website" />
-<meta property="og:site_name" content="YRSF Ã¢â‚¬â€ Yacht Rentals of South Florida" />
+<meta property="og:site_name" content="YRSF ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Yacht Rentals of South Florida" />
 <meta property="og:title" content="Miami's #1 Boat &amp; Yacht Charters" />
 <meta property="og:description" content="From affordable boats to luxury yachts, find the perfect vessel for your day on the Miami waters. Transparent pricing, captain included, and instant WhatsApp booking." />
 <meta property="og:image" content="https://www.sfyachtrentals.com/images/social_preview.jpg" />
@@ -46,6 +46,9 @@
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://elfsightcdn.com" crossorigin>
+<link rel="dns-prefetch" href="//elfsightcdn.com">
+<script src="https://elfsightcdn.com/platform.js" async></script>
 <link rel="stylesheet" href="/css/tailwind.css"/>
 <link rel="stylesheet" href="/css/shared.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -143,7 +146,19 @@
 </section>
 <!-- Instagram Showcase Section -->
 <section class="py-10 bg-surface-container-lowest overflow-hidden border-y border-outline-variant">
-    <div class="max-w-container-max mx-auto px-lg min-h-[100px]" id="instagram-showcase-container">
+    <div class="max-w-container-max mx-auto px-lg relative min-h-[400px]" id="instagram-showcase-container">
+        <!-- Elfsight skeleton placeholder -->
+        <div class="elfsight-skeleton-placeholder absolute inset-0 px-lg py-4 w-full h-full pointer-events-none transition-opacity duration-300">
+            <div class="flex flex-col h-full space-y-4">
+                <div class="h-8 bg-surface-variant rounded w-64 animate-pulse mx-auto mb-4"></div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1">
+                    <div class="bg-surface-variant rounded-xl animate-pulse h-full min-h-[200px]"></div>
+                    <div class="bg-surface-variant rounded-xl animate-pulse h-full min-h-[200px]"></div>
+                    <div class="bg-surface-variant rounded-xl animate-pulse h-full min-h-[200px] hidden md:block"></div>
+                    <div class="bg-surface-variant rounded-xl animate-pulse h-full min-h-[200px] hidden md:block"></div>
+                </div>
+            </div>
+        </div>
         <!-- Instagram widget is injected here dynamically from settings -->
     </div>
 </section>
@@ -389,7 +404,7 @@
 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
 </div>
 <p class="font-body-md italic mb-lg">"Absolutely incredible experience. The captain was professional, the boat was immaculate, and the sunset was unforgettable. YRSF is the only company I trust in Miami."</p>
-<p class="font-label-md text-sm">Sarah Jenkins Ã¢â‚¬â€ <span class="opacity-60 font-normal">June 2024</span></p>
+<p class="font-label-md text-sm">Sarah Jenkins ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â <span class="opacity-60 font-normal">June 2024</span></p>
 </div>
 <div class="bg-white/10 backdrop-blur-md p-lg rounded-2xl border border-white/10">
 <div class="flex text-yellow-400 mb-4">
@@ -400,7 +415,7 @@
 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
 </div>
 <p class="font-body-md italic mb-lg">"Booked for my company's corporate event. The team handled everything perfectly, from the catering to the DJ. High-end professional service throughout."</p>
-<p class="font-label-md text-sm">Michael Chen Ã¢â‚¬â€ <span class="opacity-60 font-normal">May 2024</span></p>
+<p class="font-label-md text-sm">Michael Chen ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â <span class="opacity-60 font-normal">May 2024</span></p>
 </div>
 </div>
 </div>
@@ -483,9 +498,9 @@
       <div>
         <label class="block font-label text-xs font-bold text-on-surface mb-1">Rating *</label>
         <select id="rev-rating" class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-lg text-sm">
-          <option value="5">Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦ (5 / 5 Excellent)</option>
-          <option value="4">Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€  (4 / 5 Very Good)</option>
-          <option value="3">Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€ Ã¢Ëœâ€  (3 / 5 Average)</option>
+          <option value="5">ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ (5 / 5 Excellent)</option>
+          <option value="4">ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â  (4 / 5 Very Good)</option>
+          <option value="3">ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¦ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â  (3 / 5 Average)</option>
         </select>
       </div>
       <div>

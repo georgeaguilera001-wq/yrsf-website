@@ -1,5 +1,5 @@
 /**
- * YRSF — Homepage Logic
+ * YRSF â€” Homepage Logic
  */
 
 import { initNavbar } from '../components/navbar.js';
@@ -163,21 +163,44 @@ async function initHomePage() {
       if (settings.instagram_embed_code?.value) {
         const container = document.getElementById('instagram-showcase-container');
         if (container) {
-          const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
-              container.innerHTML = settings.instagram_embed_code.value;
-              // Re-evaluate script tags so widgets like Elfsight load correctly
-              const scripts = container.querySelectorAll('script');
-              scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                oldScript.parentNode.replaceChild(newScript, oldScript);
-              });
-              observer.disconnect();
-            }
-          }, { rootMargin: '200px' });
-          observer.observe(container);
+                    let embedCode = settings.instagram_embed_code.value;
+          
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = embedCode;
+          tempDiv.querySelectorAll('script').forEach(s => {
+            if (s.src.includes('elfsightcdn.com')) s.remove();
+          });
+          
+          container.insertAdjacentHTML('beforeend', tempDiv.innerHTML);
+          
+          const scripts = container.querySelectorAll('script');
+          scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+            newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+          });
+          
+          const skeleton = container.querySelector('.elfsight-skeleton-placeholder');
+          if (skeleton) {
+            const renderObserver = new MutationObserver(() => {
+              const appDiv = container.querySelector('[class*="elfsight-app"]');
+              if (appDiv && appDiv.children.length > 0) {
+                skeleton.style.opacity = '0';
+                setTimeout(() => skeleton.remove(), 300);
+                renderObserver.disconnect();
+              }
+            });
+            renderObserver.observe(container, { childList: true, subtree: true });
+            
+            setTimeout(() => {
+              if (skeleton && skeleton.parentNode) {
+                skeleton.style.opacity = '0';
+                setTimeout(() => skeleton.remove(), 300);
+                renderObserver.disconnect();
+              }
+            }, 6000);
+          }
         }
       }
 
