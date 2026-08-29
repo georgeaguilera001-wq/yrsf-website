@@ -1,5 +1,5 @@
 /**
- * YRSF — Navbar Component
+ * YRSF Ã¢â‚¬â€ Navbar Component
  * Renders the glass-effect navigation bar matching the approved design.
  */
 
@@ -50,11 +50,11 @@ export function renderNavbar(activePage = '') {
         
         <div class="flex items-center gap-sm">
           <a class="hidden lg:flex items-center gap-xs font-label-md text-secondary" href="tel:305-990-2192">
-            <span class="material-symbols-outlined text-sm">call</span> 305-990-2192
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 1-.63 1-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg> 305-990-2192
           </a>
           <!-- Favorites counter -->
           <a href="/ourfleet?favorites=true" class="relative ${favCount === 0 ? 'hidden' : ''}" id="nav-favorites">
-            <span class="material-symbols-outlined text-secondary">favorite</span>
+            <svg class="w-6 h-6 text-secondary" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             <span class="absolute -top-1 -right-2 bg-error text-on-error text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold" id="favorites-count">${favCount}</span>
           </a>
           <a href="https://wa.me/13059902192?text=Hello%20YRSF%2C%20I%20would%20like%20to%20learn%20more%20about%20your%20charter%20options." class="flex items-center text-[#25D366] sm:hidden ml-1" aria-label="WhatsApp">
@@ -64,7 +64,7 @@ export function renderNavbar(activePage = '') {
           
           <!-- Mobile menu toggle -->
           <button class="mobile-menu-toggle p-2 rounded-lg hover:bg-surface-container transition-colors sm:hidden" id="mobile-toggle" aria-label="Open menu">
-            <span class="material-symbols-outlined">menu</span>
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 18V16H21V18H3ZM3 13V11H21V13H3ZM3 8V6H21V8H3Z"/></svg>
           </button>
         </div>
       </nav>
@@ -72,14 +72,14 @@ export function renderNavbar(activePage = '') {
     <!-- Mobile menu -->
     <div class="mobile-menu" id="mobile-menu">
       <button class="mobile-menu-close absolute top-5 right-5 p-2 rounded-lg hover:bg-surface-container transition-colors" id="mobile-close" aria-label="Close menu">
-        <span class="material-symbols-outlined">close</span>
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
       </button>
       <div class="flex flex-col gap-2 mt-4">
         ${mobileLinks}
       </div>
       <div class="mt-auto pt-8">
         <button class="w-full bg-secondary text-on-secondary px-6 py-3 rounded-lg font-label-md hover:bg-on-secondary-fixed-variant transition-all flex items-center justify-center gap-2" onclick="window.location.href='https://wa.me/13059902192?text=Hi%20YRSF%2C%20I%27m%20interested%20in%20renting%20a%20boat!'">
-          <span class="material-symbols-outlined text-[18px]">chat</span> WhatsApp Inquire
+          <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg> WhatsApp Inquire
         </button>
       </div>
     </div>

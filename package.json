@@ -4,6 +4,7 @@
   "description": "Yacht Rentals of South Florida - Premium Yacht Charter Website",
   "private": true,
   "scripts": {
+    "build": "node build.js",
     "dev": "npx serve .",
     "start": "npx serve ."
   },
