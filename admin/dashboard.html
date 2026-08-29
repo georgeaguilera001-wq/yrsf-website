@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light fouc-guard" lang="en">
+<html class="light" lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -52,7 +52,6 @@
     });
   </script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script>document.documentElement.classList.replace('fouc-guard','fouc-ready');</script>
 </head>
 <body class="bg-surface text-on-surface">
   <!-- Sidebar Overlay (mobile) -->
@@ -751,7 +750,7 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                  <span class="text-[10px] font-bold text-purple-800 bg-white/80 border border-purple-200 px-2 py-0.5 rounded-full shadow-2xs group-hover:bg-purple-600 group-hover:text-white transition-colors">✨ Ask AI</span>
+                  <span class="text-[10px] font-bold text-purple-800 bg-white/80 border border-purple-200 px-2 py-0.5 rounded-full shadow-2xs group-hover:bg-purple-600 group-hover:text-white transition-colors">âœ¨ Ask AI</span>
                   <span id="ai-fleet-chevron" class="material-symbols-outlined text-purple-700 text-lg sm:text-xl transition-transform duration-200" style="transform: rotate(-90deg);">expand_more</span>
                 </div>
               </button>
@@ -775,19 +774,19 @@
                 <div class="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-purple-900">
                   <span class="text-purple-700 font-medium mr-1">Quick Prompts:</span>
                   <button type="button" onclick="window.queryAiFleet('What 50ft+ boats are open for 6 hours today?')" class="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-purple-200 hover:border-purple-400 text-purple-900 transition-all shadow-2xs cursor-pointer">
-                    ⛵ 50ft+ open 6hrs today
+                    â›µ 50ft+ open 6hrs today
                   </button>
                   <button type="button" onclick="window.queryAiFleet('What boats are available tomorrow at 2pm?')" class="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-purple-200 hover:border-purple-400 text-purple-900 transition-all shadow-2xs cursor-pointer">
-                    📅 Tomorrow at 2:00 PM
+                    ðŸ“… Tomorrow at 2:00 PM
                   </button>
                   <button type="button" onclick="window.queryAiFleet('Show available 50ft boats grouped by marina for today')" class="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-purple-200 hover:border-purple-400 text-purple-900 transition-all shadow-2xs cursor-pointer">
-                    📍 Group Boats by Marina
+                    ðŸ“ Group Boats by Marina
                   </button>
                   <button type="button" onclick="window.queryAiFleet('What is the cheapest boat available for 4 hours today?')" class="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-purple-200 hover:border-purple-400 text-purple-900 transition-all shadow-2xs cursor-pointer">
-                    💲 Cheapest boat for 4hrs
+                    ðŸ’² Cheapest boat for 4hrs
                   </button>
                   <button type="button" onclick="window.queryAiFleet('Show me all open boats for this weekend')" class="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-purple-200 hover:border-purple-400 text-purple-900 transition-all shadow-2xs cursor-pointer">
-                    🚤 Weekend Availability
+                    ðŸš¤ Weekend Availability
                   </button>
                 </div>
 
@@ -1966,7 +1965,7 @@
         </div>
         <div>
           <label class="block font-label text-sm font-bold text-on-surface mb-1">New Password <span class="text-xs text-on-surface-variant font-normal">(Leave blank to keep current)</span></label>
-          <input type="password" id="admin-profile-password" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:border-secondary transition-colors" placeholder="��������">
+          <input type="password" id="admin-profile-password" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:border-secondary transition-colors" placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½">
         </div>
         <div class="flex justify-end pt-2">
           <button type="submit" class="bg-secondary text-on-secondary px-6 py-2.5 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-opacity w-full sm:w-auto">Save Changes</button>
@@ -2575,20 +2574,20 @@
                 <label class="block font-label text-xs font-bold text-on-surface mb-1">Payment Method *</label>
                 <select id="book-pay-method" required class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
                   <option value="none">-- Select Method --</option>
-                  <option value="stripe">💳 Credit Card (Stripe Portal)</option>
-                  <option value="zelle">📱 Zelle</option>
-                  <option value="cashapp">💵 CashApp</option>
-                  <option value="cash">💵 Cash (At Dock)</option>
+                  <option value="stripe">ðŸ’³ Credit Card (Stripe Portal)</option>
+                  <option value="zelle">ðŸ“± Zelle</option>
+                  <option value="cashapp">ðŸ’µ CashApp</option>
+                  <option value="cash">ðŸ’µ Cash (At Dock)</option>
                   <option value="other">Other / Manual</option>
                 </select>
               </div>
               <div>
                 <label class="block font-label text-xs font-bold text-on-surface mb-1">Booking Status</label>
                 <select id="book-status" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
-                  <option value="inquiry">📝 Draft / Quote (Unpaid)</option>
-                  <option value="confirmed">📅 Confirmed (Deposit Paid)</option>
-                  <option value="completed">✅ Completed &amp; Fully Paid</option>
-                  <option value="cancelled">🚫 Cancelled / Refunded</option>
+                  <option value="inquiry">ðŸ“ Draft / Quote (Unpaid)</option>
+                  <option value="confirmed">ðŸ“… Confirmed (Deposit Paid)</option>
+                  <option value="completed">âœ… Completed &amp; Fully Paid</option>
+                  <option value="cancelled">ðŸš« Cancelled / Refunded</option>
                 </select>
               </div>
               <div id="lead-status-container" class="hidden">
@@ -2828,7 +2827,7 @@
   <div id="day-events-modal" class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
     <div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-outline-variant flex flex-col max-h-[90vh]">
       <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4 shrink-0">
-        <h3 class="font-headline text-base sm:text-lg font-bold text-on-surface" id="day-events-modal-title">📅 Schedule for Day</h3>
+        <h3 class="font-headline text-base sm:text-lg font-bold text-on-surface" id="day-events-modal-title">ðŸ“… Schedule for Day</h3>
         <button type="button" id="close-day-events-modal" onclick="window.closeDayEventsModal()" class="text-on-surface-variant hover:text-on-surface font-bold text-xl leading-none px-2 py-1 cursor-pointer">&times;</button>
       </div>
       
