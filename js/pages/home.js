@@ -160,49 +160,53 @@ async function initHomePage() {
       }
 
       // Instagram Embed Settings
-      if (settings.instagram_embed_code?.value) {
-                const container = document.getElementById('instagram-showcase-container');
-        if (container) {
-          const target = container.querySelector('.elfsight-target') || container;
-          let embedCode = settings.instagram_embed_code.value;
-          
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = embedCode;
-          tempDiv.querySelectorAll('script').forEach(s => {
-            if (s.src.includes('elfsightcdn.com')) s.remove();
-          });
-          
-          target.insertAdjacentHTML('beforeend', tempDiv.innerHTML);
-          
-          const scripts = target.querySelectorAll('script');
-          scripts.forEach(oldScript => {
-            const newScript = document.createElement('script');
-            Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-            newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-            oldScript.parentNode.replaceChild(newScript, oldScript);
-          });
-          
-          const skeleton = container.querySelector('.elfsight-skeleton-placeholder');
-          if (skeleton) {
-            const renderObserver = new MutationObserver(() => {
-              const appDiv = target.querySelector('[class*="elfsight-app"]');
-              if (appDiv && appDiv.children.length > 0) {
-                skeleton.style.opacity = '0';
-                setTimeout(() => skeleton.remove(), 300);
-                renderObserver.disconnect();
-              }
-            });
-            renderObserver.observe(target, { childList: true, subtree: true });
+      try {
+        if (settings.instagram_embed_code?.value) {
+          const container = document.getElementById('instagram-showcase-container');
+          if (container) {
+            const target = container.querySelector('.elfsight-target') || container;
+            let embedCode = settings.instagram_embed_code.value;
             
-            setTimeout(() => {
-              if (skeleton && skeleton.parentNode) {
-                skeleton.style.opacity = '0';
-                setTimeout(() => skeleton.remove(), 300);
-                renderObserver.disconnect();
-              }
-            }, 6000);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = embedCode;
+            tempDiv.querySelectorAll('script').forEach(s => {
+              if (s.src.includes('elfsightcdn.com')) s.remove();
+            });
+            
+            target.insertAdjacentHTML('beforeend', tempDiv.innerHTML);
+            
+            const scripts = target.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+              const newScript = document.createElement('script');
+              Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+              newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+              oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+            
+            const skeleton = container.querySelector('.elfsight-skeleton-placeholder');
+            if (skeleton) {
+              const renderObserver = new MutationObserver(() => {
+                const appDiv = target.querySelector('[class*="elfsight-app"]');
+                if (appDiv && appDiv.children.length > 0) {
+                  skeleton.style.opacity = '0';
+                  setTimeout(() => skeleton.remove(), 300);
+                  renderObserver.disconnect();
+                }
+              });
+              renderObserver.observe(target, { childList: true, subtree: true });
+              
+              setTimeout(() => {
+                if (skeleton && skeleton.parentNode) {
+                  skeleton.style.opacity = '0';
+                  setTimeout(() => skeleton.remove(), 300);
+                  renderObserver.disconnect();
+                }
+              }, 6000);
+            }
           }
         }
+      } catch (err) {
+        console.warn('Elfsight widget failed to initialize:', err);
       }
 
       // Expert Settings
