@@ -173,6 +173,15 @@ async function initHomePage() {
               if (s.src.includes('elfsightcdn.com')) s.remove();
             });
             
+            // Dynamically load Elfsight after critical render
+            if (!document.getElementById('elfsight-platform')) {
+              const elfsightScript = document.createElement('script');
+              elfsightScript.id = 'elfsight-platform';
+              elfsightScript.src = 'https://elfsightcdn.com/platform.js';
+              elfsightScript.async = true;
+              document.body.appendChild(elfsightScript);
+            }
+            
             target.insertAdjacentHTML('beforeend', tempDiv.innerHTML);
             
             const scripts = target.querySelectorAll('script');

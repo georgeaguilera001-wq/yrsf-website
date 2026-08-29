@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -58,36 +58,36 @@ async function build() {
     html = html.replace(/<title>.*?<\/title>/, `<title>${plainTitle} | YRSF</title>`);
     html = html.replace(/<meta name="description" content=".*?"\s*\/?>/, `<meta name="description" content="${plainDesc}"/>`);
 
-    // Replace Placeholders in HTML
-    html = html.replace('{{HERO_TAGLINE}}', tagline);
-    html = html.replace('{{HERO_TITLE}}', title + '&nbsp;<img src="/images/cursive-heart.png" alt="Heart" class="inline-block w-[1.2em] h-auto align-middle -mt-2 pointer-events-none select-none">');
-    html = html.replace('{{HERO_DESCRIPTION}}', description);
+    // Replace Placeholders in HTML globally
+    html = html.replace(/\{\{HERO_TAGLINE\}\}/g, tagline);
+    html = html.replace(/\{\{HERO_TITLE\}\}/g, title ? title + '&nbsp;<img src="/images/cursive-heart.png" alt="Heart" class="inline-block w-[1.2em] h-auto align-middle -mt-2 pointer-events-none select-none">' : '');
+    html = html.replace(/\{\{HERO_DESCRIPTION\}\}/g, description);
 
     // Handle Background Media
     if (isVid) {
-      html = html.replace('{{HERO_VIDEO_SRC}}', firstUrl);
-      html = html.replace('{{HERO_IMAGE_SRC}}', '');
-      html = html.replace('{{HERO_IMAGE_DISPLAY}}', 'hidden');
-      html = html.replace('{{HERO_VIDEO_DISPLAY}}', 'block');
-      html = html.replace('{{HERO_PRELOAD}}', '');
+      html = html.replace(/\{\{HERO_VIDEO_SRC\}\}/g, firstUrl);
+      html = html.replace(/\{\{HERO_IMAGE_SRC\}\}/g, '');
+      html = html.replace(/\{\{HERO_IMAGE_DISPLAY\}\}/g, 'hidden');
+      html = html.replace(/\{\{HERO_VIDEO_DISPLAY\}\}/g, 'block');
+      html = html.replace(/\{\{HERO_PRELOAD\}\}/g, '');
     } else {
       let safeImgUrl = firstUrl || '';
-      html = html.replace('{{HERO_IMAGE_SRC}}', safeImgUrl);
-      html = html.replace('{{HERO_VIDEO_SRC}}', '');
-      html = html.replace('{{HERO_IMAGE_DISPLAY}}', 'block');
-      html = html.replace('{{HERO_VIDEO_DISPLAY}}', 'hidden');
-      html = html.replace('{{HERO_PRELOAD}}', safeImgUrl ? `<link rel="preload" as="image" href="${safeImgUrl}" fetchpriority="high">` : '');
+      html = html.replace(/\{\{HERO_IMAGE_SRC\}\}/g, safeImgUrl);
+      html = html.replace(/\{\{HERO_VIDEO_SRC\}\}/g, '');
+      html = html.replace(/\{\{HERO_IMAGE_DISPLAY\}\}/g, 'block');
+      html = html.replace(/\{\{HERO_VIDEO_DISPLAY\}\}/g, 'hidden');
+      html = html.replace(/\{\{HERO_PRELOAD\}\}/g, safeImgUrl ? `<link rel="preload" as="image" href="${safeImgUrl}" fetchpriority="high">` : '');
     }
 
     // Expert section replacements
-    html = html.replace('{{EXPERT_SECTION_DISPLAY}}', settings.expert_title ? '' : 'hidden');
-    html = html.replace('{{EXPERT_TAGLINE}}', settings.expert_tagline ? String(settings.expert_tagline) : '');
-    html = html.replace('{{EXPERT_TITLE}}', settings.expert_title ? String(settings.expert_title) : '');
-    html = html.replace('{{EXPERT_DESCRIPTION}}', settings.expert_description ? String(settings.expert_description) : '');
-    html = html.replace('{{EXPERT_BULLET_1}}', settings.expert_bullet_1 ? String(settings.expert_bullet_1) : '');
-    html = html.replace('{{EXPERT_BULLET_2}}', settings.expert_bullet_2 ? String(settings.expert_bullet_2) : '');
-    html = html.replace('{{EXPERT_IMG_1}}', String(settings.expert_image_1 || ''));
-    html = html.replace('{{EXPERT_IMG_2}}', String(settings.expert_image_2 || ''));
+    html = html.replace(/\{\{EXPERT_SECTION_DISPLAY\}\}/g, settings.expert_title ? '' : 'hidden');
+    html = html.replace(/\{\{EXPERT_TAGLINE\}\}/g, settings.expert_tagline ? String(settings.expert_tagline) : '');
+    html = html.replace(/\{\{EXPERT_TITLE\}\}/g, settings.expert_title ? String(settings.expert_title) : '');
+    html = html.replace(/\{\{EXPERT_DESCRIPTION\}\}/g, settings.expert_description ? String(settings.expert_description) : '');
+    html = html.replace(/\{\{EXPERT_BULLET_1\}\}/g, settings.expert_bullet_1 ? String(settings.expert_bullet_1) : '');
+    html = html.replace(/\{\{EXPERT_BULLET_2\}\}/g, settings.expert_bullet_2 ? String(settings.expert_bullet_2) : '');
+    html = html.replace(/\{\{EXPERT_IMG_1\}\}/g, String(settings.expert_image_1 || ''));
+    html = html.replace(/\{\{EXPERT_IMG_2\}\}/g, String(settings.expert_image_2 || ''));
 
     fs.writeFileSync(indexPath, html, 'utf8');
     console.log('Successfully generated static index.html with live DB settings.');
