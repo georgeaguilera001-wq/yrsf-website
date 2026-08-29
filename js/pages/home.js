@@ -1,5 +1,5 @@
 /**
- * YRSF ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Homepage Logic
+ * YRSF ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Homepage Logic
  */
 
 import { initNavbar } from '../components/navbar.js';
@@ -193,17 +193,6 @@ async function initHomePage() {
               }
             });
             renderObserver.observe(target, { childList: true, subtree: true });
-            
-            setTimeout(() => {
-              if (skeleton && skeleton.parentNode) {
-                skeleton.style.opacity = '0';
-                setTimeout(() => skeleton.remove(), 300);
-                renderObserver.disconnect();
-              }
-            }, 6000);
-          }
-        });
-            renderObserver.observe(container, { childList: true, subtree: true });
             
             setTimeout(() => {
               if (skeleton && skeleton.parentNode) {
