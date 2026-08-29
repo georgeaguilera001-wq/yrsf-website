@@ -3,6 +3,18 @@
    Supplements Tailwind CSS CDN
    ============================================ */
 
+/* --- Anti-FOUC Guard --- */
+/* Body starts with opacity:0 via inline style in HTML.
+   Once this stylesheet is parsed, it proves CSS has loaded,
+   so we reveal the body with a fast opacity transition. */
+html.fouc-guard body {
+  opacity: 0 !important;
+}
+html.fouc-ready body {
+  opacity: 1 !important;
+  transition: opacity 0.08s ease-out;
+}
+
 /* --- Base --- */
 body {
   font-family: 'Montserrat', sans-serif;

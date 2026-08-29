@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html class="light fouc-guard" lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Complete Your Booking | YRSF</title>
   <meta name="description" content="Complete your yacht charter booking securely."/>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: { "primary": "#2563eb", "on-primary": "#ffffff", "primary-container": "#dbeafe", "on-primary-container": "#1e3a8a", "secondary": "#1d4ed8", "on-secondary": "#ffffff", "secondary-container": "#bfdbfe", "on-secondary-container": "#1e3a8a", "tertiary": "#3b82f6", "on-tertiary": "#ffffff", "tertiary-container": "#eff6ff", "on-tertiary-container": "#172554", "error": "#ef4444", "on-error": "#ffffff", "error-container": "#fecaca", "on-error-container": "#7f1d1d", "background": "#f0f9ff", "on-background": "#0f172a", "surface": "#f0f9ff", "on-surface": "#0f172a", "surface-variant": "#e2e8f0", "on-surface-variant": "#475569", "outline": "#94a3b8", "outline-variant": "#cbd5e1" }, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, fontFamily: {"display-lg": ["Montserrat"], "label-md": ["Montserrat"], "body-md": ["Montserrat"], "headline-md": ["Montserrat"], caption: ["Montserrat"], "headline-lg": ["Montserrat"], "body-lg": ["Montserrat"], headline: ["Montserrat"], display: ["Montserrat"], body: ["Montserrat"], label: ["Montserrat"]}}}};</script>
+  <link rel="stylesheet" href="/css/tailwind.css"/>
   <link rel="stylesheet" href="/css/shared.css"/>
   <style>
     .spinner {
@@ -21,6 +20,7 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
+  <script>document.documentElement.classList.replace('fouc-guard','fouc-ready');</script>
 </head>
 <body class="bg-surface text-on-surface min-h-screen flex flex-col">
   <div id="navbar-container"></div>

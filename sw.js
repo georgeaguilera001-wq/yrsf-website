@@ -4,11 +4,12 @@
  * while falling back cleanly to cached versions when offline.
  */
 
-const CACHE_NAME = 'yrsf-main-v26';
+const CACHE_NAME = 'yrsf-main-v27';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/ourfleet',
+  '/css/tailwind.css',
   '/css/shared.css',
   '/js/pages/home.js'
 ];
