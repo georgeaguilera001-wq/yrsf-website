@@ -23,8 +23,9 @@ async function build() {
       settings[row.key] = row.value?.value ?? row.value;
     });
 
+    let templatePath = path.join(process.cwd(), 'src/index.template.html');
     let indexPath = path.join(process.cwd(), 'index.html');
-    let html = fs.readFileSync(indexPath, 'utf8');
+    let html = fs.readFileSync(templatePath, 'utf8');
 
     // Default Fallbacks if DB is empty
     const title = String(settings.hero_title || 'Rent a Boat in Miami & Experience Paradise');
