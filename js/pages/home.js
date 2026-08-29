@@ -173,13 +173,20 @@ async function initHomePage() {
               if (s.src.includes('elfsightcdn.com')) s.remove();
             });
             
-            // Dynamically load Elfsight after critical render
+            // Dynamically load Elfsight after critical render (using idle callback for absolute lowest priority)
             if (!document.getElementById('elfsight-platform')) {
-              const elfsightScript = document.createElement('script');
-              elfsightScript.id = 'elfsight-platform';
-              elfsightScript.src = 'https://elfsightcdn.com/platform.js';
-              elfsightScript.async = true;
-              document.body.appendChild(elfsightScript);
+              const loadElfsight = () => {
+                const elfsightScript = document.createElement('script');
+                elfsightScript.id = 'elfsight-platform';
+                elfsightScript.src = 'https://elfsightcdn.com/platform.js';
+                elfsightScript.async = true;
+                document.body.appendChild(elfsightScript);
+              };
+              if (window.requestIdleCallback) {
+                window.requestIdleCallback(loadElfsight, { timeout: 3000 });
+              } else {
+                setTimeout(loadElfsight, 1000);
+              }
             }
             
             target.insertAdjacentHTML('beforeend', tempDiv.innerHTML);
