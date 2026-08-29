@@ -1,5 +1,5 @@
 /**
- * YRSF — Admin Dashboard Logic
+ * YRSF â€” Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
 
@@ -9,6 +9,7 @@ import { getAddons, getAllAddons, createAddon, updateAddon, deleteAddon } from '
 import { getAllBlogs, createBlog, updateBlog, deleteBlog } from '../services/blogs.js';
 import { getAllSettings, updateSettings } from '../services/settings.js';
 import { supabase } from '../config/supabase.js';
+window.supabase = supabase;
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal, confirmModal } from '../components/modal.js';
 import { escapeHtml, formatPrice, slugify } from '../utils/dom.js';
@@ -69,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.querySelectorAll('#permissions-accordion-container input[type="checkbox"]').forEach(cb => cb.checked = false);
     });
   }, 300);
-  // ─── Auth Guard ─────────────────────────────────────
+  // â”€â”€â”€ Auth Guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let user;
   try {
     user = await requireAuth('/admin/index.html');
@@ -190,7 +191,7 @@ return; // Redirect in progress
       console.warn('Failed to load staff permissions:', e);
     }
   }
-  // ─── GLOBAL REALTIME BACKGROUND SYNC ENGINE ────────────────────────────
+  // â”€â”€â”€ GLOBAL REALTIME BACKGROUND SYNC ENGINE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.initGlobalRealtimeSync = () => {
     if (window.hasGlobalRealtimeSyncInitialized || typeof supabase === 'undefined') return;
     window.hasGlobalRealtimeSyncInitialized = true;
@@ -209,7 +210,7 @@ return; // Redirect in progress
           if (user?.email && payload?.new?.email && payload.new.email.trim().toLowerCase() === user.email.trim().toLowerCase()) {
             window.currentStaffPermissions = payload.new.permissions || {};
             if (typeof window.refreshNavMenu === 'function') window.refreshNavMenu();
-            if (typeof showToast === 'function') showToast('⚡ Your access permissions were updated live!', 'info', 5000);
+            if (typeof showToast === 'function') showToast('âš¡ Your access permissions were updated live!', 'info', 5000);
           }
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_timecards' }, (payload) => {
@@ -227,7 +228,7 @@ return; // Redirect in progress
           if (typeof loadSettings === 'function') loadSettings();
         })
         .subscribe((status) => {
-          console.log('⚡ YRSF Realtime Background Engine Status:', status);
+          console.log('âš¡ YRSF Realtime Background Engine Status:', status);
         });
 
       // Removed redundant Silent Heartbeat Polling Loop to significantly reduce Supabase API calls.
@@ -250,13 +251,13 @@ return; // Redirect in progress
   let settingsCache = null;
   try { settingsCache = await getAllSettings(); } catch(e) { console.warn('Settings pre-fetch failed:', e); }
 
-  // ─── Logout ─────────────────────────────────────────
+  // â”€â”€â”€ Logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.getElementById('logout-btn')?.addEventListener('click', async () => {
     await logout();
     window.location.href = '/admin/index.html';
   });
 
-  // ─── Admin Profile ────────────────────────────────────
+  // â”€â”€â”€ Admin Profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.openAdminProfileModal = () => {
     const modal = document.getElementById('admin-profile-modal');
     const nameInput = document.getElementById('admin-profile-name');
@@ -305,7 +306,7 @@ return; // Redirect in progress
             const firstName = nameInput.split(' ')[0] || 'Captain';
             const hr = new Date().getHours();
             const timeGreet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-            greetingEl.textContent = `${timeGreet}, ${firstName} 👋`;
+            greetingEl.textContent = `${timeGreet}, ${firstName} ðŸ‘‹`;
           }
         }
         
@@ -322,7 +323,7 @@ return; // Redirect in progress
     }
   });
 
-  // ─── Sidebar Navigation ─────────────────────────────
+  // â”€â”€â”€ Sidebar Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const navButtons = document.querySelectorAll('.admin-nav-btn');
   const sections = document.querySelectorAll('.admin-section');
   const sidebar = document.getElementById('admin-sidebar');
@@ -342,7 +343,7 @@ return; // Redirect in progress
   function showSection(sectionId) {
     if (sectionId) localStorage.setItem('adminLastModule', sectionId);
     if (sectionId && !window.hasPermission(sectionId, 'access')) {
-      showToast(`⛔ Access Denied: You do not have permission to view the ${sectionId.toUpperCase()} module.`, true);
+      showToast(`â›” Access Denied: You do not have permission to view the ${sectionId.toUpperCase()} module.`, true);
       
       const firstAllowed = Array.from(document.querySelectorAll('.admin-sidebar li[data-nav-id]'))
         .map(li => li.getAttribute('data-nav-id'))
@@ -429,7 +430,7 @@ return; // Redirect in progress
     btn.addEventListener('click', () => showSection(btn.dataset.section));
   });
 
-  // ─── Section Data Loaders ───────────────────────────
+  // â”€â”€â”€ Section Data Loaders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const loaded = {};
 
   async function loadSectionData(section) {
@@ -521,7 +522,7 @@ return; // Redirect in progress
     }
   }
 
-  // ─── Real-Time Customer Inquiries Monitor ───────────
+  // â”€â”€â”€ Real-Time Customer Inquiries Monitor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let knownInquiryIds = new Set();
   let inquiryMonitorInitialized = false;
 
@@ -554,7 +555,7 @@ return; // Redirect in progress
 
   function triggerDesktopNotification(inquiry) {
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(`🚨 New Charter Inquiry: ${inquiry.boat_name}`, {
+      new Notification(`ðŸš¨ New Charter Inquiry: ${inquiry.boat_name}`, {
         body: `${inquiry.customer_name} (${inquiry.customer_phone}) requested ${inquiry.boat_name} on ${inquiry.booking_date}.`,
         icon: '/favicon.ico'
       });
@@ -650,7 +651,7 @@ return; // Redirect in progress
                   <span class="font-bold text-xs text-secondary">${escapeHtml(i.boat_name)}</span>
                   <span class="text-[10px] text-on-surface-variant">${i.booking_date || ''}</span>
                 </div>
-                <p class="text-xs font-medium text-on-surface mt-1">${escapeHtml(i.customer_name)} • ${escapeHtml(i.customer_phone)}</p>
+                <p class="text-xs font-medium text-on-surface mt-1">${escapeHtml(i.customer_name)} â€¢ ${escapeHtml(i.customer_phone)}</p>
               </div>
             `).join('');
           }
@@ -757,12 +758,12 @@ return; // Redirect in progress
     }
   }
 
-  // ─── Dashboard ──────────────────────────────────────
+  // â”€â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function loadDashboard() {
     try {
       await initInquiriesMonitor();
 
-      // ── Greeting ──────────────────────────────────────────────────────────
+      // â”€â”€ Greeting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const greetingEl = document.getElementById('dashboard-greeting');
       const quoteEl    = document.getElementById('dashboard-quote');
 
@@ -780,20 +781,20 @@ return; // Redirect in progress
         const hr = new Date().getHours();
         const timeGreet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
 
-        greetingEl.textContent = `${timeGreet}, ${firstName} 👋`;
+        greetingEl.textContent = `${timeGreet}, ${firstName} ðŸ‘‹`;
       }
 
       if (quoteEl) {
         const quotes = [
-          '"The pessimist complains about the wind; the optimist expects it to change; the realist adjusts the sails." — William Arthur Ward',
-          '"A smooth sea never made a skilled sailor — or a top-performing sales team."',
+          '"The pessimist complains about the wind; the optimist expects it to change; the realist adjusts the sails." â€” William Arthur Ward',
+          '"A smooth sea never made a skilled sailor â€” or a top-performing sales team."',
           '"Every charter you close is a memory someone will keep for a lifetime. Make it count."',
           '"The ocean doesn\'t care about your quota. Your hustle does."',
           '"Ships don\'t sink because of the water around them. They sink because of the water that gets inside. Stay focused."',
-          '"Success in sales is like sailing — reading the wind, adjusting your approach, and never giving up on the destination."',
+          '"Success in sales is like sailing â€” reading the wind, adjusting your approach, and never giving up on the destination."',
           '"The best salespeople, like the best sailors, know when to push forward and when to tack."',
           '"You miss 100% of the charters you don\'t pitch. Get on the phone."',
-          '"Luxury is not a product — it\'s a feeling. Sell the feeling, and the booking takes care of itself."',
+          '"Luxury is not a product â€” it\'s a feeling. Sell the feeling, and the booking takes care of itself."',
           '"Every great voyage begins with someone saying yes. Go find your yes today."',
         ];
         quoteEl.textContent = quotes[Math.floor(Math.random() * quotes.length)];
@@ -820,7 +821,7 @@ return; // Redirect in progress
     }
   }
 
-  // ─── Fleet Management ───────────────────────────────
+  // â”€â”€â”€ Fleet Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let allAdminBoatsCache = null;
   let fleetCache = [];
 
@@ -1092,7 +1093,7 @@ return; // Redirect in progress
                   <span id="loc-verify-icon" class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined ${boat?.location ? 'text-green-600' : 'text-on-surface-variant'}">${boat?.location ? 'verified' : 'search'}</span>
                 </div>
                 <div id="loc-suggestions-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-outline-variant rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 hidden"></div>
-                <p id="loc-verify-status" class="text-xs mt-1 ${boat?.location ? 'text-green-600 font-bold' : 'text-on-surface-variant'}">${boat?.location ? '✓ Confirmed address' : 'Type to search and confirm exact dock location on map.'}</p>
+                <p id="loc-verify-status" class="text-xs mt-1 ${boat?.location ? 'text-green-600 font-bold' : 'text-on-surface-variant'}">${boat?.location ? 'âœ“ Confirmed address' : 'Type to search and confirm exact dock location on map.'}</p>
                 
                 <div id="admin-map-preview-wrapper" class="w-full h-48 rounded-xl overflow-hidden border border-outline-variant mt-2 relative ${boat?.location ? '' : 'hidden'}">
                   <div id="admin-preview-map" class="w-full h-full"></div>
@@ -1143,11 +1144,11 @@ return; // Redirect in progress
                   <div class="flex items-center justify-between mb-1">
                     <label class="block font-label text-xs font-bold text-on-surface">iCal (.ics) Feed URL(s)</label>
                     <select id="ical-provider-template-select" class="px-2 py-1 bg-blue-100/80 border border-blue-300 rounded text-[11px] font-bold text-blue-900 cursor-pointer hover:bg-blue-200 transition-colors">
-                      <option value="">⚡ Quick-Select Provider Format...</option>
-                      <option value="timetree">🌳 TimeTree (Sync via Bridge)</option>
-                      <option value="google">📅 Google Calendar (.ics Link)</option>
-                      <option value="icloud">🍏 Apple iCloud Calendar</option>
-                      <option value="boatsetter">⚓ Boatsetter Charter Feed</option>
+                      <option value="">âš¡ Quick-Select Provider Format...</option>
+                      <option value="timetree">ðŸŒ³ TimeTree (Sync via Bridge)</option>
+                      <option value="google">ðŸ“… Google Calendar (.ics Link)</option>
+                      <option value="icloud">ðŸ Apple iCloud Calendar</option>
+                      <option value="boatsetter">âš“ Boatsetter Charter Feed</option>
                     </select>
                   </div>
                   <div id="timetree-input-group" class="hidden flex items-center border border-blue-300 rounded-lg overflow-hidden bg-white mb-2 shadow-sm">
@@ -1163,7 +1164,7 @@ return; // Redirect in progress
                   <input type="text" id="edit-boat-ical-label" value="${escapeHtml(boat?.ical_feed_label || '')}" placeholder="e.g. Filter: Remedy OR Google Cal" class="admin-field w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs font-bold"/>
                 </div>
               </div>
-              <p class="text-[11px] text-blue-800 mt-2 bg-blue-100/70 p-2 rounded-lg font-medium">💡 <b>Multiple Calendars?</b> Paste <b>multiple .ics URLs</b> (separated by comma or new line) to merge 2+ calendars into this yacht! Or if using a Master Feed containing all boats, type <code class="bg-white px-1.5 py-0.5 rounded border border-blue-300 font-mono text-blue-900 font-bold">Filter: BoatName</code> in the filter box to only import events matching this yacht!</p>
+              <p class="text-[11px] text-blue-800 mt-2 bg-blue-100/70 p-2 rounded-lg font-medium">ðŸ’¡ <b>Multiple Calendars?</b> Paste <b>multiple .ics URLs</b> (separated by comma or new line) to merge 2+ calendars into this yacht! Or if using a Master Feed containing all boats, type <code class="bg-white px-1.5 py-0.5 rounded border border-blue-300 font-mono text-blue-900 font-bold">Filter: BoatName</code> in the filter box to only import events matching this yacht!</p>
             </div>
 
             <!-- Drag & Drop Photo Manager -->
@@ -1996,7 +1997,7 @@ EXTRACTION RULES:
       }
       if (previewMarker) previewMap.removeLayer(previewMarker);
       previewMarker = L.marker([lat, lon]).addTo(previewMap);
-      previewMarker.bindPopup(`<div class="font-bold text-secondary text-xs">📍 ${escapeHtml(titleText)}</div>`).openPopup();
+      previewMarker.bindPopup(`<div class="font-bold text-secondary text-xs">ðŸ“ ${escapeHtml(titleText)}</div>`).openPopup();
       setTimeout(() => previewMap.invalidateSize(), 200);
     }
 
@@ -2094,11 +2095,11 @@ EXTRACTION RULES:
                 locDropdown.classList.add('hidden');
                 locIcon.textContent = 'edit_location_alt';
                 locIcon.className = 'absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-amber-600';
-                locStatus.innerHTML = '⚠ Address not verified via map, but it will be saved.';
+                locStatus.innerHTML = 'âš  Address not verified via map, but it will be saved.';
                 locStatus.className = 'text-xs mt-1 text-amber-600 font-medium';
               });
               locDropdown.classList.remove('hidden');
-              locStatus.textContent = 'No exact map match — you can still use this address.';
+              locStatus.textContent = 'No exact map match â€” you can still use this address.';
               locStatus.className = 'text-xs mt-1 text-amber-600';
               return;
             }
@@ -2123,7 +2124,7 @@ EXTRACTION RULES:
                 
                 locIcon.textContent = 'verified';
                 locIcon.className = 'absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-green-600';
-                locStatus.innerHTML = `✓ Address confirmed! GPS: (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+                locStatus.innerHTML = `âœ“ Address confirmed! GPS: (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
                 locStatus.className = 'text-xs mt-1 text-green-600 font-bold';
 
                 showPreviewMap(lat, lon, cleanAddress);
@@ -2183,7 +2184,7 @@ EXTRACTION RULES:
                 <div class="flex justify-between items-center w-full">
                   ${i > 0 ? `
                     <button type="button" onclick="window.setCoverPhoto(${i})" class="bg-secondary/90 hover:bg-secondary text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-0.5 cursor-pointer" title="Make Cover Photo">
-                      ⭐ Cover
+                      â­ Cover
                     </button>
                   ` : `<span></span>`}
                   <button type="button" onclick="window.removeBoatPhoto(${i})" class="bg-red-600/90 hover:bg-red-700 text-white w-6 h-6 rounded-full text-xs flex items-center justify-center shadow cursor-pointer" title="Delete">&times;</button>
@@ -2191,12 +2192,12 @@ EXTRACTION RULES:
                 <div class="flex justify-center items-center gap-1.5 w-full pb-0.5">
                   ${i > 0 ? `
                     <button type="button" onclick="window.moveBoatPhoto(${i}, -1)" class="bg-white/95 hover:bg-white text-gray-900 w-6 h-6 rounded-full flex items-center justify-center shadow text-xs font-bold cursor-pointer" title="Move Left">
-                      ⬅️
+                      â¬…ï¸
                     </button>
                   ` : ''}
                   ${i < currentPhotos.length - 1 ? `
                     <button type="button" onclick="window.moveBoatPhoto(${i}, 1)" class="bg-white/95 hover:bg-white text-gray-900 w-6 h-6 rounded-full flex items-center justify-center shadow text-xs font-bold cursor-pointer" title="Move Right">
-                      ➡️
+                      âž¡ï¸
                     </button>
                   ` : ''}
                 </div>
@@ -2311,7 +2312,7 @@ EXTRACTION RULES:
             }
             renderPhotoManager();
           } catch (err) {
-            showToast(`⚠️ Failed to upload ${file.name}: ${err.message}`, 'error', 6000);
+            showToast(`âš ï¸ Failed to upload ${file.name}: ${err.message}`, 'error', 6000);
             const idx = currentPhotos.indexOf(tempItem);
             if (idx !== -1) {
               currentPhotos.splice(idx, 1);
@@ -2321,7 +2322,7 @@ EXTRACTION RULES:
         }
 
         galleryUploadInput.value = '';
-        showToast(`✓ All ${files.length} media item(s) uploaded! Remember to click Save Changes when finished.`, 'success', 5000);
+        showToast(`âœ“ All ${files.length} media item(s) uploaded! Remember to click Save Changes when finished.`, 'success', 5000);
       };
     }
 
@@ -2400,10 +2401,10 @@ EXTRACTION RULES:
             renderPhotoManager();
 
             if (cloudStatus) {
-              cloudStatus.textContent = `✓ Imported ${driveFiles.length} photos!`;
+              cloudStatus.textContent = `âœ“ Imported ${driveFiles.length} photos!`;
               cloudStatus.className = 'text-xs font-bold text-green-600';
             }
-            showToast(`✓ Imported ${driveFiles.length} Google Drive photos! Remember to click Save Changes.`, 'success', 6000);
+            showToast(`âœ“ Imported ${driveFiles.length} Google Drive photos! Remember to click Save Changes.`, 'success', 6000);
 
           } else if (link.includes('dropbox.com')) {
             let entries = [];
@@ -2496,10 +2497,10 @@ EXTRACTION RULES:
             }
 
             if (cloudStatus) {
-              cloudStatus.textContent = `✓ Imported ${successCount} Dropbox photos!`;
+              cloudStatus.textContent = `âœ“ Imported ${successCount} Dropbox photos!`;
               cloudStatus.className = 'text-xs font-bold text-green-600';
             }
-            showToast(`✓ Imported ${successCount} Dropbox photos! Click Save Changes when ready.`, 'success', 6000);
+            showToast(`âœ“ Imported ${successCount} Dropbox photos! Click Save Changes when ready.`, 'success', 6000);
 
           } else if (link.startsWith('http')) {
             // GENERIC GALLERY URL (Aryeo, MLS, Property Galleries, etc.)
@@ -2536,17 +2537,17 @@ EXTRACTION RULES:
             renderPhotoManager();
 
             if (cloudStatus) {
-              cloudStatus.textContent = `✓ Pulled ${cleanUrls.length} photos!`;
+              cloudStatus.textContent = `âœ“ Pulled ${cleanUrls.length} photos!`;
               cloudStatus.className = 'text-xs font-bold text-green-600';
             }
-            showToast(`✓ Pulled and attached ${cleanUrls.length} gallery photos! Click Save Changes when ready.`, 'success', 6000);
+            showToast(`âœ“ Pulled and attached ${cleanUrls.length} gallery photos! Click Save Changes when ready.`, 'success', 6000);
 
           } else {
             throw new Error('Please enter a valid Google Drive, Dropbox, or Gallery URL.');
           }
         } catch (err) {
           console.error('Cloud Import Error:', err);
-          showToast(`⚠️ Cloud Import Error: ${err.message}`, 'error', 7000);
+          showToast(`âš ï¸ Cloud Import Error: ${err.message}`, 'error', 7000);
           if (cloudStatus) {
             cloudStatus.textContent = `Error: ${err.message}`;
             cloudStatus.className = 'text-xs font-bold text-red-600';
@@ -2613,7 +2614,7 @@ EXTRACTION RULES:
       };
 
       if (boatData.ical_feed_url && (boatData.ical_feed_url.includes('timetr.ee/s/') || boatData.ical_feed_url.includes('/invitations/'))) {
-        alert('⚠️ Notice: That is a TimeTree Web Share / Invitation link!\n\nUnlike Google Calendar, Apple Calendar, or Teamup (which have native 1-click .ics export links), TimeTree does not have a built-in iCal export in their app.\n\nTo sync a TimeTree calendar into YRSF:\n• Use a free converter like "TimeTree Exporter" to generate a secret .ics link from their calendar.\n• OR recommend your partner captain use Google Calendar / Apple Calendar / Teamup, which natively support 1-click industry standard .ics syncing!');
+        alert('âš ï¸ Notice: That is a TimeTree Web Share / Invitation link!\n\nUnlike Google Calendar, Apple Calendar, or Teamup (which have native 1-click .ics export links), TimeTree does not have a built-in iCal export in their app.\n\nTo sync a TimeTree calendar into YRSF:\nâ€¢ Use a free converter like "TimeTree Exporter" to generate a secret .ics link from their calendar.\nâ€¢ OR recommend your partner captain use Google Calendar / Apple Calendar / Teamup, which natively support 1-click industry standard .ics syncing!');
         if (saveBtn) {
           saveBtn.disabled = false;
           saveBtn.innerHTML = originalSaveText;
@@ -2725,7 +2726,7 @@ EXTRACTION RULES:
     });
   }
 
-  // ─── Add-ons Management ─────────────────────────────
+  // â”€â”€â”€ Add-ons Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function loadAdminAddons() {
     const grid = document.getElementById('admin-addons-grid');
     if (!grid) return;
@@ -2886,12 +2887,12 @@ EXTRACTION RULES:
     });
   }
 
-  // ─── Content (Blogs only — FAQs & Testimonials are now in Dashboard) ─────
+  // â”€â”€â”€ Content (Blogs only â€” FAQs & Testimonials are now in Dashboard) â”€â”€â”€â”€â”€
   async function loadContent() {
     await loadBlogs();
   }
 
-  // ─── Blogs ──────────────────────────────────────────
+  // â”€â”€â”€ Blogs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function loadBlogs() {
     const list = document.getElementById('blogs-list');
     if (!list) return;
@@ -3146,7 +3147,7 @@ EXTRACTION RULES:
     });
   }
 
-  // ─── FAQs ───────────────────────────────────────────
+  // â”€â”€â”€ FAQs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function loadFAQs() {
     const list = document.getElementById('faqs-list');
     if (!list) return;
@@ -3256,7 +3257,7 @@ EXTRACTION RULES:
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-1">
             <p class="font-label text-label-md text-on-surface">${escapeHtml(t.name)}</p>
-            <span class="text-caption text-on-surface-variant">${'★'.repeat(t.rating || 5)}</span>
+            <span class="text-caption text-on-surface-variant">${'â˜…'.repeat(t.rating || 5)}</span>
           </div>
           <p class="font-body text-body-md text-on-surface-variant line-clamp-2">${escapeHtml(t.text)}</p>
         </div>
@@ -3342,7 +3343,7 @@ EXTRACTION RULES:
     });
   }
 
-  // ─── SEO Settings ───────────────────────────────────
+  // â”€â”€â”€ SEO Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function loadSEO() {
     try {
       const settings = await getAllSettings();
@@ -3366,7 +3367,7 @@ EXTRACTION RULES:
     }
   });
 
-  // ─── General Settings ───────────────────────────────
+  // â”€â”€â”€ General Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function loadSettings() {
     try {
       const settings = await getAllSettings();
@@ -3483,7 +3484,7 @@ EXTRACTION RULES:
   handleBucketUpload('upload-expert-image-1', 'setting-expert-image-1');
   handleBucketUpload('upload-expert-image-2', 'setting-expert-image-2');
 
-  // ─── Data Migration ─────────────────────────────────
+  // â”€â”€â”€ Data Migration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const migInput = document.getElementById('migration-csv');
   const migBtn = document.getElementById('start-migration-btn');
   const migProgress = document.getElementById('migration-progress');
@@ -3635,7 +3636,7 @@ EXTRACTION RULES:
     });
   }
 
-  // ─── Staff & Timeclock Management ───────────────────
+  // â”€â”€â”€ Staff & Timeclock Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let staffUsersCache = [];
   let timecardsCache = [];
 
@@ -3822,7 +3823,7 @@ EXTRACTION RULES:
             staff_id, boat_id, boat_name, charter_date, charter_price, commission_rate, commission_amount, client_notes
           }]);
           if (error) throw error;
-          showToast(`💰 Commission logged! Earned $${commission_amount.toFixed(2)}`, 'success');
+          showToast(`ðŸ’° Commission logged! Earned $${commission_amount.toFixed(2)}`, 'success');
           commModal.classList.add('hidden');
           loadCommissions();
         } catch (err) {
@@ -3877,7 +3878,7 @@ EXTRACTION RULES:
         if (openCard) {
           activeTimecardId = openCard.id;
           const inTime = new Date(openCard.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          statusBox.innerHTML = `🟢 <b>Currently Clocked In</b> since ${inTime}<br/><span class="text-[11px] font-normal">Notes: ${openCard.notes || 'None'}</span>`;
+          statusBox.innerHTML = `ðŸŸ¢ <b>Currently Clocked In</b> since ${inTime}<br/><span class="text-[11px] font-normal">Notes: ${openCard.notes || 'None'}</span>`;
           statusBox.className = 'p-3 rounded-xl bg-green-50 border border-green-200 text-center text-xs font-bold text-green-800';
           statusBox.classList.remove('hidden');
           btnIn.classList.add('hidden');
@@ -3885,7 +3886,7 @@ EXTRACTION RULES:
           notesInput.value = openCard.notes || '';
         } else {
           activeTimecardId = null;
-          statusBox.innerHTML = `⚪ <b>Currently Off Duty</b>`;
+          statusBox.innerHTML = `âšª <b>Currently Off Duty</b>`;
           statusBox.className = 'p-3 rounded-xl bg-surface-container text-center text-xs font-bold text-on-surface-variant';
           statusBox.classList.remove('hidden');
           btnIn.classList.remove('hidden');
@@ -3904,7 +3905,7 @@ EXTRACTION RULES:
         const { error } = await supabase.from('staff_timecards').insert([{ staff_id: staffId, clock_in: new Date().toISOString(), notes }]);
         if (error) { showToast('Error clocking in: ' + error.message, true); return; }
 
-        showToast('✓ Clocked in successfully! Have a great shift!');
+        showToast('âœ“ Clocked in successfully! Have a great shift!');
         clockModal.classList.add('hidden');
         loadStaffUsers();
         loadTimecards();
@@ -3926,7 +3927,7 @@ EXTRACTION RULES:
         const { error } = await supabase.from('staff_timecards').update({ clock_out: now.toISOString(), duration_hours: durationHours, notes }).eq('id', activeTimecardId);
         if (error) { showToast('Error clocking out: ' + error.message, true); return; }
 
-        showToast(`✓ Clocked out! Shift logged: ${durationHours} hours.`);
+        showToast(`âœ“ Clocked out! Shift logged: ${durationHours} hours.`);
         clockModal.classList.add('hidden');
         loadStaffUsers();
         loadTimecards();
@@ -3999,13 +4000,13 @@ EXTRACTION RULES:
                 <p class="text-[10px] text-on-surface-variant truncate">${escapeHtml(userItem.role || 'Staff')}</p>
               </div>
               <span class="px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0 ${isWorking ? 'bg-green-100 text-green-800 animate-pulse' : 'bg-surface-container text-on-surface-variant'}">
-                ${isWorking ? '🟢 Working' : '⚪ Off Duty'}
+                ${isWorking ? 'ðŸŸ¢ Working' : 'âšª Off Duty'}
               </span>
             </div>
 
             <div class="pt-1 border-t border-outline-variant/30">
               ${!canManage ? `
-                <span class="w-full py-1.5 px-2 bg-surface-container text-on-surface-variant/60 rounded-lg text-[11px] font-bold text-center block opacity-60 cursor-not-allowed" title="Only Super Admin can clock in for co-workers">🔒 Self Only</span>
+                <span class="w-full py-1.5 px-2 bg-surface-container text-on-surface-variant/60 rounded-lg text-[11px] font-bold text-center block opacity-60 cursor-not-allowed" title="Only Super Admin can clock in for co-workers">ðŸ”’ Self Only</span>
               ` : isWorking ? `
                 <button onclick="window.quickClockOutStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="w-full py-1.5 px-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs">
                   <span class="material-symbols-outlined text-[14px]">logout</span> Clock Out
@@ -4026,7 +4027,7 @@ EXTRACTION RULES:
 
   window.quickClockInStaff = async (staffId, staffName) => {
     if (!window.canClockInForStaff(staffId)) {
-      showToast(`⛔ Permission Denied: You can only clock in for yourself!`, true);
+      showToast(`â›” Permission Denied: You can only clock in for yourself!`, true);
       return;
     }
 
@@ -4042,7 +4043,7 @@ EXTRACTION RULES:
         return;
       }
 
-      showToast(`🟢 ${staffName} is now Clocked In! Have a great shift!`);
+      showToast(`ðŸŸ¢ ${staffName} is now Clocked In! Have a great shift!`);
       if (typeof loadStaffUsers === 'function') loadStaffUsers();
       if (typeof loadTimecards === 'function') loadTimecards();
       if (typeof window.loadDashStaffTimeclock === 'function') window.loadDashStaffTimeclock();
@@ -4053,7 +4054,7 @@ EXTRACTION RULES:
 
   window.quickClockOutStaff = async (staffId, staffName) => {
     if (!window.canClockInForStaff(staffId)) {
-      showToast(`⛔ Permission Denied: You can only clock out for yourself!`, true);
+      showToast(`â›” Permission Denied: You can only clock out for yourself!`, true);
       return;
     }
 
@@ -4088,7 +4089,7 @@ EXTRACTION RULES:
         return;
       }
 
-      showToast(`🛑 ${staffName} Clocked Out! Shift logged: ${durationHours} hrs.`);
+      showToast(`ðŸ›‘ ${staffName} Clocked Out! Shift logged: ${durationHours} hrs.`);
       if (typeof loadStaffUsers === 'function') loadStaffUsers();
       if (typeof loadTimecards === 'function') loadTimecards();
       if (typeof window.loadDashStaffTimeclock === 'function') window.loadDashStaffTimeclock();
@@ -4168,20 +4169,20 @@ EXTRACTION RULES:
             <td class="p-4">
               <span class="font-medium text-on-surface">${escapeHtml(userItem.role || 'Staff')}</span>
               ${userItem.pay_type === 'commission'
-                ? `<p class="text-xs font-mono text-amber-700 font-bold">🤝 ${userItem.commission_rate || 0}% Comm.</p>`
+                ? `<p class="text-xs font-mono text-amber-700 font-bold">ðŸ¤ ${userItem.commission_rate || 0}% Comm.</p>`
                 : userItem.pay_type === 'both'
                 ? `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(userItem.hourly_rate || 0).toFixed(2)}/hr + <span class="text-amber-700">${userItem.commission_rate || 0}% Comm.</span></p>`
                 : `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(userItem.hourly_rate || 0).toFixed(2)}/hr</p>`}
             </td>
             <td class="p-4">
               ${isWorking 
-                ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold animate-pulse">🟢 On Clock</span>' 
-                : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-medium">⚪ Off Duty</span>'}
+                ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold animate-pulse">ðŸŸ¢ On Clock</span>' 
+                : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-medium">âšª Off Duty</span>'}
             </td>
             <td class="p-4 flex flex-wrap gap-1 max-w-sm">${permBadges}</td>
             <td class="p-4 text-right whitespace-nowrap">
               ${!canManage ? `
-                <span class="px-2.5 py-1.5 bg-surface-container text-on-surface-variant/60 rounded-lg text-xs font-bold inline-block opacity-60 cursor-not-allowed mr-1.5" title="Only Super Admin can clock in for co-workers">🔒 Self Only</span>
+                <span class="px-2.5 py-1.5 bg-surface-container text-on-surface-variant/60 rounded-lg text-xs font-bold inline-block opacity-60 cursor-not-allowed mr-1.5" title="Only Super Admin can clock in for co-workers">ðŸ”’ Self Only</span>
               ` : isWorking ? `
                 <button onclick="window.quickClockOutStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5" title="Clock Out ${escapeHtml(userItem.name)}">
                   <span class="material-symbols-outlined text-[16px]">logout</span> Clock Out
@@ -4235,7 +4236,7 @@ EXTRACTION RULES:
       tbody.innerHTML = timecardsCache.map(card => {
         const staff = card.staff_users || { name: 'Unknown', hourly_rate: 0 };
         const inDate = new Date(card.clock_in).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        const outDate = card.clock_out ? new Date(card.clock_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '⏳ Active Shift...';
+        const outDate = card.clock_out ? new Date(card.clock_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'â³ Active Shift...';
         const hours = card.duration_hours ? `${parseFloat(card.duration_hours).toFixed(2)} hrs` : 'In Progress';
         const earnings = card.duration_hours ? `$${(parseFloat(card.duration_hours) * parseFloat(staff.hourly_rate || 0)).toFixed(2)}` : 'TBD';
 
@@ -4400,7 +4401,7 @@ EXTRACTION RULES:
   const refreshCommissionsBtn = document.getElementById('refresh-commissions-btn');
   refreshCommissionsBtn?.addEventListener('click', loadCommissions);
 
-  // ─── Charter Bookings & Daily Manifest System ─────────
+  // â”€â”€â”€ Charter Bookings & Daily Manifest System â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // settingsCache is declared at the top of DOMContentLoaded
   let bookingsCache = [];
   let currentManifestFilter = 'today';
@@ -4412,7 +4413,7 @@ EXTRACTION RULES:
   window.initBookingsSection = function() {
     if (isBookingsInit) return;
     isBookingsInit = true;
-    // ── Pre-warm fleet cache so the boat dropdown is instant on first tap ──
+    // â”€â”€ Pre-warm fleet cache so the boat dropdown is instant on first tap â”€â”€
     if (!fleetCache || fleetCache.length === 0) {
       loadFleet().then(() => {
         // Silently pre-render dropdown options after data arrives
@@ -4797,7 +4798,7 @@ EXTRACTION RULES:
               const defP = p.price ? parseFloat(p.price) : 0;
               const boatP = specP > 0 ? specP : defP;
               const capTotal = capRate * p.duration_hours;
-              const capText = capRate > 0 ? ` (Captain: $${capRate}/hr · $${capTotal} total)` : ' ⚠️ Captain Rate Missing';
+              const capText = capRate > 0 ? ` (Captain: $${capRate}/hr Â· $${capTotal} total)` : ' âš ï¸ Captain Rate Missing';
               return `<option value="${p.duration_hours}">${escapeHtml(p.duration_label)} - Boat: $${boatP.toLocaleString()}${capText}</option>`;
             }).join('');
           } else {
@@ -4966,7 +4967,7 @@ EXTRACTION RULES:
                 </div>
                 <div class="flex items-center gap-2 text-[11px] text-on-surface-variant font-medium mt-0.5">
                   <span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[13px] text-secondary">straighten</span> ${b.length_ft || '55'}ft</span>
-                  <span>•</span>
+                  <span>â€¢</span>
                   <span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[13px] text-secondary">group</span> ${b.capacity || 12} guests</span>
                 </div>
               </div>
@@ -4998,7 +4999,7 @@ EXTRACTION RULES:
         }
       });
       calBoatSearchInput.addEventListener('focus', () => {
-        // Render immediately from whatever is already cached — no await
+        // Render immediately from whatever is already cached â€” no await
         window.renderCalBoatDropdownOptions(calBoatSearchInput.value === 'Select Yacht...' ? '' : calBoatSearchInput.value);
         calBoatOptionsList?.classList.remove('hidden');
         if (calBoatToggle) calBoatToggle.classList.add('rotate-180');
@@ -5012,7 +5013,7 @@ EXTRACTION RULES:
     if (calBoatTrigger) {
       calBoatTrigger.addEventListener('click', (e) => {
         if (e.target === calBoatSearchInput) return;
-        // Render instantly from cache — no await
+        // Render instantly from cache â€” no await
         window.renderCalBoatDropdownOptions(calBoatSearchInput?.value === 'Select Yacht...' ? '' : (calBoatSearchInput?.value || ''));
         const isHidden = calBoatOptionsList?.classList.contains('hidden');
         if (isHidden) {
@@ -5030,7 +5031,7 @@ EXTRACTION RULES:
       });
     } else if (calBoatToggle) {
       calBoatToggle.addEventListener('click', () => {
-        // Render instantly from cache — no await
+        // Render instantly from cache â€” no await
         window.renderCalBoatDropdownOptions(calBoatSearchInput?.value === 'Select Yacht...' ? '' : (calBoatSearchInput?.value || ''));
         calBoatOptionsList?.classList.toggle('hidden');
         calBoatToggle?.classList.toggle('rotate-180');
@@ -5164,7 +5165,7 @@ EXTRACTION RULES:
           if (custContactEl) custContactEl.textContent = `${custPhone} ${custEmail ? '| ' + custEmail : ''}`;
           if (boatNameEl) boatNameEl.textContent = boatName;
           if (charterDateEl) charterDateEl.textContent = `${date} at ${time}`;
-          if (durationEl) durationEl.textContent = `${duration} Hours • Up to ${guests} Guests`;
+          if (durationEl) durationEl.textContent = `${duration} Hours â€¢ Up to ${guests} Guests`;
           if (totalPriceEl) totalPriceEl.textContent = `$${parseFloat(total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
           // Super Itemized Breakdown Math for Single Yacht
@@ -5286,11 +5287,11 @@ EXTRACTION RULES:
 
           const element = document.getElementById('pdf-quote-template');
           if (!element) {
-            alert('⚠️ PDF Template missing from document.');
+            alert('âš ï¸ PDF Template missing from document.');
             return;
           }
 
-          if (typeof showToast === 'function') showToast(isMultiYacht ? `📄 Generating Multi-Yacht Proposal (${optionsList.length} Boats)...` : '📄 Generating Quote PDF...', 'info');
+          if (typeof showToast === 'function') showToast(isMultiYacht ? `ðŸ“„ Generating Multi-Yacht Proposal (${optionsList.length} Boats)...` : 'ðŸ“„ Generating Quote PDF...', 'info');
 
           // Render clone inside interactive Quote Preview Modal
           const clone = element.cloneNode(true);
@@ -5346,7 +5347,7 @@ EXTRACTION RULES:
                     <div>
                       <span style="background-color: #4f46e5; color: #ffffff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">OPTION ${opt.optionNum}</span>
                       <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 6px 0 2px 0;">${escapeHtml(opt.boatName)}</h3>
-                      <p style="font-size: 12px; color: #475569; margin: 0;">${opt.duration} Hours • ${date} at ${opt.time} • Up to ${opt.guests} Guests</p>
+                      <p style="font-size: 12px; color: #475569; margin: 0;">${opt.duration} Hours â€¢ ${date} at ${opt.time} â€¢ Up to ${opt.guests} Guests</p>
                     </div>
                     <div style="text-align: right;">
                       <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block;">All-Inclusive Rate</span>
@@ -5444,7 +5445,7 @@ EXTRACTION RULES:
             const dlBtn = document.getElementById('download-quote-pdf-btn');
             if (dlBtn) {
               dlBtn.onclick = () => {
-                if (typeof showToast === 'function') showToast('📄 Downloading PDF Proposal File...', 'info');
+                if (typeof showToast === 'function') showToast('ðŸ“„ Downloading PDF Proposal File...', 'info');
                 
                 const opt = {
                   margin:       [0.3, 0.3, 0.3, 0.3],
@@ -5456,13 +5457,13 @@ EXTRACTION RULES:
 
                 if (typeof html2pdf !== 'undefined') {
                   html2pdf().set(opt).from(clone).save().then(() => {
-                    if (typeof showToast === 'function') showToast('✓ Quote saved to Documents!', 'success');
+                    if (typeof showToast === 'function') showToast('âœ“ Quote saved to Documents!', 'success');
                   }).catch(err => {
                     console.error('html2pdf export error:', err);
                     if (typeof showToast === 'function') showToast('Quote Export Error: ' + err.message, 'error');
                   });
                 } else {
-                  alert('⚠️ PDF library is initializing. Please try downloading again in 2 seconds.');
+                  alert('âš ï¸ PDF library is initializing. Please try downloading again in 2 seconds.');
                 }
               };
             }
@@ -5626,7 +5627,7 @@ EXTRACTION RULES:
         if (rem === 0 && tot > 0) {
           bookBalDisplay.classList.remove('text-red-600');
           bookBalDisplay.classList.add('text-green-600');
-          bookBalDisplay.value = '✓ PAID IN FULL ($0.00)';
+          bookBalDisplay.value = 'âœ“ PAID IN FULL ($0.00)';
         } else {
           bookBalDisplay.classList.add('text-red-600');
           bookBalDisplay.classList.remove('text-green-600');
@@ -6126,7 +6127,7 @@ EXTRACTION RULES:
           } else {
             const { error } = await supabase.from('bookings').insert([{ ...payload, created_at: new Date().toISOString() }]);
             if (error) throw error;
-            showToast('🛥️ New charter scheduled & manifest updated!', 'success');
+            showToast('ðŸ›¥ï¸ New charter scheduled & manifest updated!', 'success');
             
             try {
               const settings = await getAllSettings();
@@ -6236,7 +6237,7 @@ EXTRACTION RULES:
             }
           }
         } catch (e) {
-          console.warn('⚠️ [AutoSync] Error during background iCal sync:', e);
+          console.warn('âš ï¸ [AutoSync] Error during background iCal sync:', e);
         }
 
         const badge = document.getElementById('cal-last-synced-badge');
@@ -6266,7 +6267,7 @@ EXTRACTION RULES:
   let isFetchingBookings = false;
   async function loadBookings(forceRefresh = false) {
     const tbody = document.getElementById('manifest-table-body');
-    // Note: tbody may be absent when called from the dashboard view — that's OK,
+    // Note: tbody may be absent when called from the dashboard view â€” that's OK,
     // renderManifestTable() is a no-op when tbody is null.
     if (!fleetCache || fleetCache.length === 0) loadFleet();
 
@@ -6305,7 +6306,7 @@ EXTRACTION RULES:
                   if (payload.old && payload.new.deposit_amount > payload.old.deposit_amount) {
                     const diff = payload.new.deposit_amount - payload.old.deposit_amount;
                     const name = payload.new.customer_name || 'Guest';
-                    if (window.showToast) window.showToast(`💰 Payment Confirmed: Received $${diff.toFixed(2)} from ${name}!`, 'success', 6000);
+                    if (window.showToast) window.showToast(`ðŸ’° Payment Confirmed: Received $${diff.toFixed(2)} from ${name}!`, 'success', 6000);
                   }
                 }
               })
@@ -6521,10 +6522,10 @@ EXTRACTION RULES:
       const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
       const isToday = b.booking_date === todayStr;
       
-      let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">🟢 Confirmed</span>`;
-      if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold">✓ Completed</span>`;
-      if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">🔴 Cancelled</span>`;
-      if (b.status === 'inquiry') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">📝 Quote / Draft</span>`;
+      let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">ðŸŸ¢ Confirmed</span>`;
+      if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold">âœ“ Completed</span>`;
+      if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">ðŸ”´ Cancelled</span>`;
+      if (b.status === 'inquiry') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">ðŸ“ Quote / Draft</span>`;
 
       const tot = parseFloat(b.total_price || b.amount || 0);
       const dep = parseFloat(b.deposit_amount || 0);
@@ -6573,9 +6574,9 @@ EXTRACTION RULES:
               ` : ''}
               <div class="flex justify-between font-bold border-t border-outline-variant/40 pt-0.5 ${rem > 0.01 ? 'text-red-600 bg-red-50/80 px-1 py-0 rounded' : 'text-green-700 bg-green-50/80 px-1 py-0 rounded'}">
                 <span class="text-[9px] font-sans">${rem > 0.01 ? 'Bal Due:' : 'Status:'}</span>
-                <span>${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
+                <span>${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `âœ“ PAID`}</span>
               </div>
-              ${b.payment_method ? `<div class="text-[9px] text-on-surface-variant font-sans italic truncate pt-0.5">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
+              ${b.payment_method ? `<div class="text-[9px] text-on-surface-variant font-sans italic truncate pt-0.5">ðŸ’³ ${escapeHtml(b.payment_method)}</div>` : ''}
               <div class="pt-0.5">${statusBadge.replace('px-2.5 py-1 text-xs', 'px-1.5 py-0.5 text-[10px]')}</div>
             </div>
           </td>
@@ -6615,9 +6616,9 @@ EXTRACTION RULES:
       cardsGrid.innerHTML = filtered.map(b => {
         const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         const isToday = b.booking_date === todayStr;
-        let statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">✓ Confirmed</button>`;
-        if (b.status === 'completed') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">🏁 Completed</button>`;
-        if (b.status === 'cancelled') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">🛑 Cancelled</button>`;
+        let statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">âœ“ Confirmed</button>`;
+        if (b.status === 'completed') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">ðŸ Completed</button>`;
+        if (b.status === 'cancelled') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">ðŸ›‘ Cancelled</button>`;
 
         const total = parseFloat(b.total_price || b.amount || 0);
         const dep = parseFloat(b.deposit_amount || 0);
@@ -6640,19 +6641,19 @@ EXTRACTION RULES:
 
               <div class="space-y-1 mb-3 bg-surface-container-low p-2.5 rounded-xl border border-outline-variant/50 text-xs">
                 <div class="flex justify-between text-on-surface font-semibold">
-                  <span>📅 Date &amp; Time:</span>
+                  <span>ðŸ“… Date &amp; Time:</span>
                   <span class="font-mono text-secondary">${dateFormatted} @ ${escapeHtml(b.start_time || 'TBD')}</span>
                 </div>
                 <div class="flex justify-between text-on-surface-variant">
-                  <span>👤 Guest:</span>
+                  <span>ðŸ‘¤ Guest:</span>
                   <span class="font-bold text-on-surface">${escapeHtml(b.customer_name || 'Guest')}</span>
                 </div>
                 <div class="flex justify-between text-on-surface-variant">
-                  <span>📞 Phone:</span>
+                  <span>ðŸ“ž Phone:</span>
                   <span>${b.customer_phone ? `<a href="tel:${escapeHtml(b.customer_phone)}" onclick="event.stopPropagation()" class="font-mono text-secondary font-bold hover:underline hover:text-primary transition-colors">${escapeHtml(b.customer_phone)}</a>` : '-'}</span>
                 </div>
                 <div class="flex justify-between text-on-surface-variant">
-                  <span>👥 Passengers:</span>
+                  <span>ðŸ‘¥ Passengers:</span>
                   <span>${b.guest_count || b.guests || b.passengers || 1} Guests (${b.duration_hours || 4} hrs)</span>
                 </div>
               </div>
@@ -6674,12 +6675,12 @@ EXTRACTION RULES:
                 ` : ''}
                 <div class="flex justify-between border-t border-amber-200 pt-1 ${rem > 0.01 ? 'text-red-700 font-bold bg-red-100/60 px-1 rounded' : 'text-green-800 font-bold bg-green-100/60 px-1 rounded'}">
                   <span class="font-sans text-[9px]">${rem > 0.01 ? 'Balance Due:' : 'Status:'}</span>
-                  <span class="text-[11px]">${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
+                  <span class="text-[11px]">${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `âœ“ PAID`}</span>
                 </div>
-                ${b.payment_method ? `<div class="text-[9px] font-sans text-on-surface-variant italic pt-0.5 border-t border-amber-200/40">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
+                ${b.payment_method ? `<div class="text-[9px] font-sans text-on-surface-variant italic pt-0.5 border-t border-amber-200/40">ðŸ’³ ${escapeHtml(b.payment_method)}</div>` : ''}
               </div>
 
-              ${b.special_requests ? `<p class="text-[10px] leading-tight text-on-surface-variant italic bg-surface-container-low p-1.5 rounded-lg mb-1.5">📝 "${escapeHtml(b.special_requests)}"</p>` : ''}
+              ${b.special_requests ? `<p class="text-[10px] leading-tight text-on-surface-variant italic bg-surface-container-low p-1.5 rounded-lg mb-1.5">ðŸ“ "${escapeHtml(b.special_requests)}"</p>` : ''}
             </div>
 
             <div class="flex items-center justify-end gap-1 pt-1.5 border-t border-outline-variant mt-1">
@@ -6737,7 +6738,7 @@ EXTRACTION RULES:
     }
 
     if (boatsWithIcal.length === 0) {
-      if (showNotification) alert('ℹ️ No active yachts matching your selection have an external iCal (.ics) feed saved yet!\n\nMake sure the selected yacht has an iCal feed URL saved under Fleet Management -> Edit Yacht.');
+      if (showNotification) alert('â„¹ï¸ No active yachts matching your selection have an external iCal (.ics) feed saved yet!\n\nMake sure the selected yacht has an iCal feed URL saved under Fleet Management -> Edit Yacht.');
       return;
     }
 
@@ -7125,12 +7126,12 @@ EXTRACTION RULES:
 
     if (showNotification) {
       if (addedCount > 0) {
-        showToast(`✓ Synced ${addedCount} new calendar event(s) successfully!`, 'success');
+        showToast(`âœ“ Synced ${addedCount} new calendar event(s) successfully!`, 'success');
       } else if (totalParsedCount > 0) {
-        showToast(`✓ Calendar is already up to date!`, 'success');
+        showToast(`âœ“ Calendar is already up to date!`, 'success');
       } else {
         const targetBoatName = boatsWithIcal.length === 1 ? boatsWithIcal[0].name : 'selected yachts';
-        showToast(`⚠️ 0 events found for ${targetBoatName}. Make sure the TimeTree iCal secret link (.ics) is valid and set to public share.`, 'warning', 6000);
+        showToast(`âš ï¸ 0 events found for ${targetBoatName}. Make sure the TimeTree iCal secret link (.ics) is valid and set to public share.`, 'warning', 6000);
       }
     }
     if (showNotification && syncBtn) {
@@ -7265,10 +7266,10 @@ EXTRACTION RULES:
         const diffDays = Math.round((new Date(dateStr) - new Date(todayStr)) / (1000 * 60 * 60 * 24));
         let weatherBadge = '';
         if (diffDays >= 0 && diffDays <= 6) {
-          const icons = ['☀️ 85°', '⛅ 82°', '☀️ 86°', '🌤 84°', '🌧 80°', '☀️ 85°', '⛅ 83°'];
+          const icons = ['â˜€ï¸ 85Â°', 'â›… 82Â°', 'â˜€ï¸ 86Â°', 'ðŸŒ¤ 84Â°', 'ðŸŒ§ 80Â°', 'â˜€ï¸ 85Â°', 'â›… 83Â°'];
           weatherBadge = `<span class="hidden lg:flex text-[10px] bg-amber-500/10 text-amber-800 border border-amber-500/20 px-1.5 py-0.5 rounded font-extrabold items-center gap-1 shadow-2xs" title="Miami Forecast">${icons[diffDays % icons.length]}</span>`;
         } else if (diffDays > 6 && diffDays <= 14) {
-          weatherBadge = `<span class="hidden lg:inline-block text-[10px] text-on-surface-variant/60 font-medium" title="Long range forecast">⛅</span>`;
+          weatherBadge = `<span class="hidden lg:inline-block text-[10px] text-on-surface-variant/60 font-medium" title="Long range forecast">â›…</span>`;
         }
 
         const badgesHtml = allEvents.map(b => {
@@ -7343,7 +7344,7 @@ EXTRACTION RULES:
     grid.innerHTML = cellsHtml;
   }
 
-  // ─── Availability Engine ────────────────────────────────────────────────────
+  // â”€â”€â”€ Availability Engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const CHARTER_START_MINS = 10 * 60;       // 10:00 AM in minutes
   const CHARTER_END_MINS   = (24 + 2) * 60; // 2:00 AM next day in minutes (26:00)
 
@@ -7425,7 +7426,7 @@ EXTRACTION RULES:
 
       const startRes = timeStrToMins(effectiveStartTime, ev.customer_name);
       
-      // If event is "All Day", block entire operating window (10:00 AM – 2:00 AM)!
+      // If event is "All Day", block entire operating window (10:00 AM â€“ 2:00 AM)!
       if (startRes && startRes.isAllDay) {
         blocked.push({
           startMins: CHARTER_START_MINS,
@@ -7470,7 +7471,7 @@ EXTRACTION RULES:
       }
     }
 
-    // Calculate free windows within 10AM–2AM
+    // Calculate free windows within 10AMâ€“2AM
     const freeWindows = [];
     let cursor = CHARTER_START_MINS;
     for (const blk of merged) {
@@ -7506,7 +7507,7 @@ EXTRACTION RULES:
       if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') return null;
 
       const windows = availability.freeWindows.map(w =>
-        `${minsToTimeStr(w.startMins)} – ${minsToTimeStr(w.endMins)} (${Math.round((w.endMins - w.startMins) / 60 * 10) / 10} hrs)`
+        `${minsToTimeStr(w.startMins)} â€“ ${minsToTimeStr(w.endMins)} (${Math.round((w.endMins - w.startMins) / 60 * 10) / 10} hrs)`
       ).join(', ');
 
       const prompt = `You are a yacht charter scheduling assistant for a luxury yacht charter company in South Florida called YRSF (Yacht Rentals of South Florida). 
@@ -7515,7 +7516,7 @@ Given the following schedule data, write a SHORT 1-2 sentence natural language a
 
 Date: ${dateStr}
 Boat: ${boatName || 'Fleet'}
-Operating Hours: 10:00 AM – 2:00 AM
+Operating Hours: 10:00 AM â€“ 2:00 AM
 Total Free Hours Today: ${availability.totalFreeHrs} hrs
 Available Windows: ${windows || 'Fully booked'}
 Blocked Hours: ${availability.totalBlockedHrs} hrs
@@ -7561,7 +7562,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     }
   };
 
-  // ─── AI Fleet & Charter Assistant Engine ─────────────────────────────────────
+  // â”€â”€â”€ AI Fleet & Charter Assistant Engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.queryAiFleet = async (userPromptStr) => {
     window.toggleAiFleetPanel(true);
 
@@ -7674,7 +7675,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     if (matchedBoats.length === 0) {
       boatCardsHtml = `
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center space-y-1">
-          <p class="font-bold text-xs text-amber-950">⚠️ No matching yachts with a continuous ${reqDurationHrs}-hour open window on ${dateLabel} (${targetDateStr}).</p>
+          <p class="font-bold text-xs text-amber-950">âš ï¸ No matching yachts with a continuous ${reqDurationHrs}-hour open window on ${dateLabel} (${targetDateStr}).</p>
           <p class="text-[11px] text-amber-800">Try adjusting your requested charter duration or date filter.</p>
         </div>
       `;
@@ -7685,12 +7686,12 @@ Write ONLY the summary sentence(s), no extra explanation.`;
         const rawLoc = (m.boat.marina || m.boat.location || m.boat.departure_point || m.boat.dock_address || 'Other Marina / Dock Location').trim();
         let key = rawLoc;
         const low = rawLoc.toLowerCase();
-        if (low.includes('river landing') || low.includes('201 nw south river')) key = '📍 River Landing Marina (Miami River)';
-        else if (low.includes('fontainebleau') || low.includes('4441 collins')) key = '📍 Fontainebleau Marina (Miami Beach)';
-        else if (low.includes('sea isle') || low.includes('venetian')) key = '📍 Sea Isle Marina (Downtown)';
-        else if (low.includes('bayshore') || low.includes('coconut grove')) key = '📍 Bayshore Marina (Coconut Grove)';
-        else if (low.includes('haulover')) key = '📍 Haulover Marine Center';
-        else if (!key.startsWith('📍')) key = `📍 ${key}`;
+        if (low.includes('river landing') || low.includes('201 nw south river')) key = 'ðŸ“ River Landing Marina (Miami River)';
+        else if (low.includes('fontainebleau') || low.includes('4441 collins')) key = 'ðŸ“ Fontainebleau Marina (Miami Beach)';
+        else if (low.includes('sea isle') || low.includes('venetian')) key = 'ðŸ“ Sea Isle Marina (Downtown)';
+        else if (low.includes('bayshore') || low.includes('coconut grove')) key = 'ðŸ“ Bayshore Marina (Coconut Grove)';
+        else if (low.includes('haulover')) key = 'ðŸ“ Haulover Marine Center';
+        else if (!key.startsWith('ðŸ“')) key = `ðŸ“ ${key}`;
 
         if (!marinaMap[key]) marinaMap[key] = [];
         marinaMap[key].push(m);
@@ -7700,7 +7701,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
         const items = marinaMap[marinaName];
         const cards = items.map(m => {
           const b = m.boat;
-          const winStr = `${minsToTimeStr(m.bestWindow.startMins)} – ${minsToTimeStr(m.bestWindow.endMins)}`;
+          const winStr = `${minsToTimeStr(m.bestWindow.startMins)} â€“ ${minsToTimeStr(m.bestWindow.endMins)}`;
           const startTimeInput = minsToTimeStr(m.bestWindow.startMins);
 
           return `
@@ -7709,7 +7710,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-headline font-black text-sm text-purple-950">${escapeHtml(b.name)}</span>
                   ${b.length ? `<span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-mono text-[10px] font-bold">${escapeHtml(b.length)} ft</span>` : ''}
-                  ${b.capacity ? `<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label text-[10px] font-bold">👥 Up to ${b.capacity} guests</span>` : ''}
+                  ${b.capacity ? `<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label text-[10px] font-bold">ðŸ‘¥ Up to ${b.capacity} guests</span>` : ''}
                   ${m.hourlyRate ? `<span class="px-2 py-0.5 rounded-md bg-green-100 text-green-850 font-mono text-[10px] font-bold">$${m.hourlyRate}/hr</span>` : ''}
                 </div>
                 <p class="text-xs text-purple-900 font-semibold flex items-center gap-1.5">
@@ -7742,7 +7743,7 @@ Write ONLY the summary sentence(s), no extra explanation.`;
     } else {
       boatCardsHtml = matchedBoats.map(m => {
         const b = m.boat;
-        const winStr = `${minsToTimeStr(m.bestWindow.startMins)} – ${minsToTimeStr(m.bestWindow.endMins)}`;
+        const winStr = `${minsToTimeStr(m.bestWindow.startMins)} â€“ ${minsToTimeStr(m.bestWindow.endMins)}`;
         const startTimeInput = minsToTimeStr(m.bestWindow.startMins);
         const loc = b.marina || b.location || b.departure_point || b.dock_address;
 
@@ -7752,9 +7753,9 @@ Write ONLY the summary sentence(s), no extra explanation.`;
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="font-headline font-black text-sm text-purple-950">${escapeHtml(b.name)}</span>
                 ${b.length ? `<span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-mono text-[10px] font-bold">${escapeHtml(b.length)} ft</span>` : ''}
-                ${b.capacity ? `<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label text-[10px] font-bold">👥 Up to ${b.capacity} guests</span>` : ''}
+                ${b.capacity ? `<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label text-[10px] font-bold">ðŸ‘¥ Up to ${b.capacity} guests</span>` : ''}
                 ${m.hourlyRate ? `<span class="px-2 py-0.5 rounded-md bg-green-100 text-green-850 font-mono text-[10px] font-bold">$${m.hourlyRate}/hr</span>` : ''}
-                ${loc ? `<span class="px-2 py-0.5 rounded-md bg-violet-50 text-purple-900 text-[10px] font-bold border border-purple-200 truncate max-w-[200px]" title="${escapeHtml(loc)}">📍 ${escapeHtml(loc)}</span>` : ''}
+                ${loc ? `<span class="px-2 py-0.5 rounded-md bg-violet-50 text-purple-900 text-[10px] font-bold border border-purple-200 truncate max-w-[200px]" title="${escapeHtml(loc)}">ðŸ“ ${escapeHtml(loc)}</span>` : ''}
               </div>
               <p class="text-xs text-purple-900 font-semibold flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-sm text-green-600">check_circle</span> 
@@ -7800,7 +7801,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       <div class="bg-white/95 border border-purple-200 rounded-xl sm:rounded-2xl p-4 shadow-md space-y-3">
         <div class="flex items-start justify-between gap-2 border-b border-purple-100 pb-2">
           <div class="flex items-center gap-2">
-            <span class="w-6 h-6 rounded-md bg-purple-600 text-white flex items-center justify-center text-xs">✨</span>
+            <span class="w-6 h-6 rounded-md bg-purple-600 text-white flex items-center justify-center text-xs">âœ¨</span>
             <p class="font-headline font-bold text-xs sm:text-sm text-purple-950">${aiIntroText}</p>
           </div>
           <button onclick="document.getElementById('ai-fleet-response-container').classList.add('hidden')" class="text-purple-400 hover:text-purple-800 font-bold text-base leading-none">&times;</button>
@@ -7859,7 +7860,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     };
 
     // Range pattern: "11am-3pm", "11:30am - 3:30pm", "Booked 2-6pm", "10am to 2pm", "11:00 AM - 3:00 PM", "11-3pm"
-    const rangeRegex = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:-|–|—|\bto\b)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i;
+    const rangeRegex = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:-|â€“|â€”|\bto\b)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i;
     const match = title.match(rangeRegex);
 
     if (match) {
@@ -7957,7 +7958,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     }
   };
 
-  // ─── Day Events Modal ────────────────────────────────────────────────────────
+  // â”€â”€â”€ Day Events Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.showDayEventsModal = async (dateStr) => {
     const modal = document.getElementById('day-events-modal');
     const contentEl = document.getElementById('day-events-modal-content');
@@ -7974,7 +7975,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     const parts = dateStr.split('-');
     const dateObj = new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
     const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-    if (titleEl) titleEl.textContent = `📅 Schedule for ${formattedDate}`;
+    if (titleEl) titleEl.textContent = `ðŸ“… Schedule for ${formattedDate}`;
 
     const boatFilterEl = document.getElementById('cal-boat-filter');
     const selectedBoatId = boatFilterEl ? boatFilterEl.value : 'all';
@@ -7992,7 +7993,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       return timeStringToMinutes(a.start_time) - timeStringToMinutes(b.start_time);
     });
 
-    // ── Render events list ──
+    // â”€â”€ Render events list â”€â”€
     if (allEvents.length === 0) {
       contentEl.innerHTML = `
         <div class="text-center py-8 bg-surface-container-lowest rounded-2xl border border-outline-variant">
@@ -8011,9 +8012,9 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
             <div class="p-4 bg-blue-50/70 border border-blue-200 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
-                  <span class="px-2 py-0.5 rounded-md bg-blue-600 text-white font-label text-[10px] font-bold uppercase tracking-wider">🔵 ${escapeHtml(ev.source_label || 'TimeTree Sync')}</span>
+                  <span class="px-2 py-0.5 rounded-md bg-blue-600 text-white font-label text-[10px] font-bold uppercase tracking-wider">ðŸ”µ ${escapeHtml(ev.source_label || 'TimeTree Sync')}</span>
                   <span class="font-bold text-xs text-blue-900">${escapeHtml(ev.boat_name)}</span>
-                  ${(titleOverride || ev.is_title_override) ? `<span class="px-1.5 py-0.5 rounded bg-violet-100 text-purple-900 font-extrabold text-[9px] border border-purple-200" title="Time range detected & overridden from event title">✨ Smart-Title Override</span>` : ''}
+                  ${(titleOverride || ev.is_title_override) ? `<span class="px-1.5 py-0.5 rounded bg-violet-100 text-purple-900 font-extrabold text-[9px] border border-purple-200" title="Time range detected & overridden from event title">âœ¨ Smart-Title Override</span>` : ''}
                 </div>
                 <h4 class="font-headline font-bold text-sm text-blue-950">${escapeHtml(ev.customer_name)}</h4>
                 <p class="text-xs text-blue-800 flex items-center gap-1.5 font-semibold">
@@ -8027,13 +8028,13 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
             <div class="p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-secondary transition-all">
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
-                  <span class="px-2 py-0.5 rounded-md bg-secondary text-on-secondary font-label text-[10px] font-bold uppercase tracking-wider">⛵ Charter Booking</span>
+                  <span class="px-2 py-0.5 rounded-md bg-secondary text-on-secondary font-label text-[10px] font-bold uppercase tracking-wider">â›µ Charter Booking</span>
                   <span class="font-bold text-xs text-on-surface">${escapeHtml(ev.boat_name)}</span>
                   <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${ev.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-surface-container text-on-surface-variant'}">${ev.status.toUpperCase()}</span>
                 </div>
                 <h4 class="font-headline font-bold text-sm text-on-surface">${escapeHtml(ev.customer_name)} ${ev.customer_phone ? `(${escapeHtml(ev.customer_phone)})` : ''}</h4>
                 <p class="text-xs text-on-surface-variant flex items-center gap-1.5 font-semibold">
-                  <span class="material-symbols-outlined text-sm">schedule</span> <span class="font-extrabold text-on-surface">${escapeHtml(timeRangeStr)}</span> (${ev.duration_hours || 4} hrs) • Guests: ${ev.guest_count || 1}
+                  <span class="material-symbols-outlined text-sm">schedule</span> <span class="font-extrabold text-on-surface">${escapeHtml(timeRangeStr)}</span> (${ev.duration_hours || 4} hrs) â€¢ Guests: ${ev.guest_count || 1}
                 </p>
               </div>
               <button onclick="window.closeDayEventsModal(); window.editBooking('${ev.id}')" class="px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface transition-colors shrink-0 flex items-center gap-1">
@@ -8045,17 +8046,17 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       }).join('');
     }
 
-    // ── Availability Panel ──
+    // â”€â”€ Availability Panel â”€â”€
     const avail = calcBoatAvailability(dateStr, selectedBoatId === 'all' ? null : selectedBoatId);
     const boatLabel = selectedBoat?.name || (selectedBoatId === 'all' ? 'All Boats' : 'Selected Boat');
 
     const windowsHtml = avail.freeWindows.length === 0
-      ? `<div class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">🔴 Fully Booked — No windows available today.</div>`
+      ? `<div class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">ðŸ”´ Fully Booked â€” No windows available today.</div>`
       : avail.freeWindows.map(w => {
           const hrs = Math.round((w.endMins - w.startMins) / 60 * 10) / 10;
           const color = hrs >= 6 ? 'bg-green-50 border-green-300 text-green-800' : hrs >= 3 ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-orange-50 border-orange-300 text-orange-800';
           return `<div class="flex items-center justify-between ${color} border rounded-xl px-3 py-2 text-xs font-bold">
-            <span>✅ ${minsToTimeStr(w.startMins)} – ${minsToTimeStr(w.endMins)}</span>
+            <span>âœ… ${minsToTimeStr(w.startMins)} â€“ ${minsToTimeStr(w.endMins)}</span>
             <span class="opacity-80 font-mono">${hrs} hrs free</span>
           </div>`;
         }).join('');
@@ -8068,8 +8069,8 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
         class="w-full bg-gradient-to-r from-secondary/10 to-secondary/5 px-4 py-3 border-b border-outline-variant flex items-center gap-2 text-left hover:from-secondary/15 hover:to-secondary/10 transition-colors">
         <span class="material-symbols-outlined text-secondary text-lg shrink-0">auto_awesome</span>
         <div class="flex-1 min-w-0">
-          <h4 class="font-headline font-bold text-sm text-on-surface">Availability Analysis — ${escapeHtml(boatLabel)}</h4>
-          <p class="text-[11px] text-on-surface-variant">Operating hours: 10:00 AM – 2:00 AM • ${avail.totalFreeHrs} hrs free today</p>
+          <h4 class="font-headline font-bold text-sm text-on-surface">Availability Analysis â€” ${escapeHtml(boatLabel)}</h4>
+          <p class="text-[11px] text-on-surface-variant">Operating hours: 10:00 AM â€“ 2:00 AM â€¢ ${avail.totalFreeHrs} hrs free today</p>
         </div>
         <span class="ml-2 text-[11px] font-bold px-2 py-1 rounded-full shrink-0 ${avail.totalFreeHrs > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}">${avail.totalFreeHrs > 0 ? `${avail.totalFreeHrs} hrs open` : 'Fully Booked'}</span>
         <span id="avail-chevron" class="material-symbols-outlined text-on-surface-variant text-lg ml-1 shrink-0 transition-transform duration-200" style="transform: rotate(-90deg)">expand_more</span>
@@ -8084,7 +8085,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
             <div class="flex-1">
               <p class="text-[11px] font-bold text-purple-800 mb-1">AI Availability Summary</p>
               <p id="ai-summary-text" class="text-xs text-purple-900 italic">
-                <span class="animate-pulse">✨ Generating smart summary...</span>
+                <span class="animate-pulse">âœ¨ Generating smart summary...</span>
               </p>
             </div>
           </div>
@@ -8114,7 +8115,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       });
     }
 
-    // ── Fetch Gemini summary asynchronously ──
+    // â”€â”€ Fetch Gemini summary asynchronously â”€â”€
     const summaryEl = document.getElementById('ai-summary-text');
     if (summaryEl) {
       const aiText = await getGeminiAvailabilitySummary(dateStr, boatLabel, avail);
@@ -8127,7 +8128,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
         } else {
           const best = avail.freeWindows.reduce((a, b) => (b.endMins - b.startMins) > (a.endMins - a.startMins) ? b : a);
           const bestHrs = Math.round((best.endMins - best.startMins) / 60 * 10) / 10;
-          summaryEl.textContent = `Best available window: ${minsToTimeStr(best.startMins)} – ${minsToTimeStr(best.endMins)} (${bestHrs} hrs). ${avail.totalFreeHrs} total hours available today.`;
+          summaryEl.textContent = `Best available window: ${minsToTimeStr(best.startMins)} â€“ ${minsToTimeStr(best.endMins)} (${bestHrs} hrs). ${avail.totalFreeHrs} total hours available today.`;
         }
       }
     }
@@ -8280,7 +8281,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
         ` : ''}
         <div class="flex justify-between py-1.5 px-2 rounded-lg font-bold text-xs ${rem > 0.01 ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-green-50 text-green-800 border border-green-200'}">
           <span class="font-sans">${rem > 0.01 ? 'Remaining Balance Due:' : 'Payment Status:'}</span>
-          <span>${rem > 0.01 ? `$${rem.toLocaleString('en-US', {minimumFractionDigits: 2})}` : '✓ FULLY PAID'}</span>
+          <span>${rem > 0.01 ? `$${rem.toLocaleString('en-US', {minimumFractionDigits: 2})}` : 'âœ“ FULLY PAID'}</span>
         </div>
       `;
     }
@@ -8365,7 +8366,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     if (depEl) depEl.textContent = `${b.booking_date} @ ${b.start_time || 'TBD'}`;
 
     const partyEl = document.getElementById('act-party-specs');
-    if (partyEl) partyEl.textContent = `${b.guest_count || b.guests || 1} Passengers • ${b.duration_hours || 4} Hours Charter`;
+    if (partyEl) partyEl.textContent = `${b.guest_count || b.guests || 1} Passengers â€¢ ${b.duration_hours || 4} Hours Charter`;
   };
 
   window.editBooking = async (id) => {
@@ -9091,7 +9092,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     }
   };
 
-  // ─── Top Notification Bell Logic ──────────────────────────────────────────
+  // â”€â”€â”€ Top Notification Bell Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const notifBellBtn = document.getElementById('notification-bell-btn');
   const notifDropdown = document.getElementById('notif-dropdown');
   const notifBadge = document.getElementById('notif-badge');
@@ -9220,7 +9221,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     updateNotificationUI();
   };
 
-  // ─── 1. Revenue & Analytics Section ──────────────────────────────────────
+  // â”€â”€â”€ 1. Revenue & Analytics Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.initRevenueSection = async function() {
     const section = document.getElementById('section-revenue');
     if (!section) return;
@@ -9321,7 +9322,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     }
   };
 
-  // ─── 1.5 Sales & Inquiries Section (Kanban) ────────────────────────────
+  // â”€â”€â”€ 1.5 Sales & Inquiries Section (Kanban) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.initInquiriesSection = async function() {
     const colNew = document.getElementById('kanban-col-new');
     const colContacted = document.getElementById('kanban-col-contacted');
@@ -9381,7 +9382,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     colQuoteSent.innerHTML = quotedLeads.length ? quotedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No quotes sent.</p>';
   };
 
-  // ─── 2. Customer CRM Section ─────────────────────────────────────────────
+  // â”€â”€â”€ 2. Customer CRM Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.initCRMSection = async function() {
     const tbody = document.getElementById('crm-table-body');
     if (!tbody) return;
@@ -9433,7 +9434,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     const list = Object.values(customers);
     window._cachedCustomers = list; // Save for modal
 
-    // ── Render helper ────────────────────────────────────────────────────────
+    // â”€â”€ Render helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function renderCRMTable(data) {
       if (data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No customers found.</td></tr>`;
@@ -9461,7 +9462,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       }).join('');
     }
 
-    // ── Sort & Search state ───────────────────────────────────────────────────
+    // â”€â”€ Sort & Search state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let currentSort = 'spent';
     let currentSearch = '';
 
@@ -9486,7 +9487,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       renderCRMTable(data);
     }
 
-    // ── Wire Sort buttons (once) ──────────────────────────────────────────────
+    // â”€â”€ Wire Sort buttons (once) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const sortContainer = document.getElementById('crm-sort-btns');
     if (sortContainer && !sortContainer.hasAttribute('data-bound')) {
       sortContainer.setAttribute('data-bound', 'true');
@@ -9503,7 +9504,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       });
     }
 
-    // ── Wire Search input (once) ──────────────────────────────────────────────
+    // â”€â”€ Wire Search input (once) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const searchInput = document.getElementById('crm-search');
     if (searchInput && !searchInput.hasAttribute('data-bound')) {
       searchInput.setAttribute('data-bound', 'true');
@@ -9513,7 +9514,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       });
     }
 
-    // ── Wire New Quote / Lead button (once) ───────────────────────────────────
+    // â”€â”€ Wire New Quote / Lead button (once) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const addInqBtn = document.getElementById('add-inquiry-btn');
     if (addInqBtn && !addInqBtn.hasAttribute('data-bound')) {
       addInqBtn.setAttribute('data-bound', 'true');
@@ -9684,7 +9685,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
   };
 
-  // ─── 5. Promos & Discounts Section ───────────────────────────────────────
+  // â”€â”€â”€ 5. Promos & Discounts Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.initPromosSection = async function() {
     const tbody = document.getElementById('promos-table-body');
     const addBtn = document.getElementById('add-promo-btn');
@@ -9728,7 +9729,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     initPromosSection();
   };
 
-  // ─── 6. Reviews Manager Section ──────────────────────────────────────────
+  // â”€â”€â”€ 6. Reviews Manager Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.initReviewsSection = async function() {
     const listEl = document.getElementById('reviews-list');
     if (!listEl) return;
@@ -9744,7 +9745,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
           <div>
             <div class="flex items-center gap-2 mb-1">
               <span class="font-bold text-on-surface">${r.customer_name}</span>
-              <span class="text-amber-500 font-bold">★ ${r.rating} / 5</span>
+              <span class="text-amber-500 font-bold">â˜… ${r.rating} / 5</span>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${r.status.toUpperCase()}</span>
             </div>
             <p class="text-sm text-on-surface-variant italic">"${r.review_text}"</p>
@@ -9765,7 +9766,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     initReviewsSection();
   };
 
-  // ─── Zapier Integration Logic ───────────────────────
+  // â”€â”€â”€ Zapier Integration Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.openZapierSetupModal = async function() {
     const settings = await getAllSettings();
     const webhookInput = document.getElementById('zapier-webhook-url-input');
@@ -9822,7 +9823,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     
     const payload = {
       event: 'social_post',
-      content: 'Book your dream yacht today with YRSF! 🛥️✨',
+      content: 'Book your dream yacht today with YRSF! ðŸ›¥ï¸âœ¨',
       image_urls: ['https://example.com/yacht.jpg'],
       platforms: ['instagram', 'facebook']
     };
@@ -9857,7 +9858,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     }
   }
 
-  // ─── Quo (OpenPhone) Integration ───────────────────
+  // â”€â”€â”€ Quo (OpenPhone) Integration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.saveQuoSettings = async function() {
     const apiKey = document.getElementById('setting-quo-api-key')?.value.trim();
     const phone = document.getElementById('setting-quo-phone')?.value.trim();
@@ -9920,7 +9921,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     }
   };
 
-  // ─── Initial Load ───────────────────────────────────
+  // â”€â”€â”€ Initial Load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function loadQuoSettings() {
     const settings = await getAllSettings();
     const kInput = document.getElementById('setting-quo-api-key');
@@ -10089,7 +10090,7 @@ window.openSmsPreviewModal = (phone, initialMessageText) => {
     document.getElementById('btn-sms-copy').addEventListener('click', () => {
       const text = document.getElementById('sms-preview-body').value;
       navigator.clipboard.writeText(text);
-      if (window.showToast) window.showToast('📋 Message copied to clipboard!', 'success');
+      if (window.showToast) window.showToast('ðŸ“‹ Message copied to clipboard!', 'success');
     });
 
     document.getElementById('btn-sms-send-quo').addEventListener('click', async () => {
@@ -10142,7 +10143,7 @@ window.openSmsPreviewModal = (phone, initialMessageText) => {
         const messageTemplate = `Thank-you for choosing Yacht Rentals of South Florida! Here is the Payment link for your remaining balance.\n\nRemaining Balance: ${amtStr}\n\n${payUrl}\n\nNote: This Payment link will be valid for only 5 minutes. If you need more time, please let us know so that we can resend you a new one!`;
 
         await navigator.clipboard.writeText(messageTemplate);
-        if (window.showToast) window.showToast('📋 Payment message copied to clipboard!', 'success');
+        if (window.showToast) window.showToast('ðŸ“‹ Payment message copied to clipboard!', 'success');
         modal.classList.add('hidden');
       } catch (err) {
         alert('Error generating link: ' + err.message);
@@ -10226,7 +10227,7 @@ window.openSmsPreviewModal = (phone, initialMessageText) => {
 
   document.getElementById('charge-booking-id').value = booking.id;
   document.getElementById('charge-cust-name').textContent = booking.customer_name || 'Guest';
-  document.getElementById('charge-boat-info').textContent = `${booking.boat_name || 'Fleet Yacht'} • Date: ${booking.booking_date || 'TBD'}`;
+  document.getElementById('charge-boat-info').textContent = `${booking.boat_name || 'Fleet Yacht'} â€¢ Date: ${booking.booking_date || 'TBD'}`;
   document.getElementById('charge-amount').value = rem.toFixed(2);
 
   modal.classList.remove('hidden');
@@ -10267,8 +10268,8 @@ window.openRefundModal = (booking) => {
             <div>
               <label class="block font-label text-xs font-bold text-on-surface mb-1">Refund Method *</label>
               <select id="refund-method" required class="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-lg text-sm">
-                <option value="stripe">💳 Stripe Card Refund (Automatic)</option>
-                <option value="manual">💵 Offline / Bookkeeping Refund (Cash, Zelle)</option>
+                <option value="stripe">ðŸ’³ Stripe Card Refund (Automatic)</option>
+                <option value="manual">ðŸ’µ Offline / Bookkeeping Refund (Cash, Zelle)</option>
               </select>
             </div>
             <div>
