@@ -1,5 +1,5 @@
 /* ============================================
-   YRSF â€” Shared Custom Styles
+   YRSF Ã¢â‚¬â€ Shared Custom Styles
    Supplements Tailwind CSS CDN
    ============================================ */
 
@@ -355,3 +355,10 @@ img[data-src] {
     font-size: 16px !important;
   }
 }
+
+/* Elfsight Skeleton Grid Layout Classes (Fallback for Tailwind) */
+.col-start-1 { grid-column-start: 1; }
+.row-start-1 { grid-row-start: 1; }
+.aspect-square { aspect-ratio: 1 / 1; }
+.z-0 { z-index: 0; }
+.z-10 { z-index: 10; }

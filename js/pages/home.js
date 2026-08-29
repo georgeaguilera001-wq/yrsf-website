@@ -1,5 +1,5 @@
 /**
- * YRSF â€” Homepage Logic
+ * YRSF ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Homepage Logic
  */
 
 import { initNavbar } from '../components/navbar.js';
@@ -161,9 +161,10 @@ async function initHomePage() {
 
       // Instagram Embed Settings
       if (settings.instagram_embed_code?.value) {
-        const container = document.getElementById('instagram-showcase-container');
+                const container = document.getElementById('instagram-showcase-container');
         if (container) {
-                    let embedCode = settings.instagram_embed_code.value;
+          const target = container.querySelector('.elfsight-target') || container;
+          let embedCode = settings.instagram_embed_code.value;
           
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = embedCode;
@@ -171,9 +172,9 @@ async function initHomePage() {
             if (s.src.includes('elfsightcdn.com')) s.remove();
           });
           
-          container.insertAdjacentHTML('beforeend', tempDiv.innerHTML);
+          target.insertAdjacentHTML('beforeend', tempDiv.innerHTML);
           
-          const scripts = container.querySelectorAll('script');
+          const scripts = target.querySelectorAll('script');
           scripts.forEach(oldScript => {
             const newScript = document.createElement('script');
             Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
@@ -184,13 +185,24 @@ async function initHomePage() {
           const skeleton = container.querySelector('.elfsight-skeleton-placeholder');
           if (skeleton) {
             const renderObserver = new MutationObserver(() => {
-              const appDiv = container.querySelector('[class*="elfsight-app"]');
+              const appDiv = target.querySelector('[class*="elfsight-app"]');
               if (appDiv && appDiv.children.length > 0) {
                 skeleton.style.opacity = '0';
                 setTimeout(() => skeleton.remove(), 300);
                 renderObserver.disconnect();
               }
             });
+            renderObserver.observe(target, { childList: true, subtree: true });
+            
+            setTimeout(() => {
+              if (skeleton && skeleton.parentNode) {
+                skeleton.style.opacity = '0';
+                setTimeout(() => skeleton.remove(), 300);
+                renderObserver.disconnect();
+              }
+            }, 6000);
+          }
+        });
             renderObserver.observe(container, { childList: true, subtree: true });
             
             setTimeout(() => {
