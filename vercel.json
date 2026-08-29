@@ -1,114 +1,142 @@
 {
-  "redirects": [
-    {
-      "source": "/boats",
-      "destination": "/ourfleet",
-      "permanent": true
-    },
-    {
-      "source": "/boats.html",
-      "destination": "/ourfleet",
-      "permanent": true
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/ourfleet",
-      "destination": "/ourfleet.html"
-    },
-    {
-      "source": "/experiences",
-      "destination": "/experiences.html"
-    },
-    {
-      "source": "/bachelor-bachelorette",
-      "destination": "/bachelor-bachelorette.html"
-    },
-    {
-      "source": "/birthday",
-      "destination": "/birthday.html"
-    },
-    {
-      "source": "/corporate",
-      "destination": "/corporate.html"
-    },
-    {
-      "source": "/family-day",
-      "destination": "/family-day.html"
-    },
-    {
-      "source": "/sunset-cruise",
-      "destination": "/sunset-cruise.html"
-    },
-    {
-      "source": "/luxury-yachts",
-      "destination": "/luxury-yachts.html"
-    },
-    {
-      "source": "/addons",
-      "destination": "/addons.html"
-    },
-    {
-      "source": "/map",
-      "destination": "/map.html"
-    },
-    {
-      "source": "/boats/:slug",
-      "destination": "/api/boat-meta?slug=:slug"
-    },
-    {
-      "source": "/boat.html",
-      "destination": "/api/boat-meta"
-    },
-    {
-      "source": "/pay/:token",
-      "destination": "/api/pay?t=:token"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
-      ]
-    },
-    {
-      "source": "/sw.js",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.html",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/admin/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/css/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/js/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/images/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=2592000" }
-      ]
-    }
-  ]
+    "redirects":  [
+                      {
+                          "source":  "/boats",
+                          "destination":  "/ourfleet",
+                          "permanent":  true
+                      },
+                      {
+                          "source":  "/boats.html",
+                          "destination":  "/ourfleet",
+                          "permanent":  true
+                      }
+                  ],
+    "rewrites":  [
+                     {
+                         "source":  "/ourfleet",
+                         "destination":  "/ourfleet.html"
+                     },
+                     {
+                         "source":  "/experiences",
+                         "destination":  "/experiences.html"
+                     },
+                     {
+                         "source":  "/bachelor-bachelorette",
+                         "destination":  "/bachelor-bachelorette.html"
+                     },
+                     {
+                         "source":  "/birthday",
+                         "destination":  "/birthday.html"
+                     },
+                     {
+                         "source":  "/corporate",
+                         "destination":  "/corporate.html"
+                     },
+                     {
+                         "source":  "/family-day",
+                         "destination":  "/family-day.html"
+                     },
+                     {
+                         "source":  "/sunset-cruise",
+                         "destination":  "/sunset-cruise.html"
+                     },
+                     {
+                         "source":  "/luxury-yachts",
+                         "destination":  "/luxury-yachts.html"
+                     },
+                     {
+                         "source":  "/addons",
+                         "destination":  "/addons.html"
+                     },
+                     {
+                         "source":  "/map",
+                         "destination":  "/map.html"
+                     },
+                     {
+                         "source":  "/boats/:slug",
+                         "destination":  "/api/boat-meta?slug=:slug"
+                     },
+                     {
+                         "source":  "/boat.html",
+                         "destination":  "/api/boat-meta"
+                     },
+                     {
+                         "source":  "/pay/:token",
+                         "destination":  "/api/pay?t=:token"
+                     }
+                 ],
+    "headers":  [
+                    {
+                        "source":  "/(.*)",
+                        "headers":  [
+                                        {
+                                            "key":  "X-Frame-Options",
+                                            "value":  "DENY"
+                                        },
+                                        {
+                                            "key":  "X-Content-Type-Options",
+                                            "value":  "nosniff"
+                                        },
+                                        {
+                                            "key":  "Referrer-Policy",
+                                            "value":  "strict-origin-when-cross-origin"
+                                        }
+                                    ]
+                    },
+                    {
+                        "source":  "/sw.js",
+                        "headers":  [
+                                        {
+                                            "key":  "Cache-Control",
+                                            "value":  "public, max-age=0, must-revalidate"
+                                        }
+                                    ]
+                    },
+                    {
+                        "source":  "/(.*)\\.html",
+                        "headers":  [
+                                        {
+                                            "key":  "Cache-Control",
+                                            "value":  "public, max-age=0, must-revalidate"
+                                        }
+                                    ]
+                    },
+                    {
+                        "source":  "/admin/(.*)",
+                        "headers":  [
+                                        {
+                                            "key":  "Cache-Control",
+                                            "value":  "public, max-age=0, must-revalidate"
+                                        }
+                                    ]
+                    },
+                    {
+                        "source":  "/css/(.*)",
+                        "headers":  [
+                                        {
+                                            "key":  "Cache-Control",
+                                            "value":  "public, max-age=0, must-revalidate"
+                                        }
+                                    ]
+                    },
+                    {
+                        "source":  "/js/(.*)",
+                        "headers":  [
+                                        {
+                                            "key":  "Cache-Control",
+                                            "value":  "public, max-age=0, must-revalidate"
+                                        }
+                                    ]
+                    },
+                    {
+                        "source":  "/images/(.*)",
+                        "headers":  [
+                                        {
+                                            "key":  "Cache-Control",
+                                            "value":  "public, max-age=2592000"
+                                        }
+                                    ]
+                    }
+                ],
+    "outputDirectory":  "."
 }
