@@ -116,7 +116,7 @@ export async function showBoatLocationMap(boatName, address) {
   const map = L.map('lm-map').setView([boatCoords.lat, boatCoords.lon], 14);
   locationMapInstance = map;
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
     attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
     maxZoom: 19
   }).addTo(map);

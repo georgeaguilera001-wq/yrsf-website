@@ -1988,7 +1988,7 @@ EXTRACTION RULES:
       mapWrapper.classList.remove('hidden');
       if (!previewMap) {
         previewMap = L.map('admin-preview-map').setView([lat, lon], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
           attribution: '&copy; OpenStreetMap contributors'
         }).addTo(previewMap);
       } else {
