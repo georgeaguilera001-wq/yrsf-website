@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YRSF - Boat Location Map Modal
  * Shows an in-page Leaflet map for a boat's address,
  * plus the user's live location and straight-line distance.
@@ -116,7 +116,7 @@ export async function showBoatLocationMap(boatName, address) {
   const map = L.map('lm-map').setView([boatCoords.lat, boatCoords.lon], 14);
   locationMapInstance = map;
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
     maxZoom: 19
   }).addTo(map);

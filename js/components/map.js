@@ -1,4 +1,4 @@
-import { getMapBoats } from '../services/boats.js';
+﻿import { getMapBoats } from '../services/boats.js';
 
 const PREDEFINED_LOCATIONS = {
   // Exact marina addresses from the fleet database
@@ -189,8 +189,8 @@ export async function initMarinaMap() {
   const map = L.map('marina-map').setView([25.7617, -80.1918], 11);
 
   // Add OpenStreetMap tiles
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
 
   try {

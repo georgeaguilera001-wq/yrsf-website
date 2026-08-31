@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YRSF — Partner Yacht Listing Submission Page Logic
  * Handles address verification, preview map, and instant Supabase database submission.
  */
@@ -50,7 +50,7 @@ function initListYourBoatPage() {
     
     if (!previewMap) {
       previewMap = L.map('partner-preview-map').setView([lat, lon], 15);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(previewMap);
     } else {
