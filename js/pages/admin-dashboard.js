@@ -1,4 +1,4 @@
-﻿/**
+/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
@@ -1989,7 +1989,7 @@ EXTRACTION RULES:
       if (!previewMap) {
         previewMap = L.map('admin-preview-map').setView([lat, lon], 15);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '&copy; OpenStreetMap contributors'
+          attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
         }).addTo(previewMap);
       } else {
         previewMap.setView([lat, lon], 15);

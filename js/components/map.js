@@ -1,4 +1,4 @@
-﻿import { getMapBoats } from '../services/boats.js';
+import { getMapBoats } from '../services/boats.js';
 
 const PREDEFINED_LOCATIONS = {
   // Exact marina addresses from the fleet database
