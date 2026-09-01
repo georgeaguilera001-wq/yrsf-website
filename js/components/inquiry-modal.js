@@ -195,7 +195,9 @@ export function openInquiryModal({ boatName = 'General Charter Inquiry', boatId 
         duration_hours: parseInt(duration, 10) || 4,
         guest_count: parseInt(guests, 10) || 1,
         special_requests: `Best time to call: ${callTime}`,
-        status: 'inquiry'
+        status: 'inquiry',
+        lead_status: 'new',
+        lead_source: 'web'
       }]).then((res) => {
         if (!res.error && window.trackInquirySuccess) {
           window.trackInquirySuccess(finalBoatName, boatId);
