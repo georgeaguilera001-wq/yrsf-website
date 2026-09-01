@@ -5837,9 +5837,10 @@ EXTRACTION RULES:
         const bookTime = document.getElementById('book-time')?.value;
         const bookDur = document.getElementById('book-duration')?.value;
         const deposit = document.getElementById('book-deposit')?.value;
+        const totalPrice = document.getElementById('book-price')?.value;
         
-        if (!boatId || !bookDate || !bookTime || !bookDur || !deposit) {
-          showToast('Please fill out the boat, date, time, duration, and deposit before generating a link.', true);
+        if (!boatId || !bookDate || !bookTime || !bookDur || !deposit || !totalPrice) {
+          showToast('Please fill out the boat, date, time, duration, price, and deposit before generating a link.', true);
           return;
         }
 
@@ -5863,6 +5864,7 @@ EXTRACTION RULES:
           customer_email: document.getElementById('book-cust-email')?.value.trim() || '',
           guest_count: document.getElementById('book-guests')?.value || 1,
           deposit_amount: deposit,
+          total_price: totalPrice,
           allow_double_booking: true,
           ignore_overlap: true,
           addons: []
