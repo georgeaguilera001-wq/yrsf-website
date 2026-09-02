@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
@@ -1895,7 +1895,7 @@ EXTRACTION RULES:
     });
 
     document.getElementById('add-override-btn')?.addEventListener('click', () => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('sv-SE');
       window.__dateOverrides.push({
         override_date: today,
         label: 'Special Date',
@@ -3784,7 +3784,7 @@ EXTRACTION RULES:
       openCommBtn.addEventListener('click', async () => {
         await loadStaffUsers();
         commModal.classList.remove('hidden');
-        if (commDate) commDate.value = new Date().toISOString().split('T')[0];
+        if (commDate) commDate.value = new Date().toLocaleDateString('sv-SE');
         if (commPrice) commPrice.value = '';
         if (commRate) commRate.value = '10';
         if (commAmount) commAmount.value = '0.00';
@@ -4404,7 +4404,7 @@ EXTRACTION RULES:
   // settingsCache is declared at the top of DOMContentLoaded
   let bookingsCache = [];
   let currentManifestFilter = 'all';
-  let currentManifestDate = new Date().toISOString().split('T')[0];
+  let currentManifestDate = new Date().toLocaleDateString('sv-SE');
   let calCurrentDate = new Date();
   let calendarSourceFilter = 'all';
 
@@ -5061,7 +5061,7 @@ EXTRACTION RULES:
       addBtn.addEventListener('click', async () => {
         document.getElementById('booking-modal-title').textContent = 'Schedule Charter Booking';
         document.getElementById('booking-id').value = '';
-        document.getElementById('book-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('book-date').value = new Date().toLocaleDateString('sv-SE');
         document.getElementById('book-time').value = '10:00 AM';
         document.getElementById('book-duration').value = '4';
         document.getElementById('book-cust-name').value = '';
@@ -5147,7 +5147,7 @@ EXTRACTION RULES:
           }
           if (!boatName || boatName === '-- Select Boat --') boatName = 'Luxury Yacht Charter';
 
-          const date = document.getElementById('book-date')?.value || new Date().toISOString().split('T')[0];
+          const date = document.getElementById('book-date')?.value || new Date().toLocaleDateString('sv-SE');
           const time = document.getElementById('book-time')?.value || '12:00 PM';
           const duration = document.getElementById('book-duration')?.value || '4';
           const guests = document.getElementById('book-guests')?.value || '1';
@@ -6374,7 +6374,7 @@ EXTRACTION RULES:
     }
 
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = now.toLocaleDateString('sv-SE');
 
     // Filter to future or today's bookings, not cancelled, not inquiries
     const upcoming = bookingsCache.filter(b => {
@@ -6487,15 +6487,15 @@ EXTRACTION RULES:
 
     const query = (document.getElementById('manifest-search')?.value || '').toLowerCase().trim();
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = now.toLocaleDateString('sv-SE');
     const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const tomorrowStr = tomorrow.toLocaleDateString('sv-SE');
     const weekOut = new Date(now); weekOut.setDate(weekOut.getDate() + 7);
-    const weekOutStr = weekOut.toISOString().split('T')[0];
+    const weekOutStr = weekOut.toLocaleDateString('sv-SE');
     const thirtyDaysOut = new Date(now); thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
-    const thirtyDaysOutStr = thirtyDaysOut.toISOString().split('T')[0];
+    const thirtyDaysOutStr = thirtyDaysOut.toLocaleDateString('sv-SE');
     const pastMonth = new Date(now); pastMonth.setDate(pastMonth.getDate() - 30);
-    const pastMonthStr = pastMonth.toISOString().split('T')[0];
+    const pastMonthStr = pastMonth.toLocaleDateString('sv-SE');
 
     const filtered = bookingsCache.filter(b => {
       if (b.status === 'inquiry') return false;
@@ -6791,7 +6791,7 @@ EXTRACTION RULES:
     cutoffDateObj.setDate(1);
     cutoffDateObj.setMonth(cutoffDateObj.getMonth() - 1);
     cutoffDateObj.setHours(0, 0, 0, 0);
-    const cutoffDateStr = cutoffDateObj.toISOString().split('T')[0];
+    const cutoffDateStr = cutoffDateObj.toLocaleDateString('sv-SE');
 
     // Helper: Request deduplication + fast fetcher with 25s timeout to prevent rate-limiting when multiple boats share a feed
     const inFlightFetches = new Map();
@@ -7052,7 +7052,7 @@ EXTRACTION RULES:
                   datesToPush = [];
                   let daysCount = 0;
                   while (curDate <= endDate && daysCount < 14) {
-                    datesToPush.push(curDate.toISOString().split('T')[0]);
+                    datesToPush.push(curDate.toLocaleDateString('sv-SE'));
                     curDate.setDate(curDate.getDate() + 1);
                     daysCount++;
                   }
@@ -10481,7 +10481,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const boatSelect = document.getElementById('book-boat-select');
       const boat_id = boatSelect.value || null;
       const boat_name = boatSelect.options[boatSelect.selectedIndex]?.getAttribute('data-name') || (boatSelect.selectedIndex >= 0 ? boatSelect.options[boatSelect.selectedIndex].text.split(' (')[0] : 'Custom Charter');
-      const booking_date = document.getElementById('book-date').value || new Date().toISOString().split('T')[0];
+      const booking_date = document.getElementById('book-date').value || new Date().toLocaleDateString('sv-SE');
       const start_time = document.getElementById('book-time').value || '10:00 AM';
       const duration_hours = parseInt(document.getElementById('book-duration').value) || 4;
       const customer_name = document.getElementById('book-cust-name').value.trim() || 'Guest';

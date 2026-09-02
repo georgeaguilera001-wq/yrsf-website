@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YRSF — Boat Detail Page Logic
  */
 
@@ -326,7 +326,7 @@ function populateBoatDetail(boat) {
     function drawCalendar() {
       const firstDay = new Date(currentYear, currentMonth, 1).getDay();
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = new Date().toLocaleDateString('sv-SE');
 
       let daysHtml = '';
       for (let i = 0; i < firstDay; i++) {
@@ -568,7 +568,7 @@ function populateBoatDetail(boat) {
       const currentDayName = days[(new Date().getDay() + 6) % 7];
 
       // Check for today's date override
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = new Date().toLocaleDateString('sv-SE');
       const todayOverrides = dateOverrides.filter(o => o.override_date === todayStr);
 
       function renderDayPrices(dayCode) {

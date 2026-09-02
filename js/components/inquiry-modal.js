@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YRSF — Boat Charter Inquiry Modal Component
  * Opens a customer-facing inquiry popup when viewing a boat or card.
  */
@@ -23,7 +23,7 @@ function ensureModalContainer() {
 
 export function openInquiryModal({ boatName = 'General Charter Inquiry', boatId = null, isGeneral = false }) {
   const container = ensureModalContainer();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = new Date().toLocaleDateString('sv-SE');
   const isGen = isGeneral || !boatId || boatName === 'General Inquiry' || boatName === 'General Charter Inquiry';
 
   container.innerHTML = `
