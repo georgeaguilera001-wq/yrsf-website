@@ -33,6 +33,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Populate summary
     document.getElementById('summ-boat').textContent = bookingData.boat_name || 'Luxury Yacht';
+    const boatImg = document.getElementById('summ-boat-img');
+    if (boatImg && bookingData.boat_image) {
+      boatImg.src = bookingData.boat_image;
+      boatImg.classList.remove('hidden');
+    }
     document.getElementById('summ-date').textContent = bookingData.booking_date || 'TBD';
     document.getElementById('summ-time').textContent = bookingData.start_time || 'TBD';
     document.getElementById('summ-duration').textContent = bookingData.duration_hours || '4';

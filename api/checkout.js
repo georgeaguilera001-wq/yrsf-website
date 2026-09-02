@@ -31,11 +31,20 @@ module.exports = async (req, res) => {
 
       const { data: booking, error } = await supabase
         .from('bookings')
-        .select('id, boat_name, booking_date, start_time, duration_hours, total_price, deposit_amount, status, guest_count, customer_name, customer_email, customer_phone')
+        .select('id, boat_id, boat_name, booking_date, start_time, duration_hours, total_price, deposit_amount, status, guest_count, customer_name, customer_email, customer_phone')
         .eq('id', id)
         .single();
 
       if (error || !booking) return res.status(404).json({ error: 'Booking not found' });
+
+      if (booking.boat_id) {
+        const { data: img } = await supabase.from('boat_images').select('url').eq('boat_id', booking.boat_id).eq('is_primary', true).maybeSingle();
+        if (img) booking.boat_image = img.url;
+        else {
+          const { data: fallbackImg } = await supabase.from('boat_images').select('url').eq('boat_id', booking.boat_id).limit(1).maybeSingle();
+          if (fallbackImg) booking.boat_image = fallbackImg.url;
+        }
+      }
 
       const { data: addons } = await supabase.from('addons').select('*').eq('status', 'active').order('sort_order', { ascending: true });
       booking.available_addons = addons || [];
