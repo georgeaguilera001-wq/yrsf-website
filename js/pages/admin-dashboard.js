@@ -35,6 +35,26 @@ const MODULE_SUBPERMS = {
   promos: ['view', 'create_edit', 'delete']
 };
 
+// --- Sync Nav Config with Supabase ---
+const NAV_CONFIG_KEY = 'yrsf_admin_nav_config';
+
+window.addEventListener('navConfigSaved', async (e) => {
+  try {
+    await supabase.from('site_settings').upsert({ key: NAV_CONFIG_KEY, value: e.detail });
+  } catch (err) {
+    console.error('Failed to sync nav config to DB', err);
+  }
+});
+
+// Immediately load from DB so it's ready when DOMContentLoaded fires
+supabase.from('site_settings').select('value').eq('key', NAV_CONFIG_KEY).single().then(({data}) => {
+  if (data && data.value) {
+    localStorage.setItem(NAV_CONFIG_KEY, JSON.stringify(data.value));
+    if (typeof window.refreshNavMenu === 'function') window.refreshNavMenu();
+  }
+}).catch(console.error);
+
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Setup Master & Sub-Permission Checkbox Event Listeners
   setTimeout(() => {

@@ -3013,6 +3013,7 @@
           return { id, icon, label, level, bold, collapsed };
         });
         localStorage.setItem(NAV_CONFIG_KEY, JSON.stringify(navConfig));
+        window.dispatchEvent(new CustomEvent('navConfigSaved', { detail: navConfig }));
       }
 
       function renderNav() {
@@ -3038,9 +3039,9 @@
                 <button class="admin-nav-btn flex-1 flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors text-on-surface-variant hover:bg-surface-container ${isSub ? 'ml-6 border-l-2 border-outline-variant/30 bg-surface-container-lowest' : ''}" data-section="${item.id}" onclick="event.stopPropagation(); window.sidebarNavClick('${item.id}');">
                   <span class="material-symbols-outlined ${item.bold && !isSub ? 'text-secondary' : ''} text-[16px]">${item.icon}</span>
                   ${isEditMode ? 
-                    `<input type="text" class="nav-label-input w-full bg-transparent border-b border-secondary/50 text-[12px] font-label font-bold text-on-surface focus:outline-none" value="${item.label}" onclick="event.stopPropagation()">` 
+                    `<input type="text" class="nav-label-input w-full bg-transparent border-b border-secondary/50 text-[10px] font-label font-bold text-on-surface focus:outline-none" value="${item.label}" onclick="event.stopPropagation()">` 
                     : 
-                    `<span class="nav-label-text font-label text-[12px] font-bold ${item.bold ? 'text-secondary' : ''}">${escapeHtml(item.label)}</span>`
+                    `<span class="nav-label-text font-label text-[10px] font-bold ${item.bold ? 'text-secondary' : ''}">${escapeHtml(item.label)}</span>`
                   }
                   ${hasChildren && !isEditMode ? `
                     <button class="ml-auto p-0.5 rounded hover:bg-surface-container-high transition-colors text-on-surface-variant flex items-center justify-center" onclick="event.stopPropagation(); window.toggleNavCollapse('${item.id}');">
@@ -3051,11 +3052,11 @@
 
                 ${isEditMode ? `
                   <div class="flex items-center gap-0.5 ml-1 bg-surface-container px-1 py-0.5 rounded shadow-sm border border-outline-variant/50">
-                    <button type="button" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-secondary-container rounded indent-btn" title="Make Sub-menu" onclick="event.stopPropagation(); window.setNavLevel('${item.id}', 1)">
-                      <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                    <button type="button" class="p-0.5 text-on-surface-variant hover:text-secondary hover:bg-secondary-container rounded indent-btn" title="Make Sub-menu" onclick="event.stopPropagation(); window.setNavLevel('${item.id}', 1)">
+                      <span class="material-symbols-outlined text-[10px]">chevron_right</span>
                     </button>
-                    <button type="button" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-secondary-container rounded outdent-btn" title="Make Main Menu" onclick="event.stopPropagation(); window.setNavLevel('${item.id}', 0)">
-                      <span class="material-symbols-outlined text-[14px]">chevron_left</span>
+                    <button type="button" class="p-0.5 text-on-surface-variant hover:text-secondary hover:bg-secondary-container rounded outdent-btn" title="Make Main Menu" onclick="event.stopPropagation(); window.setNavLevel('${item.id}', 0)">
+                      <span class="material-symbols-outlined text-[10px]">chevron_left</span>
                     </button>
                   </div>
                 ` : ''}
@@ -3071,7 +3072,10 @@
         }
       }
 
-      window.refreshNavMenu = () => renderNav();
+      window.refreshNavMenu = () => {
+        loadConfig();
+        renderNav();
+      };
 
       function escapeHtml(str) {
         return (str || '').replace(/[&<>"']/g, function(m) {
