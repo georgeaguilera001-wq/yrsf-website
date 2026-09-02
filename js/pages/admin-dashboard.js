@@ -2830,13 +2830,17 @@ EXTRACTION RULES:
             <label class="block font-label text-label-md text-on-surface-variant mb-2">Image URL</label>
             <input type="url" id="edit-addon-image" value="${escapeHtml(addon?.image_url || '')}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
             <div>
               <label class="block font-label text-label-md text-on-surface-variant mb-2">Status</label>
               <select id="edit-addon-status" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg">
                 <option value="active" ${addon?.status === 'active' ? 'selected' : ''}>Active</option>
                 <option value="hidden" ${addon?.status === 'hidden' ? 'selected' : ''}>Hidden</option>
               </select>
+            </div>
+            <div>
+              <label class="block font-label text-label-md text-on-surface-variant mb-2">Sort Order</label>
+              <input type="number" id="edit-addon-sort" value="${addon?.sort_order ?? 0}" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg"/>
             </div>
             <div class="flex items-end">
               <label class="flex items-center gap-2 cursor-pointer pb-3">
@@ -2867,6 +2871,7 @@ EXTRACTION RULES:
         badge: document.getElementById('edit-addon-badge').value.trim() || null,
         image_url: document.getElementById('edit-addon-image').value.trim() || null,
         status: document.getElementById('edit-addon-status').value,
+        sort_order: parseInt(document.getElementById('edit-addon-sort').value) || 0,
         is_featured: document.getElementById('edit-addon-featured').checked
       };
 
