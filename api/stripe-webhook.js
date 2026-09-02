@@ -1,5 +1,15 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require('@supabase/supabase-js');
+const webpush = require('web-push');
+
+const VAPID_PUBLIC_KEY = 'BGtkbcjrO12YMoDuq2sCQeHlu47uPx3SHTgFKZFYiBW8Qr0D9vgyZSZPdw6_4ZFEI9Snk1VEAj2qTYI1I1YxBXE';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'I0_d0vnesxbBSUmlDdOKibGo6vEXRO-Vu88QlSlm5j0';
+
+webpush.setVapidDetails(
+  'mailto:admin@yrsf.com',
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+);
 
 // Required for Stripe webhook raw body signature verification on Vercel
 export const config = {
@@ -121,6 +131,48 @@ module.exports = async (req, res) => {
         return res.status(500).send('Error updating booking');
       }
       console.log(`Booking ${bookingId} updated successfully. Payment Type: ${paymentType}`);
+
+      // Push notification and admin_notifications
+      try {
+        const { data: notifSetting } = await supabase.from('site_settings').select('value').eq('key', 'admin_notifications').single();
+        let adminNotifications = (notifSetting && notifSetting.value && Array.isArray(notifSetting.value)) ? notifSetting.value : [];
+        
+        const { data: subSettings } = await supabase.from('site_settings').select('value').eq('key', 'push_subscriptions').single();
+        const subscriptions = (subSettings && subSettings.value && Array.isArray(subSettings.value)) ? subSettings.value : [];
+        
+        const amountFormatted = session.amount_total ? (session.amount_total / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00';
+        const notifMsg = `A payment of ${amountFormatted} was made for booking ${booking.boat_name || 'Charter'} (${booking.customer_name || 'Guest'}).`;
+        
+        adminNotifications.unshift({
+          id: 'notif_' + Math.random().toString(36).substr(2, 9),
+          title: 'Payment Received',
+          message: notifMsg,
+          time: new Date().toISOString(),
+          read: false
+        });
+        
+        if (adminNotifications.length > 50) adminNotifications = adminNotifications.slice(0, 50);
+        
+        await supabase.from('site_settings').upsert({
+          key: 'admin_notifications',
+          value: adminNotifications,
+          updated_at: new Date().toISOString()
+        });
+        
+        if (subscriptions.length > 0) {
+          const payload = JSON.stringify({
+            title: 'Payment Received!',
+            body: notifMsg,
+            url: '/admin/dashboard.html'
+          });
+          const pushPromises = subscriptions.map(sub => 
+            webpush.sendNotification(sub, payload).catch(err => console.error('Push error:', err.statusCode))
+          );
+          await Promise.all(pushPromises);
+        }
+      } catch (notifErr) {
+        console.error('Failed to send notifications:', notifErr);
+      }
     } else {
       console.warn('No booking_id or hold_id in session metadata, skipping...');
     }
