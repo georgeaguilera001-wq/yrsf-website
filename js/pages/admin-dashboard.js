@@ -10491,7 +10491,7 @@ document.addEventListener('DOMContentLoaded', () => {
         topPortalBtn.disabled = true;
         
         try {
-          const { data, error } = await window.supabase.from('bookings').insert([{
+          const { data, error } = await supabase.from('bookings').insert([{
             boat_id, boat_name, booking_date, start_time, duration_hours,
             customer_name, customer_phone, customer_email, guest_count,
             total_price, deposit_amount, status: 'inquiry', lead_status: 'Draft Quote'
