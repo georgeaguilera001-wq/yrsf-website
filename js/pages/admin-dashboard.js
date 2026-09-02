@@ -4706,7 +4706,7 @@ EXTRACTION RULES:
         return;
       }
 
-      const match = startTimeVal.match(/(\d{2}):(\d{2})\s*(AM|PM)/i);
+      const match = startTimeVal.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
       if (match) {
         let h = parseInt(match[1], 10);
         const m = parseInt(match[2], 10);
