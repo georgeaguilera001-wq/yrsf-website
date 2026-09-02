@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
 
       if (error || !booking) return res.status(404).json({ error: 'Booking not found' });
 
-      const { data: addons } = await supabase.from('addons').select('*').eq('status', 'active');
+      const { data: addons } = await supabase.from('addons').select('*').eq('status', 'active').order('sort_order', { ascending: true });
       booking.available_addons = addons || [];
 
       return res.status(200).json({ booking });
