@@ -72,10 +72,15 @@
             </div>
           </div>
 
-          <h3 class="font-bold text-lg border-b border-outline-variant pb-2 mb-4 mt-8">Optional Add-ons</h3>
-          <div id="checkout-addons-container" class="space-y-2 mb-6">
-            <div class="text-sm text-on-surface-variant italic">Loading add-ons...</div>
-          </div>
+          <details class="group bg-surface-container-lowest border border-outline-variant rounded-xl mt-8 mb-6 overflow-hidden shadow-sm">
+            <summary class="font-bold text-lg p-4 cursor-pointer hover:bg-surface-container-low flex items-center justify-between list-none [&::-webkit-details-marker]:hidden">
+              <span class="flex items-center gap-2"><span class="material-symbols-outlined text-secondary">extension</span> Optional Add-ons</span>
+              <span class="material-symbols-outlined group-open:rotate-180 transition-transform text-on-surface-variant">expand_more</span>
+            </summary>
+            <div id="checkout-addons-container" class="p-4 pt-0 border-t border-outline-variant space-y-2 bg-surface-container-low">
+              <div class="text-sm text-on-surface-variant italic mt-2">Loading add-ons...</div>
+            </div>
+          </details>
 
           <button type="submit" id="pay-btn" class="w-full mt-6 bg-secondary text-white py-4 rounded-xl font-bold text-lg hover:bg-secondary/90 transition-all flex justify-center items-center gap-2 shadow-lg">
             <span class="material-symbols-outlined">lock</span> Pay Deposit Securely
