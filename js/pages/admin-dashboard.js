@@ -4403,7 +4403,7 @@ EXTRACTION RULES:
   // ─── Charter Bookings & Daily Manifest System ─────────
   // settingsCache is declared at the top of DOMContentLoaded
   let bookingsCache = [];
-  let currentManifestFilter = 'today';
+  let currentManifestFilter = 'all';
   let currentManifestDate = new Date().toISOString().split('T')[0];
   let calCurrentDate = new Date();
   let calendarSourceFilter = 'all';
@@ -4469,7 +4469,7 @@ EXTRACTION RULES:
     const searchInput = document.getElementById('manifest-search');
 
     function updateFilterPills(activeId) {
-      [pillAll, pillToday, pillTomorrow, pillWeek].forEach(btn => {
+      [pillAll, pillToday, pillTomorrow, pillWeek, document.getElementById('filter-book-past-month')].forEach(btn => {
         if (!btn) return;
         if (btn.id === activeId) {
           btn.className = 'px-3.5 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold transition-all shadow-sm';
@@ -4483,6 +4483,8 @@ EXTRACTION RULES:
     if (pillToday) pillToday.addEventListener('click', () => { currentManifestFilter = 'today'; updateFilterPills('filter-book-today'); renderManifestTable(); });
     if (pillTomorrow) pillTomorrow.addEventListener('click', () => { currentManifestFilter = 'tomorrow'; updateFilterPills('filter-book-tomorrow'); renderManifestTable(); });
     if (pillWeek) pillWeek.addEventListener('click', () => { currentManifestFilter = 'week'; updateFilterPills('filter-book-week'); renderManifestTable(); });
+    const pillPastMonth = document.getElementById('filter-book-past-month');
+    if (pillPastMonth) pillPastMonth.addEventListener('click', () => { currentManifestFilter = 'past_month'; updateFilterPills('filter-book-past-month'); renderManifestTable(); });
 
     if (datePicker) {
       datePicker.value = currentManifestDate;
@@ -6492,6 +6494,8 @@ EXTRACTION RULES:
     const weekOutStr = weekOut.toISOString().split('T')[0];
     const thirtyDaysOut = new Date(now); thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
     const thirtyDaysOutStr = thirtyDaysOut.toISOString().split('T')[0];
+    const pastMonth = new Date(now); pastMonth.setDate(pastMonth.getDate() - 30);
+    const pastMonthStr = pastMonth.toISOString().split('T')[0];
 
     const filtered = bookingsCache.filter(b => {
       if (b.status === 'inquiry') return false;
@@ -6501,6 +6505,7 @@ EXTRACTION RULES:
       if (currentManifestFilter === 'week' && (b.booking_date < todayStr || b.booking_date > weekOutStr)) return false;
       if (currentManifestFilter === 'date' && b.booking_date !== currentManifestDate) return false;
       if (currentManifestFilter === 'all' && (b.booking_date < todayStr || b.booking_date > thirtyDaysOutStr)) return false;
+      if (currentManifestFilter === 'past_month' && (b.booking_date > todayStr || b.booking_date < pastMonthStr)) return false;
 
       // Search Filter
       if (query) {
@@ -6522,6 +6527,7 @@ EXTRACTION RULES:
     tbody.innerHTML = filtered.map(b => {
       const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
       const isToday = b.booking_date === todayStr;
+      const isHighlight = (currentManifestFilter === 'all' && isToday);
       
       let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">🟢 Confirmed</span>`;
       if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold">✓ Completed</span>`;
@@ -6535,7 +6541,7 @@ EXTRACTION RULES:
       const rem = Math.max(0, tot - netPaid);
 
       return `
-        <tr class="hover:bg-surface-container-low/50 transition-colors ${isToday ? 'bg-amber-50/50' : ''}">
+        <tr class="hover:bg-surface-container-low/50 transition-colors ${isHighlight ? 'bg-[#fcf8e3]' : (isToday ? 'bg-amber-50/50' : '')}">
           <td class="p-2 whitespace-nowrap">
             <p class="font-bold text-on-surface text-sm flex items-center gap-1.5">
               ${isToday ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" title="Departing Today"></span>' : ''}
@@ -6617,6 +6623,7 @@ EXTRACTION RULES:
       cardsGrid.innerHTML = filtered.map(b => {
         const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         const isToday = b.booking_date === todayStr;
+        const isHighlight = (currentManifestFilter === 'all' && isToday);
         let statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">✓ Confirmed</button>`;
         if (b.status === 'completed') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">🏁 Completed</button>`;
         if (b.status === 'cancelled') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">🛑 Cancelled</button>`;
@@ -6629,7 +6636,7 @@ EXTRACTION RULES:
         const canRefund = dep > 0 && ref < dep;
 
         return `
-          <div class="bg-surface-container-lowest border ${isToday ? 'border-secondary ring-1 ring-secondary/30' : 'border-outline-variant'} rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden">
+          <div class="${isHighlight ? 'bg-[#fcf8e3]' : 'bg-surface-container-lowest'} border ${isToday ? 'border-secondary ring-1 ring-secondary/30' : 'border-outline-variant'} rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden">
             ${isToday ? '<div class="absolute top-0 right-0 bg-secondary text-on-secondary text-[9px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">DEPARTING TODAY</div>' : ''}
             <div>
               <div class="flex items-center justify-between gap-2 mb-2">
