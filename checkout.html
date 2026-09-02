@@ -72,6 +72,11 @@
             </div>
           </div>
 
+          <h3 class="font-bold text-lg border-b border-outline-variant pb-2 mb-4 mt-8">Optional Add-ons</h3>
+          <div id="checkout-addons-container" class="space-y-2 mb-6">
+            <div class="text-sm text-on-surface-variant italic">Loading add-ons...</div>
+          </div>
+
           <button type="submit" id="pay-btn" class="w-full mt-6 bg-secondary text-white py-4 rounded-xl font-bold text-lg hover:bg-secondary/90 transition-all flex justify-center items-center gap-2 shadow-lg">
             <span class="material-symbols-outlined">lock</span> Pay Deposit Securely
           </button>
@@ -104,15 +109,21 @@
               <span class="text-on-surface-variant font-bold">Total Charter Price</span>
               <span class="font-bold" id="summ-total">...</span>
             </div>
+            <div id="summ-addons-row" class="flex justify-between items-center text-sm hidden">
+              <span class="text-on-surface-variant font-bold">Add-ons Total</span>
+              <span class="font-bold" id="summ-addons">$0.00</span>
+            </div>
             <div class="flex justify-between items-center text-sm">
               <span class="text-on-surface-variant font-bold">Remaining Balance Due on Boat</span>
               <span class="font-bold" id="summ-balance">...</span>
             </div>
           </div>
 
-          <div class="bg-secondary-container text-on-secondary-container p-4 rounded-xl mt-6 flex justify-between items-center border border-blue-200">
-            <span class="font-bold">Deposit Due Today</span>
-            <span class="font-bold text-xl" id="summ-deposit">...</span>
+          <div class="border-t border-outline-variant pt-4 mt-4">
+            <div class="bg-secondary-container text-on-secondary-container p-4 rounded-xl flex justify-between items-center border border-blue-200">
+              <span class="font-bold">Deposit Due Today</span>
+              <span class="font-bold text-xl" id="summ-deposit">...</span>
+            </div>
           </div>
 
         </div>

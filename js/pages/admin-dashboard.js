@@ -1,4 +1,4 @@
-﻿/**
+/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
@@ -4737,6 +4737,14 @@ EXTRACTION RULES:
         endDisplay.textContent = `${hStr}:${mStr} ${endAp}${isNextDay ? ' (+1)' : ''}`;
       } else {
         endDisplay.textContent = '--:--';
+      }
+      
+      // Validate Send Portal Button
+      const boatSel = document.getElementById('book-boat-select')?.value;
+      const dateSel = document.getElementById('book-date')?.value;
+      const portalBtn = document.getElementById('top-send-portal-btn');
+      if (portalBtn) {
+        portalBtn.disabled = !(boatSel && dateSel && startTimeVal && durationVal);
       }
     };
 

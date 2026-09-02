@@ -60,12 +60,47 @@ module.exports = async (req, res) => {
       let descriptionText = `Date: ${booking.booking_date || 'TBD'}`;
 
       // Optionally update customer info if provided in request
-      const { customer_name, customer_email, customer_phone, guest_count } = req.body;
+      const { customer_name, customer_email, customer_phone, guest_count, customer_addons } = req.body;
       let updateData = {};
       if (customer_name) { updateData.customer_name = customer_name; booking.customer_name = customer_name; }
       if (customer_email) { updateData.customer_email = customer_email; booking.customer_email = customer_email; }
       if (customer_phone) { updateData.customer_phone = customer_phone; booking.customer_phone = customer_phone; }
       if (guest_count) { updateData.guest_count = guest_count; booking.guest_count = guest_count; }
+
+      let additionalAddonCost = 0;
+      let addonStrings = [];
+      if (customer_addons && Array.isArray(customer_addons) && customer_addons.length > 0) {
+        // Fetch prices securely
+        const addonIds = customer_addons.map(a => a.id).filter(id => id);
+        if (addonIds.length > 0) {
+          const { data: realAddons } = await supabase.from('addons').select('id, name, price_value').in('id', addonIds);
+          if (realAddons && realAddons.length > 0) {
+            customer_addons.forEach(ca => {
+              const real = realAddons.find(r => r.id === ca.id);
+              if (real) {
+                const price = parseFloat(real.price_value) || 0;
+                const qty = parseInt(ca.qty) || 1;
+                additionalAddonCost += (price * qty);
+                const priceStr = price > 0 ? ` ($${(price * qty).toFixed(2)})` : '';
+                addonStrings.push(`[Addon: ${qty}x ${real.name}${priceStr}]`);
+              }
+            });
+          }
+        }
+      }
+      
+      if (additionalAddonCost > 0) {
+        booking.total_price = (parseFloat(booking.total_price) || 0) + additionalAddonCost;
+        booking.deposit_amount = (parseFloat(booking.deposit_amount) || 0) + (additionalAddonCost / 2); // 50% for deposit
+        
+        let existingReqs = booking.special_requests || '';
+        const newAddonsStr = addonStrings.join('\n');
+        booking.special_requests = newAddonsStr + (existingReqs ? '\n\n' + existingReqs : '');
+        
+        updateData.total_price = booking.total_price;
+        updateData.deposit_amount = booking.deposit_amount;
+        updateData.special_requests = booking.special_requests;
+      }
 
       if (Object.keys(updateData).length > 0) {
         await supabase.from('bookings').update(updateData).eq('id', booking_id);
