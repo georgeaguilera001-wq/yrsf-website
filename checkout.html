@@ -38,16 +38,18 @@
       <a href="/" class="bg-secondary text-on-secondary px-6 py-3 rounded-lg font-bold">Return Home</a>
     </div>
 
-    <div id="checkout-content" class="hidden grid grid-cols-1 md:grid-cols-5 gap-8">
+    <div id="checkout-content" class="hidden space-y-6">
       
-      <!-- Left Column: Form -->
-      <div class="md:col-span-3 space-y-6">
-        <div>
-          <h1 class="font-headline-lg text-3xl font-bold mb-2">Complete Your Booking</h1>
-          <p class="text-on-surface-variant">Please confirm your contact details below to proceed to payment.</p>
-        </div>
+      <div>
+        <h1 class="font-headline-lg text-3xl font-bold mb-2">Complete Your Booking</h1>
+        <p class="text-on-surface-variant">Please confirm your contact details below to proceed to payment.</p>
+      </div>
 
-        <form id="checkout-form" class="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant space-y-5">
+      <div class="flex flex-col-reverse md:grid md:grid-cols-5 gap-8">
+        
+        <!-- Left Column: Form -->
+        <div class="md:col-span-3 space-y-6">
+          <form id="checkout-form" class="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant space-y-5">
           <h3 class="font-bold text-lg border-b border-outline-variant pb-2 mb-4">Guest Information</h3>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -132,6 +134,7 @@
           </div>
 
         </div>
+      </div>
       </div>
     </div>
   </main>
