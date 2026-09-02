@@ -1,8 +1,9 @@
-import { loadNavbar, loadFooter } from '../components/layout.js';
+import { initNavbar } from '../components/navbar.js';
+import { initFooter } from '../components/footer.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  loadNavbar('navbar-container');
-  loadFooter('footer-container');
+  initNavbar();
+  initFooter();
 
   const params = new URLSearchParams(window.location.search);
   const bookingId = params.get('id');

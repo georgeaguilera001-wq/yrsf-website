@@ -10467,3 +10467,62 @@ window.setBookingModalMode = (mode) => {
 
 
 
+
+document.addEventListener('DOMContentLoaded', () => {
+  const topPortalBtn = document.getElementById('top-send-portal-btn');
+  if (topPortalBtn) {
+    topPortalBtn.addEventListener('click', async () => {
+      let id = document.getElementById('booking-id').value;
+      const boatSelect = document.getElementById('book-boat-select');
+      const boat_id = boatSelect.value || null;
+      const boat_name = boatSelect.options[boatSelect.selectedIndex]?.getAttribute('data-name') || (boatSelect.selectedIndex >= 0 ? boatSelect.options[boatSelect.selectedIndex].text.split(' (')[0] : 'Custom Charter');
+      const booking_date = document.getElementById('book-date').value || new Date().toISOString().split('T')[0];
+      const start_time = document.getElementById('book-time').value || '10:00 AM';
+      const duration_hours = parseInt(document.getElementById('book-duration').value) || 4;
+      const customer_name = document.getElementById('book-cust-name').value.trim() || 'Guest';
+      const customer_phone = document.getElementById('book-cust-phone').value.trim();
+      const customer_email = document.getElementById('book-cust-email').value.trim() || null;
+      const guest_count = parseInt(document.getElementById('book-guests').value) || 1;
+      const total_price = parseFloat(document.getElementById('book-price').value) || 0;
+      const deposit_amount = parseFloat(document.getElementById('book-deposit').value) || 0;
+
+      if (!id) {
+        topPortalBtn.innerHTML = '<span class="admin-spinner w-4 h-4 border-blue-700"></span> Generating...';
+        topPortalBtn.disabled = true;
+        
+        try {
+          const { data, error } = await window.supabase.from('bookings').insert([{
+            boat_id, boat_name, booking_date, start_time, duration_hours,
+            customer_name, customer_phone, customer_email, guest_count,
+            total_price, deposit_amount, status: 'inquiry', lead_status: 'Draft Quote'
+          }]).select('id').single();
+          
+          if (error) throw error;
+          id = data.id;
+          document.getElementById('booking-id').value = id;
+          if (typeof window.loadManifest === 'function') window.loadManifest();
+        } catch (err) {
+          if (typeof window.showToast === 'function') window.showToast('Error creating draft: ' + err.message, true);
+          topPortalBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">travel_explore</span> Send Portal';
+          topPortalBtn.disabled = false;
+          return;
+        }
+        
+        topPortalBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">travel_explore</span> Send Portal';
+        topPortalBtn.disabled = false;
+      }
+      
+      const portalUrl = window.location.origin + '/checkout.html?id=' + id;
+      const template = "Hi " + customer_name + ", here is your secure booking portal to review your charter details, provide your guest info, and pay your deposit: \n\n" + portalUrl + "\n\nLet us know if you have any questions!";
+      
+      if (typeof window.openSmsPreviewModal === 'function') {
+        const modal = document.getElementById('booking-modal');
+        if (modal) modal.classList.add('hidden');
+        window.openSmsPreviewModal(customer_phone || '', "Hi " + customer_name + ", here is your secure booking portal to review your charter details, provide your guest info, and pay your deposit: \n\n" + portalUrl + "\n\nLet us know if you have any questions!");
+      } else {
+        navigator.clipboard.writeText("Hi " + customer_name + ", here is your secure booking portal to review your charter details, provide your guest info, and pay your deposit: \n\n" + portalUrl + "\n\nLet us know if you have any questions!");
+        alert('Portal link copied to clipboard!');
+      }
+    });
+  }
+});
