@@ -6666,11 +6666,15 @@ EXTRACTION RULES:
                 </div>
               </div>
 
-              <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2 mb-3 text-xs space-y-1 font-mono">
-                <div class="flex justify-between text-amber-900 font-bold">
-                  <span class="font-sans">Total Charter Price:</span>
+              <details class="bg-amber-500/10 border border-amber-500/20 rounded-xl mb-3 text-xs font-mono group">
+                <summary class="flex justify-between items-center text-amber-900 font-bold p-2 cursor-pointer outline-none select-none list-none [&::-webkit-details-marker]:hidden">
+                  <div class="flex items-center gap-1 font-sans">
+                    <span class="material-symbols-outlined text-[16px] transition-transform group-open:rotate-180">expand_more</span>
+                    Total Charter Price:
+                  </div>
                   <span>$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                </div>
+                </summary>
+                <div class="px-2 pb-2 space-y-1">
                 <div class="flex justify-between text-amber-800 text-[11px]">
                   <span class="font-sans">Deposit Paid:</span>
                   <span>-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -6686,7 +6690,8 @@ EXTRACTION RULES:
                   <span class="text-[11px]">${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `âœ“ PAID`}</span>
                 </div>
                 ${b.payment_method ? `<div class="text-[9px] font-sans text-on-surface-variant italic pt-0.5 border-t border-amber-200/40">ðŸ’³ ${escapeHtml(b.payment_method)}</div>` : ''}
-              </div>
+                </div>
+              </details>
 
               ${b.special_requests ? `<p class="text-[10px] leading-tight text-on-surface-variant italic bg-surface-container-low p-1.5 rounded-lg mb-1.5">ðŸ“ "${escapeHtml(b.special_requests)}"</p>` : ''}
             </div>
