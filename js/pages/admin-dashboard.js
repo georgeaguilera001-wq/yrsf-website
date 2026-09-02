@@ -10494,7 +10494,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const { data, error } = await supabase.from('bookings').insert([{
             boat_id, boat_name, booking_date, start_time, duration_hours,
             customer_name, customer_phone, customer_email, guest_count,
-            total_price, deposit_amount, status: 'inquiry', lead_status: 'Draft Quote'
+            total_price, deposit_amount, status: 'inquiry', lead_status: 'quote_sent'
           }]).select('id').single();
           
           if (error) throw error;
