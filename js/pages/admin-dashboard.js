@@ -10532,3 +10532,64 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+window.openPortalChoiceModal = (phone, templateText) => {
+  let modal = document.getElementById('portal-choice-modal');
+  if (!modal) {
+    const html = `
+      <div id="portal-choice-modal" class="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4 hidden animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-outline-variant text-center">
+          <div class="w-12 h-12 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-symbols-outlined text-2xl">travel_explore</span>
+          </div>
+          <h3 class="font-headline text-lg font-bold text-on-surface mb-2">Portal Link Ready</h3>
+          <p class="text-sm text-on-surface-variant mb-6">How would you like to send the booking portal to the customer?</p>
+          
+          <div class="flex flex-col gap-3">
+            <button type="button" id="pc-copy-btn" class="w-full py-3 bg-surface-container text-on-surface rounded-xl font-bold hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined">content_copy</span> Copy to Clipboard
+            </button>
+            <button type="button" id="pc-sms-btn" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined">sms</span> Send via Quo SMS
+            </button>
+          </div>
+          
+          <button type="button" id="close-portal-choice-modal" class="mt-4 text-on-surface-variant hover:text-on-surface text-sm font-bold w-full py-2">
+            Cancel
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    modal = document.getElementById('portal-choice-modal');
+    
+    document.getElementById('close-portal-choice-modal').onclick = () => {
+      modal.classList.add('hidden');
+    };
+  }
+  
+  const copyBtn = document.getElementById('pc-copy-btn');
+  const smsBtn = document.getElementById('pc-sms-btn');
+  
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(templateText);
+    if (typeof window.showToast === 'function') {
+      window.showToast('Portal template copied to clipboard!', 'success');
+    } else {
+      alert('Portal template copied to clipboard!');
+    }
+    modal.classList.add('hidden');
+  };
+  
+  smsBtn.onclick = () => {
+    modal.classList.add('hidden');
+    document.getElementById('booking-modal')?.classList.add('hidden');
+    if (typeof window.openSmsPreviewModal === 'function') {
+      window.openSmsPreviewModal(phone || '', templateText);
+    } else {
+      alert('SMS integration not available.');
+    }
+  };
+  
+  modal.classList.remove('hidden');
+};
