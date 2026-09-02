@@ -36,6 +36,10 @@ module.exports = async (req, res) => {
         .single();
 
       if (error || !booking) return res.status(404).json({ error: 'Booking not found' });
+
+      const { data: addons } = await supabase.from('addons').select('*').eq('status', 'active');
+      booking.available_addons = addons || [];
+
       return res.status(200).json({ booking });
     } catch (err) {
       return res.status(500).json({ error: err.message });

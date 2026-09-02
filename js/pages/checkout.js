@@ -1,6 +1,5 @@
 import { initNavbar } from '../components/navbar.js';
 import { initFooter } from '../components/footer.js';
-import { getAddons } from '../services/addons.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   initNavbar();
@@ -66,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const addonsContainer = document.getElementById('checkout-addons-container');
     if (addonsContainer) {
       try {
-        const activeAddons = await getAddons();
+        const activeAddons = bookingData.available_addons || [];
         if (activeAddons.length === 0) {
           addonsContainer.innerHTML = '<div class="text-sm text-on-surface-variant italic">No optional add-ons available.</div>';
         } else {
