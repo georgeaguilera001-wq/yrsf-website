@@ -1,4 +1,4 @@
-﻿/**
+/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
@@ -6232,8 +6232,6 @@ EXTRACTION RULES:
                      client_notes: 'Auto-generated from new booking for ' + payload.customer_name
                    }]);
                  }
-               }
-            }
                }
             }
             
