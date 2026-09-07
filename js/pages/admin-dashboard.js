@@ -129,6 +129,7 @@ return; // Redirect in progress
 
       const { data: staffUsers } = await supabase.from('staff_users').select('*');
       const staffUser = (staffUsers || []).find(s => s.email && s.email.trim().toLowerCase() === userEmailClean);
+      window.currentStaffUser = staffUser;
 
       const isStaffAdminRole = staffUser && (
         (staffUser.role || '').toLowerCase() === 'admin' || 
@@ -6161,9 +6162,31 @@ EXTRACTION RULES:
             if (error) throw error;
             showToast('Charter booking updated successfully!');
           } else {
+            if (window.currentStaffUser && window.currentStaffUser.name) {
+              payload.special_requests = (payload.special_requests ? payload.special_requests + '\n' : '') + `[Booked By Staff: ${window.currentStaffUser.name}]`;
+            }
             const { error } = await supabase.from('bookings').insert([{ ...payload, created_at: new Date().toISOString() }]);
             if (error) throw error;
             showToast('🛥️ New charter scheduled & manifest updated!', 'success');
+            
+            // Auto-assign commission to staff member who made the booking
+            if (window.currentStaffUser && window.currentStaffUser.pay_type === 'commission') {
+               const commRate = parseFloat(window.currentStaffUser.commission_rate) || 0;
+               const charterPrice = parseFloat(payload.total_price) || 0;
+               if (commRate > 0 && charterPrice > 0) {
+                 const commAmount = (charterPrice * commRate) / 100;
+                 await supabase.from('staff_commissions').insert([{
+                   staff_id: window.currentStaffUser.id,
+                   boat_id: payload.boat_id,
+                   boat_name: payload.boat_name,
+                   charter_date: payload.booking_date,
+                   charter_price: charterPrice,
+                   commission_rate: commRate,
+                   commission_amount: commAmount,
+                   client_notes: 'Auto-generated from new booking for ' + payload.customer_name
+                 }]);
+               }
+            }
             
             try {
               const settings = await getAllSettings();
@@ -10618,3 +10641,4 @@ window.openPortalChoiceModal = (phone, templateText) => {
   
   modal.classList.remove('hidden');
 };
+
