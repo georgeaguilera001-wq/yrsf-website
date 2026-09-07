@@ -6094,8 +6094,8 @@ EXTRACTION RULES:
               return;
             }
           } else if (isStripe && !currentHoldId) {
-              showToast('You selected Stripe but did not generate a payment link. Please generate a link or choose another payment method.', true);
-              return;
+              const conf = confirm('You selected Stripe but did not generate a payment link. Are you SURE you want to save this booking anyway?');
+              if (!conf) return;
           } else {
             // Manual booking override
             const conf = confirm('You are creating this booking without a confirmed Stripe payment hold. Is this correct?');
