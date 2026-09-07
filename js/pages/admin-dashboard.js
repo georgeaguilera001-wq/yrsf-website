@@ -6082,21 +6082,25 @@ EXTRACTION RULES:
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Manual override check if no hold is paid
+        const id = document.getElementById('booking-id').value;
         const isStripe = document.getElementById('book-pay-method')?.value === 'stripe';
-        if (isStripe && currentHoldId) {
-          const { data: holdCheck } = await supabase.from('booking_holds').select('status').eq('id', currentHoldId).single();
-          if (!holdCheck || holdCheck.status !== 'paid') {
-            showToast('Cannot save. The payment hold has not been confirmed as paid.', true);
-            return;
+        
+        // Manual override check if no hold is paid (ONLY for NEW bookings)
+        if (!id) {
+          if (isStripe && currentHoldId) {
+            const { data: holdCheck } = await supabase.from('booking_holds').select('status').eq('id', currentHoldId).single();
+            if (!holdCheck || holdCheck.status !== 'paid') {
+              showToast('Cannot save. The payment hold has not been confirmed as paid.', true);
+              return;
+            }
+          } else if (isStripe && !currentHoldId) {
+              showToast('You selected Stripe but did not generate a payment link. Please generate a link or choose another payment method.', true);
+              return;
+          } else {
+            // Manual booking override
+            const conf = confirm('You are creating this booking without a confirmed Stripe payment hold. Is this correct?');
+            if (!conf) return;
           }
-        } else if (isStripe && !currentHoldId) {
-            showToast('You selected Stripe but did not generate a payment link. Please generate a link or choose another payment method.', true);
-            return;
-        } else {
-          // Manual booking override
-          const conf = confirm('You are creating/updating this booking without a confirmed Stripe payment hold. Is this correct?');
-          if (!conf) return;
         }
 
         const submitBtn = form.querySelector('button[type="submit"]');
@@ -6104,7 +6108,6 @@ EXTRACTION RULES:
         submitBtn.innerHTML = '<span class="admin-spinner w-4 h-4 border-white"></span>';
         submitBtn.disabled = true;
 
-        const id = document.getElementById('booking-id').value;
         const boatSelect = document.getElementById('book-boat-select');
         const boat_id = boatSelect.value || null;
         const boat_name = boatSelect.options[boatSelect.selectedIndex]?.getAttribute('data-name') || boatSelect.options[boatSelect.selectedIndex]?.text.split(' (')[0] || 'Custom Charter';
