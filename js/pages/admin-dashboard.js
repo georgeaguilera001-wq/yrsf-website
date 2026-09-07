@@ -4306,6 +4306,8 @@ EXTRACTION RULES:
       tbody.innerHTML = commissionsCache.map(comm => {
         const staff = comm.staff_users || { name: 'Unknown', role: 'Staff' };
         const dateStr = new Date(comm.charter_date + 'T00:00:00').toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+        const isPaid = (comm.client_notes || '').includes('[PAID]');
+        const cleanNotes = (comm.client_notes || '').replace('[PAID]', '').trim() || '-';
         return `
           <tr class="hover:bg-surface-container-low/50 transition-colors">
             <td class="p-4">
@@ -4316,9 +4318,17 @@ EXTRACTION RULES:
             <td class="p-4 text-xs font-mono text-on-surface-variant">${dateStr}</td>
             <td class="p-4 font-mono text-sm">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
             <td class="p-4 font-mono font-bold text-amber-700">${comm.commission_rate}%</td>
-            <td class="p-4 font-mono font-extrabold text-green-700 text-base">$${parseFloat(comm.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-            <td class="p-4 text-xs text-on-surface-variant max-w-xs truncate">${escapeHtml(comm.client_notes || '-')}</td>
+            <td class="p-4 font-mono font-extrabold ${isPaid ? 'text-green-700' : 'text-blue-700'} text-base flex flex-col justify-center">
+              $${parseFloat(comm.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ${isPaid ? '<span class="text-[9px] font-bold bg-green-100 text-green-800 px-1 py-0.5 rounded uppercase mt-0.5 w-fit">PAID</span>' : ''}
+            </td>
+            <td class="p-4 text-xs text-on-surface-variant max-w-xs truncate">${escapeHtml(cleanNotes)}</td>
             <td class="p-4 text-right">
+              ${!isPaid ? `
+              <button onclick="window.markCommissionPaid('${comm.id}')" class="p-1 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Mark as Paid">
+                <span class="material-symbols-outlined text-[18px]">payments</span>
+              </button>
+              ` : ''}
               <button onclick="window.deleteCommission('${comm.id}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Commission Log">
                 <span class="material-symbols-outlined text-[18px]">delete</span>
               </button>
@@ -4413,6 +4423,18 @@ EXTRACTION RULES:
     showToast('Shift timecard deleted.');
     loadTimecards();
     loadStaffUsers();
+  };
+
+  window.markCommissionPaid = async (id) => {
+    if (!confirm('Mark this commission as paid out to the rep?')) return;
+    const comm = commissionsCache.find(c => c.id === id);
+    if (!comm) return;
+    
+    const newNotes = (comm.client_notes || '') + (comm.client_notes ? '\n' : '') + '[PAID]';
+    const { error } = await supabase.from('staff_commissions').update({ client_notes: newNotes }).eq('id', id);
+    if (error) { showToast('Error marking as paid: ' + error.message, true); return; }
+    showToast('Commission marked as paid!', 'success');
+    loadCommissions(true);
   };
 
   window.deleteCommission = async (id) => {
