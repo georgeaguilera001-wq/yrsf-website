@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
@@ -5106,6 +5106,21 @@ EXTRACTION RULES:
         const depEl = document.getElementById('book-deposit'); if (depEl) depEl.value = '0';
         const payEl = document.getElementById('book-pay-method'); if (payEl) payEl.value = '';
         document.getElementById('book-status').value = 'confirmed';
+        
+        // Populate Assign Rep Dropdown
+        const assignRepEl = document.getElementById('book-assigned-rep');
+        if (assignRepEl) {
+          const { data: staffData } = await supabase.from('staff_users').select('*').order('name');
+          assignRepEl.innerHTML = '<option value="">-- No Rep (Unassigned) --</option>' + 
+            (staffData || []).map(s => `<option value="${s.id}">${s.name} ${s.pay_type==='commission' ? '(Comm.)' : ''}</option>`).join('');
+          
+          if (window.currentStaffUser) {
+             assignRepEl.value = window.currentStaffUser.id;
+          } else {
+             assignRepEl.value = '';
+          }
+        }
+        
         document.getElementById('book-notes').value = '';
         
         // Reset Custom Addon
@@ -6105,6 +6120,7 @@ EXTRACTION RULES:
         const remaining_balance = Math.max(0, total_price - deposit_amount);
         const payment_method = document.getElementById('book-pay-method')?.value.trim() || null;
         const status = document.getElementById('book-status').value;
+        const assignedRepId = document.getElementById('book-assigned-rep')?.value || null;
         let special_requests = document.getElementById('book-notes').value.trim() || '';
 
         // Build dynamically checked Add-ons string
@@ -6161,30 +6177,63 @@ EXTRACTION RULES:
             const { error } = await supabase.from('bookings').update(payload).eq('id', id);
             if (error) throw error;
             showToast('Charter booking updated successfully!');
-          } else {
-            if (window.currentStaffUser && window.currentStaffUser.name) {
-              payload.special_requests = (payload.special_requests ? payload.special_requests + '\n' : '') + `[Booked By Staff: ${window.currentStaffUser.name}]`;
+
+            if (assignedRepId) {
+               if (!special_requests.includes('[AssignedRep:' + assignedRepId + ']')) {
+                 const { data: staffData } = await supabase.from('staff_users').select('*').eq('id', assignedRepId).single();
+                 if (staffData && staffData.pay_type === 'commission') {
+                   const commRate = parseFloat(staffData.commission_rate) || 0;
+                   const charterPrice = parseFloat(payload.total_price) || 0;
+                   if (commRate > 0 && charterPrice > 0) {
+                     const commAmount = (charterPrice * commRate) / 100;
+                     await supabase.from('staff_commissions').insert([{
+                       staff_id: assignedRepId,
+                       boat_id: payload.boat_id,
+                       boat_name: payload.boat_name,
+                       charter_date: payload.booking_date,
+                       charter_price: charterPrice,
+                       commission_rate: commRate,
+                       commission_amount: commAmount,
+                       client_notes: 'Assigned from booking edit for ' + payload.customer_name
+                     }]);
+                     payload.special_requests = (payload.special_requests ? payload.special_requests + '\n' : '') + '[AssignedRep:' + assignedRepId + ']';
+                     await supabase.from('bookings').update({ special_requests: payload.special_requests }).eq('id', id);
+                   }
+                 }
+               }
             }
+          } else {
+            if (assignedRepId) {
+               payload.special_requests = (payload.special_requests ? payload.special_requests + '\n' : '') + '[AssignedRep:' + assignedRepId + ']';
+            } else if (window.currentStaffUser && window.currentStaffUser.name) {
+               payload.special_requests = (payload.special_requests ? payload.special_requests + '\n' : '') + '[Booked By Staff: ' + window.currentStaffUser.name + ']';
+            }
+            
             const { error } = await supabase.from('bookings').insert([{ ...payload, created_at: new Date().toISOString() }]);
             if (error) throw error;
             showToast('🛥️ New charter scheduled & manifest updated!', 'success');
             
-            // Auto-assign commission to staff member who made the booking
-            if (window.currentStaffUser && window.currentStaffUser.pay_type === 'commission') {
-               const commRate = parseFloat(window.currentStaffUser.commission_rate) || 0;
-               const charterPrice = parseFloat(payload.total_price) || 0;
-               if (commRate > 0 && charterPrice > 0) {
-                 const commAmount = (charterPrice * commRate) / 100;
-                 await supabase.from('staff_commissions').insert([{
-                   staff_id: window.currentStaffUser.id,
-                   boat_id: payload.boat_id,
-                   boat_name: payload.boat_name,
-                   charter_date: payload.booking_date,
-                   charter_price: charterPrice,
-                   commission_rate: commRate,
-                   commission_amount: commAmount,
-                   client_notes: 'Auto-generated from new booking for ' + payload.customer_name
-                 }]);
+            const repToAssign = assignedRepId || (window.currentStaffUser ? window.currentStaffUser.id : null);
+            if (repToAssign) {
+               const { data: staffData } = await supabase.from('staff_users').select('*').eq('id', repToAssign).single();
+               if (staffData && staffData.pay_type === 'commission') {
+                 const commRate = parseFloat(staffData.commission_rate) || 0;
+                 const charterPrice = parseFloat(payload.total_price) || 0;
+                 if (commRate > 0 && charterPrice > 0) {
+                   const commAmount = (charterPrice * commRate) / 100;
+                   await supabase.from('staff_commissions').insert([{
+                     staff_id: repToAssign,
+                     boat_id: payload.boat_id,
+                     boat_name: payload.boat_name,
+                     charter_date: payload.booking_date,
+                     charter_price: charterPrice,
+                     commission_rate: commRate,
+                     commission_amount: commAmount,
+                     client_notes: 'Auto-generated from new booking for ' + payload.customer_name
+                   }]);
+                 }
+               }
+            }
                }
             }
             
@@ -8466,6 +8515,21 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     const depEl = document.getElementById('book-deposit'); if (depEl) depEl.value = b.deposit_amount || 0;
     const payEl = document.getElementById('book-pay-method'); if (payEl) payEl.value = b.payment_method || '';
     document.getElementById('book-status').value = b.status || 'confirmed';
+
+    // Populate Assign Rep dropdown
+    const assignRepEl = document.getElementById('book-assigned-rep');
+    if (assignRepEl) {
+      const { data: staffData } = await supabase.from('staff_users').select('*').order('name');
+      assignRepEl.innerHTML = '<option value="">-- No Rep (Unassigned) --</option>' + 
+        (staffData || []).map(s => `<option value="${s.id}">${s.name} ${s.pay_type==='commission' ? '(Comm.)' : ''}</option>`).join('');
+      
+      const repMatch = (b.special_requests || '').match(/\[AssignedRep:([^\]]+)\]/);
+      if (repMatch) {
+         assignRepEl.value = repMatch[1];
+      } else {
+         assignRepEl.value = '';
+      }
+    }
     
     // Parse Add-ons from special_requests
     await window.loadBookingAddons();
@@ -10641,4 +10705,6 @@ window.openPortalChoiceModal = (phone, templateText) => {
   
   modal.classList.remove('hidden');
 };
+
+
 
