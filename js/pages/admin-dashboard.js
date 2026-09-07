@@ -3810,6 +3810,8 @@ EXTRACTION RULES:
       openCommBtn.addEventListener('click', async () => {
         await loadStaffUsers();
         commModal.classList.remove('hidden');
+        const commIdEl = document.getElementById('comm-id');
+        if (commIdEl) commIdEl.value = '';
         if (commDate) commDate.value = new Date().toLocaleDateString('sv-SE');
         if (commPrice) commPrice.value = '';
         if (commRate) commRate.value = '10';
@@ -3843,12 +3845,19 @@ EXTRACTION RULES:
         const commission_amount = parseFloat(commAmount.value) || 0;
         const client_notes = commNotes.value.trim();
 
+        const id = document.getElementById('comm-id')?.value;
+        const payload = { staff_id, boat_id, boat_name, charter_date, charter_price, commission_rate, commission_amount, client_notes };
+
         try {
-          const { error } = await supabase.from('staff_commissions').insert([{
-            staff_id, boat_id, boat_name, charter_date, charter_price, commission_rate, commission_amount, client_notes
-          }]);
-          if (error) throw error;
-          showToast(`💰 Commission logged! Earned $${commission_amount.toFixed(2)}`, 'success');
+          if (id) {
+            const { error } = await supabase.from('staff_commissions').update(payload).eq('id', id);
+            if (error) throw error;
+            showToast('Commission updated!', 'success');
+          } else {
+            const { error } = await supabase.from('staff_commissions').insert([payload]);
+            if (error) throw error;
+            showToast('Commission logged! Earned $' + commission_amount.toFixed(2), 'success');
+          }
           commModal.classList.add('hidden');
           loadCommissions();
         } catch (err) {
