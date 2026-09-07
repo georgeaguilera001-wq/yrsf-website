@@ -6182,7 +6182,7 @@ EXTRACTION RULES:
             showToast('Charter booking updated successfully!');
 
             if (assignedRepId) {
-               if (!special_requests.includes('[AssignedRep:' + assignedRepId + ']')) {
+               if (!(special_requests || '').includes('[AssignedRep:' + assignedRepId + ']')) {
                  const { data: staffData } = await supabase.from('staff_users').select('*').eq('id', assignedRepId).single();
                  if (staffData && staffData.pay_type === 'commission') {
                    const commRate = parseFloat(staffData.commission_rate) || 0;
