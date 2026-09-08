@@ -735,9 +735,9 @@ return; // Redirect in progress
             const id = b.dataset.inquiryId;
             removeLocalInquiry(id);
             if (id && !id.startsWith('inq_')) {
-              await supabase.from('bookings').update({ status: 'confirmed' }).eq('id', id);
+              await supabase.from('bookings').update({ lead_status: 'contacted' }).eq('id', id);
             }
-            showToast('Inquiry marked as contacted / confirmed!', 'success');
+            showToast('Inquiry marked as contacted!', 'success');
             fetchAndRenderInquiries(false);
           };
         });
