@@ -1,4 +1,4 @@
-﻿/**
+/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
@@ -9807,7 +9807,6 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     document.getElementById('customer-profile-modal').classList.remove('hidden');
   };
 
-  window.initInquiriesSection = async function() {
   window.sendWhatsAppCRM = function(phone, name) {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const msg = encodeURIComponent(`Hi ${name}! Thanks for yachting with Yacht Rentals of South Florida. Would you like to plan another charter experience soon?`);
