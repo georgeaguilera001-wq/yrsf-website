@@ -223,6 +223,8 @@ return; // Redirect in progress
         .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
           if (typeof loadBookings === 'function') loadBookings(true);
           if (typeof window.loadDashStaffTimeclock === 'function') window.loadDashStaffTimeclock();
+          if (typeof window.initInquiriesSection === 'function') window.initInquiriesSection();
+          if (typeof window.refreshInquiriesMonitor === 'function') window.refreshInquiriesMonitor();
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_users' }, async (payload) => {
           if (typeof loadStaffUsers === 'function') await loadStaffUsers();
@@ -739,6 +741,7 @@ return; // Redirect in progress
             }
             showToast('Inquiry marked as contacted!', 'success');
             fetchAndRenderInquiries(false);
+            if (typeof window.initInquiriesSection === 'function') window.initInquiriesSection();
           };
         });
 
@@ -751,6 +754,7 @@ return; // Redirect in progress
             }
             showToast('Inquiry archived', 'info');
             fetchAndRenderInquiries(false);
+            if (typeof window.initInquiriesSection === 'function') window.initInquiriesSection();
           };
         });
       } catch (err) {
@@ -758,11 +762,72 @@ return; // Redirect in progress
       }
     }
 
+    window.refreshInquiriesMonitor = () => fetchAndRenderInquiries(false);
+
     if (refreshBtn) {
-      refreshBtn.onclick = () => fetchAndRenderInquiries(false);
+      refreshBtn.onclick = () => {
+        fetchAndRenderInquiries(false);
+        if (typeof window.initInquiriesSection === 'function') window.initInquiriesSection();
+      };
     }
 
+    // Setup toggleable Kanban board inside the Inquiries box
+    const toggleKanbanBtn = document.getElementById('toggle-inquiries-kanban-btn');
+    const toggleKanbanLabel = document.getElementById('toggle-kanban-label');
+    const toggleKanbanArrow = document.getElementById('toggle-kanban-arrow');
+    const kanbanContainer = document.getElementById('admin-inquiries-kanban-container');
+    const prefCheckbox = document.getElementById('kanban-collapsed-default-pref');
+    const collapseKanbanBtn = document.getElementById('collapse-inquiries-kanban-btn');
+    const refreshDashKanbanBtn = document.getElementById('refresh-dash-kanban-btn');
 
+    function setKanbanOpen(isOpen) {
+      if (!kanbanContainer) return;
+      if (isOpen) {
+        kanbanContainer.classList.remove('hidden');
+        if (toggleKanbanLabel) toggleKanbanLabel.textContent = 'Hide Kanban Board';
+        if (toggleKanbanArrow) toggleKanbanArrow.textContent = 'expand_less';
+        if (typeof window.initInquiriesSection === 'function') window.initInquiriesSection();
+      } else {
+        kanbanContainer.classList.add('hidden');
+        if (toggleKanbanLabel) toggleKanbanLabel.textContent = 'Show Kanban Board';
+        if (toggleKanbanArrow) toggleKanbanArrow.textContent = 'expand_more';
+      }
+    }
+
+    if (prefCheckbox) {
+      const storedPref = localStorage.getItem('yrsf_inquiries_kanban_collapsed');
+      // Collapsed by default unless the user explicitly saved 'false'
+      const isCollapsed = storedPref === null ? true : (storedPref === 'true');
+      prefCheckbox.checked = isCollapsed;
+      setKanbanOpen(!isCollapsed);
+
+      prefCheckbox.onchange = () => {
+        localStorage.setItem('yrsf_inquiries_kanban_collapsed', prefCheckbox.checked ? 'true' : 'false');
+        showToast(prefCheckbox.checked ? 'Kanban will default to collapsed' : 'Kanban will default to open', 'info');
+      };
+    } else {
+      setKanbanOpen(false);
+    }
+
+    if (toggleKanbanBtn) {
+      toggleKanbanBtn.onclick = () => {
+        if (!kanbanContainer) return;
+        const isCurrentlyHidden = kanbanContainer.classList.contains('hidden');
+        setKanbanOpen(isCurrentlyHidden);
+      };
+    }
+
+    if (collapseKanbanBtn) {
+      collapseKanbanBtn.onclick = () => {
+        setKanbanOpen(false);
+      };
+    }
+
+    if (refreshDashKanbanBtn) {
+      refreshDashKanbanBtn.onclick = () => {
+        if (typeof window.initInquiriesSection === 'function') window.initInquiriesSection();
+      };
+    }
 
     await fetchAndRenderInquiries(false);
 
@@ -9487,13 +9552,40 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     }
   };
 
+  window.moveLeadStage = async function(id, newStage) {
+    try {
+      if (!id || id.startsWith('inq_')) {
+        showToast('Temporary inquiry must be stored before moving stages.', 'warning');
+        return;
+      }
+      const { error } = await supabase
+        .from('bookings')
+        .update({ lead_status: newStage })
+        .eq('id', id);
+      if (error) throw error;
+      const stageLabels = { new: 'New Web Requests', contacted: 'Contacted / Draft', quote_sent: 'Quote Sent' };
+      showToast(`Lead moved to ${stageLabels[newStage] || newStage}!`, 'success');
+      await window.initInquiriesSection();
+      if (typeof window.refreshInquiriesMonitor === 'function') {
+        window.refreshInquiriesMonitor();
+      }
+    } catch (err) {
+      console.error('Error moving lead stage:', err);
+      showToast('Failed to move lead stage', 'error');
+    }
+  };
+
   // ─── 1.5 Sales & Inquiries Section (Kanban) ────────────────────────────
   window.initInquiriesSection = async function() {
     const colNew = document.getElementById('kanban-col-new');
     const colContacted = document.getElementById('kanban-col-contacted');
     const colQuoteSent = document.getElementById('kanban-col-quote_sent');
-    if (!colNew) return;
 
+    const dashColNew = document.getElementById('dash-kanban-col-new');
+    const dashColContacted = document.getElementById('dash-kanban-col-contacted');
+    const dashColQuoteSent = document.getElementById('dash-kanban-col-quote_sent');
+
+    if (!colNew && !dashColNew) return;
 
     const { data: leads, error } = await supabase
       .from('bookings')
@@ -9517,34 +9609,103 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       else quotedLeads.push(lead);
     });
 
-    document.getElementById('count-col-new').textContent = newLeads.length;
-    document.getElementById('count-col-contacted').textContent = contactedLeads.length;
-    document.getElementById('count-col-quote_sent').textContent = quotedLeads.length;
+    const countNewEl = document.getElementById('count-col-new');
+    const countContactedEl = document.getElementById('count-col-contacted');
+    const countQuoteSentEl = document.getElementById('count-col-quote_sent');
+    if (countNewEl) countNewEl.textContent = newLeads.length;
+    if (countContactedEl) countContactedEl.textContent = contactedLeads.length;
+    if (countQuoteSentEl) countQuoteSentEl.textContent = quotedLeads.length;
 
-    const renderCard = (b) => {
+    const dashCountNewEl = document.getElementById('dash-count-col-new');
+    const dashCountContactedEl = document.getElementById('dash-count-col-contacted');
+    const dashCountQuoteSentEl = document.getElementById('dash-count-col-quote_sent');
+    if (dashCountNewEl) dashCountNewEl.textContent = newLeads.length;
+    if (dashCountContactedEl) dashCountContactedEl.textContent = contactedLeads.length;
+    if (dashCountQuoteSentEl) dashCountQuoteSentEl.textContent = quotedLeads.length;
+
+    const renderCard = (b, stage) => {
       const dateStr = b.booking_date ? new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], {month:'short', day:'numeric'}) : 'TBD';
+      let stageActions = '';
+      if (stage === 'new') {
+        stageActions = `
+          <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'contacted')" class="px-2 py-0.5 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold flex items-center gap-0.5 transition-colors shrink-0" title="Move to Contacted">
+            Contacted <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+          </button>
+        `;
+      } else if (stage === 'contacted') {
+        stageActions = `
+          <div class="flex items-center gap-1 shrink-0">
+            <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'new')" class="px-1.5 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-0.5 transition-colors" title="Back to New">
+              <span class="material-symbols-outlined text-[12px]">arrow_back</span>
+            </button>
+            <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'quote_sent')" class="px-2 py-0.5 rounded-md bg-purple-100 hover:bg-purple-200 text-purple-900 text-[10px] font-bold flex items-center gap-0.5 transition-colors" title="Move to Quote Sent">
+              Quote Sent <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+            </button>
+          </div>
+        `;
+      } else if (stage === 'quote_sent') {
+        stageActions = `
+          <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'contacted')" class="px-2 py-0.5 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold flex items-center gap-0.5 transition-colors shrink-0" title="Back to Contacted">
+            <span class="material-symbols-outlined text-[12px]">arrow_back</span> Contacted
+          </button>
+        `;
+      }
+
       return `
-        <div class="bg-white p-3 rounded-xl border border-outline-variant shadow-sm hover:shadow hover:border-secondary/50 cursor-pointer transition-all flex flex-col gap-2" onclick="window.editBooking('${b.id}')">
+        <div class="bg-white p-3 rounded-xl border border-outline-variant shadow-xs hover:shadow hover:border-secondary/50 cursor-pointer transition-all flex flex-col gap-2" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${b.id}')" onclick="window.editBooking('${b.id}')">
           <div class="flex justify-between items-start">
             <h4 class="font-bold text-sm text-on-surface truncate pr-2">${escapeHtml(b.customer_name || 'Unknown Lead')}</h4>
-            <span class="text-xs font-mono font-bold text-secondary bg-secondary-container/50 px-1.5 py-0.5 rounded">${dateStr}</span>
+            <span class="text-xs font-mono font-bold text-secondary bg-secondary-container/50 px-1.5 py-0.5 rounded shrink-0">${dateStr}</span>
           </div>
           <p class="text-[11px] text-on-surface-variant flex items-center gap-1">
             <span class="material-symbols-outlined text-[12px]">directions_boat</span> ${escapeHtml(b.boat_name || 'TBD')}
           </p>
-          <div class="flex items-center justify-between mt-1 pt-2 border-t border-outline-variant/50">
+          <div class="flex items-center justify-between mt-1 pt-2 border-t border-outline-variant/50 gap-2">
             <span class="text-[10px] font-bold text-on-surface-variant flex items-center gap-1">
                ${b.lead_source === 'web' ? '<span class="material-symbols-outlined text-[12px] text-blue-500">language</span> Web' : '<span class="material-symbols-outlined text-[12px] text-gray-500">edit_document</span> Manual'}
             </span>
-            <span class="text-[11px] font-bold text-green-700">$${parseFloat(b.total_price || 0).toLocaleString()}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-bold text-green-700">$${parseFloat(b.total_price || 0).toLocaleString()}</span>
+              ${stageActions}
+            </div>
           </div>
         </div>
       `;
     };
 
-    colNew.innerHTML = newLeads.length ? newLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No new leads.</p>';
-    colContacted.innerHTML = contactedLeads.length ? contactedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No contacted leads.</p>';
-    colQuoteSent.innerHTML = quotedLeads.length ? quotedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No quotes sent.</p>';
+    const newHtml = newLeads.length ? newLeads.map(b => renderCard(b, 'new')).join('') : '<p class="text-xs text-on-surface-variant text-center py-4">No new leads.</p>';
+    const contactedHtml = contactedLeads.length ? contactedLeads.map(b => renderCard(b, 'contacted')).join('') : '<p class="text-xs text-on-surface-variant text-center py-4">No contacted leads.</p>';
+    const quotedHtml = quotedLeads.length ? quotedLeads.map(b => renderCard(b, 'quote_sent')).join('') : '<p class="text-xs text-on-surface-variant text-center py-4">No quotes sent.</p>';
+
+    if (colNew) colNew.innerHTML = newHtml;
+    if (colContacted) colContacted.innerHTML = contactedHtml;
+    if (colQuoteSent) colQuoteSent.innerHTML = quotedHtml;
+
+    if (dashColNew) dashColNew.innerHTML = newHtml;
+    if (dashColContacted) dashColContacted.innerHTML = contactedHtml;
+    if (dashColQuoteSent) dashColQuoteSent.innerHTML = quotedHtml;
+
+    // Attach drag & drop listeners to all kanban columns
+    [colNew, colContacted, colQuoteSent, dashColNew, dashColContacted, dashColQuoteSent].forEach(col => {
+      if (!col || col._hasDragListeners) return;
+      col._hasDragListeners = true;
+      col.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        col.classList.add('bg-secondary/10');
+      });
+      col.addEventListener('dragleave', () => {
+        col.classList.remove('bg-secondary/10');
+      });
+      col.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        col.classList.remove('bg-secondary/10');
+        const id = e.dataTransfer.getData('text/plain');
+        const targetStage = col.dataset.stage;
+        if (id && targetStage) {
+          await window.moveLeadStage(id, targetStage);
+        }
+      });
+    });
   };
 
   // ─── 2. Customer CRM Section ─────────────────────────────────────────────

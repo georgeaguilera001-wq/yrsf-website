@@ -307,7 +307,12 @@
                 <p class="text-xs text-on-surface-variant">Real-time charter inquiry leads awaiting followup</p>
               </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <button id="toggle-inquiries-kanban-btn" type="button" class="px-3 py-1.5 rounded-xl border border-secondary/40 bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-bold flex items-center gap-1.5 transition-all">
+                <span class="material-symbols-outlined text-[16px]">view_kanban</span>
+                <span id="toggle-kanban-label">Show Kanban Board</span>
+                <span class="material-symbols-outlined text-[16px] transition-transform duration-200" id="toggle-kanban-arrow">expand_more</span>
+              </button>
               <button id="enable-browser-notifs-btn" class="px-3 py-1.5 rounded-xl border border-outline-variant hover:bg-surface-container text-xs font-bold text-on-surface flex items-center gap-1.5 transition-colors">
                 <span class="material-symbols-outlined text-[16px]">campaign</span> Enable Desktop Alerts
               </button>
@@ -318,6 +323,76 @@
           </div>
           <div id="admin-inquiries-list" class="space-y-3">
             <p class="text-sm text-on-surface-variant text-center py-6">Checking for new customer inquiries...</p>
+          </div>
+
+          <!-- Live Sales Pipeline (Kanban Board) - Collapsed by default -->
+          <div id="admin-inquiries-kanban-container" class="hidden mt-6 pt-5 border-t border-outline-variant">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary text-[20px]">view_kanban</span>
+                <div>
+                  <h3 class="font-headline font-bold text-sm text-on-surface">Sales Pipeline Kanban</h3>
+                  <p class="text-xs text-on-surface-variant">Drag or track leads across New, Contacted, and Quote Sent stages</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 flex-wrap">
+                <label class="flex items-center gap-1.5 text-xs text-on-surface-variant cursor-pointer select-none hover:text-on-surface transition-colors" title="Keep collapsed every time dashboard opens">
+                  <input type="checkbox" id="kanban-collapsed-default-pref" class="rounded border-outline-variant text-secondary focus:ring-secondary text-xs" checked>
+                  <span>Collapsed by default</span>
+                </label>
+                <button type="button" id="refresh-dash-kanban-btn" class="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface flex items-center gap-1 transition-colors">
+                  <span class="material-symbols-outlined text-[14px]">refresh</span> Refresh
+                </button>
+                <button type="button" id="collapse-inquiries-kanban-btn" class="px-2.5 py-1 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-bold text-on-surface-variant flex items-center gap-1 transition-colors">
+                  <span class="material-symbols-outlined text-[14px]">expand_less</span> Collapse
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto pb-2 -mx-2 px-2">
+              <div class="flex gap-4 min-w-[750px]">
+                
+                <!-- Column 1: New Web Requests -->
+                <div class="flex-1 bg-surface-container-low border border-outline-variant rounded-xl flex flex-col min-h-[260px]">
+                  <div class="p-3 border-b border-outline-variant bg-surface-container/60 rounded-t-xl flex items-center justify-between">
+                    <h4 class="font-label text-xs font-bold flex items-center gap-1.5 text-on-surface">
+                      <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> New Web Requests
+                    </h4>
+                    <span id="dash-count-col-new" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold text-on-surface">0</span>
+                  </div>
+                  <div id="dash-kanban-col-new" class="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2.5 max-h-[380px]" data-stage="new">
+                    <p class="text-xs text-on-surface-variant text-center py-4">No new leads.</p>
+                  </div>
+                </div>
+
+                <!-- Column 2: Contacted / Drafting Quote -->
+                <div class="flex-1 bg-surface-container-low border border-outline-variant rounded-xl flex flex-col min-h-[260px]">
+                  <div class="p-3 border-b border-outline-variant bg-surface-container/60 rounded-t-xl flex items-center justify-between">
+                    <h4 class="font-label text-xs font-bold flex items-center gap-1.5 text-on-surface">
+                      <span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span> Contacted / Draft
+                    </h4>
+                    <span id="dash-count-col-contacted" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold text-on-surface">0</span>
+                  </div>
+                  <div id="dash-kanban-col-contacted" class="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2.5 max-h-[380px]" data-stage="contacted">
+                    <p class="text-xs text-on-surface-variant text-center py-4">No contacted leads.</p>
+                  </div>
+                </div>
+
+                <!-- Column 3: Quote Sent -->
+                <div class="flex-1 bg-surface-container-low border border-outline-variant rounded-xl flex flex-col min-h-[260px]">
+                  <div class="p-3 border-b border-outline-variant bg-surface-container/60 rounded-t-xl flex items-center justify-between">
+                    <h4 class="font-label text-xs font-bold flex items-center gap-1.5 text-on-surface">
+                      <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Quote Sent
+                    </h4>
+                    <span id="dash-count-col-quote_sent" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold text-on-surface">0</span>
+                  </div>
+                  <div id="dash-kanban-col-quote_sent" class="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2.5 max-h-[380px]" data-stage="quote_sent">
+                    <p class="text-xs text-on-surface-variant text-center py-4">No quotes sent.</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
           </div>
         </div>
 
