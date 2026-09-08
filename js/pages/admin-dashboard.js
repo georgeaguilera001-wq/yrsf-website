@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YRSF — Admin Dashboard Logic
  * Handles all CMS sections: fleet, add-ons, content, SEO, settings.
  */
@@ -9808,42 +9808,6 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
   };
 
   window.initInquiriesSection = async function() {
-    const kanbanNew = document.getElementById('kanban-col-new');
-    const kanbanContacted = document.getElementById('kanban-col-contacted');
-    const kanbanSent = document.getElementById('kanban-col-quote_sent');
-    if (!kanbanNew || !kanbanContacted || !kanbanSent) return;
-
-    const { data: leads } = await supabase.from('bookings').select('*').in('status', ['inquiry']).order('created_at', { ascending: false });
-    const allLeads = leads || [];
-
-    const newLeads = allLeads.filter(l => l.lead_status === 'New Web Request');
-    const contactedLeads = allLeads.filter(l => l.lead_status === 'Contacted' || l.lead_status === 'Draft Quote');
-    const quotedLeads = allLeads.filter(l => l.lead_status === 'Quote Sent');
-
-    document.getElementById('count-col-new').textContent = newLeads.length;
-    document.getElementById('count-col-contacted').textContent = contactedLeads.length;
-    document.getElementById('count-col-quote_sent').textContent = quotedLeads.length;
-
-    const renderCard = (l) => {
-      return `
-        <div class="bg-surface border border-outline-variant rounded-xl p-3 shadow-sm hover:shadow transition-shadow cursor-pointer flex flex-col gap-2" onclick="editBooking('${l.id}')">
-          <div class="flex justify-between items-start">
-            <span class="font-bold text-sm text-on-surface">${l.customer_name || 'Web Lead'}</span>
-            <span class="text-xs font-bold text-secondary bg-secondary-container px-2 py-0.5 rounded-md">${l.boat_name || 'Yacht'}</span>
-          </div>
-          <div class="flex justify-between items-center text-xs text-on-surface-variant">
-            <span>Date: ${l.booking_date || l.charter_date || 'TBD'}</span>
-            <span class="font-bold text-green-700">$${parseFloat(l.total_price || 0).toLocaleString()}</span>
-          </div>
-        </div>
-      `;
-    };
-
-    kanbanNew.innerHTML = newLeads.length ? newLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No new leads.</p>';
-    kanbanContacted.innerHTML = contactedLeads.length ? contactedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No contacted leads.</p>';
-    kanbanSent.innerHTML = quotedLeads.length ? quotedLeads.map(renderCard).join('') : '<p class="text-xs text-on-surface-variant text-center mt-4">No quotes sent.</p>';
-  };
-
   window.sendWhatsAppCRM = function(phone, name) {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const msg = encodeURIComponent(`Hi ${name}! Thanks for yachting with Yacht Rentals of South Florida. Would you like to plan another charter experience soon?`);
