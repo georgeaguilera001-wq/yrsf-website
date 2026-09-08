@@ -748,13 +748,15 @@ return; // Redirect in progress
         listEl.querySelectorAll('.dismiss-inquiry-btn').forEach(b => {
           b.onclick = async () => {
             const id = b.dataset.inquiryId;
+            if (!confirm('Are you sure you want to delete this customer inquiry?')) return;
             removeLocalInquiry(id);
             if (id && !id.startsWith('inq_')) {
-              await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id);
+              await supabase.from('bookings').delete().eq('id', id);
             }
-            showToast('Inquiry archived', 'info');
+            showToast('Inquiry removed', 'info');
             fetchAndRenderInquiries(false);
             if (typeof window.initInquiriesSection === 'function') window.initInquiriesSection();
+            if (typeof loadUpcomingReservations === 'function') loadUpcomingReservations();
           };
         });
       } catch (err) {
@@ -6623,9 +6625,14 @@ EXTRACTION RULES:
               </p>
             </div>
           </div>
-          <div class="flex flex-col items-end gap-1">
-            ${statusBadge}
-            <span class="text-xs font-bold text-on-surface font-mono">$${parseFloat(b.total_price || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+          <div class="flex items-center gap-2">
+            <div class="flex flex-col items-end gap-1">
+              ${statusBadge}
+              <span class="text-xs font-bold text-on-surface font-mono">$${parseFloat(b.total_price || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+            </div>
+            <button type="button" onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1 shrink-0" title="Delete Charter">
+              <span class="material-symbols-outlined text-[18px]">delete</span>
+            </button>
           </div>
         </div>
       `;
@@ -8252,9 +8259,14 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
                   <span class="material-symbols-outlined text-sm">schedule</span> <span class="font-extrabold text-on-surface">${escapeHtml(timeRangeStr)}</span> (${ev.duration_hours || 4} hrs) • Guests: ${ev.guest_count || 1}
                 </p>
               </div>
-              <button onclick="window.closeDayEventsModal(); window.editBooking('${ev.id}')" class="px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface transition-colors shrink-0 flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">edit</span> Edit / View details
-              </button>
+              <div class="flex items-center gap-2 shrink-0">
+                <button onclick="window.closeDayEventsModal(); window.editBooking('${ev.id}')" class="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface transition-colors flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">visibility</span> View details
+                </button>
+                <button type="button" onclick="window.closeDayEventsModal(); window.deleteBooking('${ev.id}', '${escapeHtml(ev.customer_name || '')}');" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete Booking">
+                  <span class="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+              </div>
             </div>
           `;
         }
@@ -9310,12 +9322,28 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
   };
 
   window.deleteBooking = async (id, name, closePanel = false) => {
-    if (!confirm(`Are you sure you want to delete charter booking for "${name}"?`)) return;
-    const { error } = await supabase.from('bookings').delete().eq('id', id);
-    if (error) { showToast('Error deleting booking: ' + error.message, true); return; }
-    showToast('Charter booking removed.');
-    loadBookings();
-    if (window.initCRMSection) window.initCRMSection();
+    const displayName = name ? ` "${name}"` : '';
+    if (!confirm(`Are you sure you want to delete charter booking${displayName}?`)) return;
+
+    // Clean local inquiry queue if applicable
+    try {
+      let localList = []; try { const rawInq = localStorage.getItem('yrsf_all_inquiries'); localList = (rawInq && rawInq !== 'undefined') ? JSON.parse(rawInq) : []; } catch(e) { localList = []; }
+      const updated = localList.filter(item => item.id !== id);
+      localStorage.setItem('yrsf_all_inquiries', JSON.stringify(updated));
+    } catch(e) {}
+
+    if (id && !id.startsWith('inq_')) {
+      const { error } = await supabase.from('bookings').delete().eq('id', id);
+      if (error) { showToast('Error deleting booking: ' + error.message, 'error'); return; }
+    }
+    showToast('Charter booking removed.', 'success');
+    if (typeof loadBookings === 'function') loadBookings();
+    if (typeof loadUpcomingReservations === 'function') loadUpcomingReservations();
+    if (typeof window.initInquiriesSection === 'function') window.initInquiriesSection();
+    if (typeof window.refreshInquiriesMonitor === 'function') window.refreshInquiriesMonitor();
+    if (typeof window.initCRMSection === 'function') window.initCRMSection();
+    if (typeof window.renderCalendarEvents === 'function') window.renderCalendarEvents();
+
     if (closePanel) {
       const p = document.getElementById('customer-profile-panel');
       if (p) p.classList.add('translate-x-full');
@@ -9655,7 +9683,12 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
         <div class="bg-white p-3 rounded-xl border border-outline-variant shadow-xs hover:shadow hover:border-secondary/50 cursor-pointer transition-all flex flex-col gap-2" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${b.id}')" onclick="window.editBooking('${b.id}')">
           <div class="flex justify-between items-start">
             <h4 class="font-bold text-sm text-on-surface truncate pr-2">${escapeHtml(b.customer_name || 'Unknown Lead')}</h4>
-            <span class="text-xs font-mono font-bold text-secondary bg-secondary-container/50 px-1.5 py-0.5 rounded shrink-0">${dateStr}</span>
+            <div class="flex items-center gap-1 shrink-0">
+              <span class="text-xs font-mono font-bold text-secondary bg-secondary-container/50 px-1.5 py-0.5 rounded">${dateStr}</span>
+              <button type="button" onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Lead">
+                <span class="material-symbols-outlined text-[15px]">delete</span>
+              </button>
+            </div>
           </div>
           <p class="text-[11px] text-on-surface-variant flex items-center gap-1">
             <span class="material-symbols-outlined text-[12px]">directions_boat</span> ${escapeHtml(b.boat_name || 'TBD')}
@@ -9901,8 +9934,11 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
             <span class="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full font-bold">${q.lead_status || 'Draft'}</span>
           </div>
           <div class="text-xs text-on-surface-variant mb-2">Requested Date: ${q.booking_date || q.charter_date || 'TBD'}</div>
-          <div class="flex justify-end gap-2">
+          <div class="flex justify-end items-center gap-2">
             <button onclick="editBooking('${q.id}')" class="text-xs font-bold text-secondary hover:underline">Edit/Send Quote</button>
+            <button type="button" onclick="event.stopPropagation(); deleteBooking('${q.id}', '${escapeHtml(c.name || 'Quote')}', false)" class="p-1 text-on-surface-variant hover:text-red-600 rounded hover:bg-red-50 transition-colors" title="Delete Quote">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
           </div>
         </div>
       `).join('');
