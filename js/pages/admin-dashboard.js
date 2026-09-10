@@ -8811,7 +8811,8 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       const tot = parseFloat(b.total_price || b.amount || 0);
       const dep = parseFloat(b.deposit_amount || 0);
       const ref = parseFloat(b.refunded_amount || 0);
-      const rem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, tot - (dep - ref));
+      const rawRem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : null;
+      const rem = (rawRem !== null && (rawRem > 0 || dep >= tot || b.status === 'completed')) ? rawRem : Math.max(0, tot - (dep - ref));
       if (rem > 0.01) {
         chargeBtn.classList.remove('hidden');
         chargeBtn.onclick = () => window.openChargeBalanceModal(b);
@@ -8902,7 +8903,8 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     const tax = price - subtotal;
     const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
     const refunded = parseFloat(b.refunded_amount || 0);
-    const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid + refunded);
+    const rawBal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : null;
+    const bal = (rawBal !== null && (rawBal > 0 || paid >= price || b.status === 'completed')) ? rawBal : Math.max(0, price - paid + refunded);
     
     let charterBaseSubtotal = customBoatOverride !== null ? customBoatOverride : Math.max(0, subtotal - captainTotal - totalAddonsPrice + explicitDiscountOverride);
     
@@ -9282,7 +9284,8 @@ Additional Information: (we will add this part if needed)`;
 
     const price = parseFloat(b.total_price || b.amount || 0);
     const paid = parseFloat(b.deposit_amount || (b.deposit_paid ? price * 0.3 : 0) || 0);
-    const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
+    const rawBal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : null;
+    const bal = (rawBal !== null && (rawBal > 0 || paid >= price || b.status === 'completed')) ? rawBal : Math.max(0, price - paid);
 
     let boatLoc = '';
     const boat = (fleetCache || []).find(x => (b.boat_id && x.id === b.boat_id) || (b.boat_name && x.name && x.name.toLowerCase() === b.boat_name.toLowerCase()));
@@ -10709,7 +10712,8 @@ window.openSmsPreviewModal = (phone, initialMessageText) => {
   const tot = parseFloat(booking.total_price || booking.amount || 0);
   const dep = parseFloat(booking.deposit_amount || 0);
   const ref = parseFloat(booking.refunded_amount || 0);
-  const rem = booking.remaining_balance !== undefined && booking.remaining_balance !== null ? parseFloat(booking.remaining_balance) : Math.max(0, tot - (dep - ref));
+  const rawRem = booking.remaining_balance !== undefined && booking.remaining_balance !== null ? parseFloat(booking.remaining_balance) : null;
+  const rem = (rawRem !== null && (rawRem > 0 || dep >= tot || booking.status === 'completed')) ? rawRem : Math.max(0, tot - (dep - ref));
 
   document.getElementById('charge-booking-id').value = booking.id;
   document.getElementById('charge-cust-name').textContent = booking.customer_name || 'Guest';
@@ -10963,6 +10967,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const guest_count = parseInt(document.getElementById('book-guests').value) || 1;
       const total_price = parseFloat(document.getElementById('book-price').value) || 0;
       const deposit_amount = parseFloat(document.getElementById('book-deposit').value) || 0;
+      const remaining_balance = Math.max(0, total_price - deposit_amount);
 
       if (!id) {
         topPortalBtn.innerHTML = '<span class="admin-spinner w-4 h-4 border-blue-700"></span> Generating...';
@@ -10972,7 +10977,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const { data, error } = await supabase.from('bookings').insert([{
             boat_id, boat_name, booking_date, start_time, duration_hours,
             customer_name, customer_phone, customer_email, guest_count,
-            total_price, deposit_amount, status: 'inquiry', lead_status: 'quote_sent'
+            total_price, deposit_amount, remaining_balance, status: 'inquiry', lead_status: 'quote_sent'
           }]).select('id').single();
           
           if (error) throw error;

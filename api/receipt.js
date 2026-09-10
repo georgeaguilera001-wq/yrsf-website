@@ -104,7 +104,8 @@ module.exports = async (req, res) => {
     const tax = price - subtotal;
     const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
     const refunded = parseFloat(b.refunded_amount || 0);
-    const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid + refunded);
+    const rawBal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : null;
+    const bal = (rawBal !== null && (rawBal > 0 || paid >= price || b.status === 'completed')) ? rawBal : Math.max(0, price - paid + refunded);
 
     let charterBaseSubtotal = customBoatOverride !== null ? customBoatOverride : Math.max(0, subtotal - captainTotal - totalAddonsPrice + explicitDiscountOverride);
 

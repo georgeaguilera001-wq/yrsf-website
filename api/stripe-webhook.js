@@ -103,8 +103,15 @@ module.exports = async (req, res) => {
         stripe_session_id: session.id
       };
       if (paymentType === 'deposit') {
+        const depositPaid = session.amount_total ? (session.amount_total / 100) : parseFloat(booking.deposit_amount || 0);
+        const totPrice = parseFloat(booking.total_price || booking.amount || 0);
+        const refAmount = parseFloat(booking.refunded_amount || 0);
+        const newRem = Math.max(0, totPrice - (depositPaid - refAmount));
+
         updateData.status = 'confirmed';
         updateData.payment_method = 'stripe';
+        updateData.deposit_amount = depositPaid;
+        updateData.remaining_balance = newRem;
       } else if (paymentType === 'balance' || paymentType === 'full') {
         const balancePaid = session.amount_total ? (session.amount_total / 100) : 0;
         const currentDeposit = parseFloat(booking.deposit_amount || 0);
