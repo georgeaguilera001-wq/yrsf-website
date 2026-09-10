@@ -5052,35 +5052,50 @@ EXTRACTION RULES:
     const repClean = (staffNames.length === 1 ? staffNames[0] : 'Multiple_Staff').replace(/[^a-zA-Z0-9]/g, '_');
     const fileName = `YRSF_Commission_Payout_${repClean}_${payoutDate}.pdf`;
 
-    const templateEl = document.getElementById('commission-payout-pdf-template');
-    if (!templateEl) return;
+    if (typeof html2pdf === 'undefined') {
+      alert('⚠️ PDF generation library is still loading. Please try again in 2 seconds.');
+      return;
+    }
 
-    templateEl.innerHTML = buildCommissionPayoutHtml(selectedComms, { payoutDate, paymentMethod });
-    templateEl.style.display = 'block';
+    if (typeof showToast === 'function') showToast('📄 Generating Commission Payout PDF Report...', 'info');
+
+    // Create a clean standalone export container with normal relative flow (never positioned off-screen at top: -9999px)
+    const exportDiv = document.createElement('div');
+    exportDiv.id = 'payout-pdf-render-export';
+    exportDiv.style.position = 'relative';
+    exportDiv.style.top = '0px';
+    exportDiv.style.left = '0px';
+    exportDiv.style.width = '794px';
+    exportDiv.style.maxWidth = '794px';
+    exportDiv.style.background = '#ffffff';
+    exportDiv.style.color = '#1e293b';
+    exportDiv.style.boxSizing = 'border-box';
+    exportDiv.style.padding = '0';
+    exportDiv.style.margin = '0';
+    exportDiv.innerHTML = buildCommissionPayoutHtml(selectedComms, { payoutDate, paymentMethod });
 
     const opt = {
       margin:       [0.3, 0.3, 0.3, 0.3],
       filename:     fileName,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, allowTaint: true, logging: false, scrollY: 0, scrollX: 0 },
+      html2canvas:  { 
+        scale: 2, 
+        useCORS: true, 
+        allowTaint: true, 
+        logging: false, 
+        scrollY: 0, 
+        scrollX: 0,
+        windowWidth: 800
+      },
       jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
-    if (typeof showToast === 'function') showToast('📄 Generating Commission Payout PDF Report...', 'info');
-
-    if (typeof html2pdf !== 'undefined') {
-      try {
-        await html2pdf().set(opt).from(templateEl).save();
-        templateEl.style.display = 'none';
-        if (typeof showToast === 'function') showToast('✓ Commission Payout PDF downloaded successfully!', 'success');
-      } catch (err) {
-        templateEl.style.display = 'none';
-        console.error('html2pdf payout report error:', err);
-        if (typeof showToast === 'function') showToast('PDF Export Error: ' + err.message, true);
-      }
-    } else {
-      templateEl.style.display = 'none';
-      alert('⚠️ PDF generation library is still loading. Please try again in 2 seconds.');
+    try {
+      await html2pdf().set(opt).from(exportDiv).save();
+      if (typeof showToast === 'function') showToast('✓ Commission Payout PDF downloaded successfully!', 'success');
+    } catch (err) {
+      console.error('html2pdf payout report error:', err);
+      if (typeof showToast === 'function') showToast('PDF Export Error: ' + err.message, true);
     }
   }
 
