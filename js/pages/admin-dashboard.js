@@ -4704,8 +4704,8 @@ EXTRACTION RULES:
             </td>
             <td style="text-align: right; vertical-align: top; width: 40%;">
               <div style="font-size: 14px; font-weight: 800; color: #0f172a;">Yacht Rentals of South Florida</div>
-              <div style="font-size: 11px; color: #64748b; margin-top: 1px;">Miami, FL • info@yrsfcharters.com</div>
-              <div style="font-size: 11px; color: #64748b;">(305) 990-2192 • yrsfcharters.com</div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 1px;">Miami, FL &bull; info@yrsfcharters.com</div>
+              <div style="font-size: 11px; color: #64748b;">(305) 990-2192 &bull; yrsfcharters.com</div>
               <div style="margin-top: 6px;">
                 <span style="display: inline-block; padding: 3px 9px; background: ${allPaid ? '#dcfce7' : '#fef3c7'}; color: ${allPaid ? '#166534' : '#92400e'}; border: 1px solid ${allPaid ? '#bbf7d0' : '#fde68a'}; border-radius: 6px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
                   ${allPaid ? '✓ DISBURSED / PAID' : 'PAYOUT STATEMENT'}
@@ -4839,7 +4839,7 @@ EXTRACTION RULES:
 
         <!-- Footer -->
         <div style="text-align: center; margin-top: 24px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 9.5px; color: #94a3b8;">
-          Yacht Rentals of South Florida • 401 Biscayne Blvd, Miami, FL 33132 • yrsfcharters.com • info@yrsfcharters.com<br/>
+          Yacht Rentals of South Florida &bull; 401 Biscayne Blvd, Miami, FL 33132 &bull; yrsfcharters.com &bull; info@yrsfcharters.com<br/>
           This payout statement was generated electronically by the YRSF Fleet &amp; Staff Management Portal.
         </div>
 
@@ -5065,8 +5065,7 @@ EXTRACTION RULES:
     exportDiv.style.position = 'relative';
     exportDiv.style.top = '0px';
     exportDiv.style.left = '0px';
-    exportDiv.style.width = '794px';
-    exportDiv.style.maxWidth = '794px';
+    exportDiv.style.width = '100%';
     exportDiv.style.background = '#ffffff';
     exportDiv.style.color = '#1e293b';
     exportDiv.style.boxSizing = 'border-box';
@@ -5082,10 +5081,7 @@ EXTRACTION RULES:
         scale: 2, 
         useCORS: true, 
         allowTaint: true, 
-        logging: false, 
-        scrollY: 0, 
-        scrollX: 0,
-        windowWidth: 800
+        logging: false 
       },
       jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
