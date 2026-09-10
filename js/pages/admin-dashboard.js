@@ -4424,34 +4424,36 @@ EXTRACTION RULES:
         const cleanNotes = (comm.client_notes || '').replace('[PAID]', '').trim() || '-';
         return `
           <tr class="hover:bg-surface-container-low/50 transition-colors">
-            <td class="p-4">
-              <p class="font-bold text-on-surface">${escapeHtml(staff.name)}</p>
-              <p class="text-[11px] text-on-surface-variant">${escapeHtml(staff.role)}</p>
+            <td class="px-3 py-2">
+              <p class="font-bold text-on-surface leading-tight">${escapeHtml(staff.name)}</p>
+              <p class="text-[10px] text-on-surface-variant leading-tight">${escapeHtml(staff.role)}</p>
             </td>
-            <td class="p-4 font-bold text-secondary">${escapeHtml(comm.boat_name || '')}</td>
-            <td class="p-4 text-xs font-mono text-on-surface-variant">${dateStr}</td>
-            <td class="p-4 font-mono text-sm">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-            <td class="p-4 font-mono font-bold text-amber-700">${comm.commission_rate}%</td>
-            <td class="p-4 font-mono font-extrabold ${isPaid ? 'text-green-700' : 'text-blue-700'} text-base flex flex-col justify-center">
-              $${parseFloat(comm.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              ${isPaid ? '<span class="text-[9px] font-bold bg-green-100 text-green-800 px-1 py-0.5 rounded uppercase mt-0.5 w-fit">PAID</span>' : ''}
+            <td class="px-3 py-2 font-semibold text-secondary whitespace-nowrap">${escapeHtml(comm.boat_name || '')}</td>
+            <td class="px-3 py-2 text-[11px] font-mono text-on-surface-variant whitespace-nowrap">${dateStr}</td>
+            <td class="px-3 py-2 font-mono whitespace-nowrap">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+            <td class="px-3 py-2 font-mono font-bold text-amber-700 text-center whitespace-nowrap">${comm.commission_rate}%</td>
+            <td class="px-3 py-2 font-mono font-extrabold ${isPaid ? 'text-green-700' : 'text-blue-700'} whitespace-nowrap">
+              <div class="flex items-center gap-1.5">
+                <span>$${parseFloat(comm.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                ${isPaid ? '<span class="text-[8.5px] font-bold bg-green-100 text-green-800 px-1 py-0.5 rounded uppercase">PAID</span>' : ''}
+              </div>
             </td>
-            <td class="p-4 text-xs text-on-surface-variant max-w-xs truncate">${escapeHtml(cleanNotes)}</td>
-            <td class="p-4 text-right whitespace-nowrap">
-              <div class="flex items-center justify-end gap-1">
+            <td class="px-3 py-2 text-[11px] text-on-surface-variant max-w-[150px] truncate" title="${escapeHtml(cleanNotes)}">${escapeHtml(cleanNotes)}</td>
+            <td class="px-3 py-2 text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-0.5">
                 ${!isPaid ? `
                 <button onclick="window.markCommissionPaid('${comm.id}')" class="p-1 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Mark as Paid">
-                  <span class="material-symbols-outlined text-[18px]">payments</span>
+                  <span class="material-symbols-outlined text-[16px]">payments</span>
                 </button>
                 ` : ''}
                 <button onclick="window.editCommission('${comm.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-colors" title="Edit Commission">
-                  <span class="material-symbols-outlined text-[18px]">edit</span>
+                  <span class="material-symbols-outlined text-[16px]">edit</span>
                 </button>
                 <button onclick="window.generateSingleCommissionPayoutPdf('${comm.id}')" class="p-1 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded transition-colors" title="Generate Payout Report (PDF)">
-                  <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+                  <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
                 </button>
                 <button onclick="window.deleteCommission('${comm.id}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Commission Log">
-                  <span class="material-symbols-outlined text-[18px]">delete</span>
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
                 </button>
               </div>
             </td>
@@ -4945,22 +4947,22 @@ EXTRACTION RULES:
 
       return `
         <tr class="hover:bg-surface-container-low/60 transition-colors ${isChecked ? 'bg-amber-50/40' : ''}">
-          <td class="p-3 text-center">
+          <td class="px-2 py-1.5 text-center">
             <input type="checkbox" class="payout-item-cb rounded text-amber-600 focus:ring-amber-500 cursor-pointer" data-id="${comm.id}" ${isChecked ? 'checked' : ''} />
           </td>
-          <td class="p-3">
-            <p class="font-bold text-on-surface">${escapeHtml(staff.name)}</p>
-            <p class="text-[10px] text-on-surface-variant">${escapeHtml(staff.role)}</p>
+          <td class="px-2.5 py-1.5">
+            <p class="font-bold text-on-surface leading-tight text-xs">${escapeHtml(staff.name)}</p>
+            <p class="text-[9.5px] text-on-surface-variant leading-tight">${escapeHtml(staff.role)}</p>
           </td>
-          <td class="p-3 font-bold text-secondary">${escapeHtml(comm.boat_name || '-')}</td>
-          <td class="p-3 font-mono text-on-surface-variant">${dateStr}</td>
-          <td class="p-3 font-mono">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-          <td class="p-3 font-mono text-amber-700 font-bold">${comm.commission_rate}%</td>
-          <td class="p-3 font-mono font-extrabold ${isPaid ? 'text-green-700' : 'text-blue-700'}">
+          <td class="px-2.5 py-1.5 font-bold text-secondary text-xs whitespace-nowrap">${escapeHtml(comm.boat_name || '-')}</td>
+          <td class="px-2.5 py-1.5 font-mono text-[11px] text-on-surface-variant whitespace-nowrap">${dateStr}</td>
+          <td class="px-2.5 py-1.5 font-mono text-xs whitespace-nowrap">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+          <td class="px-2.5 py-1.5 font-mono text-amber-700 font-bold text-center text-xs whitespace-nowrap">${comm.commission_rate}%</td>
+          <td class="px-2.5 py-1.5 font-mono font-extrabold text-xs ${isPaid ? 'text-green-700' : 'text-blue-700'} whitespace-nowrap">
             $${parseFloat(comm.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </td>
-          <td class="p-3">
-            ${isPaid ? '<span class="text-[9px] font-bold bg-green-100 text-green-800 px-1.5 py-0.5 rounded uppercase">PAID</span>' : '<span class="text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded uppercase">UNPAID</span>'}
+          <td class="px-2.5 py-1.5 whitespace-nowrap">
+            ${isPaid ? '<span class="text-[8.5px] font-bold bg-green-100 text-green-800 px-1 py-0.5 rounded uppercase">PAID</span>' : '<span class="text-[8.5px] font-bold bg-amber-100 text-amber-800 px-1 py-0.5 rounded uppercase">UNPAID</span>'}
           </td>
         </tr>
       `;

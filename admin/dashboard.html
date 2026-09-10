@@ -1776,33 +1776,33 @@
 
         <!-- TAB 3: Commission Sales Log Table (Hidden by default) -->
         <div id="tab-view-commissions" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm hidden">
-          <div class="p-4 bg-surface-container-low border-b border-outline-variant flex flex-wrap items-center justify-between gap-3">
+          <div class="px-4 py-2.5 bg-surface-container-low border-b border-outline-variant flex flex-wrap items-center justify-between gap-2.5">
             <span class="text-xs font-bold text-on-surface-variant">Showing charter bookings and sales commission payouts</span>
             <div class="flex items-center gap-2">
-              <button id="btn-open-payout-modal" type="button" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
-                <span class="material-symbols-outlined text-sm">picture_as_pdf</span> Generate Payout Report (PDF)
+              <button id="btn-open-payout-modal" type="button" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
+                <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span> Generate Payout Report (PDF)
               </button>
               <button id="refresh-commissions-btn" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1 cursor-pointer">
-                <span class="material-symbols-outlined text-sm">refresh</span> Refresh Log
+                <span class="material-symbols-outlined text-[16px]">refresh</span> Refresh Log
               </button>
             </div>
           </div>
           <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead class="bg-surface-container text-left text-xs font-label uppercase text-on-surface-variant tracking-wider">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-surface-container text-left text-[11px] font-label uppercase text-on-surface-variant tracking-wider">
                 <tr>
-                  <th class="p-4">Sales Agent</th>
-                  <th class="p-4">Yacht Booked</th>
-                  <th class="p-4">Charter Date</th>
-                  <th class="p-4">Total Charter ($)</th>
-                  <th class="p-4">Comm. Rate (%)</th>
-                  <th class="p-4">Earned Comm. ($)</th>
-                  <th class="p-4">Client / Notes</th>
-                  <th class="p-4 text-right">Actions</th>
+                  <th class="px-3 py-2.5 font-bold">Sales Agent</th>
+                  <th class="px-3 py-2.5 font-bold">Yacht Booked</th>
+                  <th class="px-3 py-2.5 font-bold">Charter Date</th>
+                  <th class="px-3 py-2.5 font-bold">Total ($)</th>
+                  <th class="px-3 py-2.5 font-bold text-center">Rate</th>
+                  <th class="px-3 py-2.5 font-bold">Earned ($)</th>
+                  <th class="px-3 py-2.5 font-bold">Client / Notes</th>
+                  <th class="px-3 py-2.5 font-bold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody id="commissions-table-body" class="divide-y divide-outline-variant text-sm font-body">
-                <tr><td colspan="8" class="text-center py-8"><span class="admin-spinner"></span></td></tr>
+              <tbody id="commissions-table-body" class="divide-y divide-outline-variant text-xs font-body">
+                <tr><td colspan="8" class="text-center py-6"><span class="admin-spinner"></span></td></tr>
               </tbody>
             </table>
           </div>
@@ -2443,68 +2443,68 @@
   </div>
 
   <!-- Log Charter Booking & Calculate Commission Modal -->
-  <div id="commission-modal" class="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4 hidden animate-fade-in">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-outline-variant text-left">
-      <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4">
+  <div id="commission-modal" class="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-outline-variant text-left">
+      <div class="flex items-center justify-between pb-2.5 border-b border-outline-variant mb-3">
         <div class="flex items-center gap-2">
-          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
-            <span class="material-symbols-outlined text-2xl">paid</span>
+          <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-xl">paid</span>
           </div>
           <div>
-            <h3 class="font-headline text-lg font-bold text-on-surface" id="commission-modal-title">Log Charter Commission</h3>
-            <p class="text-[11px] text-on-surface-variant" id="commission-modal-subtitle">Calculate &amp; track booking sale commissions</p>
+            <h3 class="font-headline text-base font-bold text-on-surface" id="commission-modal-title">Log Charter Commission</h3>
+            <p class="text-[10px] text-on-surface-variant" id="commission-modal-subtitle">Calculate &amp; track booking sale commissions</p>
           </div>
         </div>
-        <button type="button" id="close-commission-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-2xl leading-none cursor-pointer">&times;</button>
+        <button type="button" id="close-commission-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-xl leading-none cursor-pointer">&times;</button>
       </div>
       
-      <form id="commission-form" class="space-y-4">
+      <form id="commission-form" class="space-y-3">
         <input type="hidden" id="comm-id" />
         <div>
-          <label class="block font-label text-xs font-bold text-on-surface mb-1">Sales Agent / Broker *</label>
-          <select id="comm-staff-select" required class="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl text-sm font-bold text-secondary focus:ring-2 focus:ring-secondary">
+          <label class="block font-label text-[11px] font-bold text-on-surface mb-0.5">Sales Agent / Broker *</label>
+          <select id="comm-staff-select" required class="w-full px-2.5 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-bold text-secondary focus:ring-2 focus:ring-secondary">
             <option value="">-- Select Sales Concierge --</option>
           </select>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div>
-            <label class="block font-label text-xs font-bold text-on-surface mb-1">Yacht Booked *</label>
-            <select id="comm-boat-select" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary">
+            <label class="block font-label text-[11px] font-bold text-on-surface mb-0.5">Yacht Booked *</label>
+            <select id="comm-boat-select" required class="w-full px-2.5 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary">
               <option value="">-- Select Boat --</option>
             </select>
           </div>
           <div>
-            <label class="block font-label text-xs font-bold text-on-surface mb-1">Charter Date *</label>
-            <input type="date" id="comm-date" required class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
+            <label class="block font-label text-[11px] font-bold text-on-surface mb-0.5">Charter Date *</label>
+            <input type="date" id="comm-date" required class="w-full px-2.5 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-mono focus:ring-2 focus:ring-secondary"/>
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-2 p-3 rounded-xl bg-surface-container-low border border-outline-variant">
+        <div class="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-container-low border border-outline-variant">
           <div>
-            <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Total Price ($) *</label>
-            <input type="number" step="0.01" min="0" id="comm-price" required placeholder="2800.00" class="w-full px-2 py-1.5 bg-white border border-outline-variant rounded-lg text-sm font-bold text-on-surface focus:ring-2 focus:ring-secondary"/>
+            <label class="block font-label text-[9px] uppercase font-bold text-on-surface-variant mb-0.5">Total Price ($) *</label>
+            <input type="number" step="0.01" min="0" id="comm-price" required placeholder="2800.00" class="w-full px-2 py-1 bg-white border border-outline-variant rounded-md text-xs font-bold text-on-surface focus:ring-2 focus:ring-secondary"/>
           </div>
           <div>
-            <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Comm. Rate (%) *</label>
-            <input type="number" step="0.5" min="0" max="100" id="comm-rate" required placeholder="10.0" class="w-full px-2 py-1.5 bg-white border border-outline-variant rounded-lg text-sm font-bold text-amber-700 focus:ring-2 focus:ring-secondary"/>
+            <label class="block font-label text-[9px] uppercase font-bold text-on-surface-variant mb-0.5">Rate (%) *</label>
+            <input type="number" step="0.5" min="0" max="100" id="comm-rate" required placeholder="10.0" class="w-full px-2 py-1 bg-white border border-outline-variant rounded-md text-xs font-bold text-amber-700 focus:ring-2 focus:ring-secondary"/>
           </div>
           <div>
-            <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Payout ($) *</label>
-            <input type="number" step="0.01" min="0" id="comm-amount" required placeholder="280.00" class="w-full px-2 py-1.5 bg-amber-50 border border-amber-300 rounded-lg text-sm font-extrabold text-amber-800 focus:ring-2 focus:ring-secondary" title="Auto-calculated or manually override"/>
+            <label class="block font-label text-[9px] uppercase font-bold text-on-surface-variant mb-0.5">Payout ($) *</label>
+            <input type="number" step="0.01" min="0" id="comm-amount" required placeholder="280.00" class="w-full px-2 py-1 bg-amber-50 border border-amber-300 rounded-md text-xs font-extrabold text-amber-800 focus:ring-2 focus:ring-secondary" title="Auto-calculated or manually override"/>
           </div>
         </div>
 
         <div>
-          <label class="block font-label text-xs font-bold text-on-surface mb-1">Client Name / Reference Notes (Optional)</label>
-          <input type="text" id="comm-notes" placeholder="e.g. Birthday Charter - Client: Smith Family" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
+          <label class="block font-label text-[11px] font-bold text-on-surface mb-0.5">Client Name / Notes (Optional)</label>
+          <input type="text" id="comm-notes" placeholder="e.g. Birthday Charter - Client: Smith Family" class="w-full px-2.5 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary"/>
         </div>
 
-        <div class="flex gap-3 pt-2">
-          <button type="button" id="cancel-comm-btn" class="flex-1 bg-surface-container text-on-surface py-2.5 rounded-xl font-label text-xs font-bold hover:bg-surface-container-high transition-all cursor-pointer">
+        <div class="flex gap-2.5 pt-1">
+          <button type="button" id="cancel-comm-btn" class="flex-1 bg-surface-container text-on-surface py-2 rounded-lg font-label text-xs font-bold hover:bg-surface-container-high transition-all cursor-pointer">
             Cancel
           </button>
-          <button type="submit" id="comm-submit-btn" class="flex-1 bg-amber-600 text-white py-2.5 rounded-xl font-label text-xs font-bold shadow hover:bg-amber-700 transition-all flex items-center justify-center gap-1 cursor-pointer">
+          <button type="submit" id="comm-submit-btn" class="flex-1 bg-amber-600 text-white py-2 rounded-lg font-label text-xs font-bold shadow hover:bg-amber-700 transition-all flex items-center justify-center gap-1 cursor-pointer">
             <span class="material-symbols-outlined text-sm">check_circle</span> <span id="comm-submit-btn-text">Log Commission</span>
           </button>
         </div>
@@ -2513,49 +2513,49 @@
   </div>
 
   <!-- Staff Commission Payout Report Modal -->
-  <div id="commission-payout-modal" class="fixed inset-0 bg-black/75 z-[9999] flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
-    <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border border-outline-variant text-left max-h-[94vh] flex flex-col">
+  <div id="commission-payout-modal" class="fixed inset-0 bg-black/75 z-[9999] flex items-center justify-center p-2 sm:p-4 hidden animate-fade-in">
+    <div class="bg-white rounded-2xl max-w-4xl w-full p-4 sm:p-5 shadow-2xl border border-outline-variant text-left max-h-[92vh] flex flex-col">
       
       <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4 shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold shadow-xs">
-            <span class="material-symbols-outlined text-2xl">picture_as_pdf</span>
+      <div class="flex items-center justify-between pb-2.5 border-b border-outline-variant mb-2.5 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold shadow-xs">
+            <span class="material-symbols-outlined text-xl">picture_as_pdf</span>
           </div>
           <div>
-            <h3 class="font-headline text-lg font-bold text-on-surface flex items-center gap-2">
+            <h3 class="font-headline text-base font-bold text-on-surface flex items-center gap-2">
               Staff Commission Payout Report
-              <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">PDF Voucher</span>
+              <span class="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">PDF Voucher</span>
             </h3>
-            <p class="text-[11px] text-on-surface-variant">Generate official commission payout statements for employees & sales concierges</p>
+            <p class="text-[10.5px] text-on-surface-variant">Generate official commission payout statements for employees & sales concierges</p>
           </div>
         </div>
-        <button type="button" id="close-commission-payout-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-2xl leading-none px-2 py-1 cursor-pointer transition-colors">&times;</button>
+        <button type="button" id="close-commission-payout-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-xl leading-none px-2 py-1 cursor-pointer transition-colors">&times;</button>
       </div>
 
       <!-- Filters & Configuration Bar -->
-      <div class="bg-surface-container-low p-3.5 rounded-2xl border border-outline-variant mb-3 shrink-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+      <div class="bg-surface-container-low p-2.5 rounded-xl border border-outline-variant mb-2.5 shrink-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs">
         <div>
-          <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Employee / Sales Rep *</label>
-          <select id="payout-staff-select" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-lg font-bold text-secondary focus:ring-2 focus:ring-secondary">
+          <label class="block font-label text-[9px] uppercase font-bold text-on-surface-variant mb-0.5">Employee / Sales Rep</label>
+          <select id="payout-staff-select" class="w-full px-2 py-1 bg-white border border-outline-variant rounded-md font-bold text-secondary text-xs focus:ring-2 focus:ring-secondary">
             <option value="all">-- All Sales Agents --</option>
           </select>
         </div>
         <div>
-          <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Status Filter</label>
-          <select id="payout-status-filter" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-lg font-medium text-on-surface focus:ring-2 focus:ring-secondary">
+          <label class="block font-label text-[9px] uppercase font-bold text-on-surface-variant mb-0.5">Status Filter</label>
+          <select id="payout-status-filter" class="w-full px-2 py-1 bg-white border border-outline-variant rounded-md font-medium text-on-surface text-xs focus:ring-2 focus:ring-secondary">
             <option value="unpaid" selected>Unpaid Only (Ready for Payout)</option>
             <option value="all">All Records (Paid &amp; Unpaid)</option>
             <option value="paid">Paid Payouts Only</option>
           </select>
         </div>
         <div>
-          <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Payout Date</label>
-          <input type="date" id="payout-date-input" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-lg font-mono text-xs focus:ring-2 focus:ring-secondary" />
+          <label class="block font-label text-[9px] uppercase font-bold text-on-surface-variant mb-0.5">Payout Date</label>
+          <input type="date" id="payout-date-input" class="w-full px-2 py-1 bg-white border border-outline-variant rounded-md font-mono text-xs focus:ring-2 focus:ring-secondary" />
         </div>
         <div>
-          <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Disbursement Method</label>
-          <select id="payout-method-input" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary">
+          <label class="block font-label text-[9px] uppercase font-bold text-on-surface-variant mb-0.5">Disbursement Method</label>
+          <select id="payout-method-input" class="w-full px-2 py-1 bg-white border border-outline-variant rounded-md text-xs focus:ring-2 focus:ring-secondary">
             <option value="Direct Deposit / Zelle">Direct Deposit / Zelle</option>
             <option value="Zelle Transfer">Zelle Transfer</option>
             <option value="Direct Deposit (ACH)">Direct Deposit (ACH)</option>
@@ -2567,66 +2567,66 @@
       </div>
 
       <!-- Navigation Tabs: Item Selection vs PDF Preview -->
-      <div class="flex items-center gap-4 border-b border-outline-variant mb-3 shrink-0">
-        <button type="button" id="payout-tab-items-btn" class="pb-2 border-b-2 border-amber-600 font-bold text-xs text-amber-700 flex items-center gap-1.5 cursor-pointer">
+      <div class="flex items-center gap-3 border-b border-outline-variant mb-2.5 shrink-0">
+        <button type="button" id="payout-tab-items-btn" class="pb-1.5 border-b-2 border-amber-600 font-bold text-xs text-amber-700 flex items-center gap-1 cursor-pointer">
           <span class="material-symbols-outlined text-sm">format_list_bulleted</span> 1. Select Charters (<span id="payout-selected-count">0</span>)
         </button>
-        <button type="button" id="payout-tab-preview-btn" class="pb-2 border-b-2 border-transparent font-bold text-xs text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 cursor-pointer transition-colors">
+        <button type="button" id="payout-tab-preview-btn" class="pb-1.5 border-b-2 border-transparent font-bold text-xs text-on-surface-variant hover:text-on-surface flex items-center gap-1 cursor-pointer transition-colors">
           <span class="material-symbols-outlined text-sm">visibility</span> 2. Statement Preview
         </button>
       </div>
 
       <!-- Tab View 1: Charter & Commission Selection Table -->
-      <div id="payout-view-items" class="flex-1 overflow-y-auto min-h-0 border border-outline-variant rounded-xl mb-3 custom-scrollbar">
+      <div id="payout-view-items" class="flex-1 overflow-y-auto min-h-0 border border-outline-variant rounded-xl mb-2.5 custom-scrollbar">
         <table class="w-full text-xs text-left">
-          <thead class="bg-surface-container text-on-surface-variant uppercase font-label tracking-wider sticky top-0 border-b border-outline-variant z-10">
+          <thead class="bg-surface-container text-on-surface-variant uppercase font-label tracking-wider sticky top-0 border-b border-outline-variant z-10 text-[10px]">
             <tr>
-              <th class="p-3 w-10 text-center">
+              <th class="px-2 py-2 w-8 text-center">
                 <input type="checkbox" id="payout-select-all" class="rounded text-amber-600 focus:ring-amber-500 cursor-pointer" checked />
               </th>
-              <th class="p-3">Sales Rep</th>
-              <th class="p-3">Boat / Vessel Rented</th>
-              <th class="p-3">Charter Date</th>
-              <th class="p-3">Charter Total ($)</th>
-              <th class="p-3">Rate (%)</th>
-              <th class="p-3 font-bold text-amber-700">Commission Earned ($)</th>
-              <th class="p-3">Status</th>
+              <th class="px-2.5 py-2">Sales Rep</th>
+              <th class="px-2.5 py-2">Boat / Vessel Rented</th>
+              <th class="px-2.5 py-2">Charter Date</th>
+              <th class="px-2.5 py-2">Charter Total ($)</th>
+              <th class="px-2.5 py-2 text-center">Rate</th>
+              <th class="px-2.5 py-2 font-bold text-amber-700">Commission ($)</th>
+              <th class="px-2.5 py-2">Status</th>
             </tr>
           </thead>
-          <tbody id="payout-items-tbody" class="divide-y divide-outline-variant font-body">
+          <tbody id="payout-items-tbody" class="divide-y divide-outline-variant font-body text-xs">
             <tr><td colspan="8" class="text-center py-6 text-on-surface-variant">Loading eligible commissions...</td></tr>
           </tbody>
         </table>
       </div>
 
       <!-- Tab View 2: Live Statement Preview (Rendered printable voucher) -->
-      <div id="payout-view-preview" class="hidden flex-1 overflow-y-auto min-h-0 bg-slate-100 p-4 rounded-xl border border-outline-variant mb-3 flex justify-center custom-scrollbar">
-        <div id="payout-preview-render-target" class="w-full max-w-[760px] bg-white shadow-md rounded-lg p-6 text-slate-800">
+      <div id="payout-view-preview" class="hidden flex-1 overflow-y-auto min-h-0 bg-slate-100 p-3 rounded-xl border border-outline-variant mb-2.5 flex justify-center custom-scrollbar">
+        <div id="payout-preview-render-target" class="w-full max-w-[740px] bg-white shadow-md rounded-lg p-4 sm:p-5 text-slate-800">
           <!-- Dynamically populated -->
         </div>
       </div>
 
       <!-- Footer Summary & Action Controls -->
-      <div class="pt-3 border-t border-outline-variant flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
-        <div class="flex items-center gap-4 text-xs">
-          <div class="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl flex items-center gap-2">
-            <span class="text-amber-800 font-bold uppercase text-[10px] tracking-wider">Total Payout:</span>
-            <span id="payout-total-amount" class="text-amber-900 font-extrabold font-mono text-base">$0.00</span>
+      <div class="pt-2.5 border-t border-outline-variant flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0">
+        <div class="flex items-center gap-3 text-xs">
+          <div class="bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg flex items-center gap-2">
+            <span class="text-amber-800 font-bold uppercase text-[9.5px] tracking-wider">Total Payout:</span>
+            <span id="payout-total-amount" class="text-amber-900 font-extrabold font-mono text-sm sm:text-base">$0.00</span>
           </div>
-          <div class="text-[11px] text-on-surface-variant hidden sm:block">
+          <div class="text-[10.5px] text-on-surface-variant hidden sm:block">
             Charter Sales Volume: <strong id="payout-total-volume" class="font-mono text-on-surface font-bold">$0.00</strong>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 justify-end">
-          <button type="button" id="btn-payout-print" class="px-3.5 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
-            <span class="material-symbols-outlined text-sm">print</span> Print
+        <div class="flex flex-wrap items-center gap-1.5 justify-end">
+          <button type="button" id="btn-payout-print" class="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">print</span> Print
           </button>
-          <button type="button" id="btn-payout-download-pdf" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
-            <span class="material-symbols-outlined text-sm">picture_as_pdf</span> Download PDF
+          <button type="button" id="btn-payout-download-pdf" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span> Download PDF
           </button>
-          <button type="button" id="btn-payout-mark-paid-and-download" class="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
-            <span class="material-symbols-outlined text-sm">check_circle</span> Mark as Paid &amp; Download PDF
+          <button type="button" id="btn-payout-mark-paid-and-download" class="px-3.5 py-1.5 bg-green-700 hover:bg-green-800 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">check_circle</span> Mark as Paid &amp; Download PDF
           </button>
         </div>
       </div>
@@ -3185,7 +3185,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260910v1545"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260910v1550"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
