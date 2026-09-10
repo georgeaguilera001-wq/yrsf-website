@@ -3472,6 +3472,23 @@ EXTRACTION RULES:
       document.getElementById('setting-whatsapp-number').value = settings.whatsapp_number?.value || '';
       document.getElementById('setting-whatsapp-message').value = settings.whatsapp_auto_response?.value || '';
       document.getElementById('setting-whatsapp-template').value = settings.whatsapp_booking_template?.value || '';
+      const captTemplateDefault = `BOAT Name : {boat_name}
+Date: {date}
+Exact Time: {time}
+# of hours: {duration}
+Full name: {customer_name}
+Phone no: {customer_phone}
+DATE OF BIRTH: {dob}
+Email: {customer_email}
+No. of guests: {guests}
+Deposit collected: {deposit}
+Remaining Balance: {balance}
+Total: {total}
+Add-on activities: {addons}
+
+Additional Information: (we will add this part if needed)`;
+      const captInput = document.getElementById('setting-captain-template');
+      if (captInput) captInput.value = settings.captain_booking_template?.value || captTemplateDefault;
       document.getElementById('setting-hero-bg-image').value = settings.hero_bg_image?.value || '';
       document.getElementById('setting-hero-tagline').value = settings.hero_tagline?.value || '';
       document.getElementById('setting-hero-title').value = settings.hero_title?.value || '';
@@ -3503,6 +3520,7 @@ EXTRACTION RULES:
         whatsapp_number: { value: document.getElementById('setting-whatsapp-number').value.trim() },
         whatsapp_auto_response: { value: document.getElementById('setting-whatsapp-message').value.trim() },
         whatsapp_booking_template: { value: document.getElementById('setting-whatsapp-template').value.trim() },
+        captain_booking_template: { value: (document.getElementById('setting-captain-template')?.value || '').trim() },
         hero_bg_image: { value: document.getElementById('setting-hero-bg-image').value.trim() },
         hero_tagline: { value: document.getElementById('setting-hero-tagline').value.trim() },
         hero_title: { value: document.getElementById('setting-hero-title').value.trim() },
@@ -9230,19 +9248,40 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
   window.openMessagePreview = async (id) => {
     if (!bookingsCache || bookingsCache.length === 0) await loadBookings();
     if (!fleetCache || fleetCache.length === 0) await loadFleet();
-    const b = bookingsCache.find(x => x.id === id);
+    let b = (bookingsCache || []).find(x => x.id === id);
+    if (!b && window.inquiriesCache) {
+      b = window.inquiriesCache.find(x => x.id === id);
+    }
     if (!b) return;
     
     const receiptUrl = `https://sfyachtrentals.com/api/receipt?id=${b.id}`;
 
     const settings = await getAllSettings();
-    let template = settings.whatsapp_booking_template?.value;
-    if (!template) {
-      template = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} at {time} is confirmed! Departure Location: {address}. Itemized Receipt: {receipt_url} We look forward to welcoming you aboard.";
+    let customerTemplate = settings.whatsapp_booking_template?.value;
+    if (!customerTemplate) {
+      customerTemplate = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} at {time} is confirmed! Departure Location: {address}. Itemized Receipt: {receipt_url} We look forward to welcoming you aboard.";
     }
 
+    const defaultCaptainTemplate = `BOAT Name : {boat_name}
+Date: {date}
+Exact Time: {time}
+# of hours: {duration}
+Full name: {customer_name}
+Phone no: {customer_phone}
+DATE OF BIRTH: {dob}
+Email: {customer_email}
+No. of guests: {guests}
+Deposit collected: {deposit}
+Remaining Balance: {balance}
+Total: {total}
+Add-on activities: {addons}
+
+Additional Information: (we will add this part if needed)`;
+
+    let captainTemplate = settings.captain_booking_template?.value || defaultCaptainTemplate;
+
     const price = parseFloat(b.total_price || b.amount || 0);
-    const paid = parseFloat(b.deposit_amount || price * 0.3 || 0);
+    const paid = parseFloat(b.deposit_amount || (b.deposit_paid ? price * 0.3 : 0) || 0);
     const bal = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : Math.max(0, price - paid);
 
     let boatLoc = '';
@@ -9259,66 +9298,188 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
 
     const finalAddress = boatLoc || settings.business_address?.value || '201 NW South River Dr, Miami, FL 33128';
 
-    const text = template
-      .replace(/{customer_name}/g, b.customer_name || 'Guest')
-      .replace(/{boat_name}/g, b.boat_name || 'our luxury yacht')
-      .replace(/{date}/g, b.booking_date || '')
-      .replace(/{time}/g, b.start_time || '')
-      .replace(/{duration}/g, b.duration_hours ? b.duration_hours + ' hours' : '')
-      .replace(/{guests}/g, b.guest_count || '')
-      .replace(/{price}/g, '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2}))
-      .replace(/{deposit}/g, '$' + paid.toLocaleString(undefined, {minimumFractionDigits: 2}))
-      .replace(/{balance}/g, '$' + bal.toLocaleString(undefined, {minimumFractionDigits: 2}))
-      .replace(/{addons}/g, b.special_requests || 'None')
-      .replace(/{address}/g, finalAddress)
-      .replace(/{receipt_url}/g, receiptUrl)
-      .replace(/{invoice_url}/g, receiptUrl);
+    const boatName = b.boat_name || (boat && boat.name) || 'Charter Yacht';
+    const bookingDate = b.booking_date || b.charter_date || b.date || '';
+    const exactTime = b.start_time || '';
+    const durationHours = b.duration_hours ? (String(b.duration_hours).toLowerCase().includes('hour') ? b.duration_hours : b.duration_hours + ' hours') : '';
+    const fullName = b.customer_name || '';
+    const phoneNo = b.customer_phone || '';
+    const dob = b.date_of_birth || b.customer_dob || b.dob || '';
+    const email = b.customer_email || '';
+    const guestCount = b.guest_count || b.guests || b.passengers || '';
+    const depositFormatted = paid > 0 ? '$' + paid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '$0.00';
+    const balanceFormatted = '$' + bal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const totalFormatted = price > 0 ? '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '$0.00';
+    const addOnActivities = b.special_requests || b.addons || 'None';
+
+    const applyReplacements = (tpl, isCustomer = false) => {
+      return tpl
+        .replace(/{customer_name}|{full_name}|{name}/gi, fullName || (isCustomer ? 'Guest' : ''))
+        .replace(/{boat_name}/gi, boatName)
+        .replace(/{date}/gi, bookingDate)
+        .replace(/{time}|{exact_time}/gi, exactTime)
+        .replace(/{duration}|{hours}|{# of hours}/gi, durationHours)
+        .replace(/{customer_phone}|{phone_no}|{phone}/gi, phoneNo)
+        .replace(/{dob}|{date_of_birth}/gi, dob)
+        .replace(/{customer_email}|{email}/gi, email)
+        .replace(/{guests}|{guest_count}|{no_of_guests}/gi, guestCount)
+        .replace(/{deposit}|{deposit_collected}/gi, depositFormatted)
+        .replace(/{balance}|{remaining_balance}/gi, balanceFormatted)
+        .replace(/{total}|{price}/gi, totalFormatted)
+        .replace(/{addons}|{add_on_activities}/gi, addOnActivities)
+        .replace(/{address}/gi, finalAddress)
+        .replace(/{receipt_url}|{invoice_url}/gi, receiptUrl);
+    };
+
+    const defaultCustomerMsg = applyReplacements(customerTemplate, true);
+    const defaultCaptainMsg = applyReplacements(captainTemplate, false);
 
     const modal = document.getElementById('message-preview-modal');
     const textArea = document.getElementById('preview-message-text');
+    const label = document.getElementById('preview-message-label');
+    const note = document.getElementById('preview-message-note');
+    const subTitle = document.getElementById('preview-booking-sub');
+    const tabCustomer = document.getElementById('tab-preview-customer');
+    const tabCaptain = document.getElementById('tab-preview-captain');
+    const btnReset = document.getElementById('btn-reset-preview-message');
     const btnCopy = document.getElementById('btn-copy-message');
     const btnSendWhatsApp = document.getElementById('btn-send-whatsapp');
     const btnSendQuo = document.getElementById('btn-send-quo');
 
-    if (modal && textArea) {
-      textArea.value = text;
-      // Use style.display because Tailwind's 'hidden' class uses display:none !important
-      // which cannot be overridden by adding a 'flex' class.
-      modal.style.display = 'flex';
+    if (!modal || !textArea) return;
 
-      // Clear old listeners
+    let activeTab = 'customer';
+    let draftCustomer = defaultCustomerMsg;
+    let draftCaptain = defaultCaptainMsg;
+
+    if (subTitle) {
+      subTitle.textContent = `${boatName} • ${bookingDate || 'Charter'} • ${fullName || 'Guest'}`;
+    }
+
+    const syncUI = () => {
+      const btnSendQuoText = document.getElementById('btn-send-quo-text');
+      const btnSendWhatsAppText = document.getElementById('btn-send-whatsapp-text');
+
+      if (activeTab === 'customer') {
+        if (tabCustomer) tabCustomer.className = 'flex-1 py-2 px-3 rounded-lg font-label text-xs font-bold flex items-center justify-center gap-2 transition-all bg-secondary text-on-secondary shadow-sm cursor-pointer';
+        if (tabCaptain) tabCaptain.className = 'flex-1 py-2 px-3 rounded-lg font-label text-xs font-bold flex items-center justify-center gap-2 transition-all text-on-surface-variant hover:text-on-surface cursor-pointer';
+        if (label) label.textContent = 'Customer Confirmation Message (Editable)';
+        if (note) note.textContent = 'This message has been auto-generated from your Booking Confirmation Template settings.';
+        textArea.value = draftCustomer;
+        if (btnSendQuoText) btnSendQuoText.textContent = 'Send via Quo SMS';
+        if (btnSendWhatsAppText) btnSendWhatsAppText.textContent = 'Send to Customer';
+      } else {
+        if (tabCustomer) tabCustomer.className = 'flex-1 py-2 px-3 rounded-lg font-label text-xs font-bold flex items-center justify-center gap-2 transition-all text-on-surface-variant hover:text-on-surface cursor-pointer';
+        if (tabCaptain) tabCaptain.className = 'flex-1 py-2 px-3 rounded-lg font-label text-xs font-bold flex items-center justify-center gap-2 transition-all bg-secondary text-on-secondary shadow-sm cursor-pointer';
+        if (label) label.textContent = 'Captain Confirmation Message (Editable)';
+        if (note) note.textContent = 'This message is formatted for the boat captain/crew. You can add extra details or notes in Additional Information before sending.';
+        textArea.value = draftCaptain;
+        if (btnSendQuoText) btnSendQuoText.textContent = 'Send to Captain (SMS)';
+        if (btnSendWhatsAppText) btnSendWhatsAppText.textContent = 'Send to Captain';
+      }
+    };
+
+    textArea.oninput = () => {
+      if (activeTab === 'customer') draftCustomer = textArea.value;
+      else draftCaptain = textArea.value;
+    };
+
+    if (tabCustomer) {
+      tabCustomer.onclick = () => {
+        if (activeTab === 'captain') {
+          draftCaptain = textArea.value;
+          activeTab = 'customer';
+          syncUI();
+        }
+      };
+    }
+
+    if (tabCaptain) {
+      tabCaptain.onclick = () => {
+        if (activeTab === 'customer') {
+          draftCustomer = textArea.value;
+          activeTab = 'captain';
+          syncUI();
+        }
+      };
+    }
+
+    if (btnReset) {
+      btnReset.onclick = () => {
+        if (activeTab === 'customer') {
+          draftCustomer = defaultCustomerMsg;
+          textArea.value = draftCustomer;
+          showToast('Customer message reset to default.', 'info');
+        } else {
+          draftCaptain = defaultCaptainMsg;
+          textArea.value = draftCaptain;
+          showToast('Captain message reset to default.', 'info');
+        }
+      };
+    }
+
+    // Refresh action buttons to clean previous event bindings
+    if (btnCopy) {
       const newBtnCopy = btnCopy.cloneNode(true);
       btnCopy.parentNode.replaceChild(newBtnCopy, btnCopy);
-      const newBtnSendWhatsApp = btnSendWhatsApp.cloneNode(true);
-      btnSendWhatsApp.parentNode.replaceChild(newBtnSendWhatsApp, btnSendWhatsApp);
-      const newBtnSendQuo = btnSendQuo?.cloneNode(true);
-      if (newBtnSendQuo) btnSendQuo.parentNode.replaceChild(newBtnSendQuo, btnSendQuo);
-
-      newBtnCopy.addEventListener('click', () => {
-        navigator.clipboard.writeText(text).then(() => {
-          showToast('Message copied to clipboard!', 'success');
+      newBtnCopy.onclick = () => {
+        const currentVal = textArea.value;
+        navigator.clipboard.writeText(currentVal).then(() => {
+          showToast((activeTab === 'captain' ? 'Captain' : 'Customer') + ' confirmation message copied to clipboard!', 'success');
+        }).catch(() => {
+          textArea.select();
+          document.execCommand('copy');
+          showToast((activeTab === 'captain' ? 'Captain' : 'Customer') + ' confirmation message copied to clipboard!', 'success');
         });
-      });
+      };
+    }
 
-      newBtnSendWhatsApp.addEventListener('click', () => {
-        if (!b.customer_phone) {
-          showToast('No phone number recorded for this booking.', true);
-          return;
+    if (btnSendWhatsApp) {
+      const newBtnWhatsApp = btnSendWhatsApp.cloneNode(true);
+      btnSendWhatsApp.parentNode.replaceChild(newBtnWhatsApp, btnSendWhatsApp);
+      newBtnWhatsApp.onclick = () => {
+        const currentVal = textArea.value;
+        if (activeTab === 'customer') {
+          if (!b.customer_phone) {
+            showToast('No phone number recorded for customer.', true);
+            return;
+          }
+          const cleanPhone = b.customer_phone.replace(/[^0-9]/g, '');
+          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(currentVal)}`, '_blank');
+        } else {
+          const captPhone = prompt('Enter captain/crew phone number (or leave blank to select chat/group in WhatsApp):', '');
+          if (captPhone === null) return;
+          if (captPhone.trim()) {
+            const cleanPhone = captPhone.replace(/[^0-9]/g, '');
+            window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(currentVal)}`, '_blank');
+          } else {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(currentVal)}`, '_blank');
+          }
         }
-        const cleanPhone = b.customer_phone.replace(/[^0-9]/g, '');
-        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
-      });
+      };
+    }
 
-      if (newBtnSendQuo) {
-        newBtnSendQuo.addEventListener('click', async () => {
+    if (btnSendQuo) {
+      const newBtnQuo = btnSendQuo.cloneNode(true);
+      btnSendQuo.parentNode.replaceChild(newBtnQuo, btnSendQuo);
+      newBtnQuo.onclick = async () => {
+        const currentVal = textArea.value;
+        if (activeTab === 'customer') {
           if (!b.customer_phone) {
             showToast('No phone number recorded for this booking.', true);
             return;
           }
-          await window.sendQuoSMS(b.customer_phone, text);
-        });
-      }
+          await window.sendQuoSMS(b.customer_phone, currentVal);
+        } else {
+          const captPhone = prompt('Enter captain or crew phone number to send SMS via Quo:');
+          if (!captPhone || !captPhone.trim()) return;
+          await window.sendQuoSMS(captPhone.trim(), currentVal);
+        }
+      };
     }
+
+    syncUI();
+    modal.style.display = 'flex';
   };
 
   window.deleteBooking = async (id, name, closePanel = false) => {
