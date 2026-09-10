@@ -3883,6 +3883,15 @@ EXTRACTION RULES:
       commPrice.addEventListener('input', calcCommission);
       commRate.addEventListener('input', calcCommission);
     }
+    if (commAmount) {
+      commAmount.addEventListener('input', () => {
+        const p = parseFloat(commPrice?.value || 0);
+        const a = parseFloat(commAmount?.value || 0);
+        if (p > 0 && commRate) {
+          commRate.value = ((a / p) * 100).toFixed(1);
+        }
+      });
+    }
 
     if (commStaffSelect) {
       commStaffSelect.addEventListener('change', () => {
@@ -3901,6 +3910,13 @@ EXTRACTION RULES:
         commModal.classList.remove('hidden');
         const commIdEl = document.getElementById('comm-id');
         if (commIdEl) commIdEl.value = '';
+        const modalTitle = document.getElementById('commission-modal-title');
+        const modalSubtitle = document.getElementById('commission-modal-subtitle');
+        const submitBtnText = document.getElementById('comm-submit-btn-text');
+        if (modalTitle) modalTitle.textContent = 'Log Charter Commission';
+        if (modalSubtitle) modalSubtitle.textContent = 'Calculate & track booking sale commissions';
+        if (submitBtnText) submitBtnText.textContent = 'Log Commission';
+
         if (commDate) commDate.value = new Date().toLocaleDateString('sv-SE');
         if (commPrice) commPrice.value = '';
         if (commRate) commRate.value = '10';
@@ -3941,16 +3957,16 @@ EXTRACTION RULES:
           if (id) {
             const { error } = await supabase.from('staff_commissions').update(payload).eq('id', id);
             if (error) throw error;
-            showToast('Commission updated!', 'success');
+            showToast('✓ Commission updated successfully!', 'success');
           } else {
             const { error } = await supabase.from('staff_commissions').insert([payload]);
             if (error) throw error;
-            showToast('Commission logged! Earned $' + commission_amount.toFixed(2), 'success');
+            showToast('✓ Commission logged! Earned $' + commission_amount.toFixed(2), 'success');
           }
           commModal.classList.add('hidden');
-          loadCommissions();
+          loadCommissions(true);
         } catch (err) {
-          showToast('Error logging commission: ' + err.message, true);
+          showToast('Error saving commission: ' + err.message, true);
         }
       });
     }
@@ -4428,6 +4444,9 @@ EXTRACTION RULES:
                   <span class="material-symbols-outlined text-[18px]">payments</span>
                 </button>
                 ` : ''}
+                <button onclick="window.editCommission('${comm.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-colors" title="Edit Commission">
+                  <span class="material-symbols-outlined text-[18px]">edit</span>
+                </button>
                 <button onclick="window.generateSingleCommissionPayoutPdf('${comm.id}')" class="p-1 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded transition-colors" title="Generate Payout Report (PDF)">
                   <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
                 </button>
@@ -4550,7 +4569,82 @@ EXTRACTION RULES:
     const { error } = await supabase.from('staff_commissions').delete().eq('id', id);
     if (error) { showToast('Error deleting commission: ' + error.message, true); return; }
     showToast('Commission record deleted.');
-    loadCommissions();
+    loadCommissions(true);
+  };
+
+  window.editCommission = async (id) => {
+    let comm = commissionsCache.find(c => c.id === id);
+    if (!comm) {
+      await loadCommissions(true);
+      comm = commissionsCache.find(c => c.id === id);
+    }
+    if (!comm) {
+      showToast('Commission record not found', true);
+      return;
+    }
+
+    if (!staffUsersCache || staffUsersCache.length === 0) await loadStaffUsers();
+    if (!fleetCache || fleetCache.length === 0) await loadFleet();
+
+    const commModalEl = document.getElementById('commission-modal');
+    const modalTitle = document.getElementById('commission-modal-title');
+    const modalSubtitle = document.getElementById('commission-modal-subtitle');
+    const submitBtnText = document.getElementById('comm-submit-btn-text');
+
+    if (modalTitle) modalTitle.textContent = 'Edit Charter Commission';
+    if (modalSubtitle) modalSubtitle.textContent = 'Update yacht booking sales commission and payout details';
+    if (submitBtnText) submitBtnText.textContent = 'Update Commission';
+
+    const commIdEl = document.getElementById('comm-id');
+    if (commIdEl) commIdEl.value = comm.id;
+
+    const staffSelectEl = document.getElementById('comm-staff-select');
+    if (staffSelectEl) {
+      staffSelectEl.innerHTML = '<option value="">-- Select Sales Concierge --</option>' +
+        staffUsersCache.map(u => `<option value="${u.id}">${u.name} (${u.role || 'Staff'})</option>`).join('');
+      staffSelectEl.value = comm.staff_id || '';
+    }
+
+    const boatSelectEl = document.getElementById('comm-boat-select');
+    if (boatSelectEl) {
+      const boats = [...(fleetCache || [])].sort((a, b) => (a.length_ft || 0) - (b.length_ft || 0));
+      boatSelectEl.innerHTML = '<option value="">-- Select Boat --</option>' +
+        boats.map(b => `<option value="${b.id}" data-name="${b.name}">${b.name}</option>`).join('');
+
+      let matched = false;
+      if (comm.boat_id && Array.from(boatSelectEl.options).some(o => o.value === comm.boat_id)) {
+        boatSelectEl.value = comm.boat_id;
+        matched = true;
+      }
+      if (!matched && comm.boat_name) {
+        const match = Array.from(boatSelectEl.options).find(o => o.text.trim().toLowerCase() === comm.boat_name.trim().toLowerCase());
+        if (match) {
+          boatSelectEl.value = match.value;
+          matched = true;
+        }
+      }
+      if (!matched && comm.boat_name) {
+        const customOpt = document.createElement('option');
+        customOpt.value = comm.boat_id || '';
+        customOpt.text = comm.boat_name;
+        customOpt.selected = true;
+        boatSelectEl.appendChild(customOpt);
+      }
+    }
+
+    const dateEl = document.getElementById('comm-date');
+    const priceEl = document.getElementById('comm-price');
+    const rateEl = document.getElementById('comm-rate');
+    const amountEl = document.getElementById('comm-amount');
+    const notesEl = document.getElementById('comm-notes');
+
+    if (dateEl) dateEl.value = comm.charter_date || '';
+    if (priceEl) priceEl.value = comm.charter_price != null ? comm.charter_price : '';
+    if (rateEl) rateEl.value = comm.commission_rate != null ? comm.commission_rate : '';
+    if (amountEl) amountEl.value = comm.commission_amount != null ? parseFloat(comm.commission_amount).toFixed(2) : '';
+    if (notesEl) notesEl.value = comm.client_notes || '';
+
+    commModalEl?.classList.remove('hidden');
   };
 
   const refreshCommissionsBtn = document.getElementById('refresh-commissions-btn');
