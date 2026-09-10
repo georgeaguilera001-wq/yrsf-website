@@ -3472,21 +3472,25 @@ EXTRACTION RULES:
       document.getElementById('setting-whatsapp-number').value = settings.whatsapp_number?.value || '';
       document.getElementById('setting-whatsapp-message').value = settings.whatsapp_auto_response?.value || '';
       document.getElementById('setting-whatsapp-template').value = settings.whatsapp_booking_template?.value || '';
-      const captTemplateDefault = `BOAT Name : {boat_name}
-Date: {date}
-Exact Time: {time}
-# of hours: {duration}
-Full name: {customer_name}
-Phone no: {customer_phone}
-DATE OF BIRTH: {dob}
-Email: {customer_email}
-No. of guests: {guests}
-Deposit collected: {deposit}
-Remaining Balance: {balance}
-Total: {total}
-Add-on activities: {addons}
+      const captTemplateDefault = `🛥️ BOAT Name : {boat_name}
+📅 Date: {date}
+⏰ Exact Time: {time}
+⏳ # of hours: {duration}
 
-Additional Information: (we will add this part if needed)`;
+👤 Full name: {customer_name}
+📱 Phone no: {customer_phone}
+✉️ Email: {customer_email}
+🎂 DATE OF BIRTH: {dob}
+
+👥 No. of guests: {guests}
+
+💳 Total: {total}
+💵 Deposit collected: {deposit}
+💰 Remaining Balance: {balance}
+
+🏄 Add-on activities: {addons}
+
+📝 Additional Information: (we will add this part if needed)`;
       const captInput = document.getElementById('setting-captain-template');
       if (captInput) captInput.value = settings.captain_booking_template?.value || captTemplateDefault;
       document.getElementById('setting-hero-bg-image').value = settings.hero_bg_image?.value || '';
@@ -9264,21 +9268,25 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       customerTemplate = "Hi {customer_name}! Your charter booking aboard {boat_name} on {date} at {time} is confirmed! Departure Location: {address}. Itemized Receipt: {receipt_url} We look forward to welcoming you aboard.";
     }
 
-    const defaultCaptainTemplate = `BOAT Name : {boat_name}
-Date: {date}
-Exact Time: {time}
-# of hours: {duration}
-Full name: {customer_name}
-Phone no: {customer_phone}
-DATE OF BIRTH: {dob}
-Email: {customer_email}
-No. of guests: {guests}
-Deposit collected: {deposit}
-Remaining Balance: {balance}
-Total: {total}
-Add-on activities: {addons}
+    const defaultCaptainTemplate = `🛥️ BOAT Name : {boat_name}
+📅 Date: {date}
+⏰ Exact Time: {time}
+⏳ # of hours: {duration}
 
-Additional Information: (we will add this part if needed)`;
+👤 Full name: {customer_name}
+📱 Phone no: {customer_phone}
+✉️ Email: {customer_email}
+🎂 DATE OF BIRTH: {dob}
+
+👥 No. of guests: {guests}
+
+💳 Total: {total}
+💵 Deposit collected: {deposit}
+💰 Remaining Balance: {balance}
+
+🏄 Add-on activities: {addons}
+
+📝 Additional Information: (we will add this part if needed)`;
 
     let captainTemplate = settings.captain_booking_template?.value || defaultCaptainTemplate;
 
