@@ -4421,15 +4421,20 @@ EXTRACTION RULES:
               ${isPaid ? '<span class="text-[9px] font-bold bg-green-100 text-green-800 px-1 py-0.5 rounded uppercase mt-0.5 w-fit">PAID</span>' : ''}
             </td>
             <td class="p-4 text-xs text-on-surface-variant max-w-xs truncate">${escapeHtml(cleanNotes)}</td>
-            <td class="p-4 text-right">
-              ${!isPaid ? `
-              <button onclick="window.markCommissionPaid('${comm.id}')" class="p-1 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Mark as Paid">
-                <span class="material-symbols-outlined text-[18px]">payments</span>
-              </button>
-              ` : ''}
-              <button onclick="window.deleteCommission('${comm.id}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Commission Log">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
-              </button>
+            <td class="p-4 text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-1">
+                ${!isPaid ? `
+                <button onclick="window.markCommissionPaid('${comm.id}')" class="p-1 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Mark as Paid">
+                  <span class="material-symbols-outlined text-[18px]">payments</span>
+                </button>
+                ` : ''}
+                <button onclick="window.generateSingleCommissionPayoutPdf('${comm.id}')" class="p-1 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded transition-colors" title="Generate Payout Report (PDF)">
+                  <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+                </button>
+                <button onclick="window.deleteCommission('${comm.id}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Commission Log">
+                  <span class="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+              </div>
             </td>
           </tr>
         `;
@@ -4531,8 +4536,13 @@ EXTRACTION RULES:
     const newNotes = (comm.client_notes || '') + (comm.client_notes ? '\n' : '') + '[PAID]';
     const { error } = await supabase.from('staff_commissions').update({ client_notes: newNotes }).eq('id', id);
     if (error) { showToast('Error marking as paid: ' + error.message, true); return; }
+    comm.client_notes = newNotes;
     showToast('Commission marked as paid!', 'success');
-    loadCommissions(true);
+    await loadCommissions(true);
+
+    if (confirm('✓ Commission marked as paid!\n\nWould you like to open and download the Payout PDF voucher now?')) {
+      window.generateSingleCommissionPayoutPdf(id);
+    }
   };
 
   window.deleteCommission = async (id) => {
@@ -4544,7 +4554,574 @@ EXTRACTION RULES:
   };
 
   const refreshCommissionsBtn = document.getElementById('refresh-commissions-btn');
-  refreshCommissionsBtn?.addEventListener('click', loadCommissions);
+  refreshCommissionsBtn?.addEventListener('click', () => loadCommissions(true));
+
+  // ─── Commission Payout Report & PDF Generator System ─────────
+  let selectedPayoutCommIds = new Set();
+  let currentPayoutFilteredComms = [];
+  let payoutCurrentTab = 'items'; // 'items' | 'preview'
+
+  function getPayoutOptions() {
+    const dateInput = document.getElementById('payout-date-input');
+    const methodInput = document.getElementById('payout-method-input');
+    const payoutDate = dateInput?.value || new Date().toLocaleDateString('sv-SE');
+    const paymentMethod = methodInput?.value || 'Direct Deposit / Zelle';
+    return { payoutDate, paymentMethod };
+  }
+
+  function buildCommissionPayoutHtml(comms, options = {}) {
+    const { payoutDate, paymentMethod } = options;
+    const dateObj = new Date(payoutDate + 'T00:00:00');
+    const formattedDate = !isNaN(dateObj) ? dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : payoutDate;
+    
+    // Determine rep names
+    const staffMap = new Map();
+    comms.forEach(c => {
+      const sId = c.staff_id || 'unknown';
+      if (!staffMap.has(sId)) {
+        staffMap.set(sId, {
+          name: c.staff_users?.name || 'Staff Member',
+          role: c.staff_users?.role || 'Sales Concierge'
+        });
+      }
+    });
+
+    const staffList = Array.from(staffMap.values());
+    const repName = staffList.length === 1 ? staffList[0].name : (staffList.length > 1 ? staffList.map(s => s.name).join(', ') : 'Staff Member');
+    const repRole = staffList.length === 1 ? staffList[0].role : 'Sales Team';
+
+    const totalVolume = comms.reduce((sum, c) => sum + (parseFloat(c.charter_price) || 0), 0);
+    const totalPayout = comms.reduce((sum, c) => sum + (parseFloat(c.commission_amount) || 0), 0);
+    const voucherRef = `PAY-${payoutDate.replace(/[^0-9]/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const allPaid = comms.length > 0 && comms.every(c => (c.client_notes || '').includes('[PAID]'));
+
+    return `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; background: #ffffff; padding: 24px 28px; line-height: 1.45; box-sizing: border-box; width: 100%;">
+        
+        <!-- Header -->
+        <table style="width: 100%; border-bottom: 2px solid #b45309; padding-bottom: 14px; margin-bottom: 18px; border-collapse: collapse;">
+          <tr>
+            <td style="vertical-align: top; width: 60%;">
+              <img src="/img/logo-wide.png" alt="YRSF Luxury Charters" style="height: 40px; margin-bottom: 6px; object-fit: contain;" onerror="this.style.display='none'" />
+              <div style="font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; text-transform: uppercase;">Commission Payout Voucher</div>
+              <div style="font-size: 11px; color: #64748b; font-weight: 500; margin-top: 1px;">Official Staff Sales &amp; Charter Disbursement Statement</div>
+            </td>
+            <td style="text-align: right; vertical-align: top; width: 40%;">
+              <div style="font-size: 14px; font-weight: 800; color: #0f172a;">Yacht Rentals of South Florida</div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 1px;">Miami, FL • info@yrsfcharters.com</div>
+              <div style="font-size: 11px; color: #64748b;">(305) 990-2192 • yrsfcharters.com</div>
+              <div style="margin-top: 6px;">
+                <span style="display: inline-block; padding: 3px 9px; background: ${allPaid ? '#dcfce7' : '#fef3c7'}; color: ${allPaid ? '#166534' : '#92400e'}; border: 1px solid ${allPaid ? '#bbf7d0' : '#fde68a'}; border-radius: 6px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                  ${allPaid ? '✓ DISBURSED / PAID' : 'PAYOUT STATEMENT'}
+                </span>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Metadata Summary Box -->
+        <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+          <tr>
+            <td style="width: 50%; vertical-align: top; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px;">
+              <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 3px;">Employee / Sales Representative</div>
+              <div style="font-size: 16px; font-weight: 800; color: #0f172a;">${escapeHtml(repName)}</div>
+              <div style="font-size: 11px; font-weight: 600; color: #475569; margin-top: 2px;">Role / Position: ${escapeHtml(repRole)}</div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #e2e8f0;">
+                Disbursement Method: <strong style="color: #0f172a;">${escapeHtml(paymentMethod)}</strong>
+              </div>
+            </td>
+            <td style="width: 4%;"></td>
+            <td style="width: 46%; vertical-align: top; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px;">
+              <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 3px;">Statement Details</div>
+              <div style="font-size: 11px; color: #334155; margin-bottom: 2px;">Voucher Ref: <strong style="font-family: monospace; color: #0f172a; font-size: 12px;">${voucherRef}</strong></div>
+              <div style="font-size: 11px; color: #334155; margin-bottom: 2px;">Payout Date: <strong style="color: #0f172a;">${formattedDate}</strong></div>
+              <div style="font-size: 11px; color: #334155;">Charters Included: <strong style="color: #0f172a;">${comms.length} Charter${comms.length === 1 ? '' : 's'}</strong></div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Itemized Commission Breakdown Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 11.5px;">
+          <thead>
+            <tr style="background: #0f172a; color: #ffffff; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px;">
+              <th style="padding: 9px 10px; border-top-left-radius: 6px;">Boat / Yacht Rented</th>
+              <th style="padding: 9px 10px;">Day of Charter</th>
+              <th style="padding: 9px 10px; text-align: right;">Charter Total</th>
+              <th style="padding: 9px 10px; text-align: center;">Rate %</th>
+              <th style="padding: 9px 10px; text-align: right; border-top-right-radius: 6px;">Commission Earned</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${comms.map((comm, idx) => {
+              const bName = escapeHtml(comm.boat_name || 'Charter Vessel');
+              const cDate = comm.charter_date ? new Date(comm.charter_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
+              const price = parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              const rate = comm.commission_rate || 0;
+              const earned = parseFloat(comm.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+              const notes = (comm.client_notes || '').replace('[PAID]', '').trim();
+
+              return `
+                <tr style="background: ${bg}; border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 10px; vertical-align: top;">
+                    <div style="font-weight: 700; color: #0f172a;">${bName}</div>
+                    ${notes ? `<div style="font-size: 10px; color: #64748b; margin-top: 2px;">${escapeHtml(notes)}</div>` : ''}
+                  </td>
+                  <td style="padding: 10px 10px; vertical-align: top; font-family: monospace; color: #334155;">
+                    ${cDate}
+                  </td>
+                  <td style="padding: 10px 10px; vertical-align: top; text-align: right; font-family: monospace; color: #0f172a;">
+                    $${price}
+                  </td>
+                  <td style="padding: 10px 10px; vertical-align: top; text-align: center; font-weight: 700; color: #b45309;">
+                    ${rate}%
+                  </td>
+                  <td style="padding: 10px 10px; vertical-align: top; text-align: right; font-family: monospace; font-weight: 800; font-size: 12.5px; color: #047857;">
+                    $${earned}
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+          <tfoot>
+            <tr style="background: #f1f5f9; border-top: 2px solid #cbd5e1; font-weight: 700;">
+              <td colspan="2" style="padding: 10px; text-align: right; text-transform: uppercase; font-size: 10.5px; color: #475569;">
+                Total Charter Sales Volume:
+              </td>
+              <td style="padding: 10px; text-align: right; font-family: monospace; font-size: 12px; color: #0f172a;">
+                $${totalVolume.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+              <td style="padding: 10px; text-align: center; color: #64748b;">-</td>
+              <td style="padding: 10px; text-align: right; font-family: monospace; font-size: 14px; font-weight: 800; color: #b45309;">
+                $${totalPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- Total Payout Banner Callout -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 22px;">
+          <tr>
+            <td style="background: #fffbeb; border: 2px solid #f59e0b; border-radius: 8px; padding: 12px 18px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td>
+                    <div style="font-size: 11px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.6px;">
+                      Total Net Commission Payout
+                    </div>
+                    <div style="font-size: 10.5px; color: #b45309; margin-top: 2px;">
+                      Compensation payable for ${comms.length} completed charter booking${comms.length === 1 ? '' : 's'}
+                    </div>
+                  </td>
+                  <td style="text-align: right;">
+                    <div style="font-size: 24px; font-weight: 900; color: #b45309; font-family: monospace;">
+                      $${totalPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Signatures & Acknowledgment -->
+        <table style="width: 100%; margin-top: 20px; padding-top: 14px; border-top: 1px dashed #cbd5e1; border-collapse: collapse; font-size: 10.5px; color: #475569;">
+          <tr>
+            <td style="width: 48%; vertical-align: top;">
+              <div style="font-weight: 700; color: #0f172a; margin-bottom: 28px;">Authorized By (YRSF Management):</div>
+              <div style="border-bottom: 1px solid #94a3b8; width: 85%; margin-bottom: 4px;"></div>
+              <div style="font-size: 9.5px; color: #64748b;">Signature &amp; Date</div>
+            </td>
+            <td style="width: 4%;"></td>
+            <td style="width: 48%; vertical-align: top;">
+              <div style="font-weight: 700; color: #0f172a; margin-bottom: 28px;">Received &amp; Acknowledged By (${escapeHtml(repName)}):</div>
+              <div style="border-bottom: 1px solid #94a3b8; width: 85%; margin-bottom: 4px;"></div>
+              <div style="font-size: 9.5px; color: #64748b;">Signature &amp; Date</div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 24px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 9.5px; color: #94a3b8;">
+          Yacht Rentals of South Florida • 401 Biscayne Blvd, Miami, FL 33132 • yrsfcharters.com • info@yrsfcharters.com<br/>
+          This payout statement was generated electronically by the YRSF Fleet &amp; Staff Management Portal.
+        </div>
+
+      </div>
+    `;
+  }
+
+  function updatePayoutTotals() {
+    const selectedComms = commissionsCache.filter(c => selectedPayoutCommIds.has(c.id));
+    const totalVolume = selectedComms.reduce((acc, c) => acc + (parseFloat(c.charter_price) || 0), 0);
+    const totalPayout = selectedComms.reduce((acc, c) => acc + (parseFloat(c.commission_amount) || 0), 0);
+
+    const countEl = document.getElementById('payout-selected-count');
+    const amountEl = document.getElementById('payout-total-amount');
+    const volumeEl = document.getElementById('payout-total-volume');
+    if (countEl) countEl.textContent = selectedComms.length;
+    if (amountEl) amountEl.textContent = `$${totalPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (volumeEl) volumeEl.textContent = `$${totalVolume.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    if (payoutCurrentTab === 'preview') {
+      const target = document.getElementById('payout-preview-render-target');
+      if (target) {
+        if (selectedComms.length === 0) {
+          target.innerHTML = '<div class="text-center py-12 text-slate-500 font-medium">Please select at least one charter commission above to preview the payout statement.</div>';
+        } else {
+          target.innerHTML = buildCommissionPayoutHtml(selectedComms, getPayoutOptions());
+        }
+      }
+    }
+  }
+
+  function switchPayoutTab(tabName) {
+    payoutCurrentTab = tabName;
+    const btnItems = document.getElementById('payout-tab-items-btn');
+    const btnPreview = document.getElementById('payout-tab-preview-btn');
+    const viewItems = document.getElementById('payout-view-items');
+    const viewPreview = document.getElementById('payout-view-preview');
+
+    if (tabName === 'preview') {
+      btnItems?.classList.remove('border-amber-600', 'text-amber-700');
+      btnItems?.classList.add('border-transparent', 'text-on-surface-variant');
+      btnPreview?.classList.remove('border-transparent', 'text-on-surface-variant');
+      btnPreview?.classList.add('border-amber-600', 'text-amber-700');
+      viewItems?.classList.add('hidden');
+      viewPreview?.classList.remove('hidden');
+
+      const selectedComms = commissionsCache.filter(c => selectedPayoutCommIds.has(c.id));
+      const target = document.getElementById('payout-preview-render-target');
+      if (target) {
+        if (selectedComms.length === 0) {
+          target.innerHTML = '<div class="text-center py-12 text-slate-500 font-medium">Please select at least one charter commission to preview statement.</div>';
+        } else {
+          target.innerHTML = buildCommissionPayoutHtml(selectedComms, getPayoutOptions());
+        }
+      }
+    } else {
+      btnPreview?.classList.remove('border-amber-600', 'text-amber-700');
+      btnPreview?.classList.add('border-transparent', 'text-on-surface-variant');
+      btnItems?.classList.remove('border-transparent', 'text-on-surface-variant');
+      btnItems?.classList.add('border-amber-600', 'text-amber-700');
+      viewPreview?.classList.add('hidden');
+      viewItems?.classList.remove('hidden');
+    }
+  }
+
+  function filterAndRenderPayoutItems(preselectedCommId = null) {
+    const staffSelect = document.getElementById('payout-staff-select');
+    const statusFilter = document.getElementById('payout-status-filter');
+    const tbody = document.getElementById('payout-items-tbody');
+    const selectAllCb = document.getElementById('payout-select-all');
+    if (!tbody) return;
+
+    const selectedStaffId = staffSelect?.value || 'all';
+    const selectedStatus = statusFilter?.value || 'unpaid';
+
+    currentPayoutFilteredComms = commissionsCache.filter(comm => {
+      if (selectedStaffId !== 'all' && comm.staff_id !== selectedStaffId) return false;
+      const isPaid = (comm.client_notes || '').includes('[PAID]');
+      if (selectedStatus === 'unpaid' && isPaid) return false;
+      if (selectedStatus === 'paid' && !isPaid) return false;
+      return true;
+    });
+
+    if (preselectedCommId) {
+      selectedPayoutCommIds = new Set([preselectedCommId]);
+    } else {
+      selectedPayoutCommIds = new Set(currentPayoutFilteredComms.map(c => c.id));
+    }
+
+    if (selectAllCb) {
+      selectAllCb.checked = currentPayoutFilteredComms.length > 0 && selectedPayoutCommIds.size === currentPayoutFilteredComms.length;
+    }
+
+    if (currentPayoutFilteredComms.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-on-surface-variant">No commissions found matching the selected filter. Try selecting "All Records".</td></tr>`;
+      updatePayoutTotals();
+      return;
+    }
+
+    tbody.innerHTML = currentPayoutFilteredComms.map(comm => {
+      const staff = comm.staff_users || { name: 'Unknown', role: 'Staff' };
+      const dateStr = comm.charter_date ? new Date(comm.charter_date + 'T00:00:00').toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
+      const isPaid = (comm.client_notes || '').includes('[PAID]');
+      const isChecked = selectedPayoutCommIds.has(comm.id);
+
+      return `
+        <tr class="hover:bg-surface-container-low/60 transition-colors ${isChecked ? 'bg-amber-50/40' : ''}">
+          <td class="p-3 text-center">
+            <input type="checkbox" class="payout-item-cb rounded text-amber-600 focus:ring-amber-500 cursor-pointer" data-id="${comm.id}" ${isChecked ? 'checked' : ''} />
+          </td>
+          <td class="p-3">
+            <p class="font-bold text-on-surface">${escapeHtml(staff.name)}</p>
+            <p class="text-[10px] text-on-surface-variant">${escapeHtml(staff.role)}</p>
+          </td>
+          <td class="p-3 font-bold text-secondary">${escapeHtml(comm.boat_name || '-')}</td>
+          <td class="p-3 font-mono text-on-surface-variant">${dateStr}</td>
+          <td class="p-3 font-mono">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+          <td class="p-3 font-mono text-amber-700 font-bold">${comm.commission_rate}%</td>
+          <td class="p-3 font-mono font-extrabold ${isPaid ? 'text-green-700' : 'text-blue-700'}">
+            $${parseFloat(comm.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          </td>
+          <td class="p-3">
+            ${isPaid ? '<span class="text-[9px] font-bold bg-green-100 text-green-800 px-1.5 py-0.5 rounded uppercase">PAID</span>' : '<span class="text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded uppercase">UNPAID</span>'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('.payout-item-cb').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const id = e.target.dataset.id;
+        if (e.target.checked) {
+          selectedPayoutCommIds.add(id);
+          e.target.closest('tr')?.classList.add('bg-amber-50/40');
+        } else {
+          selectedPayoutCommIds.delete(id);
+          e.target.closest('tr')?.classList.remove('bg-amber-50/40');
+        }
+        if (selectAllCb) {
+          selectAllCb.checked = currentPayoutFilteredComms.length > 0 && selectedPayoutCommIds.size === currentPayoutFilteredComms.length;
+        }
+        updatePayoutTotals();
+      });
+    });
+
+    updatePayoutTotals();
+  }
+
+  window.openCommissionPayoutModal = async function(preselectedStaffId = null, preselectedCommId = null) {
+    const modal = document.getElementById('commission-payout-modal');
+    if (!modal) return;
+
+    if (!commissionsCache || commissionsCache.length === 0) {
+      await loadCommissions();
+    }
+    if (!staffUsersCache || staffUsersCache.length === 0) {
+      await loadStaffUsers();
+    }
+
+    // Populate Staff Dropdown
+    const staffSelect = document.getElementById('payout-staff-select');
+    if (staffSelect) {
+      const distinctStaffMap = new Map();
+      (staffUsersCache || []).forEach(u => distinctStaffMap.set(u.id, { id: u.id, name: u.name, role: u.role }));
+      (commissionsCache || []).forEach(c => {
+        if (c.staff_id && !distinctStaffMap.has(c.staff_id)) {
+          distinctStaffMap.set(c.staff_id, { id: c.staff_id, name: c.staff_users?.name || 'Staff Member', role: c.staff_users?.role || 'Staff' });
+        }
+      });
+
+      const optionsHtml = '<option value="all">-- All Sales Agents --</option>' +
+        Array.from(distinctStaffMap.values())
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.role || 'Staff')})</option>`)
+          .join('');
+      staffSelect.innerHTML = optionsHtml;
+
+      if (preselectedStaffId) {
+        staffSelect.value = preselectedStaffId;
+      }
+    }
+
+    // Default Date to today
+    const dateInput = document.getElementById('payout-date-input');
+    if (dateInput && !dateInput.value) {
+      dateInput.value = new Date().toLocaleDateString('sv-SE');
+    }
+
+    filterAndRenderPayoutItems(preselectedCommId);
+    switchPayoutTab('items');
+    modal.classList.remove('hidden');
+  };
+
+  window.generateSingleCommissionPayoutPdf = function(id) {
+    const comm = commissionsCache.find(c => c.id === id);
+    if (!comm) return;
+    window.openCommissionPayoutModal(comm.staff_id, comm.id);
+    switchPayoutTab('preview');
+  };
+
+  async function downloadCommissionPayoutPdf() {
+    const selectedComms = commissionsCache.filter(c => selectedPayoutCommIds.has(c.id));
+    if (selectedComms.length === 0) {
+      showToast('Please select at least one charter commission to generate PDF.', true);
+      return;
+    }
+
+    const { payoutDate, paymentMethod } = getPayoutOptions();
+    const staffNames = [...new Set(selectedComms.map(c => c.staff_users?.name || 'Staff'))];
+    const repClean = (staffNames.length === 1 ? staffNames[0] : 'Multiple_Staff').replace(/[^a-zA-Z0-9]/g, '_');
+    const fileName = `YRSF_Commission_Payout_${repClean}_${payoutDate}.pdf`;
+
+    const templateEl = document.getElementById('commission-payout-pdf-template');
+    if (!templateEl) return;
+
+    templateEl.innerHTML = buildCommissionPayoutHtml(selectedComms, { payoutDate, paymentMethod });
+    templateEl.style.display = 'block';
+
+    const opt = {
+      margin:       [0.3, 0.3, 0.3, 0.3],
+      filename:     fileName,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, allowTaint: true, logging: false, scrollY: 0, scrollX: 0 },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    if (typeof showToast === 'function') showToast('📄 Generating Commission Payout PDF Report...', 'info');
+
+    if (typeof html2pdf !== 'undefined') {
+      try {
+        await html2pdf().set(opt).from(templateEl).save();
+        templateEl.style.display = 'none';
+        if (typeof showToast === 'function') showToast('✓ Commission Payout PDF downloaded successfully!', 'success');
+      } catch (err) {
+        templateEl.style.display = 'none';
+        console.error('html2pdf payout report error:', err);
+        if (typeof showToast === 'function') showToast('PDF Export Error: ' + err.message, true);
+      }
+    } else {
+      templateEl.style.display = 'none';
+      alert('⚠️ PDF generation library is still loading. Please try again in 2 seconds.');
+    }
+  }
+
+  function printCommissionPayoutReport() {
+    const selectedComms = commissionsCache.filter(c => selectedPayoutCommIds.has(c.id));
+    if (selectedComms.length === 0) {
+      showToast('Please select at least one charter commission to print report.', true);
+      return;
+    }
+
+    const { payoutDate, paymentMethod } = getPayoutOptions();
+    const html = buildCommissionPayoutHtml(selectedComms, { payoutDate, paymentMethod });
+
+    const printWin = window.open('', '_blank', 'width=880,height=920');
+    if (printWin) {
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>YRSF Commission Payout Report</title>
+          <style>
+            body { margin: 0; padding: 24px; background: #fff; font-family: Arial, sans-serif; }
+            @media print {
+              body { padding: 0; }
+              @page { margin: 0.4in; size: portrait; }
+            }
+          </style>
+        </head>
+        <body>
+          ${html}
+          <script>
+            window.onload = function() {
+              window.focus();
+              setTimeout(() => { window.print(); }, 250);
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+    } else {
+      window.print();
+    }
+  }
+
+  async function markSelectedCommissionsPaidAndDownload() {
+    const selectedComms = commissionsCache.filter(c => selectedPayoutCommIds.has(c.id));
+    if (selectedComms.length === 0) {
+      showToast('Please select at least one charter commission to process.', true);
+      return;
+    }
+
+    const unpaid = selectedComms.filter(c => !(c.client_notes || '').includes('[PAID]'));
+    if (unpaid.length === 0) {
+      showToast('All selected commissions are already marked as PAID. Downloading PDF report...', 'info');
+      await downloadCommissionPayoutPdf();
+      return;
+    }
+
+    const confirmed = confirm(`Mark ${unpaid.length} selected charter commission(s) as PAID and download the Payout PDF voucher?`);
+    if (!confirmed) return;
+
+    if (typeof showToast === 'function') showToast(`Processing payout for ${unpaid.length} commission(s)...`, 'info');
+
+    let errors = 0;
+    for (const comm of unpaid) {
+      const newNotes = (comm.client_notes || '') + (comm.client_notes ? '\n' : '') + '[PAID]';
+      const { error } = await supabase.from('staff_commissions').update({ client_notes: newNotes }).eq('id', comm.id);
+      if (error) {
+        errors++;
+        console.error('Error marking comm as paid:', comm.id, error);
+      } else {
+        comm.client_notes = newNotes;
+      }
+    }
+
+    if (errors > 0) {
+      showToast(`Completed with ${errors} error(s). Refreshing log...`, true);
+    } else {
+      showToast(`✓ Marked ${unpaid.length} commission(s) as PAID!`, 'success');
+    }
+
+    await loadCommissions(true);
+    filterAndRenderPayoutItems();
+    await downloadCommissionPayoutPdf();
+  }
+
+  // Wire up Payout Modal Event Listeners
+  const btnOpenPayoutModal = document.getElementById('btn-open-payout-modal');
+  btnOpenPayoutModal?.addEventListener('click', () => window.openCommissionPayoutModal());
+
+  const btnClosePayoutModal = document.getElementById('close-commission-payout-modal');
+  btnClosePayoutModal?.addEventListener('click', () => {
+    document.getElementById('commission-payout-modal')?.classList.add('hidden');
+  });
+
+  const payoutStaffSelect = document.getElementById('payout-staff-select');
+  payoutStaffSelect?.addEventListener('change', () => filterAndRenderPayoutItems());
+
+  const payoutStatusFilter = document.getElementById('payout-status-filter');
+  payoutStatusFilter?.addEventListener('change', () => filterAndRenderPayoutItems());
+
+  const payoutSelectAll = document.getElementById('payout-select-all');
+  payoutSelectAll?.addEventListener('change', (e) => {
+    const isChecked = e.target.checked;
+    currentPayoutFilteredComms.forEach(c => {
+      if (isChecked) selectedPayoutCommIds.add(c.id);
+      else selectedPayoutCommIds.delete(c.id);
+    });
+    document.querySelectorAll('.payout-item-cb').forEach(cb => {
+      cb.checked = isChecked;
+      if (isChecked) cb.closest('tr')?.classList.add('bg-amber-50/40');
+      else cb.closest('tr')?.classList.remove('bg-amber-50/40');
+    });
+    updatePayoutTotals();
+  });
+
+  const payoutDateInput = document.getElementById('payout-date-input');
+  payoutDateInput?.addEventListener('change', () => updatePayoutTotals());
+
+  const payoutMethodInput = document.getElementById('payout-method-input');
+  payoutMethodInput?.addEventListener('change', () => updatePayoutTotals());
+
+  const btnPayoutTabItems = document.getElementById('payout-tab-items-btn');
+  btnPayoutTabItems?.addEventListener('click', () => switchPayoutTab('items'));
+
+  const btnPayoutTabPreview = document.getElementById('payout-tab-preview-btn');
+  btnPayoutTabPreview?.addEventListener('click', () => switchPayoutTab('preview'));
+
+  const btnPayoutDownload = document.getElementById('btn-payout-download-pdf');
+  btnPayoutDownload?.addEventListener('click', downloadCommissionPayoutPdf);
+
+  const btnPayoutPrint = document.getElementById('btn-payout-print');
+  btnPayoutPrint?.addEventListener('click', printCommissionPayoutReport);
+
+  const btnPayoutMarkPaidAndDl = document.getElementById('btn-payout-mark-paid-and-download');
+  btnPayoutMarkPaidAndDl?.addEventListener('click', markSelectedCommissionsPaidAndDownload);
 
   // ─── Charter Bookings & Daily Manifest System ─────────
   // settingsCache is declared at the top of DOMContentLoaded

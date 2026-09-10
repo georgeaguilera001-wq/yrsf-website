@@ -1776,11 +1776,16 @@
 
         <!-- TAB 3: Commission Sales Log Table (Hidden by default) -->
         <div id="tab-view-commissions" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm hidden">
-          <div class="p-4 bg-surface-container-low border-b border-outline-variant flex items-center justify-between">
+          <div class="p-4 bg-surface-container-low border-b border-outline-variant flex flex-wrap items-center justify-between gap-3">
             <span class="text-xs font-bold text-on-surface-variant">Showing charter bookings and sales commission payouts</span>
-            <button id="refresh-commissions-btn" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">refresh</span> Refresh Log
-            </button>
+            <div class="flex items-center gap-2">
+              <button id="btn-open-payout-modal" type="button" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
+                <span class="material-symbols-outlined text-sm">picture_as_pdf</span> Generate Payout Report (PDF)
+              </button>
+              <button id="refresh-commissions-btn" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1 cursor-pointer">
+                <span class="material-symbols-outlined text-sm">refresh</span> Refresh Log
+              </button>
+            </div>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
@@ -2507,6 +2512,133 @@
     </div>
   </div>
 
+  <!-- Staff Commission Payout Report Modal -->
+  <div id="commission-payout-modal" class="fixed inset-0 bg-black/75 z-[9999] flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border border-outline-variant text-left max-h-[94vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold shadow-xs">
+            <span class="material-symbols-outlined text-2xl">picture_as_pdf</span>
+          </div>
+          <div>
+            <h3 class="font-headline text-lg font-bold text-on-surface flex items-center gap-2">
+              Staff Commission Payout Report
+              <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">PDF Voucher</span>
+            </h3>
+            <p class="text-[11px] text-on-surface-variant">Generate official commission payout statements for employees & sales concierges</p>
+          </div>
+        </div>
+        <button type="button" id="close-commission-payout-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-2xl leading-none px-2 py-1 cursor-pointer transition-colors">&times;</button>
+      </div>
+
+      <!-- Filters & Configuration Bar -->
+      <div class="bg-surface-container-low p-3.5 rounded-2xl border border-outline-variant mb-3 shrink-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+        <div>
+          <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Employee / Sales Rep *</label>
+          <select id="payout-staff-select" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-lg font-bold text-secondary focus:ring-2 focus:ring-secondary">
+            <option value="all">-- All Sales Agents --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Status Filter</label>
+          <select id="payout-status-filter" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-lg font-medium text-on-surface focus:ring-2 focus:ring-secondary">
+            <option value="unpaid" selected>Unpaid Only (Ready for Payout)</option>
+            <option value="all">All Records (Paid &amp; Unpaid)</option>
+            <option value="paid">Paid Payouts Only</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Payout Date</label>
+          <input type="date" id="payout-date-input" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-lg font-mono text-xs focus:ring-2 focus:ring-secondary" />
+        </div>
+        <div>
+          <label class="block font-label text-[10px] uppercase font-bold text-on-surface-variant mb-1">Disbursement Method</label>
+          <select id="payout-method-input" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-lg text-xs focus:ring-2 focus:ring-secondary">
+            <option value="Direct Deposit / Zelle">Direct Deposit / Zelle</option>
+            <option value="Zelle Transfer">Zelle Transfer</option>
+            <option value="Direct Deposit (ACH)">Direct Deposit (ACH)</option>
+            <option value="Company Check">Company Check</option>
+            <option value="Cash Disbursement">Cash Disbursement</option>
+            <option value="Wire Transfer">Wire Transfer</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs: Item Selection vs PDF Preview -->
+      <div class="flex items-center gap-4 border-b border-outline-variant mb-3 shrink-0">
+        <button type="button" id="payout-tab-items-btn" class="pb-2 border-b-2 border-amber-600 font-bold text-xs text-amber-700 flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-sm">format_list_bulleted</span> 1. Select Charters (<span id="payout-selected-count">0</span>)
+        </button>
+        <button type="button" id="payout-tab-preview-btn" class="pb-2 border-b-2 border-transparent font-bold text-xs text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 cursor-pointer transition-colors">
+          <span class="material-symbols-outlined text-sm">visibility</span> 2. Statement Preview
+        </button>
+      </div>
+
+      <!-- Tab View 1: Charter & Commission Selection Table -->
+      <div id="payout-view-items" class="flex-1 overflow-y-auto min-h-0 border border-outline-variant rounded-xl mb-3 custom-scrollbar">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-surface-container text-on-surface-variant uppercase font-label tracking-wider sticky top-0 border-b border-outline-variant z-10">
+            <tr>
+              <th class="p-3 w-10 text-center">
+                <input type="checkbox" id="payout-select-all" class="rounded text-amber-600 focus:ring-amber-500 cursor-pointer" checked />
+              </th>
+              <th class="p-3">Sales Rep</th>
+              <th class="p-3">Boat / Vessel Rented</th>
+              <th class="p-3">Charter Date</th>
+              <th class="p-3">Charter Total ($)</th>
+              <th class="p-3">Rate (%)</th>
+              <th class="p-3 font-bold text-amber-700">Commission Earned ($)</th>
+              <th class="p-3">Status</th>
+            </tr>
+          </thead>
+          <tbody id="payout-items-tbody" class="divide-y divide-outline-variant font-body">
+            <tr><td colspan="8" class="text-center py-6 text-on-surface-variant">Loading eligible commissions...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tab View 2: Live Statement Preview (Rendered printable voucher) -->
+      <div id="payout-view-preview" class="hidden flex-1 overflow-y-auto min-h-0 bg-slate-100 p-4 rounded-xl border border-outline-variant mb-3 flex justify-center custom-scrollbar">
+        <div id="payout-preview-render-target" class="w-full max-w-[760px] bg-white shadow-md rounded-lg p-6 text-slate-800">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Footer Summary & Action Controls -->
+      <div class="pt-3 border-t border-outline-variant flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center gap-4 text-xs">
+          <div class="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl flex items-center gap-2">
+            <span class="text-amber-800 font-bold uppercase text-[10px] tracking-wider">Total Payout:</span>
+            <span id="payout-total-amount" class="text-amber-900 font-extrabold font-mono text-base">$0.00</span>
+          </div>
+          <div class="text-[11px] text-on-surface-variant hidden sm:block">
+            Charter Sales Volume: <strong id="payout-total-volume" class="font-mono text-on-surface font-bold">$0.00</strong>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 justify-end">
+          <button type="button" id="btn-payout-print" class="px-3.5 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">print</span> Print
+          </button>
+          <button type="button" id="btn-payout-download-pdf" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">picture_as_pdf</span> Download PDF
+          </button>
+          <button type="button" id="btn-payout-mark-paid-and-download" class="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">check_circle</span> Mark as Paid &amp; Download PDF
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Hidden PDF Payout Template for html2pdf -->
+  <div id="commission-payout-pdf-template" style="display: none; position: absolute; top: -9999px; left: 0; width: 794px; background: #ffffff; color: #1e293b; padding: 40px; font-family: Arial, Helvetica, sans-serif; box-sizing: border-box;">
+    <!-- Populated by JS right before html2pdf export -->
+  </div>
+
   <!-- Create / Edit Charter Booking Modal -->
   <div id="booking-modal" class="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-outline-variant text-left max-h-[90vh] overflow-y-auto">
@@ -3053,7 +3185,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260817v0935"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260910v1535"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
