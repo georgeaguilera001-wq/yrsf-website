@@ -1131,6 +1131,7 @@ return; // Redirect in progress
     }
 
     const isNew = !boat;
+    const boatOwnerRule = (boat && (boatOwnersCache[boat.id] || boatOwnersCache[boat.name])) || {};
     const title = isNew ? 'Add New Yacht' : `Edit ${boat.name}`;
 
     const html = `
@@ -1357,6 +1358,38 @@ return; // Redirect in progress
               </div>
               <div id="date-overrides-editor" class="flex flex-col gap-3">
                 <!-- Rendered via JS -->
+              </div>
+            </div>
+
+            <!-- Boat Owner / Partner Settlement Rule -->
+            <div class="pt-md border-t border-outline-variant bg-indigo-50/50 p-4 rounded-xl border border-indigo-200">
+              <h4 class="font-headline text-[15px] font-bold text-indigo-950 mb-1 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-indigo-700 text-lg">handshake</span> Owner / Partner Payout Rule
+              </h4>
+              <p class="text-xs text-on-surface-variant mb-3">Define the boat owner or partner who receives payout for this yacht, and whether they receive a percentage (%) of total charter booking or a fixed ($) payout.</p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label class="block font-label text-xs font-bold text-on-surface mb-1">Owner / Partner Name</label>
+                  <input type="text" id="edit-boat-owner-name" value="${escapeHtml(boatOwnerRule.owner_name || '')}" placeholder="Owner or Partner" class="admin-field w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs font-bold"/>
+                </div>
+                <div>
+                  <label class="block font-label text-xs font-bold text-on-surface mb-1">Owner Contact (Phone/Email)</label>
+                  <input type="text" id="edit-boat-owner-contact" value="${escapeHtml(boatOwnerRule.owner_phone || boatOwnerRule.owner_email || '')}" placeholder="Phone or email" class="admin-field w-full px-3 py-2 bg-white border border-outline-variant rounded-lg text-xs"/>
+                </div>
+                <div>
+                  <label class="block font-label text-xs font-bold text-on-surface mb-1">Payout Rule &amp; Rate</label>
+                  <div class="flex items-center gap-1.5">
+                    <select id="edit-boat-owner-type" class="w-1/2 px-2 py-2 bg-white border border-outline-variant rounded-lg text-xs font-bold">
+                      <option value="percentage" ${boatOwnerRule.payout_type !== 'fixed' ? 'selected' : ''}>% Pct</option>
+                      <option value="fixed" ${boatOwnerRule.payout_type === 'fixed' ? 'selected' : ''}>$ Fixed</option>
+                    </select>
+                    <input type="number" step="0.01" min="0" id="edit-boat-owner-rate" value="${typeof boatOwnerRule.payout_value !== 'undefined' ? boatOwnerRule.payout_value : ''}" placeholder="e.g. 60 or 800" class="w-1/2 px-2 py-2 bg-white border border-outline-variant rounded-lg text-xs font-bold text-right"/>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-2">
+                <label class="block font-label text-[11px] font-bold text-on-surface-variant mb-1">Payout Instructions / Notes</label>
+                <input type="text" id="edit-boat-owner-notes" value="${escapeHtml(boatOwnerRule.notes || '')}" placeholder="e.g. Settle via Zelle every Monday" class="admin-field w-full px-3 py-1.5 bg-white border border-outline-variant rounded-lg text-xs"/>
               </div>
             </div>
           </div>
@@ -2795,6 +2828,27 @@ EXTRACTION RULES:
           await updateBoatDateOverrides(savedBoat.id, overridesToSave);
         } catch(e) {
           console.warn('Failed to save date overrides:', e);
+        }
+
+        // Save Boat Owner / Partner Rule
+        const editOwnerName = document.getElementById('edit-boat-owner-name')?.value.trim();
+        const editOwnerContact = document.getElementById('edit-boat-owner-contact')?.value.trim() || '';
+        const editOwnerType = document.getElementById('edit-boat-owner-type')?.value || 'percentage';
+        const editOwnerRate = parseFloat(document.getElementById('edit-boat-owner-rate')?.value) || 0;
+        const editOwnerNotes = document.getElementById('edit-boat-owner-notes')?.value.trim() || '';
+
+        if (editOwnerName || editOwnerRate > 0) {
+          boatOwnersCache[savedBoat.id] = {
+            boat_id: savedBoat.id,
+            boat_name: savedBoat.name,
+            owner_name: editOwnerName || 'Boat Owner',
+            owner_phone: editOwnerContact,
+            payout_type: editOwnerType,
+            payout_value: editOwnerRate,
+            notes: editOwnerNotes,
+            updated_at: new Date().toISOString()
+          };
+          saveBoatOwnerPartners(boatOwnersCache);
         }
 
         clearCache('boat');
@@ -5252,24 +5306,751 @@ EXTRACTION RULES:
       });
     }
 
+    // ─── Boat Owner / Partner Settlement System ─────────
+    let boatOwnersCache = {};
+    let ownerSettlementsCache = {};
+    let ownerFilterStatus = 'all'; // 'all', 'unpaid', 'paid'
+    let ownerFilterBoat = 'all';
+    let ownerFilterSearch = '';
+    let isOwnerDataLoaded = false;
+
+    async function loadBoatOwnerPartners() {
+      try {
+        const local = localStorage.getItem('yrsf_boat_owner_partners');
+        if (local) {
+          boatOwnersCache = JSON.parse(local);
+        }
+        const { data, error } = await supabase.from('site_settings').select('value').eq('key', 'boat_owner_partners').single();
+        if (data && data.value && typeof data.value === 'object') {
+          boatOwnersCache = { ...boatOwnersCache, ...data.value };
+          localStorage.setItem('yrsf_boat_owner_partners', JSON.stringify(boatOwnersCache));
+        }
+      } catch (e) {
+        console.warn('loadBoatOwnerPartners warning:', e);
+      }
+      return boatOwnersCache;
+    }
+
+    async function saveBoatOwnerPartners(data) {
+      boatOwnersCache = data;
+      localStorage.setItem('yrsf_boat_owner_partners', JSON.stringify(data));
+      try {
+        await supabase.from('site_settings').upsert({
+          key: 'boat_owner_partners',
+          value: data,
+          updated_at: new Date().toISOString()
+        });
+      } catch (e) {
+        console.warn('saveBoatOwnerPartners remote upsert error:', e);
+      }
+    }
+
+    async function loadOwnerPayoutSettlements() {
+      try {
+        const local = localStorage.getItem('yrsf_owner_payout_settlements');
+        if (local) {
+          ownerSettlementsCache = JSON.parse(local);
+        }
+        const { data, error } = await supabase.from('site_settings').select('value').eq('key', 'owner_payout_settlements').single();
+        if (data && data.value && typeof data.value === 'object') {
+          ownerSettlementsCache = { ...ownerSettlementsCache, ...data.value };
+          localStorage.setItem('yrsf_owner_payout_settlements', JSON.stringify(ownerSettlementsCache));
+        }
+      } catch (e) {
+        console.warn('loadOwnerPayoutSettlements warning:', e);
+      }
+      return ownerSettlementsCache;
+    }
+
+    async function saveOwnerPayoutSettlements(data) {
+      ownerSettlementsCache = data;
+      localStorage.setItem('yrsf_owner_payout_settlements', JSON.stringify(data));
+      try {
+        await supabase.from('site_settings').upsert({
+          key: 'owner_payout_settlements',
+          value: data,
+          updated_at: new Date().toISOString()
+        });
+      } catch (e) {
+        console.warn('saveOwnerPayoutSettlements remote upsert error:', e);
+      }
+    }
+
+    function getOwnerPayoutForBooking(b) {
+      if (!b) return { isPaid: false, status: 'unpaid', ownerName: 'Boat Owner', payoutType: 'percentage', payoutRate: 0, amount: 0, paidDate: '', paymentMethod: '', referenceNote: '', ruleDescription: 'None' };
+
+      // 1. Resolve Boat Owner Config
+      let boatRule = null;
+      if (b.boat_id && boatOwnersCache[b.boat_id]) {
+        boatRule = boatOwnersCache[b.boat_id];
+      } else if (b.boat_name && boatOwnersCache[b.boat_name]) {
+        boatRule = boatOwnersCache[b.boat_name];
+      } else if (fleetCache && fleetCache.length > 0) {
+        const foundBoat = fleetCache.find(x => x.id === b.boat_id || (x.name && b.boat_name && x.name.toLowerCase() === b.boat_name.toLowerCase()));
+        if (foundBoat && boatOwnersCache[foundBoat.id]) {
+          boatRule = boatOwnersCache[foundBoat.id];
+        }
+      }
+
+      const ownerName = (boatRule && boatRule.owner_name) ? boatRule.owner_name : 'Boat Owner';
+      const payoutType = (boatRule && boatRule.payout_type === 'fixed') ? 'fixed' : 'percentage';
+      const payoutRate = (boatRule && typeof boatRule.payout_value !== 'undefined') ? parseFloat(boatRule.payout_value) : 0;
+      
+      const charterTotal = parseFloat(b.total_price || b.amount || 0);
+      let defaultAmount = 0;
+      let ruleDesc = 'Not configured';
+      if (payoutType === 'percentage') {
+        defaultAmount = payoutRate > 0 ? (charterTotal * payoutRate) / 100 : 0;
+        ruleDesc = payoutRate > 0 ? `${payoutRate}% of Total` : '0% (Unconfigured)';
+      } else {
+        defaultAmount = payoutRate;
+        ruleDesc = `$${payoutRate.toFixed(2)} Fixed`;
+      }
+
+      // 2. Check settlements cache
+      let settlement = ownerSettlementsCache[b.id];
+
+      // 3. Fallback: check booking.special_requests for [OwnerPayout: ...] tag
+      const reqNotes = b.special_requests || '';
+      const match = reqNotes.match(/\[OwnerPayout:\s*PAID\s*\|\s*\$([0-9.]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)(?:\s*\|\s*([^\]]*))?\]/i);
+      if (match) {
+        if (!settlement) {
+          settlement = {
+            booking_id: b.id,
+            status: 'paid',
+            amount: parseFloat(match[1]) || defaultAmount,
+            paid_date: match[2]?.trim() || '',
+            payment_method: match[3]?.trim() || 'Direct Transfer',
+            reference_note: match[4]?.trim() || '',
+            owner_name: ownerName,
+            payout_type: payoutType,
+            payout_rate: payoutRate
+          };
+          ownerSettlementsCache[b.id] = settlement;
+        }
+      }
+
+      if (settlement && settlement.status === 'paid') {
+        return {
+          isPaid: true,
+          status: 'paid',
+          ownerName: settlement.owner_name || ownerName,
+          payoutType: settlement.payout_type || payoutType,
+          payoutRate: typeof settlement.payout_rate !== 'undefined' ? settlement.payout_rate : payoutRate,
+          amount: typeof settlement.amount !== 'undefined' ? parseFloat(settlement.amount) : defaultAmount,
+          paidDate: settlement.paid_date || '',
+          paymentMethod: settlement.payment_method || 'Transfer',
+          referenceNote: settlement.reference_note || '',
+          ruleDescription: ruleDesc
+        };
+      }
+
+      return {
+        isPaid: false,
+        status: 'unpaid',
+        ownerName: ownerName,
+        payoutType: payoutType,
+        payoutRate: payoutRate,
+        amount: defaultAmount,
+        paidDate: '',
+        paymentMethod: '',
+        referenceNote: '',
+        ruleDescription: ruleDesc
+      };
+    }
+
+    function renderOwnerPayoutsTable() {
+      const tbody = document.getElementById('owner-payouts-tbody');
+      if (!tbody) return;
+
+      const query = (ownerFilterSearch || '').toLowerCase().trim();
+
+      // All confirmed/completed charters (exclude draft inquiries and cancellations)
+      const eligibleBookings = (bookingsCache || []).filter(b => b.status !== 'inquiry' && b.status !== 'cancelled');
+
+      let totalPaidAmount = 0;
+      let settledChartersCount = 0;
+      let totalPendingAmount = 0;
+      let pendingChartersCount = 0;
+      let totalCharterVolume = 0;
+
+      eligibleBookings.forEach(b => {
+        const p = getOwnerPayoutForBooking(b);
+        const tot = parseFloat(b.total_price || b.amount || 0);
+        totalCharterVolume += tot;
+        if (p.isPaid) {
+          totalPaidAmount += p.amount;
+          settledChartersCount++;
+        } else {
+          totalPendingAmount += p.amount;
+          pendingChartersCount++;
+        }
+      });
+
+      // Update KPI counters
+      const statPaid = document.getElementById('stat-owner-paid');
+      if (statPaid) statPaid.textContent = `$${totalPaidAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const statPaidCount = document.getElementById('stat-owner-settled-count');
+      if (statPaidCount) statPaidCount.textContent = settledChartersCount;
+
+      const statUnpaid = document.getElementById('stat-owner-unpaid');
+      if (statUnpaid) statUnpaid.textContent = `$${totalPendingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const statUnpaidCount = document.getElementById('stat-owner-unsettled-count');
+      if (statUnpaidCount) statUnpaidCount.textContent = pendingChartersCount;
+
+      const statVolume = document.getElementById('stat-owner-charter-volume');
+      if (statVolume) statVolume.textContent = `$${totalCharterVolume.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const statTotalCharters = document.getElementById('stat-owner-total-charters');
+      if (statTotalCharters) statTotalCharters.textContent = eligibleBookings.length;
+
+      const statConfigured = document.getElementById('stat-owner-configured-count');
+      if (statConfigured) {
+        const configuredCount = Object.values(boatOwnersCache).filter(x => x && (x.owner_name || x.payout_value > 0)).length;
+        statConfigured.textContent = `${configuredCount} configured`;
+      }
+
+      // Filter bookings for display
+      const filtered = eligibleBookings.filter(b => {
+        const p = getOwnerPayoutForBooking(b);
+
+        // Status filter
+        if (ownerFilterStatus === 'unpaid' && p.isPaid) return false;
+        if (ownerFilterStatus === 'paid' && !p.isPaid) return false;
+
+        // Boat filter
+        if (ownerFilterBoat !== 'all') {
+          if (b.boat_id !== ownerFilterBoat && b.boat_name !== ownerFilterBoat) return false;
+        }
+
+        // Text search
+        if (query) {
+          const matchBoat = (b.boat_name || '').toLowerCase().includes(query);
+          const matchCust = (b.customer_name || '').toLowerCase().includes(query);
+          const matchPhone = (b.customer_phone || '').toLowerCase().includes(query);
+          const matchOwner = (p.ownerName || '').toLowerCase().includes(query);
+          const matchRef = (p.referenceNote || '').toLowerCase().includes(query);
+          if (!matchBoat && !matchCust && !matchPhone && !matchOwner && !matchRef) return false;
+        }
+
+        return true;
+      });
+
+      // Sort by booking_date descending (newest first)
+      filtered.sort((a, b) => (b.booking_date || '').localeCompare(a.booking_date || ''));
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-on-surface-variant font-medium">No rentals found matching this filter.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(b => {
+        const p = getOwnerPayoutForBooking(b);
+        const dateFormatted = b.booking_date ? new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '-';
+        const charterTotal = parseFloat(b.total_price || b.amount || 0);
+
+        const statusBadge = p.isPaid
+          ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-[11px] font-bold">
+               <span class="material-symbols-outlined text-[13px]">check_circle</span> Paid to Owner
+             </span>
+             <div class="text-[10px] text-on-surface-variant font-mono mt-0.5">${p.paidDate ? p.paidDate : ''} ${p.paymentMethod ? `&bull; ${escapeHtml(p.paymentMethod)}` : ''}</div>`
+          : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold">
+               <span class="material-symbols-outlined text-[13px]">pending</span> Unpaid / Pending
+             </span>`;
+
+        const splitBadge = p.payoutType === 'percentage'
+          ? `<span class="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10.5px] font-bold">${p.payoutRate}% Total</span>`
+          : `<span class="px-2 py-0.5 rounded bg-purple-50 border border-purple-200 text-purple-800 text-[10.5px] font-bold">$${p.payoutRate.toFixed(2)} Fixed</span>`;
+
+        return `
+          <tr class="hover:bg-surface-container-low/60 transition-colors ${p.isPaid ? '' : 'bg-amber-50/20'}">
+            <td class="px-3 py-3 whitespace-nowrap">
+              <p class="font-bold text-on-surface text-xs">${dateFormatted}</p>
+              <p class="text-[10px] font-mono text-on-surface-variant">${escapeHtml(b.start_time || '')} &bull; ${b.duration_hours || 4} hrs</p>
+            </td>
+            <td class="px-3 py-3">
+              <p class="font-bold text-secondary text-xs">${escapeHtml(b.boat_name || 'Fleet Yacht')}</p>
+              <div class="flex items-center gap-1 mt-0.5">
+                <span class="material-symbols-outlined text-[12px] text-indigo-700">person</span>
+                <span class="text-[10.5px] font-semibold text-indigo-950">${escapeHtml(p.ownerName)}</span>
+              </div>
+            </td>
+            <td class="px-3 py-3">
+              <p class="font-bold text-on-surface text-xs">${escapeHtml(b.customer_name || 'Guest')}</p>
+              <p class="text-[10px] font-mono text-secondary">${escapeHtml(b.customer_phone || '')}</p>
+            </td>
+            <td class="px-3 py-3 text-right font-mono font-bold text-xs text-on-surface">
+              $${charterTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </td>
+            <td class="px-3 py-3 text-center whitespace-nowrap">
+              ${splitBadge}
+            </td>
+            <td class="px-3 py-3 text-right whitespace-nowrap font-mono font-black text-sm ${p.isPaid ? 'text-green-700' : 'text-amber-700'}">
+              $${p.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${p.referenceNote ? `<div class="text-[9.5px] font-sans text-on-surface-variant truncate max-w-[130px] ml-auto" title="${escapeHtml(p.referenceNote)}">${escapeHtml(p.referenceNote)}</div>` : ''}
+            </td>
+            <td class="px-3 py-3 text-center whitespace-nowrap">
+              ${statusBadge}
+            </td>
+            <td class="px-3 py-3 text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-1.5">
+                <button type="button" onclick="window.openMarkOwnerPaidModal('${b.id}')" class="px-2.5 py-1 rounded-lg text-xs font-bold ${p.isPaid ? 'bg-surface-container text-on-surface hover:bg-surface-container-high border border-outline-variant' : 'bg-green-700 text-white hover:bg-green-800 shadow-2xs'} flex items-center gap-1 cursor-pointer transition-all">
+                  <span class="material-symbols-outlined text-[14px]">${p.isPaid ? 'edit' : 'payments'}</span>
+                  ${p.isPaid ? 'Edit Payout' : 'Mark as Paid'}
+                </button>
+                <button type="button" onclick="window.editBooking('${b.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors cursor-pointer" title="View Booking Details">
+                  <span class="material-symbols-outlined text-[16px]">visibility</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function populateOwnerFilterBoatDropdown() {
+      const select = document.getElementById('filter-owner-boat-select');
+      if (!select) return;
+      const currentVal = select.value;
+      const boats = (fleetCache || []).slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      select.innerHTML = '<option value="all">-- All Yachts / Boats --</option>' +
+        boats.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+      if (currentVal && boats.some(b => b.id === currentVal)) {
+        select.value = currentVal;
+      }
+    }
+
+    async function loadAndRenderOwnerPayouts() {
+      const tbody = document.getElementById('owner-payouts-tbody');
+      if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-on-surface-variant"><span class="admin-spinner"></span></td></tr>`;
+
+      if (!fleetCache || fleetCache.length === 0) await loadFleet();
+      await loadBoatOwnerPartners();
+      await loadOwnerPayoutSettlements();
+      if (!bookingsCache || bookingsCache.length === 0) await loadBookings();
+
+      populateOwnerFilterBoatDropdown();
+      renderOwnerPayoutsTable();
+    }
+
+    function openMarkOwnerPaidModal(bookingId) {
+      const b = (bookingsCache || []).find(x => x.id === bookingId);
+      if (!b) {
+        showToast('Booking not found', 'error');
+        return;
+      }
+
+      const p = getOwnerPayoutForBooking(b);
+      const charterTotal = parseFloat(b.total_price || b.amount || 0);
+      const dateFormatted = b.booking_date ? new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+      document.getElementById('settlement-booking-id').value = b.id;
+      document.getElementById('settlement-boat-name').textContent = b.boat_name || 'Fleet Yacht';
+      document.getElementById('settlement-charter-total').textContent = `$${charterTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      document.getElementById('settlement-booking-summary').textContent = `${b.customer_name || 'Guest'} • ${dateFormatted} @ ${b.start_time || ''}`;
+      
+      document.getElementById('settlement-owner-name').value = p.ownerName !== 'Boat Owner' ? p.ownerName : '';
+      document.getElementById('settlement-payout-type').value = p.payoutType;
+      document.getElementById('settlement-payout-rate').value = p.payoutRate || '';
+      document.getElementById('settlement-payout-amount').value = p.amount.toFixed(2);
+      
+      const todayStr = new Date().toLocaleDateString('sv-SE');
+      document.getElementById('settlement-paid-date').value = p.paidDate || todayStr;
+      document.getElementById('settlement-payment-method').value = p.paymentMethod || 'Zelle Transfer';
+      document.getElementById('settlement-reference-note').value = p.referenceNote || '';
+
+      const btnRevert = document.getElementById('btn-revert-unpaid');
+      const btnSave = document.getElementById('btn-save-settlement');
+
+      if (p.isPaid) {
+        if (btnRevert) btnRevert.classList.remove('hidden');
+        if (btnSave) btnSave.innerHTML = '<span class="material-symbols-outlined text-[16px]">save</span> Update Settlement';
+      } else {
+        if (btnRevert) btnRevert.classList.add('hidden');
+        if (btnSave) btnSave.innerHTML = '<span class="material-symbols-outlined text-[16px]">check_circle</span> Confirm Paid to Owner';
+      }
+
+      const calcAmount = () => {
+        const type = document.getElementById('settlement-payout-type').value;
+        const rate = parseFloat(document.getElementById('settlement-payout-rate').value) || 0;
+        let amt = 0;
+        if (type === 'percentage') {
+          amt = (charterTotal * rate) / 100;
+        } else {
+          amt = rate;
+        }
+        document.getElementById('settlement-payout-amount').value = amt.toFixed(2);
+      };
+
+      const typeEl = document.getElementById('settlement-payout-type');
+      const rateEl = document.getElementById('settlement-payout-rate');
+      typeEl.onchange = calcAmount;
+      rateEl.oninput = calcAmount;
+
+      document.getElementById('owner-settlement-modal')?.classList.remove('hidden');
+    }
+
+    function closeOwnerSettlementModal() {
+      document.getElementById('owner-settlement-modal')?.classList.add('hidden');
+    }
+
+    async function submitOwnerSettlement(e) {
+      if (e) e.preventDefault();
+      const bookingId = document.getElementById('settlement-booking-id').value;
+      const b = (bookingsCache || []).find(x => x.id === bookingId);
+      if (!b) return;
+
+      const ownerName = document.getElementById('settlement-owner-name').value.trim() || 'Boat Owner';
+      const payoutType = document.getElementById('settlement-payout-type').value;
+      const payoutRate = parseFloat(document.getElementById('settlement-payout-rate').value) || 0;
+      const payoutAmount = parseFloat(document.getElementById('settlement-payout-amount').value) || 0;
+      const paidDate = document.getElementById('settlement-paid-date').value;
+      const paymentMethod = document.getElementById('settlement-payment-method').value;
+      const referenceNote = document.getElementById('settlement-reference-note').value.trim();
+
+      // Save to settlements cache
+      ownerSettlementsCache[bookingId] = {
+        booking_id: bookingId,
+        status: 'paid',
+        amount: payoutAmount,
+        paid_date: paidDate,
+        payment_method: paymentMethod,
+        reference_note: referenceNote,
+        owner_name: ownerName,
+        payout_type: payoutType,
+        payout_rate: payoutRate,
+        boat_name: b.boat_name,
+        customer_name: b.customer_name,
+        charter_total: parseFloat(b.total_price || b.amount || 0),
+        settled_at: new Date().toISOString()
+      };
+      await saveOwnerPayoutSettlements(ownerSettlementsCache);
+
+      // If boat rule has not been saved yet or user updated owner name/rate, also persist rule for this boat
+      if (b.boat_id) {
+        boatOwnersCache[b.boat_id] = {
+          ...(boatOwnersCache[b.boat_id] || {}),
+          boat_id: b.boat_id,
+          boat_name: b.boat_name,
+          owner_name: ownerName,
+          payout_type: payoutType,
+          payout_value: payoutRate
+        };
+        await saveBoatOwnerPartners(boatOwnersCache);
+      }
+
+      // Update booking.special_requests with [OwnerPayout: ...] tag
+      let notes = b.special_requests || '';
+      const lines = notes.split('\n').filter(l => !l.trim().startsWith('[OwnerPayout:'));
+      const payoutTag = `[OwnerPayout: PAID | $${payoutAmount.toFixed(2)} | ${paidDate} | ${paymentMethod}${referenceNote ? ` | ${referenceNote}` : ''}]`;
+      lines.push(payoutTag);
+      const updatedNotes = lines.join('\n').trim();
+      b.special_requests = updatedNotes;
+
+      try {
+        await supabase.from('bookings').update({ special_requests: updatedNotes }).eq('id', bookingId);
+      } catch (err) {
+        console.warn('Booking special_requests update error:', err);
+      }
+
+      closeOwnerSettlementModal();
+      showToast(`✓ Marked rental for ${b.boat_name || 'yacht'} as Paid to Owner ($${payoutAmount.toFixed(2)})!`, 'success');
+
+      renderOwnerPayoutsTable();
+      if (typeof renderManifestTable === 'function') renderManifestTable();
+      updateBookingModalOwnerPayout(bookingId);
+    }
+
+    async function revertOwnerSettlementToUnpaid() {
+      const bookingId = document.getElementById('settlement-booking-id').value;
+      const b = (bookingsCache || []).find(x => x.id === bookingId);
+      if (!b) return;
+
+      if (ownerSettlementsCache[bookingId]) {
+        delete ownerSettlementsCache[bookingId];
+        await saveOwnerPayoutSettlements(ownerSettlementsCache);
+      }
+
+      let notes = b.special_requests || '';
+      const lines = notes.split('\n').filter(l => !l.trim().startsWith('[OwnerPayout:'));
+      const updatedNotes = lines.join('\n').trim();
+      b.special_requests = updatedNotes;
+
+      try {
+        await supabase.from('bookings').update({ special_requests: updatedNotes }).eq('id', bookingId);
+      } catch (err) {
+        console.warn('Booking special_requests update error:', err);
+      }
+
+      closeOwnerSettlementModal();
+      showToast(`Rental marked as Unpaid / Pending.`, 'info');
+
+      renderOwnerPayoutsTable();
+      if (typeof renderManifestTable === 'function') renderManifestTable();
+      updateBookingModalOwnerPayout(bookingId);
+    }
+
+    async function openManageBoatOwnersModal() {
+      if (!fleetCache || fleetCache.length === 0) await loadFleet();
+      await loadBoatOwnerPartners();
+
+      renderManageBoatOwnersTable('');
+
+      const searchInput = document.getElementById('manage-owners-search');
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.oninput = (e) => renderManageBoatOwnersTable(e.target.value);
+      }
+
+      document.getElementById('manage-boat-owners-modal')?.classList.remove('hidden');
+    }
+
+    function closeManageBoatOwnersModal() {
+      document.getElementById('manage-boat-owners-modal')?.classList.add('hidden');
+      renderOwnerPayoutsTable();
+    }
+
+    function renderManageBoatOwnersTable(filterQuery = '') {
+      const tbody = document.getElementById('manage-boat-owners-tbody');
+      if (!tbody) return;
+
+      const boats = (fleetCache || []).slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      const q = (filterQuery || '').toLowerCase().trim();
+
+      const filteredBoats = boats.filter(b => {
+        if (!q) return true;
+        const rule = boatOwnersCache[b.id] || {};
+        return (b.name || '').toLowerCase().includes(q) ||
+               (rule.owner_name || '').toLowerCase().includes(q) ||
+               (rule.owner_phone || '').toLowerCase().includes(q) ||
+               (rule.owner_email || '').toLowerCase().includes(q);
+      });
+
+      const countDisplay = document.getElementById('manage-owners-count-display');
+      if (countDisplay) countDisplay.textContent = `${filteredBoats.length} of ${boats.length} Yachts`;
+
+      if (filteredBoats.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-on-surface-variant">No yachts matching "${escapeHtml(filterQuery)}"</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filteredBoats.map(boat => {
+        const rule = boatOwnersCache[boat.id] || {};
+        const isFixed = rule.payout_type === 'fixed';
+        const rateVal = typeof rule.payout_value !== 'undefined' ? rule.payout_value : '';
+
+        return `
+          <tr class="hover:bg-surface-container-low/50" id="owner-rule-row-${boat.id}">
+            <td class="px-3 py-2.5 whitespace-nowrap">
+              <div class="font-bold text-secondary text-xs">${escapeHtml(boat.name)}</div>
+              <div class="text-[10px] text-on-surface-variant">${boat.length_ft ? `${boat.length_ft}ft` : ''} &bull; ${boat.capacity ? `${boat.capacity} guests` : ''}</div>
+            </td>
+            <td class="px-3 py-2.5">
+              <input type="text" id="rule-name-${boat.id}" value="${escapeHtml(rule.owner_name || '')}" placeholder="Owner or Partner" class="w-full px-2 py-1 bg-white border border-outline-variant rounded-lg text-xs font-bold text-on-surface focus:ring-1 focus:ring-secondary"/>
+            </td>
+            <td class="px-3 py-2.5">
+              <input type="text" id="rule-contact-${boat.id}" value="${escapeHtml(rule.owner_phone || rule.owner_email || '')}" placeholder="Phone or email" class="w-full px-2 py-1 bg-white border border-outline-variant rounded-lg text-xs focus:ring-1 focus:ring-secondary"/>
+            </td>
+            <td class="px-3 py-2.5 text-center">
+              <select id="rule-type-${boat.id}" class="px-2 py-1 bg-white border border-outline-variant rounded-lg text-xs font-bold text-on-surface focus:ring-1 focus:ring-secondary">
+                <option value="percentage" ${!isFixed ? 'selected' : ''}>% Percentage</option>
+                <option value="fixed" ${isFixed ? 'selected' : ''}>$ Fixed Amount</option>
+              </select>
+            </td>
+            <td class="px-3 py-2.5 text-right">
+              <input type="number" step="0.01" id="rule-val-${boat.id}" value="${rateVal}" placeholder="e.g. 60 or 800" class="w-24 px-2 py-1 bg-white border border-outline-variant rounded-lg text-xs font-bold font-mono text-right focus:ring-1 focus:ring-secondary"/>
+            </td>
+            <td class="px-3 py-2.5">
+              <input type="text" id="rule-notes-${boat.id}" value="${escapeHtml(rule.notes || '')}" placeholder="Payment details..." class="w-full px-2 py-1 bg-white border border-outline-variant rounded-lg text-[11px] focus:ring-1 focus:ring-secondary"/>
+            </td>
+            <td class="px-3 py-2.5 text-right whitespace-nowrap">
+              <button type="button" onclick="window.saveSingleBoatOwnerRule('${boat.id}', '${escapeHtml(boat.name)}')" class="px-2.5 py-1 bg-secondary text-on-secondary rounded-lg text-[11px] font-bold hover:opacity-90 transition-all cursor-pointer shadow-2xs">
+                Save
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function saveSingleBoatOwnerRule(boatId, boatName) {
+      const nameInput = document.getElementById(`rule-name-${boatId}`);
+      const contactInput = document.getElementById(`rule-contact-${boatId}`);
+      const typeInput = document.getElementById(`rule-type-${boatId}`);
+      const valInput = document.getElementById(`rule-val-${boatId}`);
+      const notesInput = document.getElementById(`rule-notes-${boatId}`);
+
+      if (!nameInput || !typeInput || !valInput) return;
+
+      const ownerName = nameInput.value.trim();
+      const contact = contactInput ? contactInput.value.trim() : '';
+      const payoutType = typeInput.value;
+      const payoutVal = parseFloat(valInput.value) || 0;
+      const notes = notesInput ? notesInput.value.trim() : '';
+
+      boatOwnersCache[boatId] = {
+        boat_id: boatId,
+        boat_name: boatName || (boatOwnersCache[boatId]?.boat_name) || '',
+        owner_name: ownerName,
+        owner_phone: contact,
+        payout_type: payoutType,
+        payout_value: payoutVal,
+        notes: notes,
+        updated_at: new Date().toISOString()
+      };
+
+      await saveBoatOwnerPartners(boatOwnersCache);
+      showToast(`✓ Saved owner rule for ${boatName || 'yacht'}!`, 'success');
+    }
+
+    function updateBookingModalOwnerPayout(bookingId) {
+      const box = document.getElementById('booking-owner-payout-box');
+      if (!box) return;
+
+      const b = (bookingsCache || []).find(x => x.id === bookingId);
+      if (!b) {
+        box.classList.add('hidden');
+        return;
+      }
+      box.classList.remove('hidden');
+
+      const p = getOwnerPayoutForBooking(b);
+      const nameEl = document.getElementById('booking-owner-name-display');
+      if (nameEl) nameEl.textContent = p.ownerName || 'Boat Owner';
+
+      const calcEl = document.getElementById('booking-owner-calc-display');
+      if (calcEl) {
+        if (p.isPaid) {
+          calcEl.innerHTML = `<span class="text-green-700 font-bold">$${p.amount.toFixed(2)} Paid</span> via ${escapeHtml(p.paymentMethod || 'Transfer')} on ${p.paidDate || 'Date'} ${p.referenceNote ? `(${escapeHtml(p.referenceNote)})` : ''}`;
+        } else {
+          calcEl.innerHTML = `Rule: <span class="font-bold text-on-surface">${p.ruleDescription}</span> &bull; Due: <span class="font-bold text-amber-700 font-mono">$${p.amount.toFixed(2)}</span>`;
+        }
+      }
+
+      const badgeEl = document.getElementById('booking-owner-status-badge');
+      if (badgeEl) {
+        if (p.isPaid) {
+          badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-green-100 text-green-800 uppercase tracking-wide';
+          badgeEl.textContent = 'Paid to Owner';
+        } else {
+          badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-800 uppercase tracking-wide';
+          badgeEl.textContent = 'Unpaid';
+        }
+      }
+
+      const settleBtn = document.getElementById('booking-owner-settle-btn');
+      if (settleBtn) {
+        if (p.isPaid) {
+          settleBtn.className = 'px-3 py-1 bg-surface-container text-on-surface hover:bg-surface-container-high rounded-lg text-xs font-bold transition-all border border-outline-variant flex items-center gap-1 cursor-pointer';
+          settleBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">edit</span> Edit Payout';
+        } else {
+          settleBtn.className = 'px-3 py-1 bg-green-700 hover:bg-green-800 text-white rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center gap-1 cursor-pointer';
+          settleBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">payments</span> Settle Payout';
+        }
+      }
+    }
+
+    // Expose functions globally for modal onclick attributes
+    window.openMarkOwnerPaidModal = openMarkOwnerPaidModal;
+    window.closeOwnerSettlementModal = closeOwnerSettlementModal;
+    window.revertOwnerSettlementToUnpaid = revertOwnerSettlementToUnpaid;
+    window.openManageBoatOwnersModal = openManageBoatOwnersModal;
+    window.closeManageBoatOwnersModal = closeManageBoatOwnersModal;
+    window.saveSingleBoatOwnerRule = saveSingleBoatOwnerRule;
+    window.updateBookingModalOwnerPayout = updateBookingModalOwnerPayout;
+    window.loadAndRenderOwnerPayouts = loadAndRenderOwnerPayouts;
+    window.getOwnerPayoutForBooking = getOwnerPayoutForBooking;
+
+    // Hook filter pills and search inputs for Settlements tab
+    const filterOwnerPillAll = document.getElementById('filter-owner-payout-all');
+    const filterOwnerPillUnpaid = document.getElementById('filter-owner-payout-unpaid');
+    const filterOwnerPillPaid = document.getElementById('filter-owner-payout-paid');
+
+    function setOwnerFilterPill(status) {
+      ownerFilterStatus = status;
+      [
+        { el: filterOwnerPillAll, key: 'all' },
+        { el: filterOwnerPillUnpaid, key: 'unpaid' },
+        { el: filterOwnerPillPaid, key: 'paid' }
+      ].forEach(({ el, key }) => {
+        if (!el) return;
+        if (key === status) {
+          el.className = 'px-3 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold transition-all shadow-xs cursor-pointer';
+        } else {
+          el.className = 'px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer';
+        }
+      });
+      renderOwnerPayoutsTable();
+    }
+
+    filterOwnerPillAll?.addEventListener('click', () => setOwnerFilterPill('all'));
+    filterOwnerPillUnpaid?.addEventListener('click', () => setOwnerFilterPill('unpaid'));
+    filterOwnerPillPaid?.addEventListener('click', () => setOwnerFilterPill('paid'));
+
+    document.getElementById('filter-owner-boat-select')?.addEventListener('change', (e) => {
+      ownerFilterBoat = e.target.value;
+      renderOwnerPayoutsTable();
+    });
+
+    document.getElementById('filter-owner-search')?.addEventListener('input', (e) => {
+      ownerFilterSearch = e.target.value;
+      renderOwnerPayoutsTable();
+    });
+
+    document.getElementById('refresh-owner-payouts-btn')?.addEventListener('click', () => {
+      loadAndRenderOwnerPayouts();
+      showToast('Refreshed owner settlements', 'info');
+    });
+
+    window.submitOwnerSettlement = submitOwnerSettlement;
+
+    document.getElementById('settlement-form')?.addEventListener('submit', submitOwnerSettlement);
+    document.getElementById('owner-settlement-form')?.addEventListener('submit', submitOwnerSettlement);
+
+    // ─── Sub-navigation Tabs (Manifest, Calendar, Owner Settlements) ─────────
     const tabManifest = document.getElementById('tab-btn-manifest');
     const tabCal = document.getElementById('tab-btn-calendar');
+    const tabOwnerPayouts = document.getElementById('tab-btn-owner-payouts');
     const viewManifest = document.getElementById('view-manifest');
     const viewCal = document.getElementById('view-calendar');
+    const viewOwnerPayouts = document.getElementById('view-owner-payouts');
 
-    if (tabManifest && tabCal && viewManifest && viewCal) {
+    function setActiveBookingTab(tab) {
+      if (tabManifest) {
+        tabManifest.className = tab === 'manifest'
+          ? 'whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-secondary font-label text-[11px] sm:text-sm font-bold text-secondary flex items-center gap-1.5 sm:gap-2'
+          : 'whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-transparent font-label text-[11px] sm:text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer';
+      }
+      if (tabCal) {
+        tabCal.className = tab === 'calendar'
+          ? 'whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-secondary font-label text-[11px] sm:text-sm font-bold text-secondary flex items-center gap-1.5 sm:gap-2'
+          : 'whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-transparent font-label text-[11px] sm:text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer';
+      }
+      if (tabOwnerPayouts) {
+        tabOwnerPayouts.className = tab === 'owner_payouts'
+          ? 'whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-secondary font-label text-[11px] sm:text-sm font-bold text-secondary flex items-center gap-1.5 sm:gap-2'
+          : 'whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-transparent font-label text-[11px] sm:text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer';
+      }
+
+      if (viewManifest) viewManifest.classList.toggle('hidden', tab !== 'manifest');
+      if (viewCal) viewCal.classList.toggle('hidden', tab !== 'calendar');
+      if (viewOwnerPayouts) viewOwnerPayouts.classList.toggle('hidden', tab !== 'owner_payouts');
+    }
+
+    if (tabManifest) {
       tabManifest.addEventListener('click', () => {
-        tabManifest.className = 'pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2';
-        tabCal.className = 'pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors';
-        viewManifest.classList.remove('hidden');
-        viewCal.classList.add('hidden');
+        setActiveBookingTab('manifest');
       });
+    }
+    if (tabCal) {
       tabCal.addEventListener('click', () => {
-        tabCal.className = 'pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2';
-        tabManifest.className = 'pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors';
-        viewCal.classList.remove('hidden');
-        viewManifest.classList.add('hidden');
+        setActiveBookingTab('calendar');
         renderCalendar();
+      });
+    }
+    if (tabOwnerPayouts) {
+      tabOwnerPayouts.addEventListener('click', () => {
+        setActiveBookingTab('owner_payouts');
+        loadAndRenderOwnerPayouts();
       });
     }
 
@@ -5910,6 +6691,7 @@ EXTRACTION RULES:
         const depEl = document.getElementById('book-deposit'); if (depEl) depEl.value = '0';
         const payEl = document.getElementById('book-pay-method'); if (payEl) payEl.value = '';
         document.getElementById('book-status').value = 'confirmed';
+        document.getElementById('booking-owner-payout-box')?.classList.add('hidden');
         
         // Populate Assign Rep Dropdown
         const assignRepEl = document.getElementById('book-assigned-rep');
@@ -7183,6 +7965,11 @@ EXTRACTION RULES:
     // Note: tbody may be absent when called from the dashboard view — that's OK,
     // renderManifestTable() is a no-op when tbody is null.
     if (!fleetCache || fleetCache.length === 0) loadFleet();
+    if (!isOwnerDataLoaded) {
+      isOwnerDataLoaded = true;
+      loadBoatOwnerPartners();
+      loadOwnerPayoutSettlements();
+    }
 
     const doFetch = async () => {
       if (isFetchingBookings) return;
@@ -7196,6 +7983,7 @@ EXTRACTION RULES:
 
         bookingsCache = data || [];
         window.bookingsCache = bookingsCache;
+        if (typeof renderOwnerPayoutsTable === 'function') renderOwnerPayoutsTable();
 
         // Setup Realtime Listener for Instant Payment Reflections when payment is actually completed
         if (!window.hasBookingsRealtimeListener && typeof supabase !== 'undefined') {
@@ -7215,6 +8003,7 @@ EXTRACTION RULES:
                   }
                   if (typeof renderManifestTable === 'function') renderManifestTable();
                   if (typeof renderCalendar === 'function') renderCalendar();
+                  if (typeof renderOwnerPayoutsTable === 'function') renderOwnerPayoutsTable();
                   
                   if (payload.old && payload.new.deposit_amount > payload.old.deposit_amount) {
                     const diff = payload.new.deposit_amount - payload.old.deposit_amount;
@@ -7454,6 +8243,7 @@ EXTRACTION RULES:
       const ref = parseFloat(b.refunded_amount || 0);
       const netPaid = Math.max(0, dep - ref);
       const rem = Math.max(0, tot - netPaid);
+      const ownerPayout = getOwnerPayoutForBooking(b);
 
       return `
         <tr class="hover:bg-surface-container-low/50 transition-colors ${isHighlight ? 'bg-[#fcf8e3]' : (isToday ? 'bg-amber-50/50' : '')}">
@@ -7500,6 +8290,10 @@ EXTRACTION RULES:
               </div>
               ${b.payment_method ? `<div class="text-[9px] text-on-surface-variant font-sans italic truncate pt-0.5">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
               <div class="pt-0.5">${statusBadge.replace('px-2.5 py-1 text-xs', 'px-1.5 py-0.5 text-[10px]')}</div>
+              <div class="flex justify-between items-center border-t border-outline-variant/40 pt-0.5 text-[9px] ${ownerPayout.isPaid ? 'text-indigo-900 bg-indigo-50/80 font-bold' : 'text-amber-900 bg-amber-50/70 font-medium'} px-1 rounded cursor-pointer hover:opacity-80" onclick="event.stopPropagation(); window.openMarkOwnerPaidModal('${b.id}')" title="Click to view/settle owner payout">
+                <span class="font-sans flex items-center gap-0.5"><span class="material-symbols-outlined text-[10px]">handshake</span> Owner:</span>
+                <span>${ownerPayout.isPaid ? `Paid ($${ownerPayout.amount.toFixed(2)}) ✓` : `Unpaid ($${ownerPayout.amount.toFixed(2)})`}</span>
+              </div>
             </div>
           </td>
           <td class="p-2 text-[10px] text-on-surface-variant max-w-[150px]">
@@ -7521,6 +8315,9 @@ EXTRACTION RULES:
             </button>
             <button onclick="window.openMessagePreview('${b.id}')" class="p-1 text-on-surface-variant hover:text-green-600 hover:bg-green-50 rounded transition-colors ml-0.5" title="Send WhatsApp Confirmation">
               <span class="material-symbols-outlined text-[14px]">chat</span>
+            </button>
+            <button onclick="window.openMarkOwnerPaidModal('${b.id}')" class="p-1 text-on-surface-variant hover:text-indigo-700 hover:bg-indigo-50 rounded transition-colors ml-0.5" title="Owner / Partner Settlement">
+              <span class="material-symbols-outlined text-[14px]">handshake</span>
             </button>
             <button onclick="window.editBooking('${b.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-colors ml-0.5" title="View Details">
               <span class="material-symbols-outlined text-[14px]">visibility</span>
@@ -7549,6 +8346,7 @@ EXTRACTION RULES:
         const netPaid = Math.max(0, dep - ref);
         const rem = Math.max(0, total - netPaid);
         const canRefund = dep > 0 && ref < dep;
+        const ownerPayout = getOwnerPayoutForBooking(b);
 
         return `
           <div class="${isHighlight ? 'bg-[#fcf8e3]' : 'bg-surface-container-lowest'} border ${isToday ? 'border-secondary ring-1 ring-secondary/30' : 'border-outline-variant'} rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden">
@@ -7605,6 +8403,12 @@ EXTRACTION RULES:
                   <span class="text-[11px]">${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
                 </div>
                 ${b.payment_method ? `<div class="text-[9px] font-sans text-on-surface-variant italic pt-0.5 border-t border-amber-200/40">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
+                <div class="flex justify-between items-center border-t border-amber-200/50 pt-1 text-[10px]">
+                  <span class="font-sans text-amber-900 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px] text-indigo-700">handshake</span> Owner Payout:</span>
+                  <span class="font-bold cursor-pointer hover:underline ${ownerPayout.isPaid ? 'text-indigo-900' : 'text-amber-900'}" onclick="event.stopPropagation(); window.openMarkOwnerPaidModal('${b.id}')">
+                    ${ownerPayout.isPaid ? `Paid ($${ownerPayout.amount.toFixed(2)}) ✓` : `Unpaid ($${ownerPayout.amount.toFixed(2)})`}
+                  </span>
+                </div>
                 </div>
               </details>
 
@@ -7627,6 +8431,9 @@ EXTRACTION RULES:
               </button>
               <button onclick="event.stopPropagation(); window.openMessagePreview('${b.id}')" class="p-1 bg-surface-container hover:bg-green-50 hover:text-green-600 rounded transition-colors" title="Send Confirmation Message">
                 <span class="material-symbols-outlined text-[14px]">chat</span>
+              </button>
+              <button onclick="event.stopPropagation(); window.openMarkOwnerPaidModal('${b.id}')" class="p-1 bg-surface-container hover:bg-indigo-50 hover:text-indigo-700 rounded transition-colors" title="Owner Settlement">
+                <span class="material-symbols-outlined text-[14px]">handshake</span>
               </button>
               <button onclick="event.stopPropagation(); window.editBooking('${b.id}')" class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-[10px] font-bold text-on-surface flex items-center gap-0.5 transition-colors">
                 <span class="material-symbols-outlined text-[12px]">visibility</span> View
@@ -9314,6 +10121,7 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
 
     window.switchBookingModalTab('details');
     window.populateBookingActivitySheet(b);
+    window.updateBookingModalOwnerPayout(b.id);
 
     document.getElementById('booking-modal-title').textContent = 'Edit Charter Booking';
     document.getElementById('booking-id').value = b.id;
