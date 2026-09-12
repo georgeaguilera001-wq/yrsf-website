@@ -5292,21 +5292,7 @@ EXTRACTION RULES:
   let calCurrentDate = new Date();
   let calendarSourceFilter = 'all';
 
-  let isBookingsInit = false;
-  window.initBookingsSection = function() {
-    if (isBookingsInit) return;
-    isBookingsInit = true;
-    // ── Pre-warm fleet cache so the boat dropdown is instant on first tap ──
-    if (!fleetCache || fleetCache.length === 0) {
-      loadFleet().then(() => {
-        // Silently pre-render dropdown options after data arrives
-        if (typeof window.renderCalBoatDropdownOptions === 'function') {
-          window.renderCalBoatDropdownOptions('');
-        }
-      });
-    }
-
-    // ─── Boat Owner / Partner Settlement System ─────────
+  // ─── Boat Owner / Partner Settlement System ─────────
     let boatOwnersCache = {};
     let ownerSettlementsCache = {};
     let ownerFilterStatus = 'all'; // 'all', 'unpaid', 'paid'
@@ -5959,6 +5945,20 @@ EXTRACTION RULES:
     window.updateBookingModalOwnerPayout = updateBookingModalOwnerPayout;
     window.loadAndRenderOwnerPayouts = loadAndRenderOwnerPayouts;
     window.getOwnerPayoutForBooking = getOwnerPayoutForBooking;
+
+  let isBookingsInit = false;
+  window.initBookingsSection = function() {
+    if (isBookingsInit) return;
+    isBookingsInit = true;
+    // ── Pre-warm fleet cache so the boat dropdown is instant on first tap ──
+    if (!fleetCache || fleetCache.length === 0) {
+      loadFleet().then(() => {
+        // Silently pre-render dropdown options after data arrives
+        if (typeof window.renderCalBoatDropdownOptions === 'function') {
+          window.renderCalBoatDropdownOptions('');
+        }
+      });
+    }
 
     // Hook filter pills and search inputs for Settlements tab
     const filterOwnerPillAll = document.getElementById('filter-owner-payout-all');
