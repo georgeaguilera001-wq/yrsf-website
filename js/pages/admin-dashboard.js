@@ -5946,6 +5946,184 @@ EXTRACTION RULES:
     window.loadAndRenderOwnerPayouts = loadAndRenderOwnerPayouts;
     window.getOwnerPayoutForBooking = getOwnerPayoutForBooking;
 
+  window.closeBookingModal = function() {
+    const bModal = document.getElementById('booking-modal');
+    if (bModal) {
+      bModal.classList.add('hidden');
+      bModal.style.display = 'none';
+    }
+  };
+
+  window.openNewBookingModal = async function(prefill = {}) {
+    if (typeof window.initBookingsSection === 'function' && !isBookingsInit) {
+      window.initBookingsSection();
+    }
+
+    const bModal = document.getElementById('booking-modal');
+    if (!bModal) return;
+
+    // Show modal immediately so it feels instant
+    bModal.classList.remove('hidden');
+    bModal.style.display = 'flex';
+
+    try {
+      if (typeof window.switchBookingModalTab === 'function') {
+        window.switchBookingModalTab('details');
+      }
+
+      const titleEl = document.getElementById('booking-modal-title');
+      if (titleEl) titleEl.textContent = 'Schedule Charter Booking';
+
+      const idEl = document.getElementById('booking-id');
+      if (idEl) idEl.value = '';
+
+      const dateEl = document.getElementById('book-date');
+      if (dateEl) dateEl.value = prefill.date || new Date().toLocaleDateString('sv-SE');
+
+      const timeEl = document.getElementById('book-time');
+      if (timeEl) timeEl.value = prefill.time || '10:00 AM';
+
+      const durEl = document.getElementById('book-duration');
+      if (durEl) durEl.value = String(prefill.duration || '4');
+
+      const nameEl = document.getElementById('book-cust-name');
+      if (nameEl) nameEl.value = prefill.custName || prefill.name || '';
+
+      const phoneEl = document.getElementById('book-cust-phone');
+      if (phoneEl) phoneEl.value = prefill.custPhone || prefill.phone || '';
+
+      const emailEl = document.getElementById('book-cust-email');
+      if (emailEl) emailEl.value = prefill.custEmail || prefill.email || '';
+
+      const guestsEl = document.getElementById('book-guests');
+      if (guestsEl) guestsEl.value = String(prefill.guests || '8');
+
+      const priceEl = document.getElementById('book-price');
+      if (priceEl) {
+        priceEl.value = prefill.price || '';
+        priceEl.dataset.autoCalculated = 'true';
+      }
+
+      const depEl = document.getElementById('book-deposit');
+      if (depEl) {
+        depEl.value = prefill.deposit || '0';
+        depEl.dataset.autoCalculated = 'true';
+      }
+
+      const discEl = document.getElementById('book-discount');
+      if (discEl) discEl.value = '0';
+
+      const payEl = document.getElementById('book-pay-method');
+      if (payEl) payEl.value = prefill.payMethod || '';
+
+      const statusEl = document.getElementById('book-status');
+      if (statusEl) {
+        statusEl.value = prefill.status || 'confirmed';
+        statusEl.dispatchEvent(new Event('change'));
+      }
+
+      const leadStatusEl = document.getElementById('book-lead-status');
+      if (leadStatusEl) leadStatusEl.value = prefill.leadStatus || 'Draft Quote';
+
+      const notesEl = document.getElementById('book-notes');
+      if (notesEl) notesEl.value = prefill.notes || '';
+
+      // Reset Custom Addon
+      const cName = document.getElementById('custom-addon-name');
+      if (cName) cName.value = '';
+      const cPrice = document.getElementById('custom-addon-price');
+      if (cPrice) cPrice.value = '';
+
+      // Hide owner payout summary & settlement fields for new booking
+      document.getElementById('booking-owner-payout-box')?.classList.add('hidden');
+
+      // Hide delete & refund buttons on new booking
+      document.getElementById('delete-booking-btn')?.classList.add('hidden');
+      document.getElementById('refund-booking-btn')?.classList.add('hidden');
+
+      // Reset any selected addons checkboxes
+      document.querySelectorAll('.dynamic-addon-row .addon-cb').forEach(cb => {
+        cb.checked = false;
+        const qtyEl = cb.closest('.dynamic-addon-row')?.querySelector('.addon-qty');
+        if (qtyEl) qtyEl.value = '1';
+      });
+
+      // Reset boat selection
+      if (typeof window.selectBoatOption === 'function') {
+        window.selectBoatOption(prefill.boatId || '', prefill.boatName || '');
+      }
+      if (typeof window.renderBoatDropdownOptions === 'function') {
+        window.renderBoatDropdownOptions('');
+      }
+
+      if (typeof window.updateBalanceCalc === 'function') {
+        window.updateBalanceCalc();
+      } else if (typeof updateBalanceCalc === 'function') {
+        updateBalanceCalc();
+      }
+
+      if (typeof window.setBookingModalMode === 'function') {
+        window.setBookingModalMode('edit');
+      }
+    } catch (err) {
+      console.warn('Error setting fields in openNewBookingModal:', err);
+    }
+
+    // Populate Assign Rep Dropdown & addons asynchronously
+    try {
+      const assignRepEl = document.getElementById('book-assigned-rep');
+      if (assignRepEl && typeof supabase !== 'undefined') {
+        const { data: staffData } = await supabase.from('staff_users').select('*').order('name');
+        assignRepEl.innerHTML = '<option value="">-- No Rep (Unassigned) --</option>' + 
+          (staffData || []).map(s => `<option value="${s.id}">${s.name} ${s.pay_type==='commission' ? '(Comm.)' : ''}</option>`).join('');
+        
+        if (window.currentStaffUser) {
+           assignRepEl.value = window.currentStaffUser.id;
+        } else {
+           assignRepEl.value = '';
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading staff for rep dropdown:', e);
+    }
+
+    try {
+      if (!fleetCache || fleetCache.length === 0) {
+        if (typeof loadFleet === 'function') await loadFleet();
+        if (prefill.boatId && typeof window.selectBoatOption === 'function') {
+          const bObj = (fleetCache || []).find(b => b.id === prefill.boatId);
+          window.selectBoatOption(prefill.boatId, bObj?.name || '');
+        } else if (typeof window.renderBoatDropdownOptions === 'function') {
+          window.renderBoatDropdownOptions('');
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading fleet:', e);
+    }
+
+    try {
+      if (typeof window.loadBookingAddons === 'function') {
+        await window.loadBookingAddons();
+      }
+    } catch (e) {
+      console.warn('Error loading booking addons:', e);
+    }
+  };
+
+  window.dayEventsAddBooking = function() {
+    const modal = document.getElementById('day-events-modal');
+    const dateStr = modal?.dataset?.currentDate || window._currentDayEventsDate || new Date().toLocaleDateString('sv-SE');
+    const boatFilterEl = document.getElementById('cal-boat-filter');
+    const selectedBoatId = boatFilterEl ? boatFilterEl.value : '';
+    window.closeDayEventsModal();
+    if (typeof window.openNewBookingModal === 'function') {
+      window.openNewBookingModal({
+        date: dateStr,
+        boatId: (selectedBoatId && selectedBoatId !== 'all') ? selectedBoatId : ''
+      });
+    }
+  };
+
   let isBookingsInit = false;
   window.initBookingsSection = function() {
     if (isBookingsInit) return;
@@ -6707,143 +6885,6 @@ EXTRACTION RULES:
     const boatSelect = document.getElementById('book-boat-select');
     const form = document.getElementById('booking-form');
 
-    window.openNewBookingModal = async (prefill = {}) => {
-      const bModal = document.getElementById('booking-modal');
-      if (!bModal) return;
-
-      if (typeof window.switchBookingModalTab === 'function') {
-        window.switchBookingModalTab('details');
-      }
-
-      const titleEl = document.getElementById('booking-modal-title');
-      if (titleEl) titleEl.textContent = 'Schedule Charter Booking';
-
-      const idEl = document.getElementById('booking-id');
-      if (idEl) idEl.value = '';
-
-      const dateEl = document.getElementById('book-date');
-      if (dateEl) dateEl.value = prefill.date || new Date().toLocaleDateString('sv-SE');
-
-      const timeEl = document.getElementById('book-time');
-      if (timeEl) timeEl.value = prefill.time || '10:00 AM';
-
-      const durEl = document.getElementById('book-duration');
-      if (durEl) durEl.value = String(prefill.duration || '4');
-
-      const nameEl = document.getElementById('book-cust-name');
-      if (nameEl) nameEl.value = prefill.custName || prefill.name || '';
-
-      const phoneEl = document.getElementById('book-cust-phone');
-      if (phoneEl) phoneEl.value = prefill.custPhone || prefill.phone || '';
-
-      const emailEl = document.getElementById('book-cust-email');
-      if (emailEl) emailEl.value = prefill.custEmail || prefill.email || '';
-
-      const guestsEl = document.getElementById('book-guests');
-      if (guestsEl) guestsEl.value = String(prefill.guests || '8');
-
-      const priceEl = document.getElementById('book-price');
-      if (priceEl) {
-        priceEl.value = prefill.price || '';
-        priceEl.dataset.autoCalculated = 'true';
-      }
-
-      const depEl = document.getElementById('book-deposit');
-      if (depEl) {
-        depEl.value = prefill.deposit || '0';
-        depEl.dataset.autoCalculated = 'true';
-      }
-
-      const discEl = document.getElementById('book-discount');
-      if (discEl) discEl.value = '0';
-
-      const payEl = document.getElementById('book-pay-method');
-      if (payEl) payEl.value = prefill.payMethod || '';
-
-      const statusEl = document.getElementById('book-status');
-      if (statusEl) {
-        statusEl.value = prefill.status || 'confirmed';
-        statusEl.dispatchEvent(new Event('change'));
-      }
-
-      const leadStatusEl = document.getElementById('book-lead-status');
-      if (leadStatusEl) leadStatusEl.value = prefill.leadStatus || 'Draft Quote';
-
-      const notesEl = document.getElementById('book-notes');
-      if (notesEl) notesEl.value = prefill.notes || '';
-
-      // Reset Custom Addon
-      const cName = document.getElementById('custom-addon-name');
-      if (cName) cName.value = '';
-      const cPrice = document.getElementById('custom-addon-price');
-      if (cPrice) cPrice.value = '';
-
-      // Hide owner payout summary & settlement fields for new booking
-      document.getElementById('booking-owner-payout-box')?.classList.add('hidden');
-
-      // Hide delete & refund buttons on new booking
-      document.getElementById('delete-booking-btn')?.classList.add('hidden');
-      document.getElementById('refund-booking-btn')?.classList.add('hidden');
-
-      // Reset any selected addons checkboxes
-      document.querySelectorAll('.dynamic-addon-row .addon-cb').forEach(cb => {
-        cb.checked = false;
-        const qtyEl = cb.closest('.dynamic-addon-row')?.querySelector('.addon-qty');
-        if (qtyEl) qtyEl.value = '1';
-      });
-
-      // Reset boat selection
-      if (typeof window.selectBoatOption === 'function') {
-        window.selectBoatOption(prefill.boatId || '', prefill.boatName || '');
-      }
-      if (typeof window.renderBoatDropdownOptions === 'function') {
-        window.renderBoatDropdownOptions('');
-      }
-
-      if (typeof updateBalanceCalc === 'function') updateBalanceCalc();
-      if (typeof window.setBookingModalMode === 'function') window.setBookingModalMode('edit');
-
-      // Show modal immediately so it feels instant
-      bModal.classList.remove('hidden');
-
-      // Populate Assign Rep Dropdown & addons asynchronously
-      try {
-        const assignRepEl = document.getElementById('book-assigned-rep');
-        if (assignRepEl) {
-          const { data: staffData } = await supabase.from('staff_users').select('*').order('name');
-          assignRepEl.innerHTML = '<option value="">-- No Rep (Unassigned) --</option>' + 
-            (staffData || []).map(s => `<option value="${s.id}">${s.name} ${s.pay_type==='commission' ? '(Comm.)' : ''}</option>`).join('');
-          
-          if (window.currentStaffUser) {
-             assignRepEl.value = window.currentStaffUser.id;
-          } else {
-             assignRepEl.value = '';
-          }
-        }
-      } catch (e) {
-        console.warn('Error loading staff for rep dropdown:', e);
-      }
-
-      try {
-        if (!fleetCache || fleetCache.length === 0) {
-          await loadFleet();
-          if (typeof window.renderBoatDropdownOptions === 'function') {
-            window.renderBoatDropdownOptions('');
-          }
-        }
-      } catch (e) {
-        console.warn('Error loading fleet:', e);
-      }
-
-      try {
-        if (typeof window.loadBookingAddons === 'function') {
-          await window.loadBookingAddons();
-        }
-      } catch (e) {
-        console.warn('Error loading booking addons:', e);
-      }
-    };
-
     if (addBtn) {
       addBtn.onclick = (e) => {
         if (e) e.preventDefault();
@@ -6851,7 +6892,7 @@ EXTRACTION RULES:
       };
     }
     if (modal) {
-      [closeBtn, cancelBtn].forEach(btn => btn?.addEventListener('click', () => modal.classList.add('hidden')));
+      [closeBtn, cancelBtn].forEach(btn => btn?.addEventListener('click', () => window.closeBookingModal()));
     }
       
       const saveDraftBtn = document.getElementById('save-draft-btn');
@@ -9172,7 +9213,7 @@ EXTRACTION RULES:
               
               <!-- Desktop Detailed Event Badges (Compact Single Line) - Strictly 1024px+ (lg:) -->
               <div class="hidden lg:block space-y-1 overflow-y-auto max-h-[56px] pr-0.5 scrollbar-thin min-w-0 mt-1">
-                ${badgesHtml || `<div class="pt-2 text-center opacity-0 group-hover/cell:opacity-100 transition-opacity"><span class="text-[9px] font-bold text-on-surface-variant/60 flex items-center justify-center gap-0.5"><span class="material-symbols-outlined text-[11px]">add_circle</span> Add Booking</span></div>`}
+                ${badgesHtml || `<div class="pt-2 text-center opacity-0 group-hover/cell:opacity-100 transition-opacity"><button type="button" onclick="event.stopPropagation(); window.openNewBookingModal({ date: '${dateStr}' });" class="text-[9px] font-bold text-secondary bg-secondary/10 hover:bg-secondary hover:text-white px-2 py-1 rounded-lg transition-all inline-flex items-center justify-center gap-0.5 shadow-2xs cursor-pointer"><span class="material-symbols-outlined text-[11px]">add_circle</span> Add Booking</button></div>`}
               </div>
             </div>
             ${allEvents.length === 0 ? `<div class="hidden lg:block mt-auto text-right opacity-30 group-hover/cell:opacity-60 transition-opacity shrink-0"><span class="text-[9px] font-mono font-bold text-on-surface-variant/60">No events</span></div>` : ''}
@@ -9821,6 +9862,20 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
 
+    modal.dataset.currentDate = dateStr;
+    window._currentDayEventsDate = dateStr;
+
+    // Attach click listeners IMMEDIATELY upon modal display without waiting for async AI
+    if (addBtn) {
+      addBtn.onclick = () => window.dayEventsAddBooking();
+    }
+    [closeBtn, closeBtn2].forEach(btn => {
+      if (btn) btn.onclick = () => window.closeDayEventsModal();
+    });
+    modal.onclick = (e) => {
+      if (e.target === modal) window.closeDayEventsModal();
+    };
+
     const parts = dateStr.split('-');
     const dateObj = new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
     const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -9848,7 +9903,10 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
         <div class="text-center py-8 bg-surface-container-lowest rounded-2xl border border-outline-variant">
           <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">event_busy</span>
           <p class="font-bold text-sm text-on-surface">No events scheduled for this day</p>
-          <p class="text-xs text-on-surface-variant mt-1">Click "Add Booking for This Day" below to schedule one.</p>
+          <p class="text-xs text-on-surface-variant mt-1 mb-3">Schedule a charter booking on ${escapeHtml(formattedDate)}.</p>
+          <button type="button" onclick="window.dayEventsAddBooking()" class="px-4 py-2 bg-secondary text-on-secondary text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition-all inline-flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">add_circle</span> Create Booking for This Day
+          </button>
         </div>
       `;
     } else {
@@ -9986,32 +10044,6 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
         }
       }
     }
-
-    if (addBtn) {
-      addBtn.onclick = () => {
-        window.closeDayEventsModal();
-        if (typeof window.openNewBookingModal === 'function') {
-          window.openNewBookingModal({ date: dateStr });
-        } else {
-          const createBtn = document.getElementById('add-booking-btn');
-          if (createBtn) {
-            createBtn.click();
-            setTimeout(() => {
-              const dateInput = document.getElementById('book-date');
-              if (dateInput) dateInput.value = dateStr;
-            }, 50);
-          }
-        }
-      };
-    }
-
-    [closeBtn, closeBtn2].forEach(btn => {
-      if (btn) btn.onclick = () => window.closeDayEventsModal();
-    });
-
-    modal.onclick = (e) => {
-      if (e.target === modal) window.closeDayEventsModal();
-    };
   };
 
   window.filterManifestByDate = (dateStr) => {
