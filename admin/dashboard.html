@@ -212,7 +212,10 @@
       <a href="/" class="flex items-center">
         <img src="/img/logo-wide.png" alt="YRSF Logo" class="h-8 sm:h-9 w-auto object-contain"/>
       </a>
-      <span class="text-xs font-bold text-secondary bg-secondary/10 px-3 py-1 rounded-full font-label">Admin Portal</span>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-secondary bg-secondary/10 px-3 py-1 rounded-full font-label">Admin Portal</span>
+        <span class="text-[10px] font-bold text-white bg-red-600 px-2 py-0.5 rounded-full">v12</span>
+      </div>
     </div>
 
     <!-- Top Notification & Status Bar -->
@@ -222,6 +225,10 @@
           <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
           <span class="text-xs font-bold text-on-surface-variant">System Live</span>
         </div>
+        <a href="/" target="_blank" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-xs font-bold text-on-surface-variant">
+          <span class="material-symbols-outlined text-[16px]">language</span> Live Website
+        </a>
+        <span class="hidden sm:inline-flex text-[10px] font-bold text-white bg-red-600 px-2 py-0.5 rounded-full">v12</span>
         <button id="header-timeclock-btn" onclick="document.getElementById('timeclock-modal').classList.remove('hidden')" class="flex items-center gap-1.5 bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded-xl text-xs font-bold transition-all shadow-xs shrink-0">
           <span class="material-symbols-outlined text-[16px]">schedule</span>
           <span>Timeclock</span>
@@ -3956,6 +3963,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+  <script>
+    window.addEventListener('load', function() {
+      if (typeof window.openNewBookingModal !== 'function') {
+        window.openNewBookingModal = function() {
+          alert("The booking system has not fully loaded, or your browser is stuck on an old cached version (Current version should be v12). Please forcefully clear your cache or restart your browser/app.");
+        };
+      }
+    });
+  </script>
 </body>
 </html>
 
