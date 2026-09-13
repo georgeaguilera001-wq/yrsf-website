@@ -214,7 +214,7 @@
       </a>
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold text-secondary bg-secondary/10 px-3 py-1 rounded-full font-label">Admin Portal</span>
-        <span class="text-[10px] font-bold text-white bg-red-600 px-2 py-0.5 rounded-full">v13</span>
+        <span class="text-[10px] font-bold text-white bg-red-600 px-2 py-0.5 rounded-full">v14</span>
       </div>
     </div>
 
@@ -228,7 +228,7 @@
         <a href="/" target="_blank" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-xs font-bold text-on-surface-variant">
           <span class="material-symbols-outlined text-[16px]">language</span> Live Website
         </a>
-        <span class="hidden sm:inline-flex text-[10px] font-bold text-white bg-red-600 px-2 py-0.5 rounded-full">v13</span>
+        <span class="hidden sm:inline-flex text-[10px] font-bold text-white bg-red-600 px-2 py-0.5 rounded-full">v14</span>
         <button id="header-timeclock-btn" onclick="document.getElementById('timeclock-modal').classList.remove('hidden')" class="flex items-center gap-1.5 bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded-xl text-xs font-bold transition-all shadow-xs shrink-0">
           <span class="material-symbols-outlined text-[16px]">schedule</span>
           <span>Timeclock</span>
@@ -1415,7 +1415,7 @@
       </section>
 
       <!-- Social Fleet Gallery Modal -->
-      <div id="social-fleet-gallery-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div id="social-fleet-gallery-modal" class="fixed inset-0 z-50 bg-black bg-opacity-60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-surface-container-lowest border border-outline-variant rounded-3xl max-w-3xl w-full p-6 shadow-2xl flex flex-col gap-5 relative max-h-[90vh] overflow-hidden">
           <div class="flex items-center justify-between border-b border-outline-variant pb-3 shrink-0">
             <div>
@@ -1456,7 +1456,7 @@
       </div>
 
       <!-- Zapier Setup & Test Modal -->
-      <div id="zapier-setup-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div id="zapier-setup-modal" class="fixed inset-0 z-50 bg-black bg-opacity-60 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-surface-container-lowest border border-outline-variant rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-5 relative max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b border-outline-variant pb-3">
             <h3 class="font-headline text-headline-md text-on-surface font-bold flex items-center gap-2">
@@ -1926,7 +1926,7 @@
       </section>
 
       <!-- Customer Profile Modal -->
-      <div id="customer-profile-modal" class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 hidden animate-fade-in">
+      <div id="customer-profile-modal" style="z-index: 9999;" class="fixed inset-0 bg-black bg-opacity-60  flex items-center justify-center p-4 hidden animate-fade-in">
         <div class="bg-surface border border-outline-variant rounded-3xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
           
           <!-- Header -->
@@ -2164,7 +2164,7 @@
   </main>
 
   <!-- Admin Profile Modal -->
-  <div id="admin-profile-modal" class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="admin-profile-modal" style="z-index: 9999;" class="fixed inset-0 bg-black bg-opacity-60  flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="bg-surface border border-outline-variant rounded-2xl w-full max-w-md p-6 shadow-2xl">
       <div class="flex items-center justify-between mb-4">
         <h2 class="font-headline text-title-lg text-on-surface font-bold">Edit Profile</h2>
@@ -2189,7 +2189,7 @@
   </div>
 
   <!-- Add/Edit Staff Modal -->
-  <div id="staff-modal" class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-2 sm:p-4 hidden animate-fade-in">
+  <div id="staff-modal" style="z-index: 9999;" class="fixed inset-0 bg-black bg-opacity-60  flex items-center justify-center p-2 sm:p-4 hidden animate-fade-in">
     <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-outline-variant flex flex-col max-h-[92vh]">
       <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-outline-variant mb-3 sm:mb-4 shrink-0">
         <h3 class="font-headline text-base sm:text-lg font-bold text-on-surface" id="staff-modal-title">Add New Employee</h3>
@@ -2520,7 +2520,7 @@
   </div>
 
   <!-- Time Clock Portal Modal -->
-  <div id="timeclock-modal" class="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="timeclock-modal" style="z-index: 9999;" class="fixed inset-0 bg-black bg-opacity-70  flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-outline-variant text-center">
       <div class="flex justify-end mb-2">
         <button type="button" id="close-timeclock-modal" class="text-on-surface-variant hover:text-on-surface font-bold text-2xl leading-none">&times;</button>
@@ -2559,7 +2559,7 @@
   </div>
 
   <!-- Log Charter Booking & Calculate Commission Modal -->
-  <div id="commission-modal" class="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
+  <div id="commission-modal" style="z-index: 9999;" class="fixed inset-0 bg-black bg-opacity-70  flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-outline-variant text-left">
       <div class="flex items-center justify-between pb-2.5 border-b border-outline-variant mb-3">
         <div class="flex items-center gap-2">
@@ -2629,7 +2629,7 @@
   </div>
 
   <!-- Staff Commission Payout Report Modal -->
-  <div id="commission-payout-modal" class="fixed inset-0 bg-black/75 z-[9999] flex items-center justify-center p-2 sm:p-4 hidden animate-fade-in">
+  <div id="commission-payout-modal" style="z-index: 9999;" class="fixed inset-0 bg-black bg-opacity-75  flex items-center justify-center p-2 sm:p-4 hidden animate-fade-in">
     <div class="bg-white rounded-2xl max-w-4xl w-full p-4 sm:p-5 shadow-2xl border border-outline-variant text-left max-h-[92vh] flex flex-col">
       
       <!-- Modal Header -->
@@ -2748,7 +2748,7 @@
       </div>
 
   <!-- Boat Owner Settlement Dialog Modal -->
-  <div id="owner-settlement-modal" class="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
+  <div id="owner-settlement-modal" style="z-index: 9999;" class="fixed inset-0 bg-black bg-opacity-70  flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
     <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-outline-variant text-left">
       <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4">
         <div class="flex items-center gap-2">
@@ -2860,7 +2860,7 @@
   </div>
 
   <!-- Manage Boat Owners & Payout Rules Modal -->
-  <div id="manage-boat-owners-modal" class="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
+  <div id="manage-boat-owners-modal" style="z-index: 9999;" class="fixed inset-0 bg-black bg-opacity-70  flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border border-outline-variant text-left max-h-[90vh] flex flex-col">
       <!-- Header -->
       <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-3 shrink-0">
@@ -2916,7 +2916,7 @@
   </div>
 
   <!-- Create / Edit Charter Booking Modal -->
-  <div id="booking-modal" class="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="booking-modal" style="z-index: 9999; background-color: rgba(0,0,0,0.7);" class="fixed inset-0 flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-outline-variant text-left max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4 sticky top-0 bg-white z-10">
         <div class="flex items-center gap-2">
@@ -3371,7 +3371,7 @@
   </div>
 
   <!-- Day Events Modal -->
-  <div id="day-events-modal" class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
+  <div id="day-events-modal" style="z-index: 9999;" class="fixed inset-0 bg-black bg-opacity-60  flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
     <div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-outline-variant flex flex-col max-h-[90vh]">
       <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4 shrink-0">
         <h3 class="font-headline text-base sm:text-lg font-bold text-on-surface" id="day-events-modal-title">📅 Schedule for Day</h3>
@@ -3396,7 +3396,7 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Interactive Quote Preview Modal -->
-  <div id="quote-preview-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-[99999] flex items-center justify-center p-3 sm:p-6 hidden animate-fade-in">
+  <div id="quote-preview-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs  flex items-center justify-center p-3 sm:p-6 hidden animate-fade-in">
     <div class="bg-white rounded-2xl max-w-4xl w-full flex flex-col max-h-[92vh] shadow-2xl border border-slate-200 overflow-hidden">
       <!-- Modal Header -->
       <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
@@ -3485,7 +3485,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260913v1013"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260914v1014"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
@@ -3720,7 +3720,7 @@
   </style>
 
   <!-- Quick Create Action Modal (Centered in middle of screen) -->
-  <div id="quick-create-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md hidden transition-all">
+  <div id="quick-create-modal" class="fixed inset-0  flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-md hidden transition-all">
     <div class="bg-surface-container-lowest w-full max-w-md rounded-3xl p-6 shadow-2xl border border-outline-variant/80 animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-4">
         <h3 class="font-headline text-headline-md font-bold text-secondary flex items-center gap-2">
@@ -3752,7 +3752,7 @@
   </div>
 
   <!-- Mobile Bottom Navigation Bar (DEBUG: BRIGHT RED, ALWAYS VISIBLE) -->
-  <nav class="fixed bottom-0 left-0 right-0 z-[999999] bg-red-600 px-2 flex items-center justify-around min-h-[104px] h-auto shadow-[0_-4px_16px_rgba(0,0,0,0.5)]" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
+  <nav class="fixed bottom-0 left-0 right-0  bg-red-600 px-2 flex items-center justify-around  h-auto shadow-[0_-4px_16px_rgba(0,0,0,0.5)]" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); min-height: 104px; z-index: 999999;">
     <!-- HOME -->
     <button onclick="if(window.showAdminSection) window.showAdminSection('dashboard')" data-bottom-section="dashboard" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1 w-[58px] text-white font-bold transition-colors group">
       <div class="relative px-2.5 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
@@ -3795,7 +3795,7 @@
   </nav>
 
   <!-- Message Preview Modal -->
-  <div id="message-preview-modal" class="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm items-center justify-center p-4" style="display:none">
+  <div id="message-preview-modal" class="fixed inset-0  bg-black bg-opacity-60 backdrop-blur-sm items-center justify-center p-4" style="display:none">
     <div class="bg-surface-container-lowest text-on-surface rounded-2xl w-full max-w-xl shadow-2xl border border-outline-variant animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Header -->
       <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between shrink-0">
@@ -3855,7 +3855,7 @@
   </div>
 
   <!-- Mobile Full Menu Pop-up Modal (Compact & Scaled Down) -->
-  <div id="mobile-menu-modal" class="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm items-center justify-center p-3.5 animate-fade-in" style="display:none">
+  <div id="mobile-menu-modal" class="fixed inset-0  bg-black bg-opacity-60 backdrop-blur-sm items-center justify-center p-3.5 animate-fade-in" style="display:none">
     <div class="bg-surface-container-lowest text-on-surface rounded-2xl max-h-[80vh] w-full max-w-md flex flex-col shadow-2xl border border-outline-variant overflow-hidden animate-slide-up">
       <!-- Modal Header -->
       <div class="px-3.5 py-3 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest sticky top-0 z-10">
@@ -3974,6 +3974,12 @@ document.addEventListener('DOMContentLoaded', () => {
   </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 

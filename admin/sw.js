@@ -4,7 +4,7 @@
  * while falling back cleanly to cached versions when offline.
  */
 
-const CACHE_NAME = 'yrsf-admin-v13';
+const CACHE_NAME = 'yrsf-admin-v14';
 const ASSETS_TO_CACHE = [
   '/admin/dashboard.html',
   '/admin/index.html',
@@ -106,4 +106,5 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
 
