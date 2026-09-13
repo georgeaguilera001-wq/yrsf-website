@@ -3478,7 +3478,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260913v1007"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260913v1010"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
@@ -3724,7 +3724,7 @@
         </button>
       </div>
       <div class="grid grid-cols-2 gap-3 mb-2">
-        <button onclick="document.getElementById('quick-create-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('bookings');" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-surface-container-low hover:bg-secondary-container text-on-surface transition-all border border-outline-variant/60">
+        <button onclick="document.getElementById('quick-create-modal').classList.add('hidden'); if(window.showAdminSection) window.showAdminSection('bookings'); setTimeout(() => { if(typeof window.openNewBookingModal === 'function') window.openNewBookingModal(); else document.getElementById('add-booking-btn')?.click(); }, 150);" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-surface-container-low hover:bg-secondary-container text-on-surface transition-all border border-outline-variant/60">
           <span class="material-symbols-outlined text-secondary text-[28px]">calendar_add_on</span>
           <span class="font-label text-label-md font-bold">New Booking</span>
         </button>

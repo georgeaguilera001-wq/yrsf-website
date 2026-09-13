@@ -46,7 +46,11 @@ window.closeDayEventsModal = function() {
 window.openNewBookingModal = async function(prefill = {}) {
   // Auto-init bookings section if not yet initialized
   if (typeof window.initBookingsSection === 'function' && !window._bookingsInitDone) {
-    window.initBookingsSection();
+    try {
+      window.initBookingsSection();
+    } catch (e) {
+      console.warn('Non-fatal error in initBookingsSection:', e);
+    }
   }
 
   const bModal = document.getElementById('booking-modal');
