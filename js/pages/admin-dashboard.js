@@ -19,6 +19,199 @@ import { clearCache } from '../utils/cache.js';
 // Expose showToast globally
 window.showToast = showToast;
 
+// ─── CRITICAL: Define booking modal functions at MODULE TOP LEVEL ─────────
+// These MUST be available immediately when the module loads, not deferred
+// inside DOMContentLoaded, to guarantee inline onclick="" handlers work.
+
+window.closeBookingModal = function() {
+  const bModal = document.getElementById('booking-modal');
+  if (bModal) {
+    bModal.classList.add('hidden');
+    bModal.style.display = 'none';
+  }
+};
+
+window.closeDayEventsModal = function() {
+  const modal = document.getElementById('day-events-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+  const availPanel = document.getElementById('avail-panel');
+  if (availPanel) {
+    availPanel.remove();
+  }
+};
+
+window.openNewBookingModal = async function(prefill = {}) {
+  // Auto-init bookings section if not yet initialized
+  if (typeof window.initBookingsSection === 'function' && !window._bookingsInitDone) {
+    window.initBookingsSection();
+  }
+
+  const bModal = document.getElementById('booking-modal');
+  if (!bModal) { console.warn('openNewBookingModal: #booking-modal not found'); return; }
+
+  // Show modal IMMEDIATELY — zero delay, no blocking
+  bModal.classList.remove('hidden');
+  bModal.style.display = 'flex';
+
+  try {
+    if (typeof window.switchBookingModalTab === 'function') {
+      window.switchBookingModalTab('details');
+    }
+
+    const titleEl = document.getElementById('booking-modal-title');
+    if (titleEl) titleEl.textContent = 'Schedule Charter Booking';
+
+    const idEl = document.getElementById('booking-id');
+    if (idEl) idEl.value = '';
+
+    const dateEl = document.getElementById('book-date');
+    if (dateEl) dateEl.value = prefill.date || new Date().toLocaleDateString('sv-SE');
+
+    const timeEl = document.getElementById('book-time');
+    if (timeEl) timeEl.value = prefill.time || '10:00 AM';
+
+    const durEl = document.getElementById('book-duration');
+    if (durEl) durEl.value = String(prefill.duration || '4');
+
+    const nameEl = document.getElementById('book-cust-name');
+    if (nameEl) nameEl.value = prefill.custName || prefill.name || '';
+
+    const phoneEl = document.getElementById('book-cust-phone');
+    if (phoneEl) phoneEl.value = prefill.custPhone || prefill.phone || '';
+
+    const emailEl = document.getElementById('book-cust-email');
+    if (emailEl) emailEl.value = prefill.custEmail || prefill.email || '';
+
+    const guestsEl = document.getElementById('book-guests');
+    if (guestsEl) guestsEl.value = String(prefill.guests || '8');
+
+    const priceEl = document.getElementById('book-price');
+    if (priceEl) {
+      priceEl.value = prefill.price || '';
+      priceEl.dataset.autoCalculated = 'true';
+    }
+
+    const depEl = document.getElementById('book-deposit');
+    if (depEl) {
+      depEl.value = prefill.deposit || '0';
+      depEl.dataset.autoCalculated = 'true';
+    }
+
+    const discEl = document.getElementById('book-discount');
+    if (discEl) discEl.value = '0';
+
+    const payEl = document.getElementById('book-pay-method');
+    if (payEl) payEl.value = prefill.payMethod || '';
+
+    const statusEl = document.getElementById('book-status');
+    if (statusEl) {
+      statusEl.value = prefill.status || 'confirmed';
+      statusEl.dispatchEvent(new Event('change'));
+    }
+
+    const leadStatusEl = document.getElementById('book-lead-status');
+    if (leadStatusEl) leadStatusEl.value = prefill.leadStatus || 'Draft Quote';
+
+    const notesEl = document.getElementById('book-notes');
+    if (notesEl) notesEl.value = prefill.notes || '';
+
+    // Reset Custom Addon
+    const cName = document.getElementById('custom-addon-name');
+    if (cName) cName.value = '';
+    const cPrice = document.getElementById('custom-addon-price');
+    if (cPrice) cPrice.value = '';
+
+    // Hide owner payout summary & settlement fields for new booking
+    document.getElementById('booking-owner-payout-box')?.classList.add('hidden');
+
+    // Hide delete & refund buttons on new booking
+    document.getElementById('delete-booking-btn')?.classList.add('hidden');
+    document.getElementById('refund-booking-btn')?.classList.add('hidden');
+
+    // Reset any selected addons checkboxes
+    document.querySelectorAll('.dynamic-addon-row .addon-cb').forEach(cb => {
+      cb.checked = false;
+      const qtyEl = cb.closest('.dynamic-addon-row')?.querySelector('.addon-qty');
+      if (qtyEl) qtyEl.value = '1';
+    });
+
+    // Reset boat selection
+    if (typeof window.selectBoatOption === 'function') {
+      window.selectBoatOption(prefill.boatId || '', prefill.boatName || '');
+    }
+    if (typeof window.renderBoatDropdownOptions === 'function') {
+      window.renderBoatDropdownOptions('');
+    }
+
+    if (typeof window.updateBalanceCalc === 'function') {
+      window.updateBalanceCalc();
+    }
+
+    if (typeof window.setBookingModalMode === 'function') {
+      window.setBookingModalMode('edit');
+    }
+  } catch (err) {
+    console.warn('Error setting fields in openNewBookingModal:', err);
+  }
+
+  // Populate Assign Rep Dropdown & addons asynchronously (non-blocking)
+  try {
+    const assignRepEl = document.getElementById('book-assigned-rep');
+    if (assignRepEl && typeof supabase !== 'undefined') {
+      const { data: staffData } = await supabase.from('staff_users').select('*').order('name');
+      assignRepEl.innerHTML = '<option value="">-- No Rep (Unassigned) --</option>' + 
+        (staffData || []).map(s => `<option value="${s.id}">${s.name} ${s.pay_type==='commission' ? '(Comm.)' : ''}</option>`).join('');
+      
+      if (window.currentStaffUser) {
+         assignRepEl.value = window.currentStaffUser.id;
+      } else {
+         assignRepEl.value = '';
+      }
+    }
+  } catch (e) {
+    console.warn('Error loading staff for rep dropdown:', e);
+  }
+
+  try {
+    if (typeof window._fleetCache !== 'undefined' && (!window._fleetCache || window._fleetCache.length === 0)) {
+      if (typeof window.loadFleetFn === 'function') await window.loadFleetFn();
+      if (prefill.boatId && typeof window.selectBoatOption === 'function') {
+        const bObj = (window._fleetCache || []).find(b => b.id === prefill.boatId);
+        window.selectBoatOption(prefill.boatId, bObj?.name || '');
+      } else if (typeof window.renderBoatDropdownOptions === 'function') {
+        window.renderBoatDropdownOptions('');
+      }
+    }
+  } catch (e) {
+    console.warn('Error loading fleet:', e);
+  }
+
+  try {
+    if (typeof window.loadBookingAddons === 'function') {
+      await window.loadBookingAddons();
+    }
+  } catch (e) {
+    console.warn('Error loading booking addons:', e);
+  }
+};
+
+window.dayEventsAddBooking = function() {
+  const modal = document.getElementById('day-events-modal');
+  const dateStr = modal?.dataset?.currentDate || window._currentDayEventsDate || new Date().toLocaleDateString('sv-SE');
+  const boatFilterEl = document.getElementById('cal-boat-filter');
+  const selectedBoatId = boatFilterEl ? boatFilterEl.value : '';
+  window.closeDayEventsModal();
+  if (typeof window.openNewBookingModal === 'function') {
+    window.openNewBookingModal({
+      date: dateStr,
+      boatId: (selectedBoatId && selectedBoatId !== 'all') ? selectedBoatId : ''
+    });
+  }
+};
+
 // Nested Action-Level Sub-Permissions Configuration
 const MODULE_SUBPERMS = {
   dashboard: ['view', 'shortcuts'],
@@ -5946,188 +6139,11 @@ EXTRACTION RULES:
     window.loadAndRenderOwnerPayouts = loadAndRenderOwnerPayouts;
     window.getOwnerPayoutForBooking = getOwnerPayoutForBooking;
 
-  window.closeBookingModal = function() {
-    const bModal = document.getElementById('booking-modal');
-    if (bModal) {
-      bModal.classList.add('hidden');
-      bModal.style.display = 'none';
-    }
-  };
-
-  window.openNewBookingModal = async function(prefill = {}) {
-    if (typeof window.initBookingsSection === 'function' && !isBookingsInit) {
-      window.initBookingsSection();
-    }
-
-    const bModal = document.getElementById('booking-modal');
-    if (!bModal) return;
-
-    // Show modal immediately so it feels instant
-    bModal.classList.remove('hidden');
-    bModal.style.display = 'flex';
-
-    try {
-      if (typeof window.switchBookingModalTab === 'function') {
-        window.switchBookingModalTab('details');
-      }
-
-      const titleEl = document.getElementById('booking-modal-title');
-      if (titleEl) titleEl.textContent = 'Schedule Charter Booking';
-
-      const idEl = document.getElementById('booking-id');
-      if (idEl) idEl.value = '';
-
-      const dateEl = document.getElementById('book-date');
-      if (dateEl) dateEl.value = prefill.date || new Date().toLocaleDateString('sv-SE');
-
-      const timeEl = document.getElementById('book-time');
-      if (timeEl) timeEl.value = prefill.time || '10:00 AM';
-
-      const durEl = document.getElementById('book-duration');
-      if (durEl) durEl.value = String(prefill.duration || '4');
-
-      const nameEl = document.getElementById('book-cust-name');
-      if (nameEl) nameEl.value = prefill.custName || prefill.name || '';
-
-      const phoneEl = document.getElementById('book-cust-phone');
-      if (phoneEl) phoneEl.value = prefill.custPhone || prefill.phone || '';
-
-      const emailEl = document.getElementById('book-cust-email');
-      if (emailEl) emailEl.value = prefill.custEmail || prefill.email || '';
-
-      const guestsEl = document.getElementById('book-guests');
-      if (guestsEl) guestsEl.value = String(prefill.guests || '8');
-
-      const priceEl = document.getElementById('book-price');
-      if (priceEl) {
-        priceEl.value = prefill.price || '';
-        priceEl.dataset.autoCalculated = 'true';
-      }
-
-      const depEl = document.getElementById('book-deposit');
-      if (depEl) {
-        depEl.value = prefill.deposit || '0';
-        depEl.dataset.autoCalculated = 'true';
-      }
-
-      const discEl = document.getElementById('book-discount');
-      if (discEl) discEl.value = '0';
-
-      const payEl = document.getElementById('book-pay-method');
-      if (payEl) payEl.value = prefill.payMethod || '';
-
-      const statusEl = document.getElementById('book-status');
-      if (statusEl) {
-        statusEl.value = prefill.status || 'confirmed';
-        statusEl.dispatchEvent(new Event('change'));
-      }
-
-      const leadStatusEl = document.getElementById('book-lead-status');
-      if (leadStatusEl) leadStatusEl.value = prefill.leadStatus || 'Draft Quote';
-
-      const notesEl = document.getElementById('book-notes');
-      if (notesEl) notesEl.value = prefill.notes || '';
-
-      // Reset Custom Addon
-      const cName = document.getElementById('custom-addon-name');
-      if (cName) cName.value = '';
-      const cPrice = document.getElementById('custom-addon-price');
-      if (cPrice) cPrice.value = '';
-
-      // Hide owner payout summary & settlement fields for new booking
-      document.getElementById('booking-owner-payout-box')?.classList.add('hidden');
-
-      // Hide delete & refund buttons on new booking
-      document.getElementById('delete-booking-btn')?.classList.add('hidden');
-      document.getElementById('refund-booking-btn')?.classList.add('hidden');
-
-      // Reset any selected addons checkboxes
-      document.querySelectorAll('.dynamic-addon-row .addon-cb').forEach(cb => {
-        cb.checked = false;
-        const qtyEl = cb.closest('.dynamic-addon-row')?.querySelector('.addon-qty');
-        if (qtyEl) qtyEl.value = '1';
-      });
-
-      // Reset boat selection
-      if (typeof window.selectBoatOption === 'function') {
-        window.selectBoatOption(prefill.boatId || '', prefill.boatName || '');
-      }
-      if (typeof window.renderBoatDropdownOptions === 'function') {
-        window.renderBoatDropdownOptions('');
-      }
-
-      if (typeof window.updateBalanceCalc === 'function') {
-        window.updateBalanceCalc();
-      } else if (typeof updateBalanceCalc === 'function') {
-        updateBalanceCalc();
-      }
-
-      if (typeof window.setBookingModalMode === 'function') {
-        window.setBookingModalMode('edit');
-      }
-    } catch (err) {
-      console.warn('Error setting fields in openNewBookingModal:', err);
-    }
-
-    // Populate Assign Rep Dropdown & addons asynchronously
-    try {
-      const assignRepEl = document.getElementById('book-assigned-rep');
-      if (assignRepEl && typeof supabase !== 'undefined') {
-        const { data: staffData } = await supabase.from('staff_users').select('*').order('name');
-        assignRepEl.innerHTML = '<option value="">-- No Rep (Unassigned) --</option>' + 
-          (staffData || []).map(s => `<option value="${s.id}">${s.name} ${s.pay_type==='commission' ? '(Comm.)' : ''}</option>`).join('');
-        
-        if (window.currentStaffUser) {
-           assignRepEl.value = window.currentStaffUser.id;
-        } else {
-           assignRepEl.value = '';
-        }
-      }
-    } catch (e) {
-      console.warn('Error loading staff for rep dropdown:', e);
-    }
-
-    try {
-      if (!fleetCache || fleetCache.length === 0) {
-        if (typeof loadFleet === 'function') await loadFleet();
-        if (prefill.boatId && typeof window.selectBoatOption === 'function') {
-          const bObj = (fleetCache || []).find(b => b.id === prefill.boatId);
-          window.selectBoatOption(prefill.boatId, bObj?.name || '');
-        } else if (typeof window.renderBoatDropdownOptions === 'function') {
-          window.renderBoatDropdownOptions('');
-        }
-      }
-    } catch (e) {
-      console.warn('Error loading fleet:', e);
-    }
-
-    try {
-      if (typeof window.loadBookingAddons === 'function') {
-        await window.loadBookingAddons();
-      }
-    } catch (e) {
-      console.warn('Error loading booking addons:', e);
-    }
-  };
-
-  window.dayEventsAddBooking = function() {
-    const modal = document.getElementById('day-events-modal');
-    const dateStr = modal?.dataset?.currentDate || window._currentDayEventsDate || new Date().toLocaleDateString('sv-SE');
-    const boatFilterEl = document.getElementById('cal-boat-filter');
-    const selectedBoatId = boatFilterEl ? boatFilterEl.value : '';
-    window.closeDayEventsModal();
-    if (typeof window.openNewBookingModal === 'function') {
-      window.openNewBookingModal({
-        date: dateStr,
-        boatId: (selectedBoatId && selectedBoatId !== 'all') ? selectedBoatId : ''
-      });
-    }
-  };
-
   let isBookingsInit = false;
   window.initBookingsSection = function() {
     if (isBookingsInit) return;
     isBookingsInit = true;
+    window._bookingsInitDone = true;
 
     // Hoisted Balance Calculation for Booking Modal
     function updateBalanceCalc() {
@@ -9834,18 +9850,6 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     const computedEndTime = `${h12}:${String(m).padStart(2, '0')} ${suffix}`;
 
     return `${startStr} - ${computedEndTime}`;
-  };
-
-  window.closeDayEventsModal = () => {
-    const modal = document.getElementById('day-events-modal');
-    if (modal) {
-      modal.classList.add('hidden');
-      modal.style.display = 'none';
-    }
-    const availPanel = document.getElementById('avail-panel');
-    if (availPanel) {
-      availPanel.remove();
-    }
   };
 
   // ─── Day Events Modal ────────────────────────────────────────────────────────
