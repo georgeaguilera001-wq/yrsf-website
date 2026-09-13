@@ -10271,220 +10271,290 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
   };
 
   window.editBooking = async (id) => {
-    if (typeof window.initBookingsSection === 'function') window.initBookingsSection();
-    if (!fleetCache || fleetCache.length === 0) await loadFleet();
-    let b = bookingsCache.find(x => x.id === id);
-    if (!b) {
-      const { data } = await supabase.from('bookings').select('*').eq('id', id).single();
-      b = data;
-    }
-    if (!b) return;
-
-    window.switchBookingModalTab('details');
-    window.populateBookingActivitySheet(b);
-    window.updateBookingModalOwnerPayout(b.id);
-
-    document.getElementById('booking-modal-title').textContent = 'Edit Charter Booking';
-    document.getElementById('booking-id').value = b.id;
-    window.selectBoatOption(b.boat_id, b.boat_name);
-    window.renderBoatDropdownOptions('');
-    document.getElementById('book-date').value = b.booking_date;
-    document.getElementById('book-time').value = b.start_time;
-    document.getElementById('book-duration').value = b.duration_hours || '4';
-    document.getElementById('book-cust-name').value = b.customer_name || '';
-    document.getElementById('book-cust-phone').value = b.customer_phone || '';
-    document.getElementById('book-cust-email').value = b.customer_email || '';
-    document.getElementById('book-guests').value = b.guest_count || '1';
-    document.getElementById('book-price').value = b.total_price || 0;
-    const depEl = document.getElementById('book-deposit'); if (depEl) depEl.value = b.deposit_amount || 0;
-    const payEl = document.getElementById('book-pay-method'); if (payEl) payEl.value = b.payment_method || '';
-    document.getElementById('book-status').value = b.status || 'confirmed';
-
-    // Populate Assign Rep dropdown
-    const assignRepEl = document.getElementById('book-assigned-rep');
-    if (assignRepEl) {
-      const { data: staffData } = await supabase.from('staff_users').select('*').order('name');
-      assignRepEl.innerHTML = '<option value="">-- No Rep (Unassigned) --</option>' + 
-        (staffData || []).map(s => `<option value="${s.id}">${s.name} ${s.pay_type==='commission' ? '(Comm.)' : ''}</option>`).join('');
-      
-      const repMatch = (b.special_requests || '').match(/\[AssignedRep:([^\]]+)\]/);
-      if (repMatch) {
-         assignRepEl.value = repMatch[1];
-      } else {
-         assignRepEl.value = '';
+    try {
+      if (typeof window.initBookingsSection === 'function') window.initBookingsSection();
+      if (!fleetCache || fleetCache.length === 0) {
+        if (typeof loadFleet === 'function') await loadFleet();
       }
-    }
-    
-    // Parse Add-ons from special_requests
-    await window.loadBookingAddons();
-    let notes = b.special_requests || '';
-    
-    // Reset all add-on checkboxes and custom inputs
-    document.querySelectorAll('#dynamic-addons-container .dynamic-addon-row').forEach(row => {
-      const cb = row.querySelector('.addon-cb');
-      const qty = row.querySelector('.addon-qty');
-      const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50, .flex.items-center.gap-1.opacity-100');
-      if (cb) cb.checked = false;
-      if (qty) qty.value = 1;
-      if (wrapper) wrapper.classList.replace('opacity-100', 'opacity-50');
-    });
-    const cNameEl = document.getElementById('custom-addon-name');
-    const cPriceEl = document.getElementById('custom-addon-price');
-    if (cNameEl) cNameEl.value = '';
-    if (cPriceEl) cPriceEl.value = '';
+      let b = (bookingsCache || []).find(x => String(x.id) === String(id));
+      if (!b) {
+        const { data } = await supabase.from('bookings').select('*').eq('id', id).single();
+        b = data;
+      }
+      if (!b) {
+        console.warn('Booking not found for id:', id);
+        return;
+      }
 
-    const discInputEl = document.getElementById('book-discount');
-    if (discInputEl) discInputEl.value = '0';
+      // Ensure booking modal is immediately displayed and visible
+      const bModal = document.getElementById('booking-modal');
+      if (bModal) {
+        bModal.classList.remove('hidden');
+        bModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
 
-    if (notes) {
-      const lines = notes.split('\n');
-      const remainingNotes = [];
-      lines.forEach(line => {
-        const match = line.match(/^\[Addon: (\d+)x (.*?)(?: \(\$([0-9.]+)\))?\]$/);
-        const customMatch = line.match(/^\[Custom Addon: (.*?)(?: \(\$([0-9.]+)\))?\]$/);
-        const discountMatch = line.match(/^\[Discount: -\$([0-9.]+)\]$/);
+      if (typeof window.switchBookingModalTab === 'function') {
+        window.switchBookingModalTab('details');
+      }
+      if (typeof window.populateBookingActivitySheet === 'function') {
+        window.populateBookingActivitySheet(b);
+      }
+      if (typeof window.updateBookingModalOwnerPayout === 'function') {
+        window.updateBookingModalOwnerPayout(b.id);
+      }
+
+      const titleEl = document.getElementById('booking-modal-title');
+      if (titleEl) titleEl.textContent = 'View Charter Details';
+
+      const idEl = document.getElementById('booking-id');
+      if (idEl) idEl.value = b.id;
+
+      if (typeof window.selectBoatOption === 'function') {
+        window.selectBoatOption(b.boat_id, b.boat_name);
+      }
+      if (typeof window.renderBoatDropdownOptions === 'function') {
+        window.renderBoatDropdownOptions('');
+      }
+
+      const dateEl = document.getElementById('book-date');
+      if (dateEl) dateEl.value = b.booking_date || '';
+
+      const timeEl = document.getElementById('book-time');
+      if (timeEl) timeEl.value = b.start_time || '';
+
+      const durEl = document.getElementById('book-duration');
+      if (durEl) durEl.value = b.duration_hours || '4';
+
+      const custNameEl = document.getElementById('book-cust-name');
+      if (custNameEl) custNameEl.value = b.customer_name || '';
+
+      const custPhoneEl = document.getElementById('book-cust-phone');
+      if (custPhoneEl) custPhoneEl.value = b.customer_phone || '';
+
+      const custEmailEl = document.getElementById('book-cust-email');
+      if (custEmailEl) custEmailEl.value = b.customer_email || '';
+
+      const guestsEl = document.getElementById('book-guests');
+      if (guestsEl) guestsEl.value = b.guest_count || '1';
+
+      const priceEl = document.getElementById('book-price');
+      if (priceEl) priceEl.value = b.total_price || 0;
+
+      const depEl = document.getElementById('book-deposit');
+      if (depEl) depEl.value = b.deposit_amount || 0;
+
+      const payEl = document.getElementById('book-pay-method');
+      if (payEl) payEl.value = b.payment_method || '';
+
+      const statusEl = document.getElementById('book-status');
+      if (statusEl) statusEl.value = b.status || 'confirmed';
+
+      // Populate Assign Rep dropdown
+      const assignRepEl = document.getElementById('book-assigned-rep');
+      if (assignRepEl) {
+        const { data: staffData } = await supabase.from('staff_users').select('*').order('name');
+        assignRepEl.innerHTML = '<option value="">-- No Rep (Unassigned) --</option>' + 
+          (staffData || []).map(s => `<option value="${s.id}">${s.name} ${s.pay_type==='commission' ? '(Comm.)' : ''}</option>`).join('');
         
-        if (discountMatch) {
-          if (discInputEl) discInputEl.value = discountMatch[1];
-        } else if (match) {
-          const qty = match[1];
-          const name = match[2];
-          const cb = document.querySelector(`.addon-cb[data-name="${name.replace(/"/g, '\\"')}"]`);
-          if (cb) {
-             cb.checked = true;
-             const row = cb.closest('.dynamic-addon-row');
-             if (row) {
-                const qtyInput = row.querySelector('.addon-qty');
-                const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50, .flex.items-center.gap-1.opacity-100');
-                if (qtyInput) qtyInput.value = qty;
-                if (wrapper) wrapper.classList.replace('opacity-50', 'opacity-100');
-             }
-          }
-        } else if (customMatch) {
-          const name = customMatch[1];
-          const price = customMatch[2] || 0;
-          if (cNameEl) cNameEl.value = name;
-          if (cPriceEl) cPriceEl.value = price;
+        const repMatch = (b.special_requests || '').match(/\[AssignedRep:([^\]]+)\]/);
+        if (repMatch) {
+           assignRepEl.value = repMatch[1];
         } else {
-          remainingNotes.push(line);
+           assignRepEl.value = '';
         }
+      }
+      
+      // Parse Add-ons from special_requests
+      if (typeof window.loadBookingAddons === 'function') {
+        await window.loadBookingAddons();
+      }
+      let notes = b.special_requests || '';
+      
+      // Reset all add-on checkboxes and custom inputs
+      document.querySelectorAll('#dynamic-addons-container .dynamic-addon-row').forEach(row => {
+        const cb = row.querySelector('.addon-cb');
+        const qty = row.querySelector('.addon-qty');
+        const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50, .flex.items-center.gap-1.opacity-100');
+        if (cb) cb.checked = false;
+        if (qty) qty.value = 1;
+        if (wrapper) wrapper.classList.replace('opacity-100', 'opacity-50');
       });
-      // Remove trailing empty lines and re-join
-      while(remainingNotes.length > 0 && remainingNotes[remainingNotes.length - 1].trim() === '') remainingNotes.pop();
-      notes = remainingNotes.join('\n');
-    }
-    document.getElementById('book-notes').value = notes;
+      const cNameEl = document.getElementById('custom-addon-name');
+      const cPriceEl = document.getElementById('custom-addon-price');
+      if (cNameEl) cNameEl.value = '';
+      if (cPriceEl) cPriceEl.value = '';
 
-    const leadStatusEl = document.getElementById('book-lead-status');
-    if (leadStatusEl) leadStatusEl.value = b.lead_status || 'new';
+      const discInputEl = document.getElementById('book-discount');
+      if (discInputEl) discInputEl.value = '0';
 
-    const leadContainer = document.getElementById('lead-status-container');
-    if (leadContainer) {
-      if (b.status === 'inquiry') leadContainer.classList.remove('hidden');
-      else leadContainer.classList.add('hidden');
-    }
-
-    const pdfBtn = document.getElementById('generate-pdf-quote-btn');
-    if (pdfBtn) {
-      if (b.status === 'inquiry') pdfBtn.classList.remove('hidden');
-      else pdfBtn.classList.add('hidden');
-    }
-    
-    const delBtn = document.getElementById('delete-booking-btn');
-    if (delBtn) {
-      if (b.status === 'inquiry' || b.lead_status === 'Draft Quote') {
-        delBtn.classList.remove('hidden');
-        delBtn.onclick = () => {
-          document.getElementById('booking-modal').classList.add('hidden');
-          window.deleteBooking(b.id, b.customer_name);
-        };
-      } else {
-        delBtn.classList.add('hidden');
+      if (notes) {
+        const lines = notes.split('\n');
+        const remainingNotes = [];
+        lines.forEach(line => {
+          const match = line.match(/^\[Addon: (\d+)x (.*?)(?: \(\$([0-9.]+)\))?\]$/);
+          const customMatch = line.match(/^\[Custom Addon: (.*?)(?: \(\$([0-9.]+)\))?\]$/);
+          const discountMatch = line.match(/^\[Discount: -\$([0-9.]+)\]$/);
+          
+          if (discountMatch) {
+            if (discInputEl) discInputEl.value = discountMatch[1];
+          } else if (match) {
+            const qty = match[1];
+            const name = match[2];
+            const cb = Array.from(document.querySelectorAll('.addon-cb')).find(el => el.getAttribute('data-name') === name);
+            if (cb) {
+               cb.checked = true;
+               const row = cb.closest('.dynamic-addon-row');
+               if (row) {
+                  const qtyInput = row.querySelector('.addon-qty');
+                  const wrapper = row.querySelector('.flex.items-center.gap-1.opacity-50, .flex.items-center.gap-1.opacity-100');
+                  if (qtyInput) qtyInput.value = qty;
+                  if (wrapper) wrapper.classList.replace('opacity-50', 'opacity-100');
+               }
+            }
+          } else if (customMatch) {
+            const name = customMatch[1];
+            const price = customMatch[2] || 0;
+            if (cNameEl) cNameEl.value = name;
+            if (cPriceEl) cPriceEl.value = price;
+          } else {
+            remainingNotes.push(line);
+          }
+        });
+        // Remove trailing empty lines and re-join
+        while(remainingNotes.length > 0 && remainingNotes[remainingNotes.length - 1].trim() === '') remainingNotes.pop();
+        notes = remainingNotes.join('\n');
       }
-    }
+      const notesEl = document.getElementById('book-notes');
+      if (notesEl) notesEl.value = notes;
 
-    if (typeof window.updateBalanceCalc === 'function') {
-      window.updateBalanceCalc();
-    } else if (typeof updateBalanceCalc === 'function') {
-      updateBalanceCalc();
-    }
-    
-    // Inject Refund Button next to Delete Button if Stripe payment
-    let refundBtn = document.getElementById('refund-booking-btn');
-    if (!refundBtn && delBtn) {
-      refundBtn = document.createElement('button');
-      refundBtn.type = 'button';
-      refundBtn.id = 'refund-booking-btn';
-      refundBtn.className = 'hidden sm:w-auto px-2 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg font-label text-[11px] font-bold hover:bg-purple-100 transition-all flex items-center justify-center gap-1';
-      refundBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">payments</span><span>Refund</span>';
-      delBtn.parentNode.insertBefore(refundBtn, delBtn);
-    }
-    
-    if (refundBtn) {
-      // Show refund if there is a deposit and it hasn't been fully refunded yet
-      const deposit = parseFloat(b.deposit_amount) || 0;
-      const refunded = parseFloat(b.refunded_amount) || 0;
-      if (deposit > 0 && refunded < deposit) {
-        refundBtn.classList.remove('hidden');
-        refundBtn.onclick = () => window.openRefundModal(b);
-      } else {
-        refundBtn.classList.add('hidden');
+      const leadStatusEl = document.getElementById('book-lead-status');
+      if (leadStatusEl) leadStatusEl.value = b.lead_status || 'new';
+
+      const leadContainer = document.getElementById('lead-status-container');
+      if (leadContainer) {
+        if (b.status === 'inquiry') leadContainer.classList.remove('hidden');
+        else leadContainer.classList.add('hidden');
       }
-    }
 
-    // Inject Charge Balance Button next to Delete/Refund Buttons
-    let chargeBtn = document.getElementById('charge-balance-modal-btn');
-    if (!chargeBtn && delBtn) {
-      chargeBtn = document.createElement('button');
-      chargeBtn.type = 'button';
-      chargeBtn.id = 'charge-balance-modal-btn';
-      chargeBtn.className = 'hidden sm:w-auto px-2 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg font-label text-[11px] font-bold hover:bg-green-100 transition-all flex items-center justify-center gap-1';
-      chargeBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">point_of_sale</span><span>Charge Balance</span>';
-      delBtn.parentNode.insertBefore(chargeBtn, delBtn);
-    }
-    
-    // Inject Send Portal Link Button next to Charge Balance Button
-    let portalBtn = document.getElementById('send-portal-link-btn');
-    if (!portalBtn && delBtn) {
-      portalBtn = document.createElement('button');
-      portalBtn.type = 'button';
-      portalBtn.id = 'send-portal-link-btn';
-      portalBtn.className = 'sm:w-auto px-2 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg font-label text-[11px] font-bold hover:bg-blue-100 transition-all flex items-center justify-center gap-1';
-      portalBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">travel_explore</span><span>Send Portal</span>';
-      delBtn.parentNode.insertBefore(portalBtn, delBtn);
-    }
-    
-    if (portalBtn) {
-      portalBtn.onclick = () => {
-        const portalUrl = `${window.location.origin}/checkout.html?id=${b.id}`;
-        const template = `Hi ${b.customer_name || 'Guest'}, here is your secure booking portal to review your charter details, provide your guest info, and pay your deposit: \n\n${portalUrl}\n\nLet us know if you have any questions!`;
-        if (typeof window.openSmsPreviewModal === 'function') {
-          document.getElementById('booking-modal')?.classList.add('hidden');
-          window.openSmsPreviewModal(b.customer_phone || '', template);
+      const pdfBtn = document.getElementById('generate-pdf-quote-btn');
+      if (pdfBtn) {
+        if (b.status === 'inquiry') pdfBtn.classList.remove('hidden');
+        else pdfBtn.classList.add('hidden');
+      }
+      
+      const delBtn = document.getElementById('delete-booking-btn');
+      if (delBtn) {
+        if (b.status === 'inquiry' || b.lead_status === 'Draft Quote') {
+          delBtn.classList.remove('hidden');
+          delBtn.onclick = () => {
+            if (typeof window.closeBookingModal === 'function') {
+              window.closeBookingModal();
+            } else {
+              const modal = document.getElementById('booking-modal');
+              if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+              }
+            }
+            window.deleteBooking(b.id, b.customer_name);
+          };
         } else {
-          navigator.clipboard.writeText(template);
-          alert('Portal link copied to clipboard!');
+          delBtn.classList.add('hidden');
         }
-      };
-    }
-    
-    if (chargeBtn) {
-      const tot = parseFloat(b.total_price || b.amount || 0);
-      const dep = parseFloat(b.deposit_amount || 0);
-      const ref = parseFloat(b.refunded_amount || 0);
-      const rawRem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : null;
-      const rem = (rawRem !== null && (rawRem > 0 || dep >= tot || b.status === 'completed')) ? rawRem : Math.max(0, tot - (dep - ref));
-      if (rem > 0.01) {
-        chargeBtn.classList.remove('hidden');
-        chargeBtn.onclick = () => window.openChargeBalanceModal(b);
-      } else {
-        chargeBtn.classList.add('hidden');
       }
-    }
 
-    if (typeof window.updateEndTime === 'function') window.updateEndTime();
-    if (typeof window.setBookingModalMode === 'function') window.setBookingModalMode('view');
-    document.getElementById('booking-modal')?.classList.remove('hidden');
+      if (typeof window.updateBalanceCalc === 'function') {
+        window.updateBalanceCalc();
+      } else if (typeof updateBalanceCalc === 'function') {
+        updateBalanceCalc();
+      }
+      
+      // Inject Refund Button next to Delete Button if Stripe payment
+      let refundBtn = document.getElementById('refund-booking-btn');
+      if (!refundBtn && delBtn) {
+        refundBtn = document.createElement('button');
+        refundBtn.type = 'button';
+        refundBtn.id = 'refund-booking-btn';
+        refundBtn.className = 'hidden sm:w-auto px-2 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg font-label text-[11px] font-bold hover:bg-purple-100 transition-all flex items-center justify-center gap-1';
+        refundBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">payments</span><span>Refund</span>';
+        delBtn.parentNode.insertBefore(refundBtn, delBtn);
+      }
+      
+      if (refundBtn) {
+        // Show refund if there is a deposit and it hasn't been fully refunded yet
+        const deposit = parseFloat(b.deposit_amount) || 0;
+        const refunded = parseFloat(b.refunded_amount) || 0;
+        if (deposit > 0 && refunded < deposit) {
+          refundBtn.classList.remove('hidden');
+          refundBtn.onclick = () => window.openRefundModal(b);
+        } else {
+          refundBtn.classList.add('hidden');
+        }
+      }
+
+      // Inject Charge Balance Button next to Delete/Refund Buttons
+      let chargeBtn = document.getElementById('charge-balance-modal-btn');
+      if (!chargeBtn && delBtn) {
+        chargeBtn = document.createElement('button');
+        chargeBtn.type = 'button';
+        chargeBtn.id = 'charge-balance-modal-btn';
+        chargeBtn.className = 'hidden sm:w-auto px-2 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg font-label text-[11px] font-bold hover:bg-green-100 transition-all flex items-center justify-center gap-1';
+        chargeBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">point_of_sale</span><span>Charge Balance</span>';
+        delBtn.parentNode.insertBefore(chargeBtn, delBtn);
+      }
+      
+      // Inject Send Portal Link Button next to Charge Balance Button
+      let portalBtn = document.getElementById('send-portal-link-btn');
+      if (!portalBtn && delBtn) {
+        portalBtn = document.createElement('button');
+        portalBtn.type = 'button';
+        portalBtn.id = 'send-portal-link-btn';
+        portalBtn.className = 'sm:w-auto px-2 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg font-label text-[11px] font-bold hover:bg-blue-100 transition-all flex items-center justify-center gap-1';
+        portalBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">travel_explore</span><span>Send Portal</span>';
+        delBtn.parentNode.insertBefore(portalBtn, delBtn);
+      }
+      
+      if (portalBtn) {
+        portalBtn.onclick = () => {
+          const portalUrl = `${window.location.origin}/checkout.html?id=${b.id}`;
+          const template = `Hi ${b.customer_name || 'Guest'}, here is your secure booking portal to review your charter details, provide your guest info, and pay your deposit: \n\n${portalUrl}\n\nLet us know if you have any questions!`;
+          if (typeof window.openSmsPreviewModal === 'function') {
+            document.getElementById('booking-modal')?.classList.add('hidden');
+            window.openSmsPreviewModal(b.customer_phone || '', template);
+          } else {
+            navigator.clipboard.writeText(template);
+            alert('Portal link copied to clipboard!');
+          }
+        };
+      }
+      
+      if (chargeBtn) {
+        const tot = parseFloat(b.total_price || b.amount || 0);
+        const dep = parseFloat(b.deposit_amount || 0);
+        const ref = parseFloat(b.refunded_amount || 0);
+        const rawRem = b.remaining_balance !== undefined && b.remaining_balance !== null ? parseFloat(b.remaining_balance) : null;
+        const rem = (rawRem !== null && (rawRem > 0 || dep >= tot || b.status === 'completed')) ? rawRem : Math.max(0, tot - (dep - ref));
+        if (rem > 0.01) {
+          chargeBtn.classList.remove('hidden');
+          chargeBtn.onclick = () => window.openChargeBalanceModal(b);
+        } else {
+          chargeBtn.classList.add('hidden');
+        }
+      }
+
+      if (typeof window.updateEndTime === 'function') window.updateEndTime();
+      if (typeof window.setBookingModalMode === 'function') window.setBookingModalMode('view');
+
+      // Final guarantee that modal is visible and unhidden
+      if (bModal) {
+        bModal.classList.remove('hidden');
+        bModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+    } catch (err) {
+      console.error('Error in window.editBooking:', err);
+    }
   };
 
   window.printBookingInvoice = async (id) => {
@@ -11714,7 +11784,10 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
         const statusEl = document.getElementById('book-status');
         if (statusEl) { statusEl.value = 'inquiry'; statusEl.dispatchEvent(new Event('change')); }
         const modal = document.getElementById('booking-modal');
-        if (modal) modal.classList.remove('hidden');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.style.display = 'flex';
+        }
         document.body.style.overflow = 'hidden';
       });
     }
@@ -11805,7 +11878,10 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
 
         // Open the modal
         const modal = document.getElementById('booking-modal');
-        if (modal) modal.classList.remove('hidden');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.style.display = 'flex';
+        }
         document.body.style.overflow = 'hidden';
       };
     }
@@ -12570,7 +12646,10 @@ window.setBookingModalMode = (mode) => {
     buttons.forEach(btn => btn.classList.add('hidden'));
 
     if (saveBtn) saveBtn.classList.add('hidden');
-    if (cancelBtn) cancelBtn.classList.add('hidden');
+    if (cancelBtn) {
+      cancelBtn.classList.remove('hidden');
+      cancelBtn.textContent = 'Close';
+    }
     if (editBtn) editBtn.classList.remove('hidden');
     const title = document.getElementById('booking-modal-title');
     if (title) title.textContent = 'View Charter Details';
@@ -12588,7 +12667,10 @@ window.setBookingModalMode = (mode) => {
     buttons.forEach(btn => btn.classList.remove('hidden'));
 
     if (saveBtn) saveBtn.classList.remove('hidden');
-    if (cancelBtn) cancelBtn.classList.remove('hidden');
+    if (cancelBtn) {
+      cancelBtn.classList.remove('hidden');
+      cancelBtn.textContent = 'Cancel';
+    }
     if (editBtn) editBtn.classList.add('hidden');
     const title = document.getElementById('booking-modal-title');
     if (title) title.textContent = document.getElementById('booking-id').value ? 'Edit Charter Booking' : 'Schedule Charter Booking';
