@@ -44,21 +44,17 @@ window.closeDayEventsModal = function() {
 };
 
 window.openNewBookingModal = async function(prefill = {}) {
-  alert('DEBUG: openNewBookingModal started');
   // Auto-init bookings section if not yet initialized
   if (typeof window.initBookingsSection === 'function' && !window._bookingsInitDone) {
     try {
       window.initBookingsSection();
-      alert('DEBUG: initBookingsSection completed');
     } catch (e) {
-      alert('DEBUG Error in init: ' + e.message);
       console.warn('Non-fatal error in initBookingsSection:', e);
     }
   }
 
   const bModal = document.getElementById('booking-modal');
   if (!bModal) {
-    alert('DEBUG: #booking-modal NOT FOUND IN DOM!');
     console.warn('openNewBookingModal: #booking-modal not found'); 
     return; 
   }
@@ -66,7 +62,6 @@ window.openNewBookingModal = async function(prefill = {}) {
   // Show modal IMMEDIATELY — zero delay, no blocking
   bModal.classList.remove('hidden');
   bModal.style.display = 'flex';
-  alert('DEBUG: Modal set to visible');
 
   try {
     if (typeof window.switchBookingModalTab === 'function') {
