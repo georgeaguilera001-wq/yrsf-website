@@ -181,9 +181,12 @@
       </ul>
     </nav>
 
-    <div class="px-2 pb-2">
-      <button id="toggle-menu-edit-btn" class="w-full flex items-center justify-center gap-1 px-3 py-1 bg-surface-container-low hover:bg-surface-container-high rounded text-[10px] font-bold text-on-surface-variant transition-colors border border-outline-variant/30">
+    <div class="px-2 pb-2 flex gap-1">
+      <button id="toggle-menu-edit-btn" class="flex-1 flex items-center justify-center gap-1 px-3 py-1 bg-surface-container-low hover:bg-surface-container-high rounded text-[10px] font-bold text-on-surface-variant transition-colors border border-outline-variant/30">
         <span class="material-symbols-outlined text-[14px]">edit</span> <span id="menu-edit-btn-text">Edit Menu</span>
+      </button>
+      <button id="reset-menu-btn" class="hidden px-2 py-1 bg-surface-container-low hover:bg-error-container hover:text-error rounded text-[10px] font-bold text-on-surface-variant transition-colors border border-outline-variant/30" title="Reset Menu to Default">
+        <span class="material-symbols-outlined text-[14px]">restart_alt</span>
       </button>
     </div>
     <div class="p-4 border-t border-outline-variant">
@@ -3487,7 +3490,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260914v1016"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20260925v1300"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------
@@ -3496,13 +3499,14 @@
       const navList = document.getElementById('admin-nav-list');
       const toggleBtn = document.getElementById('toggle-menu-edit-btn');
       const toggleBtnText = document.getElementById('menu-edit-btn-text');
+      const resetBtn = document.getElementById('reset-menu-btn');
       if (!navList || !toggleBtn) return;
 
       let isEditMode = false;
       let activeSectionId = 'dashboard';
       
-      // Default initial structure
-      let navConfig = [
+      // Canonical default structure with all 12 modules
+      const defaultNavConfig = [
         { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', level: 0 },
         { id: 'bookings', icon: 'calendar_month', label: 'Bookings & Manifest', level: 0 },
         { id: 'staff', icon: 'badge', label: 'Staff & Timeclock', level: 0 },
@@ -3517,19 +3521,59 @@
         { id: 'promos', icon: 'local_offer', label: 'Promos & Discounts', level: 0 }
       ];
 
+      function mergeWithDefaults(savedList, defaults) {
+        if (!Array.isArray(savedList) || savedList.length === 0) {
+          return defaults.map(item => ({ ...item }));
+        }
+        const defaultMap = new Map(defaults.map(item => [item.id, item]));
+        const seenIds = new Set();
+        const merged = [];
+
+        // 1. Keep existing saved items with user modifications
+        for (const item of savedList) {
+          if (item && item.id && defaultMap.has(item.id) && !seenIds.has(item.id)) {
+            const def = defaultMap.get(item.id);
+            merged.push({
+              id: item.id,
+              icon: item.icon || def.icon,
+              label: (item.label && item.label.trim()) ? item.label.trim() : def.label,
+              level: typeof item.level === 'number' ? item.level : 0,
+              bold: Boolean(item.bold !== undefined ? item.bold : def.bold),
+              collapsed: Boolean(item.collapsed)
+            });
+            seenIds.add(item.id);
+          }
+        }
+
+        // 2. Append any missing default modules so none are ever lost
+        for (const def of defaults) {
+          if (!seenIds.has(def.id)) {
+            merged.push({ ...def });
+            seenIds.add(def.id);
+          }
+        }
+
+        return merged;
+      }
+
+      let navConfig = defaultNavConfig.map(x => ({ ...x }));
+
       function loadConfig() {
         const saved = localStorage.getItem(NAV_CONFIG_KEY);
         if (saved) {
           try {
-            navConfig = JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            navConfig = mergeWithDefaults(parsed, defaultNavConfig);
+            return;
           } catch(e) {}
         }
+        navConfig = defaultNavConfig.map(x => ({ ...x }));
       }
 
       function saveConfig() {
         // Build config from DOM state (preserves live edits to inputs before save)
         const items = Array.from(navList.children);
-        navConfig = items.map(li => {
+        const domItems = items.map(li => {
           const id = li.dataset.navId;
           const level = parseInt(li.dataset.level || '0');
           const input = li.querySelector('.nav-label-input');
@@ -3539,7 +3583,13 @@
           const bold = li.dataset.bold === 'true';
           const collapsed = li.dataset.collapsed === 'true';
           return { id, icon, label, level, bold, collapsed };
-        });
+        }).filter(x => x.id);
+
+        const seenDomIds = new Set(domItems.map(x => x.id));
+        // Preserve any modules from existing navConfig that were not currently in DOM (e.g. staff permission filtering)
+        const unrendered = navConfig.filter(x => !seenDomIds.has(x.id));
+
+        navConfig = mergeWithDefaults([...domItems, ...unrendered], defaultNavConfig);
         localStorage.setItem(NAV_CONFIG_KEY, JSON.stringify(navConfig));
         window.dispatchEvent(new CustomEvent('navConfigSaved', { detail: navConfig }));
       }
@@ -3619,11 +3669,11 @@
       };
 
       window.toggleNavCollapse = function(id) {
-        saveConfig();
         const item = navConfig.find(x => x.id === id);
         if (item) {
           item.collapsed = !item.collapsed;
         }
+        localStorage.setItem(NAV_CONFIG_KEY, JSON.stringify(navConfig));
         renderNav();
       };
 
@@ -3635,14 +3685,28 @@
           toggleBtn.classList.replace('text-green-800', 'text-on-surface-variant');
           toggleBtn.classList.replace('border-green-300', 'border-outline-variant/30');
           toggleBtnText.textContent = 'Edit Menu';
+          if (resetBtn) resetBtn.classList.add('hidden');
         } else {
           toggleBtn.classList.replace('bg-surface-container-low', 'bg-green-100');
           toggleBtn.classList.replace('text-on-surface-variant', 'text-green-800');
           toggleBtn.classList.replace('border-outline-variant/30', 'border-green-300');
           toggleBtnText.textContent = 'Save Menu';
+          if (resetBtn) resetBtn.classList.remove('hidden');
         }
         renderNav();
       });
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm('Reset sidebar menu to default layout? This will restore all standard modules and default names.')) {
+            navConfig = defaultNavConfig.map(x => ({ ...x }));
+            localStorage.setItem(NAV_CONFIG_KEY, JSON.stringify(navConfig));
+            window.dispatchEvent(new CustomEvent('navConfigSaved', { detail: navConfig }));
+            renderNav();
+          }
+        });
+      }
 
       let dragSrc = null;
       function bindDragEvents() {
@@ -3914,9 +3978,13 @@
           <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">settings</span>
           <span class="font-label text-[11px] font-bold text-on-surface truncate">Site Config</span>
         </button>
-        <button onclick="document.getElementById('mobile-menu-modal').style.display='none'; if(window.showAdminSection) window.showAdminSection('promos')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group col-span-2">
+        <button onclick="document.getElementById('mobile-menu-modal').style.display='none'; if(window.showAdminSection) window.showAdminSection('social')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
+          <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">cell_tower</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Social &amp; Content Hub</span>
+        </button>
+        <button onclick="document.getElementById('mobile-menu-modal').style.display='none'; if(window.showAdminSection) window.showAdminSection('promos')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface-container-low hover:bg-secondary-container/50 text-left transition-colors border border-outline-variant/40 group">
           <span class="material-symbols-outlined text-secondary text-[17px] group-hover:scale-110 transition-transform shrink-0">local_offer</span>
-          <span class="font-label text-[11px] font-bold text-on-surface truncate">Promos & Discounts</span>
+          <span class="font-label text-[11px] font-bold text-on-surface truncate">Promos &amp; Discounts</span>
         </button>
       </div>
 

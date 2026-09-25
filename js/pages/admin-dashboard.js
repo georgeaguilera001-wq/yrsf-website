@@ -238,18 +238,70 @@ const MODULE_SUBPERMS = {
 // --- Sync Nav Config with Supabase ---
 const NAV_CONFIG_KEY = 'yrsf_admin_nav_config';
 
+const DEFAULT_ADMIN_NAV_CONFIG = [
+  { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', level: 0 },
+  { id: 'bookings', icon: 'calendar_month', label: 'Bookings & Manifest', level: 0 },
+  { id: 'staff', icon: 'badge', label: 'Staff & Timeclock', level: 0 },
+  { id: 'social', icon: 'cell_tower', label: 'Social & Content Hub', level: 0, bold: true },
+  { id: 'content', icon: 'description', label: 'CMS Pages & Content', level: 0 },
+  { id: 'fleet', icon: 'directions_boat', label: 'Fleet & Services', level: 0 },
+  { id: 'seo', icon: 'travel_explore', label: 'SEO Settings', level: 0 },
+  { id: 'settings', icon: 'settings', label: 'Site Config & Concierge', level: 0 },
+  { id: 'revenue', icon: 'insights', label: 'Revenue & Analytics', level: 0 },
+  { id: 'crm', icon: 'groups', label: 'Customer Directory', level: 0 },
+  { id: 'partners', icon: 'handshake', label: 'Partner Portal', level: 0 },
+  { id: 'promos', icon: 'local_offer', label: 'Promos & Discounts', level: 0 }
+];
+
+function mergeNavWithDefaults(savedList, defaults) {
+  if (!Array.isArray(savedList) || savedList.length === 0) {
+    return defaults.map(item => ({ ...item }));
+  }
+  const defaultMap = new Map(defaults.map(item => [item.id, item]));
+  const seenIds = new Set();
+  const merged = [];
+
+  for (const item of savedList) {
+    if (item && item.id && defaultMap.has(item.id) && !seenIds.has(item.id)) {
+      const def = defaultMap.get(item.id);
+      merged.push({
+        id: item.id,
+        icon: item.icon || def.icon,
+        label: (item.label && item.label.trim()) ? item.label.trim() : def.label,
+        level: typeof item.level === 'number' ? item.level : 0,
+        bold: Boolean(item.bold !== undefined ? item.bold : def.bold),
+        collapsed: Boolean(item.collapsed)
+      });
+      seenIds.add(item.id);
+    }
+  }
+
+  for (const def of defaults) {
+    if (!seenIds.has(def.id)) {
+      merged.push({ ...def });
+      seenIds.add(def.id);
+    }
+  }
+
+  return merged;
+}
+
 window.addEventListener('navConfigSaved', async (e) => {
+  // Only super admins can update global navigation in the database
+  if (!window.isSuperAdminUser) return;
   try {
-    await supabase.from('site_settings').upsert({ key: NAV_CONFIG_KEY, value: e.detail });
+    const fullMerged = mergeNavWithDefaults(e.detail, DEFAULT_ADMIN_NAV_CONFIG);
+    await supabase.from('site_settings').upsert({ key: NAV_CONFIG_KEY, value: fullMerged });
   } catch (err) {
     console.error('Failed to sync nav config to DB', err);
   }
 });
 
-// Immediately load from DB so it's ready when DOMContentLoaded fires
+// Immediately load from DB and merge with defaults so it's ready when DOMContentLoaded fires
 supabase.from('site_settings').select('value').eq('key', NAV_CONFIG_KEY).single().then(({data}) => {
   if (data && data.value) {
-    localStorage.setItem(NAV_CONFIG_KEY, JSON.stringify(data.value));
+    const fullMerged = mergeNavWithDefaults(data.value, DEFAULT_ADMIN_NAV_CONFIG);
+    localStorage.setItem(NAV_CONFIG_KEY, JSON.stringify(fullMerged));
     if (typeof window.refreshNavMenu === 'function') window.refreshNavMenu();
   }
 }).catch(console.error);
@@ -341,6 +393,24 @@ return; // Redirect in progress
       if (isAuthSuper || isStaffAdminRole || !staffUser) {
         window.isSuperAdminUser = true;
         window.currentStaffPermissions = null;
+
+        // Auto-heal Supabase site_settings if any standard modules are missing
+        (async () => {
+          try {
+            const { data: dbNav } = await supabase.from('site_settings').select('value').eq('key', NAV_CONFIG_KEY).single();
+            const dbItems = (dbNav && Array.isArray(dbNav.value)) ? dbNav.value : [];
+            const missing = DEFAULT_ADMIN_NAV_CONFIG.filter(def => !dbItems.some(item => item.id === def.id));
+            if (missing.length > 0) {
+              console.log(`[NavAutoHeal] Restoring ${missing.length} missing modules in Supabase site_settings...`);
+              const healed = mergeNavWithDefaults(dbItems, DEFAULT_ADMIN_NAV_CONFIG);
+              await supabase.from('site_settings').upsert({ key: NAV_CONFIG_KEY, value: healed });
+              localStorage.setItem(NAV_CONFIG_KEY, JSON.stringify(healed));
+              if (typeof window.refreshNavMenu === 'function') window.refreshNavMenu();
+            }
+          } catch (repairErr) {
+            console.warn('[NavAutoHeal] Notice during DB nav heal check:', repairErr);
+          }
+        })();
       } else {
         window.isSuperAdminUser = false;
         window.currentStaffPermissions = staffUser.permissions || {};
@@ -364,7 +434,7 @@ return; // Redirect in progress
           const hasAcc = window.hasPermission(mod, 'access');
           if (!hasAcc) {
             li.style.display = 'none';
-            li.remove();
+            li.classList.add('hidden');
           } else if (!firstVisibleMod) {
             firstVisibleMod = mod;
           }
