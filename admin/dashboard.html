@@ -6,7 +6,7 @@
   <title>Admin Dashboard | YRSF</title>
   <meta name="robots" content="noindex, nofollow"/>
   <link rel="manifest" href="/admin/manifest.json"/>
-  <meta name="theme-color" content="#455f88"/>
+  <meta name="theme-color" content="#0b1528"/>
   <script defer src="https://js.stripe.com/v3/"></script>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -492,56 +492,56 @@
 
         <!-- Live Customer Inquiries & Notification Center -->
         <div id="admin-inquiries-banner" class="mb-8 bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-outline-variant">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center">
-                <span class="material-symbols-outlined">notifications_active</span>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-slate-100">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-sky-50 border border-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[22px]">notifications_active</span>
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h2 class="font-headline font-bold text-lg text-on-surface">New Customer Inquiries</h2>
-                  <span id="inquiries-badge-count" class="px-2 py-0.5 rounded-full bg-secondary text-on-secondary text-xs font-bold">0</span>
+                  <h2 class="font-headline font-bold text-lg text-slate-900 tracking-tight">New Customer Inquiries</h2>
+                  <span id="inquiries-badge-count" class="px-2.5 py-0.5 rounded-full bg-secondary text-on-secondary text-xs font-extrabold font-mono">0</span>
                 </div>
-                <p class="text-xs text-on-surface-variant">Real-time charter inquiry leads awaiting followup</p>
+                <p class="text-xs text-slate-500 mt-0.5">Real-time charter inquiry leads awaiting concierge follow-up</p>
               </div>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
-              <button id="toggle-inquiries-kanban-btn" type="button" class="px-3 py-1.5 rounded-xl border border-secondary/40 bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-bold flex items-center gap-1.5 transition-all">
+              <button id="toggle-inquiries-kanban-btn" type="button" class="px-3.5 py-1.5 rounded-xl border border-sky-200 bg-sky-50/80 hover:bg-sky-100/80 text-sky-900 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer">
                 <span class="material-symbols-outlined text-[16px]">view_kanban</span>
                 <span id="toggle-kanban-label">Show Kanban Board</span>
                 <span class="material-symbols-outlined text-[16px] transition-transform duration-200" id="toggle-kanban-arrow">expand_more</span>
               </button>
-              <button id="enable-browser-notifs-btn" class="px-3 py-1.5 rounded-xl border border-outline-variant hover:bg-surface-container text-xs font-bold text-on-surface flex items-center gap-1.5 transition-colors">
-                <span class="material-symbols-outlined text-[16px]">campaign</span> Enable Desktop Alerts
+              <button id="enable-browser-notifs-btn" class="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-[16px] text-secondary">campaign</span> Enable Desktop Alerts
               </button>
-              <button id="refresh-inquiries-btn" class="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface flex items-center gap-1.5 transition-colors">
+              <button id="refresh-inquiries-btn" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-xs font-bold text-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer">
                 <span class="material-symbols-outlined text-[16px]">refresh</span> Check Now
               </button>
             </div>
           </div>
           <div id="admin-inquiries-list" class="space-y-3">
-            <p class="text-sm text-on-surface-variant text-center py-6">Checking for new customer inquiries...</p>
+            <p class="text-sm text-slate-500 text-center py-6">Checking for new customer inquiries...</p>
           </div>
 
           <!-- Live Sales Pipeline (Kanban Board) - Collapsed by default -->
-          <div id="admin-inquiries-kanban-container" class="hidden mt-6 pt-5 border-t border-outline-variant">
+          <div id="admin-inquiries-kanban-container" class="hidden mt-6 pt-5 border-t border-slate-100">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2.5">
                 <span class="material-symbols-outlined text-secondary text-[20px]">view_kanban</span>
                 <div>
-                  <h3 class="font-headline font-bold text-sm text-on-surface">Sales Pipeline Kanban</h3>
-                  <p class="text-xs text-on-surface-variant">Drag or track leads across New, Contacted, and Quote Sent stages</p>
+                  <h3 class="font-headline font-bold text-sm text-slate-900">Sales Pipeline Kanban</h3>
+                  <p class="text-xs text-slate-500">Drag or advance leads across New, Contacted, and Quote Sent stages</p>
                 </div>
               </div>
               <div class="flex items-center gap-3 flex-wrap">
-                <label class="flex items-center gap-1.5 text-xs text-on-surface-variant cursor-pointer select-none hover:text-on-surface transition-colors" title="Keep collapsed every time dashboard opens">
-                  <input type="checkbox" id="kanban-collapsed-default-pref" class="rounded border-outline-variant text-secondary focus:ring-secondary text-xs" checked>
+                <label class="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer select-none hover:text-slate-800 transition-colors" title="Keep collapsed every time dashboard opens">
+                  <input type="checkbox" id="kanban-collapsed-default-pref" class="rounded border-slate-300 text-secondary focus:ring-secondary text-xs" checked>
                   <span>Collapsed by default</span>
                 </label>
-                <button type="button" id="refresh-dash-kanban-btn" class="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface flex items-center gap-1 transition-colors">
+                <button type="button" id="refresh-dash-kanban-btn" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-xs font-bold text-slate-700 flex items-center gap-1 transition-colors cursor-pointer">
                   <span class="material-symbols-outlined text-[14px]">refresh</span> Refresh
                 </button>
-                <button type="button" id="collapse-inquiries-kanban-btn" class="px-2.5 py-1 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-bold text-on-surface-variant flex items-center gap-1 transition-colors">
+                <button type="button" id="collapse-inquiries-kanban-btn" class="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600 flex items-center gap-1 transition-colors cursor-pointer">
                   <span class="material-symbols-outlined text-[14px]">expand_less</span> Collapse
                 </button>
               </div>
@@ -551,41 +551,41 @@
               <div class="flex gap-4 min-w-[750px]">
                 
                 <!-- Column 1: New Web Requests -->
-                <div class="flex-1 bg-surface-container-low border border-outline-variant rounded-xl flex flex-col min-h-[260px]">
-                  <div class="p-3 border-b border-outline-variant bg-surface-container/60 rounded-t-xl flex items-center justify-between">
-                    <h4 class="font-label text-xs font-bold flex items-center gap-1.5 text-on-surface">
-                      <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> New Web Requests
+                <div class="flex-1 bg-slate-50/80 border border-slate-200/80 rounded-xl flex flex-col min-h-[260px]">
+                  <div class="p-3 border-b border-slate-200/70 bg-white/80 rounded-t-xl flex items-center justify-between">
+                    <h4 class="font-label text-xs font-bold flex items-center gap-2 text-slate-800">
+                      <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span> New Web Requests
                     </h4>
-                    <span id="dash-count-col-new" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold text-on-surface">0</span>
+                    <span id="dash-count-col-new" class="bg-sky-50 border border-sky-200/60 px-2 py-0.5 rounded-full text-xs font-bold font-mono text-sky-900">0</span>
                   </div>
-                  <div id="dash-kanban-col-new" class="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2.5 max-h-[380px]" data-stage="new">
-                    <p class="text-xs text-on-surface-variant text-center py-4">No new leads.</p>
+                  <div id="dash-kanban-col-new" class="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2.5 max-h-[380px] custom-scrollbar" data-stage="new">
+                    <p class="text-xs text-slate-400 text-center py-4">No new leads.</p>
                   </div>
                 </div>
 
                 <!-- Column 2: Contacted / Drafting Quote -->
-                <div class="flex-1 bg-surface-container-low border border-outline-variant rounded-xl flex flex-col min-h-[260px]">
-                  <div class="p-3 border-b border-outline-variant bg-surface-container/60 rounded-t-xl flex items-center justify-between">
-                    <h4 class="font-label text-xs font-bold flex items-center gap-1.5 text-on-surface">
-                      <span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span> Contacted / Draft
+                <div class="flex-1 bg-slate-50/80 border border-slate-200/80 rounded-xl flex flex-col min-h-[260px]">
+                  <div class="p-3 border-b border-slate-200/70 bg-white/80 rounded-t-xl flex items-center justify-between">
+                    <h4 class="font-label text-xs font-bold flex items-center gap-2 text-slate-800">
+                      <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Contacted / Draft
                     </h4>
-                    <span id="dash-count-col-contacted" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold text-on-surface">0</span>
+                    <span id="dash-count-col-contacted" class="bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full text-xs font-bold font-mono text-amber-900">0</span>
                   </div>
-                  <div id="dash-kanban-col-contacted" class="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2.5 max-h-[380px]" data-stage="contacted">
-                    <p class="text-xs text-on-surface-variant text-center py-4">No contacted leads.</p>
+                  <div id="dash-kanban-col-contacted" class="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2.5 max-h-[380px] custom-scrollbar" data-stage="contacted">
+                    <p class="text-xs text-slate-400 text-center py-4">No contacted leads.</p>
                   </div>
                 </div>
 
                 <!-- Column 3: Quote Sent -->
-                <div class="flex-1 bg-surface-container-low border border-outline-variant rounded-xl flex flex-col min-h-[260px]">
-                  <div class="p-3 border-b border-outline-variant bg-surface-container/60 rounded-t-xl flex items-center justify-between">
-                    <h4 class="font-label text-xs font-bold flex items-center gap-1.5 text-on-surface">
-                      <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Quote Sent
+                <div class="flex-1 bg-slate-50/80 border border-slate-200/80 rounded-xl flex flex-col min-h-[260px]">
+                  <div class="p-3 border-b border-slate-200/70 bg-white/80 rounded-t-xl flex items-center justify-between">
+                    <h4 class="font-label text-xs font-bold flex items-center gap-2 text-slate-800">
+                      <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Quote Sent
                     </h4>
-                    <span id="dash-count-col-quote_sent" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold text-on-surface">0</span>
+                    <span id="dash-count-col-quote_sent" class="bg-indigo-50 border border-indigo-200/60 px-2 py-0.5 rounded-full text-xs font-bold font-mono text-indigo-900">0</span>
                   </div>
-                  <div id="dash-kanban-col-quote_sent" class="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2.5 max-h-[380px]" data-stage="quote_sent">
-                    <p class="text-xs text-on-surface-variant text-center py-4">No quotes sent.</p>
+                  <div id="dash-kanban-col-quote_sent" class="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2.5 max-h-[380px] custom-scrollbar" data-stage="quote_sent">
+                    <p class="text-xs text-slate-400 text-center py-4">No quotes sent.</p>
                   </div>
                 </div>
 
@@ -596,31 +596,31 @@
 
         <!-- Live Staff Timeclock & Quick Clock In/Out Widget -->
         <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm mb-8">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-outline-variant">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-green-100 text-green-700 flex items-center justify-center font-bold">
-                <span class="material-symbols-outlined text-2xl">schedule</span>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-slate-100">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                <span class="material-symbols-outlined text-[22px]">schedule</span>
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h2 class="font-headline font-bold text-lg text-on-surface">Staff Timeclock &amp; On-Duty Status</h2>
-                  <span id="dash-working-staff-count" class="px-2.5 py-0.5 rounded-full bg-green-100 text-green-800 text-xs font-bold animate-pulse">0 On Duty</span>
+                  <h2 class="font-headline font-bold text-lg text-slate-900 tracking-tight">Staff Timeclock &amp; On-Duty Status</h2>
+                  <span id="dash-working-staff-count" class="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold font-mono">0 On Duty</span>
                 </div>
-                <p class="text-xs text-on-surface-variant">Click any employee below to Clock In or Clock Out instantly</p>
+                <p class="text-xs text-slate-500 mt-0.5">Select any team member below to Clock In or Clock Out instantly</p>
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="document.getElementById('timeclock-modal').classList.remove('hidden')" class="bg-green-700 text-white px-4 py-2 rounded-xl font-label text-xs font-bold hover:bg-green-800 transition-all flex items-center gap-1.5 shadow-xs">
+              <button onclick="document.getElementById('timeclock-modal').classList.remove('hidden')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl font-label text-xs font-bold hover:bg-emerald-700 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
                 <span class="material-symbols-outlined text-[16px]">timer</span> Open Timeclock
               </button>
-              <button onclick="if(window.showAdminSection) window.showAdminSection('staff')" class="bg-surface-container hover:bg-surface-container-high text-on-surface-variant px-3 py-2 rounded-xl font-label text-xs font-bold transition-all">
+              <button onclick="if(window.showAdminSection) window.showAdminSection('staff')" class="bg-slate-100 hover:bg-slate-200/80 text-slate-700 px-3.5 py-2 rounded-xl font-label text-xs font-bold transition-all cursor-pointer">
                 Manage Staff
               </button>
             </div>
           </div>
           
           <div id="dash-staff-timeclock-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            <p class="text-xs text-on-surface-variant text-center py-4 col-span-full">Loading staff members...</p>
+            <p class="text-xs text-slate-400 text-center py-4 col-span-full">Loading staff members...</p>
           </div>
         </div>
 
@@ -669,15 +669,19 @@
         
         <!-- Upcoming Reservations inside Dashboard -->
         <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm mb-8">
-          <div class="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant">
-            <div>
-              <h2 class="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
-                <span class="material-symbols-outlined text-secondary">event_upcoming</span> Upcoming Reservations
-              </h2>
-              <p class="text-xs text-on-surface-variant">Future charter bookings sorted by date</p>
+          <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+            <div class="flex items-center gap-3.5">
+              <div class="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 text-secondary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[20px]">event_upcoming</span>
+              </div>
+              <div>
+                <h2 class="font-headline font-bold text-lg text-slate-900 tracking-tight">Upcoming Reservations</h2>
+                <p class="text-xs text-slate-500">Confirmed charter departures sorted chronologically</p>
+              </div>
             </div>
-            <button class="bg-surface-container text-on-surface-variant px-3.5 py-1.5 rounded-xl font-label text-xs font-bold hover:bg-surface-container-high transition-all flex items-center gap-1.5 shrink-0 cursor-pointer" onclick="document.querySelector('[data-section=bookings]').click()">
-              View All Charters
+            <button class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-xl font-label text-xs font-bold hover:bg-slate-200/80 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer" onclick="document.querySelector('[data-section=bookings]').click()">
+              <span>View All Charters</span>
+              <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
             </button>
           </div>
           <div id="dashboard-upcoming-reservations" class="flex flex-col gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
@@ -709,36 +713,36 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-lg">
           <!-- Reviews Moderation Box -->
           <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex flex-col">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-outline-variant">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100">
               <div>
-                <h2 class="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
-                  <span class="material-symbols-outlined text-secondary">star</span> Customer Reviews Moderation
+                <h2 class="font-headline font-bold text-lg text-slate-900 flex items-center gap-2 tracking-tight">
+                  <span class="material-symbols-outlined text-amber-500">star</span> Customer Reviews Moderation
                 </h2>
-                <p class="text-xs text-on-surface-variant">Approve or reject customer reviews submitted on the website</p>
+                <p class="text-xs text-slate-500">Approve or reject guest reviews submitted on the website</p>
               </div>
-              <div class="flex gap-1.5 shrink-0">
-                <button id="reviews-filter-pending" class="px-2.5 py-1 bg-secondary text-on-secondary rounded-lg text-xs font-bold shadow-2xs">Pending</button>
-                <button id="reviews-filter-approved" class="px-2.5 py-1 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Approved</button>
-                <button id="reviews-filter-all" class="px-2.5 py-1 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">All</button>
+              <div class="flex gap-1.5 shrink-0 bg-slate-100 p-1 rounded-xl border border-slate-200/60">
+                <button id="reviews-filter-pending" class="px-2.5 py-1 bg-secondary text-on-secondary rounded-lg text-xs font-bold shadow-2xs cursor-pointer">Pending</button>
+                <button id="reviews-filter-approved" class="px-2.5 py-1 text-slate-600 rounded-lg text-xs font-bold hover:text-slate-900 transition-colors cursor-pointer">Approved</button>
+                <button id="reviews-filter-all" class="px-2.5 py-1 text-slate-600 rounded-lg text-xs font-bold hover:text-slate-900 transition-colors cursor-pointer">All</button>
               </div>
             </div>
-            <div id="reviews-list" class="flex flex-col gap-3 max-h-[420px] overflow-y-auto flex-1"><p class="text-center text-on-surface-variant py-8 text-sm">Loading reviews...</p></div>
+            <div id="reviews-list" class="flex flex-col gap-3 max-h-[420px] overflow-y-auto custom-scrollbar flex-1"><p class="text-center text-slate-400 py-8 text-sm">Loading reviews...</p></div>
           </div>
 
           <!-- Testimonials Box -->
           <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex flex-col">
-            <div class="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
               <div>
-                <h2 class="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
+                <h2 class="font-headline font-bold text-lg text-slate-900 flex items-center gap-2 tracking-tight">
                   <span class="material-symbols-outlined text-secondary">format_quote</span> Testimonials
                 </h2>
-                <p class="text-xs text-on-surface-variant">Manage quotes displayed on the home page</p>
+                <p class="text-xs text-slate-500">Manage curated guest quotes displayed on the home page</p>
               </div>
-              <button class="bg-secondary text-on-secondary px-3 py-1.5 rounded-lg font-label text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 shrink-0" id="add-testimonial-btn">
+              <button class="bg-secondary text-on-secondary px-3.5 py-1.5 rounded-xl font-label text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer" id="add-testimonial-btn">
                 <span class="material-symbols-outlined text-[16px]">add</span> Add Testimonial
               </button>
             </div>
-            <div id="testimonials-list" class="flex flex-col gap-3 max-h-[420px] overflow-y-auto flex-1">
+            <div id="testimonials-list" class="flex flex-col gap-3 max-h-[420px] overflow-y-auto custom-scrollbar flex-1">
               <div class="text-center py-6"><span class="admin-spinner"></span></div>
             </div>
           </div>
@@ -746,18 +750,18 @@
 
         <!-- FAQ Management Box inside Dashboard -->
         <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm mt-lg mb-8">
-          <div class="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant">
+          <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
             <div>
-              <h2 class="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
+              <h2 class="font-headline font-bold text-lg text-slate-900 flex items-center gap-2 tracking-tight">
                 <span class="material-symbols-outlined text-secondary">quiz</span> FAQ Management
               </h2>
-              <p class="text-xs text-on-surface-variant">Manage frequently asked questions and answers across the site</p>
+              <p class="text-xs text-slate-500">Manage frequently asked questions and answers across the site</p>
             </div>
-            <button class="bg-secondary text-on-secondary px-3 py-1.5 rounded-lg font-label text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 shrink-0" id="add-faq-btn">
+            <button class="bg-secondary text-on-secondary px-3.5 py-1.5 rounded-xl font-label text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer" id="add-faq-btn">
               <span class="material-symbols-outlined text-[16px]">add</span> Add FAQ
             </button>
           </div>
-          <div id="faqs-list" class="flex flex-col gap-3 max-h-[450px] overflow-y-auto">
+          <div id="faqs-list" class="flex flex-col gap-3 max-h-[450px] overflow-y-auto custom-scrollbar">
             <div class="text-center py-6"><span class="admin-spinner"></span></div>
           </div>
         </div>
@@ -765,61 +769,111 @@
 
       <!-- Standalone Revenue & Financial Analytics Section -->
       <section class="admin-section hidden" id="section-revenue">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
           <div>
-            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Revenue &amp; Financial Analytics</h1>
-            <p class="font-body text-body-md text-on-surface-variant mt-1">Live performance, collections, and booking trends</p>
+            <span class="text-[10px] font-label font-extrabold uppercase tracking-widest text-secondary block mb-1">Financial Intelligence</span>
+            <h1 class="font-headline text-2xl sm:text-3xl text-slate-900 font-extrabold tracking-tight">Revenue &amp; Financial Analytics</h1>
+            <p class="font-body text-xs sm:text-sm text-slate-500 mt-1">Live charter gross volume, deposit collections, and vessel utilization metrics</p>
           </div>
-          <div>
-            <select id="revenue-year-filter" class="border border-outline-variant rounded-xl px-4 py-2 text-sm font-bold bg-surface-container-lowest shadow-sm">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-500">Fiscal Year:</span>
+            <select id="revenue-year-filter" class="border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-800 bg-white shadow-2xs cursor-pointer">
               <option value="2026">2026</option>
               <option value="2025">2025</option>
             </select>
           </div>
         </div>
         <!-- KPI Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="revenue-kpi-cards">
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-2xs">
-            <p class="text-xs text-on-surface-variant font-bold mb-1">Total Revenue YTD</p>
-            <p id="kpi-revenue-ytd" class="text-2xl font-bold text-green-700">$0</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-7" id="revenue-kpi-cards">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <p class="text-[11px] text-slate-400 uppercase tracking-wider font-bold mb-1">Total Revenue YTD</p>
+              <p id="kpi-revenue-ytd" class="text-2xl sm:text-3xl font-extrabold text-emerald-700 font-mono tabular-nums">$0</p>
+              <span class="text-[10px] font-semibold text-emerald-700/80 mt-1 inline-block">Gross Charter Volume</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-2xl">payments</span>
+            </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-2xs">
-            <p class="text-xs text-on-surface-variant font-bold mb-1">Avg Booking Value</p>
-            <p id="kpi-avg-booking" class="text-2xl font-bold text-secondary">$0</p>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <p class="text-[11px] text-slate-400 uppercase tracking-wider font-bold mb-1">Avg Booking Value</p>
+              <p id="kpi-avg-booking" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono tabular-nums">$0</p>
+              <span class="text-[10px] font-semibold text-sky-700 mt-1 inline-block">Per Charter Departure</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-2xl">analytics</span>
+            </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-2xs">
-            <p class="text-xs text-on-surface-variant font-bold mb-1">Total Bookings</p>
-            <p id="kpi-total-bookings" class="text-2xl font-bold text-blue-700">0</p>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <p class="text-[11px] text-slate-400 uppercase tracking-wider font-bold mb-1">Total Bookings</p>
+              <p id="kpi-total-bookings" class="text-2xl sm:text-3xl font-extrabold text-indigo-700 font-mono tabular-nums">0</p>
+              <span class="text-[10px] font-semibold text-indigo-700/80 mt-1 inline-block">Scheduled &amp; Completed</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-2xl">sailing</span>
+            </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-2xs">
-            <p class="text-xs text-on-surface-variant font-bold mb-1">Outstanding Balance</p>
-            <p id="kpi-outstanding" class="text-2xl font-bold text-amber-700">$0</p>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <p class="text-[11px] text-slate-400 uppercase tracking-wider font-bold mb-1">Outstanding Balance</p>
+              <p id="kpi-outstanding" class="text-2xl sm:text-3xl font-extrabold text-amber-700 font-mono tabular-nums">$0</p>
+              <span class="text-[10px] font-semibold text-amber-700/80 mt-1 inline-block">Pending Dockside Collection</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
+            </div>
           </div>
         </div>
         <!-- Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm">
-            <h3 class="font-headline font-bold text-sm mb-4">Monthly Revenue (Last 12 Months)</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="font-headline font-bold text-sm text-slate-900">Monthly Revenue (Last 12 Months)</h3>
+                <p class="text-[11px] text-slate-500">Gross charter revenue aggregated by departure month</p>
+              </div>
+              <span class="material-symbols-outlined text-slate-400 text-lg">bar_chart</span>
+            </div>
             <div class="relative h-64 w-full">
               <canvas id="chart-monthly-revenue"></canvas>
             </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm">
-            <h3 class="font-headline font-bold text-sm mb-4">Top Performing Boats</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="font-headline font-bold text-sm text-slate-900">Top Performing Boats</h3>
+                <p class="text-[11px] text-slate-500">Revenue contribution share by vessel</p>
+              </div>
+              <span class="material-symbols-outlined text-slate-400 text-lg">donut_large</span>
+            </div>
             <div class="relative h-64 w-full">
               <canvas id="chart-top-boats"></canvas>
             </div>
           </div>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm">
-            <h3 class="font-headline font-bold text-sm mb-4">Bookings by Day of Week</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="font-headline font-bold text-sm text-slate-900">Bookings by Day of Week</h3>
+                <p class="text-[11px] text-slate-500">Charter demand distribution across weekdays and weekends</p>
+              </div>
+              <span class="material-symbols-outlined text-slate-400 text-lg">date_range</span>
+            </div>
             <div class="relative h-64 w-full">
               <canvas id="chart-day-of-week"></canvas>
             </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm">
-            <h3 class="font-headline font-bold text-sm mb-4">Income vs. Deposits Collected</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="font-headline font-bold text-sm text-slate-900">Income vs. Deposits Collected</h3>
+                <p class="text-[11px] text-slate-500">Collected payments vs. remaining charter balances</p>
+              </div>
+              <span class="material-symbols-outlined text-slate-400 text-lg">pie_chart</span>
+            </div>
             <div class="relative h-64 w-full">
               <canvas id="chart-income-vs-deposits"></canvas>
             </div>
@@ -830,19 +884,22 @@
       <!-- Fleet Section -->
       <section class="admin-section hidden" id="section-fleet" style="zoom: 0.90;">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h1 class="font-headline text-headline-lg text-on-surface">Fleet &amp; Services</h1>
           <div>
-            <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" id="add-boat-btn">
-              <span class="material-symbols-outlined text-[18px]">add</span> Add Yacht
+            <span class="text-[10px] font-label font-extrabold uppercase tracking-[0.16em] text-secondary block mb-1">Vessel &amp; Concierge Inventory</span>
+            <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Fleet &amp; Services</h1>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <button class="bg-[#0b1528] hover:bg-[#162744] text-white px-4 py-2.5 rounded-xl font-label text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer" id="add-boat-btn">
+              <span class="material-symbols-outlined text-[18px] text-[#38bdf8]">add</span> Add Yacht
             </button>
-            <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all items-center gap-2 hidden" id="add-addon-btn">
-              <span class="material-symbols-outlined text-[18px]">add</span> Add Service
+            <button class="bg-[#0b1528] hover:bg-[#162744] text-white px-4 py-2.5 rounded-xl font-label text-xs font-bold transition-all items-center gap-2 shadow-sm cursor-pointer hidden" id="add-addon-btn">
+              <span class="material-symbols-outlined text-[18px] text-[#38bdf8]">add</span> Add Service
             </button>
           </div>
         </div>
 
         <!-- Fleet Tab Navigation -->
-        <div class="flex border-b border-outline-variant mb-6 gap-6">
+        <div class="flex border-b border-slate-200/80 mb-6 gap-6">
           <button type="button" id="fleet-tab-btn-yachts" onclick="window.switchFleetTab('yachts')" class="pb-3 border-b-2 border-secondary font-label text-label-lg text-secondary font-bold flex items-center gap-2 cursor-pointer transition-all">
             <span class="material-symbols-outlined text-[18px]">directions_boat</span> Yachts (Fleet)
           </button>
@@ -854,21 +911,23 @@
         <!-- YACHTS TAB -->
         <div id="fleet-tab-yachts">
         <!-- Data Migration Tool (Way Smaller & Slimmer) -->
-        <div class="bg-surface-container-low border border-outline-variant/60 rounded-lg p-3 mb-6 shadow-2xs">
+        <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 mb-6 shadow-2xs">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-secondary text-[20px] shrink-0">upload_file</span>
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 border border-sky-200/60 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[18px]">upload_file</span>
+              </div>
               <div class="text-xs">
-                <span class="font-bold text-on-surface">Migrate Legacy Data:</span>
-                <span class="text-on-surface-variant ml-1">Upload <code>yachts_rows.csv</code> to auto-import fleet.</span>
+                <span class="font-bold text-slate-900">Migrate Legacy Data:</span>
+                <span class="text-slate-500 ml-1">Upload <code class="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">yachts_rows.csv</code> to auto-import fleet.</span>
               </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <input type="file" id="migration-csv" accept=".csv" class="hidden">
-              <label for="migration-csv" class="cursor-pointer bg-white text-on-surface px-2.5 py-1 rounded text-xs font-bold hover:bg-surface-container transition-colors border border-outline-variant shadow-2xs">
+              <label for="migration-csv" class="cursor-pointer bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-100 transition-colors border border-slate-200 shadow-2xs">
                 Select CSV
               </label>
-              <button id="start-migration-btn" disabled class="bg-secondary text-white px-2.5 py-1 rounded text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all shadow-2xs">
+              <button id="start-migration-btn" disabled class="bg-secondary text-white px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all shadow-2xs">
                 Start Import
               </button>
             </div>
@@ -877,7 +936,7 @@
           <div id="migration-progress" class="hidden mt-2 pt-2 border-t border-outline-variant/40">
             <div class="flex justify-between font-label text-[11px] mb-1 text-on-surface-variant">
               <span id="migration-status">Processing...</span>
-              <span id="migration-count">0 / 0</span>
+              <span id="migration-count" class="font-mono tabular-nums">0 / 0</span>
             </div>
             <div class="w-full bg-outline-variant/40 rounded-full h-1.5 mb-2">
               <div id="migration-bar" class="bg-secondary h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -887,18 +946,18 @@
         </div>
 
         <!-- Filter / Sort Bar -->
-        <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 mb-6 shadow-2xs flex flex-col md:flex-row gap-3">
           <div class="relative flex-1">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
-            <input type="text" id="admin-fleet-search" class="admin-field w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary transition-all" placeholder="Search by name, manufacturer, or ID..."/>
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[19px]">search</span>
+            <input type="text" id="admin-fleet-search" class="admin-field w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl font-body text-xs sm:text-sm focus:ring-secondary focus:border-secondary transition-all" placeholder="Search by name, manufacturer, or ID..."/>
           </div>
-          <select id="admin-fleet-filter-status" class="admin-field border border-outline-variant rounded-lg px-4 py-2 font-body text-body-md focus:ring-secondary focus:border-secondary transition-all cursor-pointer">
+          <select id="admin-fleet-filter-status" class="admin-field border border-slate-200 rounded-xl px-4 py-2 font-body text-xs sm:text-sm font-semibold text-slate-700 focus:ring-secondary focus:border-secondary transition-all cursor-pointer">
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
             <option value="hidden">Hidden</option>
             <option value="maintenance">Maintenance</option>
           </select>
-          <select id="admin-fleet-sort" class="admin-field border border-outline-variant rounded-lg px-4 py-2 font-body text-body-md focus:ring-secondary focus:border-secondary transition-all cursor-pointer">
+          <select id="admin-fleet-sort" class="admin-field border border-slate-200 rounded-xl px-4 py-2 font-body text-xs sm:text-sm font-semibold text-slate-700 focus:ring-secondary focus:border-secondary transition-all cursor-pointer">
             <option value="name_asc">Name (A-Z)</option>
             <option value="capacity_desc">Capacity (High to Low)</option>
             <option value="length_desc">Size (Large to Small)</option>
@@ -908,20 +967,20 @@
           </select>
         </div>
 
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs">
           <div class="overflow-x-auto">
             <table class="w-full">
-              <thead class="bg-surface-container">
+              <thead class="bg-slate-50/90 border-b border-slate-200/80">
                 <tr>
-                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">Yacht</th>
-                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">Capacity</th>
-                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">Status</th>
-                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">Featured</th>
-                  <th class="text-left px-6 py-3 font-label text-label-md text-on-surface-variant">iCal</th>
-                  <th class="text-right px-6 py-3 font-label text-label-md text-on-surface-variant">Actions</th>
+                  <th class="text-left px-6 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Yacht</th>
+                  <th class="text-left px-6 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Capacity</th>
+                  <th class="text-left px-6 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Status</th>
+                  <th class="text-left px-6 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Featured</th>
+                  <th class="text-left px-6 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">iCal</th>
+                  <th class="text-right px-6 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Actions</th>
                 </tr>
               </thead>
-              <tbody id="fleet-table-body">
+              <tbody id="fleet-table-body" class="divide-y divide-slate-100">
                 <tr><td colspan="6" class="text-center py-xl"><span class="admin-spinner"></span></td></tr>
               </tbody>
             </table>
@@ -939,22 +998,23 @@
 
       <!-- Bookings & Manifest Section -->
       <section class="admin-section hidden" id="section-bookings">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-7">
           <div>
-            <h1 class="font-headline text-xl sm:text-headline-lg text-on-surface tracking-tight">Charter Bookings &amp; Daily Manifest</h1>
-            <p class="font-body text-[11px] sm:text-body-md text-on-surface-variant mt-0.5 sm:mt-1 leading-snug">Schedule charters, manage fleet departures, and view daily passenger/vessel manifests.</p>
+            <span class="text-[10px] font-label font-extrabold uppercase tracking-[0.16em] text-secondary block mb-1">Reservations &amp; Dispatch</span>
+            <h1 class="font-headline text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Charter Bookings &amp; Daily Manifest</h1>
+            <p class="font-body text-[11px] sm:text-sm text-slate-500 mt-0.5 sm:mt-1 leading-snug">Schedule charters, manage fleet departures, and view daily passenger/vessel manifests.</p>
           </div>
-          <button id="add-booking-btn" type="button" onclick="window.openNewBookingModal()" class="w-full sm:w-auto justify-center bg-secondary text-on-secondary px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-label text-[11px] sm:text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 sm:gap-2 shadow-sm sm:shadow-md cursor-pointer">
-            <span class="material-symbols-outlined text-sm sm:text-base">add_circle</span> Create New Booking
+          <button id="add-booking-btn" type="button" onclick="window.openNewBookingModal()" class="w-full sm:w-auto justify-center bg-[#0b1528] hover:bg-[#162744] text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-label text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 shadow-sm cursor-pointer">
+            <span class="material-symbols-outlined text-sm sm:text-base text-[#38bdf8]">add_circle</span> Create New Booking
           </button>
         </div>
 
         <!-- Sub-navigation Tabs -->
-        <div class="flex border-b border-outline-variant mb-4 sm:mb-6 gap-3 sm:gap-6 overflow-x-auto custom-scrollbar">
-          <button id="tab-btn-calendar" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-transparent font-label text-[11px] sm:text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 sm:gap-2 transition-colors">
+        <div class="flex border-b border-slate-200/80 mb-4 sm:mb-6 gap-3 sm:gap-6 overflow-x-auto custom-scrollbar">
+          <button id="tab-btn-calendar" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-transparent font-label text-[11px] sm:text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer">
             <span class="material-symbols-outlined text-sm sm:text-base">calendar_month</span> Monthly Calendar Grid
           </button>
-          <button id="tab-btn-manifest" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-secondary font-label text-[11px] sm:text-sm font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
+          <button id="tab-btn-manifest" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-secondary font-label text-[11px] sm:text-sm font-bold text-secondary flex items-center gap-1.5 sm:gap-2 cursor-pointer">
             <span class="material-symbols-outlined text-sm sm:text-base">format_list_bulleted</span> Daily Manifest List
           </button>
           <button id="tab-btn-owner-payouts" class="whitespace-nowrap pb-2.5 sm:pb-3 border-b-2 border-transparent font-label text-[11px] sm:text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer">
@@ -965,36 +1025,36 @@
         <!-- TAB 1: Manifest View -->
         <div id="view-manifest" class="">
           <!-- Filter Bar -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mb-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mb-6 shadow-xs flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-2">
-              <button id="filter-book-all" class="px-3.5 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold transition-all shadow-sm">All Upcoming</button>
-              <button id="filter-book-today" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all">Today's Departures</button>
-              <button id="filter-book-tomorrow" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all">Tomorrow</button>
-              <button id="filter-book-week" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all">Next 7 Days</button>
-              <button id="filter-book-past-month" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all">Past Month</button>
+              <button id="filter-book-all" class="px-3.5 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold transition-all shadow-sm cursor-pointer">All Upcoming</button>
+              <button id="filter-book-today" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer">Today's Departures</button>
+              <button id="filter-book-tomorrow" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer">Tomorrow</button>
+              <button id="filter-book-week" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer">Next 7 Days</button>
+              <button id="filter-book-past-month" class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer">Past Month</button>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
-              <div class="flex items-center bg-surface-container rounded-lg p-0.5 border border-outline-variant">
-                <button id="view-mode-table" class="px-2.5 py-1 rounded-md text-on-surface-variant hover:text-on-surface text-xs font-bold flex items-center gap-1 transition-all">
+              <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/80">
+                <button id="view-mode-table" class="px-2.5 py-1 rounded-lg text-on-surface-variant hover:text-on-surface text-xs font-bold flex items-center gap-1 transition-all cursor-pointer">
                   <span class="material-symbols-outlined text-sm">table_rows</span> Table
                 </button>
-                <button id="view-mode-cards" class="px-2.5 py-1 rounded-md bg-white text-on-surface shadow-sm text-xs font-bold flex items-center gap-1 transition-all">
+                <button id="view-mode-cards" class="px-2.5 py-1 rounded-lg bg-white text-on-surface shadow-sm text-xs font-bold flex items-center gap-1 transition-all cursor-pointer">
                   <span class="material-symbols-outlined text-sm">grid_view</span> Cards
                 </button>
               </div>
-              <div class="flex items-center gap-1.5 text-xs font-bold text-on-surface-variant">
-                <span class="material-symbols-outlined text-sm">event</span> Filter Date:
-                <input type="date" id="manifest-date-picker" class="px-2.5 py-1.5 bg-surface-container-low border border-outline-variant rounded-lg text-xs font-mono text-on-surface focus:ring-2 focus:ring-secondary"/>
+              <div class="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                <span class="material-symbols-outlined text-sm text-secondary">event</span> Filter Date:
+                <input type="date" id="manifest-date-picker" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono tabular-nums text-slate-800 focus:ring-2 focus:ring-secondary"/>
               </div>
-              <input type="text" id="manifest-search" placeholder="Search customer, boat, phone..." class="px-3 py-1.5 bg-surface-container-low border border-outline-variant rounded-lg text-xs w-48 focus:ring-2 focus:ring-secondary"/>
+              <input type="text" id="manifest-search" placeholder="Search customer, boat, phone..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs w-52 focus:ring-2 focus:ring-secondary"/>
             </div>
           </div>
 
           <!-- Manifest Table -->
-          <div id="manifest-table-wrapper" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm hidden">
+          <div id="manifest-table-wrapper" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs hidden">
             <div class="overflow-x-auto">
               <table class="w-full">
-                <thead class="bg-surface-container text-left text-xs font-label uppercase text-on-surface-variant tracking-wider">
+                <thead class="bg-slate-50/90 border-b border-slate-200/80 text-left text-[11px] font-label font-bold uppercase text-slate-500 tracking-wider">
                   <tr>
                     <th class="p-4">Departure &amp; Date</th>
                     <th class="p-4">Vessel Booked</th>
@@ -1005,7 +1065,7 @@
                     <th class="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody id="manifest-table-body" class="divide-y divide-outline-variant text-sm font-body">
+                <tbody id="manifest-table-body" class="divide-y divide-slate-100 text-sm font-body">
                   <tr><td colspan="7" class="text-center py-8"><span class="admin-spinner"></span></td></tr>
                 </tbody>
               </table>
@@ -1179,55 +1239,55 @@
         <div id="view-owner-payouts" class="hidden">
           
           <!-- KPI Summary Cards -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
             <!-- 1. Owner Deposits Sent -->
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-2xs">
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 sm:p-5 shadow-2xs">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-blue-900 uppercase tracking-wider">Owner Deposits Sent</span>
-                <span class="material-symbols-outlined text-blue-600 text-lg">forward_to_inbox</span>
+                <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Owner Deposits Sent</span>
+                <span class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 border border-sky-200/60 flex items-center justify-center"><span class="material-symbols-outlined text-base">forward_to_inbox</span></span>
               </div>
-              <p id="stat-owner-deposits-sent" class="text-xl sm:text-2xl font-black text-blue-900 font-mono mt-1">$0.00</p>
-              <p class="text-[10px] text-on-surface-variant mt-0.5"><span id="stat-owner-deposits-sent-count" class="font-bold text-blue-950">0</span> sent to owner</p>
+              <p id="stat-owner-deposits-sent" class="text-xl sm:text-2xl font-black text-slate-900 font-mono tabular-nums mt-1.5">$0.00</p>
+              <p class="text-[11px] text-slate-500 mt-1"><span id="stat-owner-deposits-sent-count" class="font-bold text-slate-800 font-mono tabular-nums">0</span> sent to owner</p>
             </div>
 
             <!-- 2. Pending Owner Deposits -->
-            <div class="bg-surface-container-lowest border border-amber-200 bg-amber-50/30 rounded-2xl p-4 shadow-2xs">
+            <div class="bg-surface-container-lowest border border-amber-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-amber-900 uppercase tracking-wider">Pending Owner Deposits</span>
-                <span class="material-symbols-outlined text-amber-700 text-lg">pending</span>
+                <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Pending Owner Deposits</span>
+                <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center"><span class="material-symbols-outlined text-base">pending</span></span>
               </div>
-              <p id="stat-owner-deposits-pending" class="text-xl sm:text-2xl font-black text-amber-700 font-mono mt-1">$0.00</p>
-              <p class="text-[10px] text-amber-800 mt-0.5"><span id="stat-owner-deposits-pending-count" class="font-bold text-amber-950">0</span> awaiting deposit</p>
+              <p id="stat-owner-deposits-pending" class="text-xl sm:text-2xl font-black text-amber-700 font-mono tabular-nums mt-1.5">$0.00</p>
+              <p class="text-[11px] text-amber-800/80 mt-1"><span id="stat-owner-deposits-pending-count" class="font-bold text-amber-950 font-mono tabular-nums">0</span> awaiting deposit</p>
             </div>
 
             <!-- 3. YRSF Marina Commissions -->
-            <div class="bg-surface-container-lowest border border-emerald-200 bg-emerald-50/20 rounded-2xl p-4 shadow-2xs">
+            <div class="bg-surface-container-lowest border border-emerald-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">YRSF Marina Comm.</span>
-                <span class="material-symbols-outlined text-emerald-700 text-lg">payments</span>
+                <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">YRSF Marina Comm.</span>
+                <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center justify-center"><span class="material-symbols-outlined text-base">payments</span></span>
               </div>
-              <p id="stat-owner-commissions" class="text-xl sm:text-2xl font-black text-emerald-700 font-mono mt-1">$0.00</p>
-              <p class="text-[10px] text-emerald-800 mt-0.5"><span id="stat-owner-commissions-count" class="font-bold text-emerald-950">0</span> invoiced / collected</p>
+              <p id="stat-owner-commissions" class="text-xl sm:text-2xl font-black text-emerald-700 font-mono tabular-nums mt-1.5">$0.00</p>
+              <p class="text-[11px] text-emerald-800/80 mt-1"><span id="stat-owner-commissions-count" class="font-bold text-emerald-950 font-mono tabular-nums">0</span> invoiced / collected</p>
             </div>
 
             <!-- 4. Fully Settled Charters -->
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-2xs flex flex-col justify-between">
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col justify-between">
               <div>
                 <div class="flex items-center justify-between">
-                  <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Fully Settled</span>
-                  <span class="material-symbols-outlined text-green-700 text-lg">verified</span>
+                  <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Fully Settled</span>
+                  <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center justify-center"><span class="material-symbols-outlined text-base">verified</span></span>
                 </div>
-                <p id="stat-owner-settled-count" class="text-xl sm:text-2xl font-black text-green-700 font-mono mt-1">0</p>
-                <p class="text-[10px] text-on-surface-variant mt-0.5">Across <span id="stat-owner-total-charters" class="font-bold text-on-surface">0</span> total charters</p>
+                <p id="stat-owner-settled-count" class="text-xl sm:text-2xl font-black text-emerald-700 font-mono tabular-nums mt-1.5">0</p>
+                <p class="text-[11px] text-slate-500 mt-1">Across <span id="stat-owner-total-charters" class="font-bold text-slate-900 font-mono tabular-nums">0</span> total charters</p>
               </div>
-              <button type="button" onclick="window.openManageBoatOwnersModal()" class="mt-2 text-xs font-bold text-indigo-700 hover:text-indigo-900 hover:underline flex items-center gap-1 cursor-pointer">
+              <button type="button" onclick="window.openManageBoatOwnersModal()" class="mt-2.5 text-xs font-bold text-secondary hover:underline flex items-center gap-1 cursor-pointer">
                 <span class="material-symbols-outlined text-sm">tune</span> Boat Partner Rules
               </button>
             </div>
           </div>
 
           <!-- Filter & Controls Bar -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-3.5 mb-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-3.5 mb-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-1.5" id="owner-payout-filter-group">
               <button type="button" id="filter-owner-payout-all" class="px-3 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold transition-all shadow-xs cursor-pointer">All Rentals</button>
               <button type="button" id="filter-owner-payout-needs-deposit" class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer">Needs Owner Deposit</button>
@@ -1237,19 +1297,19 @@
 
             <div class="flex items-center gap-2.5 flex-wrap">
               <!-- Vessel Filter -->
-              <select id="filter-owner-boat-select" class="px-2.5 py-1.5 bg-surface-container-low border border-outline-variant rounded-lg text-xs font-semibold text-on-surface focus:ring-2 focus:ring-secondary">
+              <select id="filter-owner-boat-select" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-secondary">
                 <option value="all">-- All Yachts / Boats --</option>
               </select>
 
               <!-- Search -->
               <div class="relative">
-                <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
-                <input type="text" id="filter-owner-search" placeholder="Search boat, owner, customer..." class="pl-8 pr-3 py-1.5 bg-surface-container-low border border-outline-variant rounded-lg text-xs w-48 focus:ring-2 focus:ring-secondary"/>
+                <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                <input type="text" id="filter-owner-search" placeholder="Search boat, owner, customer..." class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs w-48 focus:ring-2 focus:ring-secondary"/>
               </div>
 
               <!-- Manage Owners Button -->
-              <button type="button" onclick="window.openManageBoatOwnersModal()" class="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-800 hover:bg-indigo-100 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs">
-                <span class="material-symbols-outlined text-[16px]">tune</span> Boat Owner Rules
+              <button type="button" onclick="window.openManageBoatOwnersModal()" class="px-3 py-1.5 bg-[#0b1528] text-white hover:bg-[#162744] rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs">
+                <span class="material-symbols-outlined text-[15px] text-[#38bdf8]">tune</span> Boat Owner Rules
               </button>
 
               <!-- Refresh -->
@@ -1260,22 +1320,22 @@
           </div>
 
           <!-- Settlements Table -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs">
             <div class="overflow-x-auto">
               <table class="w-full text-xs text-left">
-                <thead class="bg-surface-container text-left text-[11px] font-label uppercase text-on-surface-variant tracking-wider">
+                <thead class="bg-slate-50/90 border-b border-slate-200/80 text-left text-[11px] font-label uppercase text-slate-500 tracking-wider">
                   <tr>
-                    <th class="px-3 py-3 font-bold">Charter Date</th>
-                    <th class="px-3 py-3 font-bold">Yacht Booked &amp; Owner</th>
-                    <th class="px-3 py-3 font-bold">Customer Info</th>
-                    <th class="px-3 py-3 font-bold text-right">Charter Total</th>
-                    <th class="px-3 py-3 font-bold">Step 1: Owner Deposit</th>
-                    <th class="px-3 py-3 font-bold">Step 2: Marina Balance &amp; Comm.</th>
-                    <th class="px-3 py-3 font-bold text-center">Deal Status</th>
-                    <th class="px-3 py-3 font-bold text-right">Actions</th>
+                    <th class="px-3.5 py-3.5 font-bold">Charter Date</th>
+                    <th class="px-3.5 py-3.5 font-bold">Yacht Booked &amp; Owner</th>
+                    <th class="px-3.5 py-3.5 font-bold">Customer Info</th>
+                    <th class="px-3.5 py-3.5 font-bold text-right">Charter Total</th>
+                    <th class="px-3.5 py-3.5 font-bold">Step 1: Owner Deposit</th>
+                    <th class="px-3.5 py-3.5 font-bold">Step 2: Marina Balance &amp; Comm.</th>
+                    <th class="px-3.5 py-3.5 font-bold text-center">Deal Status</th>
+                    <th class="px-3.5 py-3.5 font-bold text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody id="owner-payouts-tbody" class="divide-y divide-outline-variant text-xs font-body">
+                <tbody id="owner-payouts-tbody" class="divide-y divide-slate-100 text-xs font-body">
                   <tr><td colspan="8" class="text-center py-8 text-on-surface-variant"><span class="admin-spinner"></span></td></tr>
                 </tbody>
               </table>
@@ -1289,50 +1349,51 @@
       <section class="admin-section hidden" id="section-partners">
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h1 class="font-headline text-headline-lg text-on-surface">Partner &amp; Affiliate Fleet Portal</h1>
-            <p class="font-body text-body-md text-on-surface-variant mt-1">Send secret unlisted onboarding links to external boat operators or submit their vessels directly from your dashboard.</p>
+            <span class="text-[10px] font-label font-extrabold uppercase tracking-[0.16em] text-secondary block mb-1">Affiliate Network</span>
+            <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Partner &amp; Affiliate Fleet Portal</h1>
+            <p class="font-body text-xs sm:text-sm text-slate-500 mt-1">Send secret unlisted onboarding links to external boat operators or submit their vessels directly from your dashboard.</p>
           </div>
         </div>
 
         <!-- Secret Invite Link Card -->
-        <div class="bg-gradient-to-r from-secondary-container/50 to-surface-container-low border border-secondary-fixed rounded-2xl p-6 mb-8 shadow-sm">
-          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="bg-gradient-to-br from-[#0b1528] via-[#112240] to-[#1e3a5f] text-white border border-slate-800 rounded-2xl p-6 mb-8 shadow-md relative overflow-hidden">
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
             <div class="space-y-2 max-w-2xl">
-              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-on-secondary font-label text-xs uppercase tracking-wider font-bold">
-                <span class="material-symbols-outlined text-sm">lock</span> Private Unlisted Portal
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38bdf8]/15 text-[#38bdf8] border border-[#38bdf8]/30 font-label text-[10px] uppercase tracking-widest font-extrabold">
+                <span class="material-symbols-outlined text-xs">lock</span> Private Unlisted Portal
               </span>
-              <h3 class="font-headline text-xl font-bold text-on-surface">Secret Partner Submission Link</h3>
-              <p class="font-body text-sm text-on-surface-variant">This page is completely hidden from the public website menu and Google search. Share this link exclusively with affiliate boat operators. Once they complete the form, their yacht automatically appears live on your website and inside your Fleet Management tab!</p>
+              <h3 class="font-headline text-xl font-extrabold text-white tracking-tight">Secret Partner Submission Link</h3>
+              <p class="font-body text-xs sm:text-sm text-slate-300 leading-relaxed">This page is completely hidden from the public website menu and Google search. Share this link exclusively with affiliate boat operators. Once they complete the form, their yacht automatically appears live on your website and inside your Fleet Management tab!</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
-              <button id="copy-partner-link-btn" class="bg-secondary text-on-secondary px-5 py-3 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow">
-                <span class="material-symbols-outlined text-lg">content_copy</span> Copy Secret Link
+              <button id="copy-partner-link-btn" class="bg-[#38bdf8] text-[#0b1528] px-5 py-3 rounded-xl font-label text-xs font-extrabold hover:bg-sky-300 transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                <span class="material-symbols-outlined text-base">content_copy</span> Copy Secret Link
               </button>
-              <a href="/list-your-boat.html" target="_blank" class="bg-white text-secondary border border-outline-variant px-5 py-3 rounded-xl font-label text-sm font-bold hover:bg-surface-container transition-all flex items-center justify-center gap-2 shadow-sm">
-                <span class="material-symbols-outlined text-lg">open_in_new</span> Test Portal
+              <a href="/list-your-boat.html" target="_blank" class="bg-white/10 text-white border border-white/20 px-5 py-3 rounded-xl font-label text-xs font-bold hover:bg-white/15 transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-base">open_in_new</span> Test Portal
               </a>
             </div>
           </div>
-          <div class="mt-4 pt-4 border-t border-secondary-fixed/40 flex items-center gap-2">
-            <span class="text-xs font-bold text-on-surface-variant">URL:</span>
-            <code id="partner-portal-url-display" class="text-xs font-mono bg-white px-3 py-1 rounded border border-outline-variant text-secondary select-all font-bold">/list-your-boat.html</code>
+          <div class="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 relative z-10">
+            <span class="text-xs font-bold text-slate-400">URL:</span>
+            <code id="partner-portal-url-display" class="text-xs font-mono bg-slate-950/60 px-3 py-1 rounded-lg border border-white/15 text-[#38bdf8] select-all font-bold">/list-your-boat.html</code>
           </div>
         </div>
 
         <!-- Admin Direct Submission Box -->
-        <div class="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
-          <div class="flex items-center justify-between mb-4 border-b border-outline-variant pb-4">
+        <div class="bg-white border border-outline-variant rounded-2xl p-6 shadow-xs">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
             <div>
-              <h3 class="font-headline text-lg font-bold text-on-surface flex items-center gap-2">
+              <h3 class="font-headline text-base font-extrabold text-slate-900 flex items-center gap-2">
                 <span class="material-symbols-outlined text-secondary">add_box</span> Direct Partner Yacht Entry
               </h3>
-              <p class="text-xs text-on-surface-variant">Fill out the affiliate listing form directly without leaving your admin session.</p>
+              <p class="text-xs text-slate-500">Fill out the affiliate listing form directly without leaving your admin session.</p>
             </div>
-            <button id="toggle-partner-iframe-btn" class="px-4 py-2 bg-surface-container text-on-surface font-label text-xs font-bold rounded-lg hover:bg-surface-variant transition-all">
+            <button id="toggle-partner-iframe-btn" class="px-4 py-2 bg-slate-100 text-slate-800 font-label text-xs font-bold rounded-xl hover:bg-slate-200 transition-all cursor-pointer">
               Show / Hide Direct Form
             </button>
           </div>
-          <div id="partner-iframe-wrapper" class="w-full rounded-xl overflow-hidden border border-outline-variant" style="height: 800px;">
+          <div id="partner-iframe-wrapper" class="w-full rounded-xl overflow-hidden border border-slate-200" style="height: 800px;">
             <iframe src="/list-your-boat.html?admin_embed=true" class="w-full h-full border-0"></iframe>
           </div>
         </div>
@@ -1344,26 +1405,27 @@
       <section class="admin-section hidden" id="section-social">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 class="font-headline text-headline-lg text-on-surface flex items-center gap-2">
-              <span class="material-symbols-outlined text-secondary text-3xl">cell_tower</span> Social Media &amp; Content Hub
+            <span class="text-[10px] font-label font-extrabold uppercase tracking-[0.16em] text-secondary block mb-1">Omnichannel Publishing</span>
+            <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary text-2xl sm:text-3xl">cell_tower</span> Social Media &amp; Content Hub
             </h1>
-            <p class="font-body text-caption text-on-surface-variant">Create multi-platform posts, preview live on iOS devices, and auto-dispatch via Zapier.</p>
+            <p class="font-body text-xs sm:text-sm text-slate-500 mt-0.5">Create multi-platform posts, preview live on iOS devices, and auto-dispatch via Zapier.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2.5">
             <div id="zapier-status-pill" class="px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 border bg-surface-container border-outline-variant text-on-surface-variant">
               <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span> Checking Zapier...
             </div>
-            <button type="button" onclick="window.openZapierSetupModal()" class="px-3.5 py-2 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-xl text-xs font-bold border border-outline-variant transition-all flex items-center gap-1.5 cursor-pointer shadow-xs">
+            <button type="button" onclick="window.openZapierSetupModal()" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 rounded-xl text-xs font-bold border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs">
               <span class="material-symbols-outlined text-sm text-secondary">bolt</span> Zapier Setup &amp; Test
             </button>
-            <button type="button" onclick="window.switchSocialTab('composer'); window.resetSocialComposer();" class="px-4 py-2 bg-secondary text-on-secondary hover:opacity-90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm">
-              <span class="material-symbols-outlined text-sm">add_circle</span> Create New Post
+            <button type="button" onclick="window.switchSocialTab('composer'); window.resetSocialComposer();" class="px-4 py-2 bg-[#0b1528] text-white hover:bg-[#162744] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm">
+              <span class="material-symbols-outlined text-sm text-[#38bdf8]">add_circle</span> Create New Post
             </button>
           </div>
         </div>
 
         <!-- Social Studio Tab Navigation -->
-        <div class="flex border-b border-outline-variant mb-6 gap-6">
+        <div class="flex border-b border-slate-200/80 mb-6 gap-6">
           <button type="button" id="social-tab-btn-composer" onclick="window.switchSocialTab('composer')" class="pb-3 border-b-2 border-secondary font-label text-label-lg text-secondary font-bold flex items-center gap-2 cursor-pointer transition-all">
             <span class="material-symbols-outlined text-sm">edit_square</span> Post Composer &amp; AI
           </button>
@@ -1371,7 +1433,7 @@
             <span class="material-symbols-outlined text-sm">calendar_month</span> Content Calendar Grid
           </button>
           <button type="button" id="social-tab-btn-queue" onclick="window.switchSocialTab('queue')" class="pb-3 border-b-2 border-transparent font-label text-label-lg text-on-surface-variant hover:text-on-surface flex items-center gap-2 cursor-pointer transition-all">
-            <span class="material-symbols-outlined text-sm">list_alt</span> All Posts &amp; Queue (<span id="social-queue-count">0</span>)
+            <span class="material-symbols-outlined text-sm">list_alt</span> All Posts &amp; Queue (<span id="social-queue-count" class="font-mono tabular-nums">0</span>)
           </button>
         </div>
 
@@ -1387,19 +1449,19 @@
               <div class="flex flex-wrap gap-2.5">
                 <label class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-secondary bg-secondary/10 text-on-surface font-label text-xs font-bold cursor-pointer select-none transition-all hover:bg-secondary/20">
                   <input type="checkbox" name="social-platform" value="instagram" checked class="rounded text-secondary focus:ring-secondary w-4 h-4"/>
-                  <span class="text-pink-600 font-extrabold">?? Instagram</span> (Reel/Post)
+                  <span class="text-pink-600 font-extrabold">📸 Instagram</span> (Reel/Post)
                 </label>
                 <label class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-secondary bg-secondary/10 text-on-surface font-label text-xs font-bold cursor-pointer select-none transition-all hover:bg-secondary/20">
                   <input type="checkbox" name="social-platform" value="tiktok" checked class="rounded text-secondary focus:ring-secondary w-4 h-4"/>
-                  <span class="text-gray-900 dark:text-white font-extrabold">?? TikTok</span> (Video/Carousel)
+                  <span class="text-gray-900 dark:text-white font-extrabold">🎵 TikTok</span> (Video/Carousel)
                 </label>
                 <label class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-outline-variant bg-surface text-on-surface-variant font-label text-xs font-bold cursor-pointer select-none transition-all hover:bg-surface-container">
                   <input type="checkbox" name="social-platform" value="facebook" class="rounded text-secondary focus:ring-secondary w-4 h-4"/>
-                  <span class="text-blue-600 font-extrabold">?? Facebook</span>
+                  <span class="text-blue-600 font-extrabold">📘 Facebook</span>
                 </label>
                 <label class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-outline-variant bg-surface text-on-surface-variant font-label text-xs font-bold cursor-pointer select-none transition-all hover:bg-surface-container">
                   <input type="checkbox" name="social-platform" value="google" class="rounded text-secondary focus:ring-secondary w-4 h-4"/>
-                  <span class="text-emerald-600 font-extrabold">?? Google Business</span>
+                  <span class="text-emerald-600 font-extrabold">📍 Google Business</span>
                 </label>
               </div>
             </div>
@@ -1426,7 +1488,7 @@
               <div>
                 <div class="flex items-center justify-between mb-2">
                   <label class="text-xs font-bold text-on-surface flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">perm_media</span> Attached Media (<span id="social-media-count">0</span>)
+                    <span class="material-symbols-outlined text-sm">perm_media</span> Attached Media (<span id="social-media-count" class="font-mono tabular-nums">0</span>)
                   </label>
                   <div class="flex gap-1.5 flex-wrap">
                     <input type="file" id="social-gallery-upload-input" accept="image/*,video/*" multiple class="hidden" onchange="window.handleSocialGalleryUpload(event)" />
@@ -1459,29 +1521,29 @@
               <!-- AI Template Quick Buttons -->
               <div class="flex flex-wrap gap-1.5 pb-1">
                 <button type="button" onclick="window.applyAiSocialTemplate('sunset')" class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-lg text-[11px] font-bold border border-amber-500/30 transition-all flex items-center gap-1 cursor-pointer">
-                  ?? Sunset Cruise
+                  🌅 Sunset Cruise
                 </button>
                 <button type="button" onclick="window.applyAiSocialTemplate('spotlight')" class="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 rounded-lg text-[11px] font-bold border border-blue-500/30 transition-all flex items-center gap-1 cursor-pointer">
-                  ??? Yacht Spotlight
+                  🛥️ Yacht Spotlight
                 </button>
                 <button type="button" onclick="window.applyAiSocialTemplate('weekend')" class="px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-lg text-[11px] font-bold border border-purple-500/30 transition-all flex items-center gap-1 cursor-pointer">
-                  ?? Weekend Special
+                  🥂 Weekend Special
                 </button>
                 <button type="button" onclick="window.applyAiSocialTemplate('party')" class="px-2.5 py-1.5 bg-pink-500/10 hover:bg-pink-500/20 text-pink-700 dark:text-pink-300 rounded-lg text-[11px] font-bold border border-pink-500/30 transition-all flex items-center gap-1 cursor-pointer">
-                  ?? Birthday / Celebration
+                  🎉 Birthday / Celebration
                 </button>
                 <button type="button" onclick="window.applyAiSocialTemplate('sandbar')" class="px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-lg text-[11px] font-bold border border-emerald-500/30 transition-all flex items-center gap-1 cursor-pointer">
-                  ?? Sandbar Vibe
+                  🏝️ Sandbar Vibe
                 </button>
                 <button type="button" onclick="window.applyAiSocialTemplate('hashtags')" class="px-2.5 py-1.5 bg-secondary/10 hover:bg-secondary/20 text-secondary rounded-lg text-[11px] font-bold border border-secondary/30 transition-all flex items-center gap-1 cursor-pointer">
-                  ? Append Viral Hashtags
+                  ✨ Append Viral Hashtags
                 </button>
               </div>
 
               <textarea id="social-post-caption" rows="6" oninput="window.updateSocialPhonePreview()" placeholder="Write your captivating luxury yacht caption here... or click an AI template right above!" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-xl font-body text-xs text-on-surface bg-surface focus:ring-secondary focus:border-secondary leading-relaxed"></textarea>
               <div class="flex justify-between items-center text-[11px] text-on-surface-variant">
                 <span>Use line breaks for clean Instagram formatting.</span>
-                <span id="social-char-count">0 chars</span>
+                <span id="social-char-count" class="font-mono tabular-nums">0 chars</span>
               </div>
             </div>
 
@@ -1490,7 +1552,7 @@
               <div>
                 <label class="block font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">4. Schedule Date &amp; Time</label>
                 <div class="flex items-center gap-2">
-                  <input type="datetime-local" id="social-schedule-time" class="admin-field px-3 py-2 border border-outline-variant rounded-xl font-body text-xs text-on-surface bg-surface focus:ring-secondary focus:border-secondary"/>
+                  <input type="datetime-local" id="social-schedule-time" class="admin-field px-3 py-2 border border-outline-variant rounded-xl font-mono text-xs text-on-surface bg-surface focus:ring-secondary focus:border-secondary"/>
                   <button type="button" onclick="window.setSchedulePreset('tomorrow10')" class="px-2 py-1.5 bg-surface-container hover:bg-surface-container-high rounded-lg text-[10px] font-bold border border-outline-variant cursor-pointer">Tomorrow 10 AM</button>
                   <button type="button" onclick="window.setSchedulePreset('friday5')" class="px-2 py-1.5 bg-surface-container hover:bg-surface-container-high rounded-lg text-[10px] font-bold border border-outline-variant cursor-pointer">Fri 5 PM</button>
                 </div>
@@ -1498,12 +1560,12 @@
               
               <div class="flex items-center gap-2.5 self-end sm:self-auto">
                 <button type="button" onclick="window.saveSocialPost('draft')" class="px-4 py-2.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-xl text-xs font-bold border border-outline-variant transition-all cursor-pointer">
-                  ?? Save Draft
+                  💾 Save Draft
                 </button>
                 <button type="button" onclick="window.saveSocialPost('scheduled')" class="px-5 py-2.5 bg-secondary text-on-secondary hover:opacity-90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer">
                   <span class="material-symbols-outlined text-sm">schedule_send</span> Save &amp; Schedule
                 </button>
-                <button type="button" onclick="window.dispatchSocialPostNow()" class="px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer">
+                <button type="button" onclick="window.dispatchSocialPostNow()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer">
                   <span class="material-symbols-outlined text-sm">send</span> Dispatch via Zapier Now
                 </button>
               </div>
@@ -1540,7 +1602,7 @@
                         <div class="w-full h-full bg-gray-900 rounded-full flex items-center justify-center text-[10px] font-bold text-amber-400">Y</div>
                       </div>
                       <div>
-                        <p class="text-xs font-bold leading-tight flex items-center gap-1">yrsf_miami <span class="text-blue-400 text-[10px]">?</span></p>
+                        <p class="text-xs font-bold leading-tight flex items-center gap-1">yrsf_miami <span class="text-blue-400 text-[10px]">✓</span></p>
                         <p id="preview-location" class="text-[9px] text-gray-400">Miami Beach Marina, FL</p>
                       </div>
                     </div>
@@ -1566,7 +1628,7 @@
                   <div class="px-4 pb-4 flex-1 overflow-y-auto text-xs leading-relaxed">
                     <p class="font-bold text-[11px] mb-1">Liked by miami_yachting and 1,248 others</p>
                     <div id="phone-preview-caption-text" class="text-[11px] text-gray-200 break-words">
-                      <span class="font-bold text-white mr-1.5">yrsf_miami</span><span class="caption-body">Start composing above to preview your caption and viral hashtags live right here! ?</span>
+                      <span class="font-bold text-white mr-1.5">yrsf_miami</span><span class="caption-body">Start composing above to preview your caption and viral hashtags live right here! ✨</span>
                     </div>
                     <p class="text-[9px] text-gray-500 mt-2 uppercase tracking-wider">Just now</p>
                   </div>
@@ -1713,21 +1775,24 @@
 
       <!-- Content Section (FAQ + Testimonials) -->
       <section class="admin-section hidden" id="section-content">
-        <h1 class="font-headline text-headline-lg text-on-surface mb-6">Content Management</h1>
+        <div class="mb-6">
+          <span class="text-[10px] font-label font-extrabold uppercase tracking-[0.16em] text-secondary block mb-1">Editorial &amp; Publishing</span>
+          <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Content Management</h1>
+        </div>
         <!-- Blog Posts -->
-        <div class="mb-8">
-          <div class="flex items-center justify-between mb-6">
+        <div class="mb-8 bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
             <div>
-              <h2 class="font-headline text-headline-md text-on-surface">Blog Posts (SEO)</h2>
-              <p class="font-body text-caption text-on-surface-variant">Paste directly from ChatGPT using Markdown.</p>
+              <h2 class="font-headline text-lg font-extrabold text-slate-900">Blog Posts (SEO)</h2>
+              <p class="font-body text-xs text-slate-500">Paste directly from ChatGPT using Markdown.</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2.5">
               <input type="file" id="blog-mig-file" accept=".csv" class="hidden" />
-              <button class="px-4 py-2 border border-outline-variant rounded-lg font-label text-label-md hover:bg-surface-container transition-colors flex items-center gap-2" id="blog-mig-btn">
+              <button class="px-4 py-2 border border-slate-200 bg-white rounded-xl font-label text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2 cursor-pointer" id="blog-mig-btn">
                 <span class="material-symbols-outlined text-[18px]">upload_file</span> Import CSV
               </button>
-              <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" id="add-blog-btn">
-                <span class="material-symbols-outlined text-[18px]">add</span> Add Post
+              <button class="bg-[#0b1528] hover:bg-[#162744] text-white px-4 py-2 rounded-xl font-label text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer" id="add-blog-btn">
+                <span class="material-symbols-outlined text-[18px] text-[#38bdf8]">add</span> Add Post
               </button>
             </div>
           </div>
@@ -1739,19 +1804,22 @@
 
       <!-- SEO Section -->
       <section class="admin-section hidden" id="section-seo">
-        <h1 class="font-headline text-headline-lg text-on-surface mb-6">SEO Settings</h1>
-        <form id="seo-form" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+        <div class="mb-6">
+          <span class="text-[10px] font-label font-extrabold uppercase tracking-[0.16em] text-secondary block mb-1">Search Engine Optimization</span>
+          <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">SEO Settings</h1>
+        </div>
+        <form id="seo-form" class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
           <div class="flex flex-col gap-6">
             <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Default Page Title</label>
-              <input type="text" id="seo-title" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"/>
+              <label class="block font-label text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Default Page Title</label>
+              <input type="text" id="seo-title" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-xl font-body text-body-md focus:ring-secondary focus:border-secondary"/>
             </div>
             <div>
-              <label class="block font-label text-label-md text-on-surface-variant mb-2">Default Meta Description</label>
-              <textarea id="seo-description" rows="3" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-lg font-body text-body-md focus:ring-secondary focus:border-secondary"></textarea>
+              <label class="block font-label text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Default Meta Description</label>
+              <textarea id="seo-description" rows="3" class="admin-field w-full px-4 py-3 border border-outline-variant rounded-xl font-body text-body-md focus:ring-secondary focus:border-secondary"></textarea>
             </div>
-            <button type="submit" class="self-start bg-secondary text-on-secondary px-6 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
-              <span class="material-symbols-outlined text-[18px]">save</span> Save SEO Settings
+            <button type="submit" class="self-start bg-[#0b1528] hover:bg-[#162744] text-white px-6 py-2.5 rounded-xl font-label text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+              <span class="material-symbols-outlined text-[18px] text-[#38bdf8]">save</span> Save SEO Settings
             </button>
           </div>
         </form>
@@ -1759,11 +1827,14 @@
 
       <!-- Settings Section (WhatsApp, Business Info) -->
       <section class="admin-section hidden" id="section-settings">
-        <h1 class="font-headline text-headline-lg text-on-surface mb-6">General Settings</h1>
+        <div class="mb-6">
+          <span class="text-[10px] font-label font-extrabold uppercase tracking-[0.16em] text-secondary block mb-1">Platform Configuration</span>
+          <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">General Settings</h1>
+        </div>
         <form id="settings-form" class="flex flex-col gap-6">
           <!-- Branding -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <h3 class="font-headline text-headline-md text-on-surface mb-6">Branding (Logos)</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
+            <h3 class="font-headline text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-xl">verified</span> Branding (Logos)</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Desktop Logo URL (e.g., https://...)</label>
@@ -1788,8 +1859,8 @@
             </div>
           </div>
           <!-- Business Info -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <h3 class="font-headline text-headline-md text-on-surface mb-6">Business Information</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
+            <h3 class="font-headline text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-xl">business</span> Business Information</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Business Name</label>
@@ -1802,8 +1873,8 @@
             </div>
           </div>
           <!-- Inquiry Alerts / Notifications Config -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <h3 class="font-headline text-headline-md text-on-surface mb-6">Inquiry Notification Alerts</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
+            <h3 class="font-headline text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-xl">notifications_active</span> Inquiry Notification Alerts</h3>
             <div class="flex flex-col gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Notification Recipient Email</label>
@@ -1813,8 +1884,8 @@
             </div>
           </div>
           <!-- WhatsApp Config -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <h3 class="font-headline text-headline-md text-on-surface mb-6">WhatsApp Integration</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
+            <h3 class="font-headline text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-xl">chat</span> WhatsApp Integration</h3>
             <div class="flex flex-col gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">WhatsApp Number (include country code)</label>
@@ -1845,8 +1916,8 @@
           </div>
 
           <!-- Quo SMS API Settings -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 xl:p-5 shadow-sm">
-            <h3 class="font-headline text-title-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
+            <h3 class="font-headline text-lg font-extrabold text-slate-900 mb-4 flex items-center gap-2">
               <span class="material-symbols-outlined text-secondary">sms</span> Quo (OpenPhone) Integration
             </h3>
             <div class="space-y-4">
@@ -1867,8 +1938,8 @@
             </div>
           </div>
           <!-- Hero Content -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <h3 class="font-headline text-headline-md text-on-surface mb-6">Homepage Hero</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
+            <h3 class="font-headline text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-xl">Wallpaper</span> Homepage Hero</h3>
             <div class="flex flex-col gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Background Image/Video URL (or upload)</label>
@@ -1896,8 +1967,8 @@
             </div>
           </div>
           <!-- Expert Section Content -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <h3 class="font-headline text-headline-md text-on-surface mb-6">Expert Section</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
+            <h3 class="font-headline text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-xl">support_agent</span> Expert Section</h3>
             <div class="flex flex-col gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Tagline</label>
@@ -1946,8 +2017,8 @@
             </div>
           </div>
           <!-- Instagram Content -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <h3 class="font-headline text-headline-md text-on-surface mb-6">Instagram Live Feed</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
+            <h3 class="font-headline text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-xl">photo_camera</span> Instagram Live Feed</h3>
             <div class="flex flex-col gap-6">
               <div>
                 <label class="block font-label text-label-md text-on-surface-variant mb-2">Instagram Embed Code (3rd-party widget)</label>
@@ -1957,8 +2028,8 @@
             </div>
           </div>
           <!-- Monetization Content -->
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <h3 class="font-headline text-headline-md text-on-surface mb-6">Monetization & Ads</h3>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-xs">
+            <h3 class="font-headline text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-xl">monetization_on</span> Monetization &amp; Ads</h3>
             <div class="flex flex-col gap-6">
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" id="setting-adsense-enabled" class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary">
@@ -1972,95 +2043,96 @@
             </div>
           </div>
           <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full">
-  <button type="submit" class="self-start bg-secondary text-on-secondary px-6 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
-    <span class="material-symbols-outlined text-[18px]">save</span> Save Settings
-  </button>
-  <button type="button" id="publish-live-btn" class="self-start bg-primary text-on-primary px-6 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
-    <span class="material-symbols-outlined text-[18px]">rocket_launch</span> Publish to Live Site
-  </button>
-  <p class="text-xs text-on-surface-variant max-w-xs">Publishing updates the static public homepage with your latest saved settings. This triggers a build and takes about ~45 seconds.</p>
-</div>
+            <button type="submit" class="self-start bg-secondary text-on-secondary px-6 py-2.5 rounded-xl font-label text-xs font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">save</span> Save Settings
+            </button>
+            <button type="button" id="publish-live-btn" class="self-start bg-[#0b1528] text-white px-6 py-2.5 rounded-xl font-label text-xs font-bold hover:bg-[#162744] transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+              <span class="material-symbols-outlined text-[18px] text-[#38bdf8]">rocket_launch</span> Publish to Live Site
+            </button>
+            <p class="text-xs text-on-surface-variant max-w-xs">Publishing updates the static public homepage with your latest saved settings. This triggers a build and takes about ~45 seconds.</p>
+          </div>
         </form>
       </section>
 
       <!-- Staff Management & Timeclock Section -->
       <section class="admin-section hidden" id="section-staff">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
           <div>
-            <h1 class="font-headline text-headline-lg text-on-surface">Staff &amp; Timeclock Management</h1>
-            <p class="font-body text-body-md text-on-surface-variant mt-1">Manage team access permissions, hourly rates, and track shift timestamps.</p>
+            <span class="text-[10px] font-label font-extrabold uppercase tracking-[0.16em] text-secondary block mb-1">Operations &amp; Payroll</span>
+            <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Staff &amp; Timeclock Management</h1>
+            <p class="font-body text-xs sm:text-sm text-slate-500 mt-1">Manage team access permissions, hourly rates, and track shift timestamps.</p>
           </div>
-          <div class="flex flex-wrap items-center gap-3">
-            <button id="open-commission-btn" class="bg-amber-600 text-white px-5 py-3 rounded-xl font-label text-sm font-bold hover:bg-amber-700 transition-all flex items-center gap-2 shadow-sm">
-              <span class="material-symbols-outlined text-lg">paid</span> Log Charter Sale / Commission
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button id="open-commission-btn" class="bg-amber-600 text-white px-4 py-2.5 rounded-xl font-label text-xs font-bold hover:bg-amber-700 transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+              <span class="material-symbols-outlined text-base">paid</span> Log Charter Sale / Commission
             </button>
-            <button id="open-timeclock-btn" class="bg-green-700 text-white px-5 py-3 rounded-xl font-label text-sm font-bold hover:bg-green-800 transition-all flex items-center gap-2 shadow-sm">
-              <span class="material-symbols-outlined text-lg">schedule</span> Employee Clock In/Out
+            <button id="open-timeclock-btn" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-label text-xs font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+              <span class="material-symbols-outlined text-base">schedule</span> Employee Clock In/Out
             </button>
-            <button id="add-staff-btn" class="bg-secondary text-on-secondary px-5 py-3 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-sm">
-              <span class="material-symbols-outlined text-lg">person_add</span> Add New Staff
+            <button id="add-staff-btn" class="bg-[#0b1528] text-white px-4 py-2.5 rounded-xl font-label text-xs font-bold hover:bg-[#162744] transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+              <span class="material-symbols-outlined text-base text-[#38bdf8]">person_add</span> Add New Staff
             </button>
           </div>
         </div>
 
         <!-- Timeclock & Sales Stats Overview -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-green-100 text-green-700 flex items-center justify-center">
-              <span class="material-symbols-outlined text-2xl">timer</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-7">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-xs flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-xl">timer</span>
             </div>
             <div>
-              <p class="font-label text-xs text-on-surface-variant uppercase tracking-wider font-bold">On Clock</p>
-              <h3 class="font-headline text-2xl font-bold text-on-surface" id="stat-staff-working">0 Staff</h3>
+              <p class="font-label text-[11px] text-slate-500 uppercase tracking-wider font-bold">On Clock</p>
+              <h3 class="font-headline text-2xl font-extrabold text-slate-900 font-mono tabular-nums mt-0.5" id="stat-staff-working">0 Staff</h3>
             </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center">
-              <span class="material-symbols-outlined text-2xl">history</span>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-xs flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-sky-50 text-sky-600 border border-sky-200/60 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-xl">history</span>
             </div>
             <div>
-              <p class="font-label text-xs text-on-surface-variant uppercase tracking-wider font-bold">Total Shifts</p>
-              <h3 class="font-headline text-2xl font-bold text-on-surface" id="stat-staff-shifts">0 Shifts</h3>
+              <p class="font-label text-[11px] text-slate-500 uppercase tracking-wider font-bold">Total Shifts</p>
+              <h3 class="font-headline text-2xl font-extrabold text-slate-900 font-mono tabular-nums mt-0.5" id="stat-staff-shifts">0 Shifts</h3>
             </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center">
-              <span class="material-symbols-outlined text-2xl">payments</span>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-xs flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/60 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-xl">payments</span>
             </div>
             <div>
-              <p class="font-label text-xs text-on-surface-variant uppercase tracking-wider font-bold">Hours Logged</p>
-              <h3 class="font-headline text-2xl font-bold text-on-surface" id="stat-staff-hours">0.00 hrs</h3>
+              <p class="font-label text-[11px] text-slate-500 uppercase tracking-wider font-bold">Hours Logged</p>
+              <h3 class="font-headline text-2xl font-extrabold text-slate-900 font-mono tabular-nums mt-0.5" id="stat-staff-hours">0.00 hrs</h3>
             </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
-              <span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-xs flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
             </div>
             <div>
-              <p class="font-label text-xs text-on-surface-variant uppercase tracking-wider font-bold">Commissions</p>
-              <h3 class="font-headline text-2xl font-bold text-on-surface" id="stat-staff-commissions">$0.00</h3>
+              <p class="font-label text-[11px] text-slate-500 uppercase tracking-wider font-bold">Commissions</p>
+              <h3 class="font-headline text-2xl font-extrabold text-slate-900 font-mono tabular-nums mt-0.5" id="stat-staff-commissions">$0.00</h3>
             </div>
           </div>
         </div>
 
         <!-- Sub-navigation Tabs -->
-        <div class="flex flex-wrap border-b border-outline-variant mb-6 gap-6">
-          <button id="tab-btn-directory" class="pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2">
+        <div class="flex flex-wrap border-b border-slate-200/80 mb-6 gap-6">
+          <button id="tab-btn-directory" class="pb-3 border-b-2 border-secondary font-label text-sm font-bold text-secondary flex items-center gap-2 cursor-pointer">
             <span class="material-symbols-outlined text-base">badge</span> Team &amp; Permissions
           </button>
-          <button id="tab-btn-timecards" class="pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors">
+          <button id="tab-btn-timecards" class="pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors cursor-pointer">
             <span class="material-symbols-outlined text-base">history_toggle_off</span> Timecards &amp; Hours Worked
           </button>
-          <button id="tab-btn-commissions" class="pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors">
+          <button id="tab-btn-commissions" class="pb-3 border-b-2 border-transparent font-label text-sm font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-2 transition-colors cursor-pointer">
             <span class="material-symbols-outlined text-base">paid</span> Commission Sales Log
           </button>
         </div>
 
         <!-- TAB 1: Staff Directory & Permissions Table -->
-        <div id="tab-view-directory" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+        <div id="tab-view-directory" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs">
           <div class="overflow-x-auto">
             <table class="w-full">
-              <thead class="bg-surface-container text-left text-xs font-label uppercase text-on-surface-variant tracking-wider">
+              <thead class="bg-slate-50/90 border-b border-slate-200/80 text-left text-[11px] font-label font-bold uppercase text-slate-500 tracking-wider">
                 <tr>
                   <th class="p-4">Employee</th>
                   <th class="p-4">Role &amp; Wage</th>
@@ -2069,7 +2141,7 @@
                   <th class="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody id="staff-table-body" class="divide-y divide-outline-variant text-sm font-body">
+              <tbody id="staff-table-body" class="divide-y divide-slate-100 text-sm font-body">
                 <tr><td colspan="5" class="text-center py-8"><span class="admin-spinner"></span></td></tr>
               </tbody>
             </table>
@@ -2077,16 +2149,16 @@
         </div>
 
         <!-- TAB 2: Timecards & Hours Log Table (Hidden by default) -->
-        <div id="tab-view-timecards" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm hidden">
-          <div class="p-4 bg-surface-container-low border-b border-outline-variant flex items-center justify-between">
-            <span class="text-xs font-bold text-on-surface-variant">Showing chronological shift records and automated wage calculations</span>
-            <button id="refresh-timecards-btn" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1">
+        <div id="tab-view-timecards" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs hidden">
+          <div class="p-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-600">Showing chronological shift records and automated wage calculations</span>
+            <button id="refresh-timecards-btn" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1 cursor-pointer">
               <span class="material-symbols-outlined text-sm">refresh</span> Refresh Log
             </button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
-              <thead class="bg-surface-container text-left text-xs font-label uppercase text-on-surface-variant tracking-wider">
+              <thead class="bg-slate-50/90 border-b border-slate-200/80 text-left text-[11px] font-label font-bold uppercase text-slate-500 tracking-wider">
                 <tr>
                   <th class="p-4">Employee</th>
                   <th class="p-4">Clock In Time</th>
@@ -2097,7 +2169,7 @@
                   <th class="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody id="timecards-table-body" class="divide-y divide-outline-variant text-sm font-body">
+              <tbody id="timecards-table-body" class="divide-y divide-slate-100 text-sm font-body">
                 <tr><td colspan="7" class="text-center py-8"><span class="admin-spinner"></span></td></tr>
               </tbody>
             </table>
@@ -2105,12 +2177,12 @@
         </div>
 
         <!-- TAB 3: Commission Sales Log Table (Hidden by default) -->
-        <div id="tab-view-commissions" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm hidden">
-          <div class="px-4 py-2.5 bg-surface-container-low border-b border-outline-variant flex flex-wrap items-center justify-between gap-2.5">
-            <span class="text-xs font-bold text-on-surface-variant">Showing charter bookings and sales commission payouts</span>
+        <div id="tab-view-commissions" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs hidden">
+          <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5">
+            <span class="text-xs font-bold text-slate-600">Showing charter bookings and sales commission payouts</span>
             <div class="flex items-center gap-2">
-              <button id="btn-open-payout-modal" type="button" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
-                <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span> Generate Payout Report (PDF)
+              <button id="btn-open-payout-modal" type="button" class="bg-[#0b1528] hover:bg-[#162744] text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
+                <span class="material-symbols-outlined text-[16px] text-[#38bdf8]">picture_as_pdf</span> Generate Payout Report (PDF)
               </button>
               <button id="refresh-commissions-btn" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1 cursor-pointer">
                 <span class="material-symbols-outlined text-[16px]">refresh</span> Refresh Log
@@ -2119,19 +2191,19 @@
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-xs text-left">
-              <thead class="bg-surface-container text-left text-[11px] font-label uppercase text-on-surface-variant tracking-wider">
+              <thead class="bg-slate-50/90 border-b border-slate-200/80 text-left text-[11px] font-label uppercase text-slate-500 tracking-wider">
                 <tr>
-                  <th class="px-3 py-2.5 font-bold">Sales Agent</th>
-                  <th class="px-3 py-2.5 font-bold">Yacht Booked</th>
-                  <th class="px-3 py-2.5 font-bold">Charter Date</th>
-                  <th class="px-3 py-2.5 font-bold">Total ($)</th>
-                  <th class="px-3 py-2.5 font-bold text-center">Rate</th>
-                  <th class="px-3 py-2.5 font-bold">Earned ($)</th>
-                  <th class="px-3 py-2.5 font-bold">Client / Notes</th>
-                  <th class="px-3 py-2.5 font-bold text-right">Actions</th>
+                  <th class="px-3.5 py-3 font-bold">Sales Agent</th>
+                  <th class="px-3.5 py-3 font-bold">Yacht Booked</th>
+                  <th class="px-3.5 py-3 font-bold">Charter Date</th>
+                  <th class="px-3.5 py-3 font-bold">Total ($)</th>
+                  <th class="px-3.5 py-3 font-bold text-center">Rate</th>
+                  <th class="px-3.5 py-3 font-bold">Earned ($)</th>
+                  <th class="px-3.5 py-3 font-bold">Client / Notes</th>
+                  <th class="px-3.5 py-3 font-bold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody id="commissions-table-body" class="divide-y divide-outline-variant text-xs font-body">
+              <tbody id="commissions-table-body" class="divide-y divide-slate-100 text-xs font-body">
                 <tr><td colspan="8" class="text-center py-6"><span class="admin-spinner"></span></td></tr>
               </tbody>
             </table>
@@ -2174,15 +2246,15 @@
           <div class="grid grid-cols-3 divide-x divide-outline-variant/50 border-b border-outline-variant bg-surface-container shrink-0">
             <div class="p-4 text-center">
               <div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Lifetime Value</div>
-              <div class="font-headline text-xl font-black text-green-700" id="cp-ltv">$0</div>
+              <div class="font-headline text-xl font-black text-emerald-700 font-mono tabular-nums" id="cp-ltv">$0</div>
             </div>
             <div class="p-4 text-center">
               <div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Total Charters</div>
-              <div class="font-headline text-xl font-black text-secondary" id="cp-bookings">0</div>
+              <div class="font-headline text-xl font-black text-secondary font-mono tabular-nums" id="cp-bookings">0</div>
             </div>
             <div class="p-4 text-center">
               <div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Last Visit</div>
-              <div class="font-headline text-xl font-black text-on-surface" id="cp-last-visit">Never</div>
+              <div class="font-headline text-xl font-black text-on-surface font-mono tabular-nums" id="cp-last-visit">Never</div>
             </div>
           </div>
 
@@ -2246,20 +2318,21 @@
 
       <!-- Customer CRM Section (Directory & Pipeline) -->
       <section id="section-crm" class="admin-section hidden flex flex-col gap-6">
-        <div class="flex items-center justify-between mb-2">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-1">
           <div>
-            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Customer Directory</h1>
-            <p class="font-body text-body-md text-on-surface-variant">Manage customer relationships, charter history, and sales pipeline</p>
+            <span class="text-[10px] font-label font-extrabold uppercase tracking-[0.16em] text-secondary block mb-1">Client Intelligence</span>
+            <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Customer Directory</h1>
+            <p class="font-body text-xs sm:text-sm text-slate-500 mt-0.5">Manage customer relationships, charter history, and sales pipeline</p>
           </div>
           <div class="flex items-center gap-3">
-            <button id="add-inquiry-btn" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2 shadow-sm">
-              <span class="material-symbols-outlined text-[18px]">add</span> New Quote / Lead
+            <button id="add-inquiry-btn" class="bg-[#0b1528] hover:bg-[#162744] text-white px-4 py-2.5 rounded-xl font-label text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+              <span class="material-symbols-outlined text-[18px] text-[#38bdf8]">add</span> New Quote / Lead
             </button>
           </div>
         </div>
 
         <!-- CRM Tabs -->
-        <div class="flex border-b border-outline-variant mb-2 gap-6">
+        <div class="flex border-b border-slate-200/80 mb-2 gap-6">
           <button type="button" onclick="document.getElementById('crm-view-directory').classList.remove('hidden'); document.getElementById('crm-view-pipeline').classList.add('hidden'); this.classList.add('border-secondary','text-secondary'); this.classList.remove('border-transparent','text-on-surface-variant'); this.nextElementSibling.classList.add('border-transparent','text-on-surface-variant'); this.nextElementSibling.classList.remove('border-secondary','text-secondary');" class="pb-3 border-b-2 border-secondary font-label text-label-lg text-secondary font-bold flex items-center gap-2 cursor-pointer transition-all">
             <span class="material-symbols-outlined text-[18px]">group</span> Directory
           </button>
@@ -2270,31 +2343,35 @@
 
         <!-- DIRECTORY VIEW -->
         <div id="crm-view-directory" class="flex flex-col gap-4">
-          <div class="flex items-center justify-between">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs flex flex-wrap items-center justify-between gap-3">
             <div class="flex gap-2 flex-wrap" id="crm-sort-btns">
-              <button data-crm-sort="spent" class="px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold">Most Spent</button>
-              <button data-crm-sort="bookings" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Most Bookings</button>
-              <button data-crm-sort="recent" class="px-3 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Most Recent</button>
+              <button data-crm-sort="spent" class="px-3.5 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold cursor-pointer">Most Spent</button>
+              <button data-crm-sort="bookings" class="px-3.5 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors cursor-pointer">Most Bookings</button>
+              <button data-crm-sort="recent" class="px-3.5 py-1.5 bg-surface-container text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors cursor-pointer">Most Recent</button>
             </div>
-            <input type="text" id="crm-search" placeholder="Search customers..." class="border border-outline-variant rounded-lg px-4 py-2 text-sm w-64 bg-surface-container-lowest"/>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base">search</span>
+              <input type="text" id="crm-search" placeholder="Search customers..." class="border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm w-64 bg-slate-50 focus:bg-white transition-all"/>
+            </div>
           </div>
 
-        </div>
-        <div id="crm-table-container" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
-          <table class="w-full">
-            <thead class="bg-surface-container border-b border-outline-variant">
-              <tr>
-                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Customer</th>
-                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Phone</th>
-                <th class="text-right px-4 py-3 font-label text-xs text-on-surface-variant">Bookings</th>
-                <th class="text-right px-4 py-3 font-label text-xs text-on-surface-variant">Total Spent</th>
-                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Last Charter</th>
-                <th class="text-center px-4 py-3 font-label text-xs text-on-surface-variant">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="crm-table-body"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">Loading CRM...</td></tr></tbody>
-          </table>
-        </div>
+          <div id="crm-table-container" class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-slate-50/90 border-b border-slate-200/80">
+                  <tr>
+                    <th class="text-left px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Customer</th>
+                    <th class="text-left px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Phone</th>
+                    <th class="text-right px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Bookings</th>
+                    <th class="text-right px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Spent</th>
+                    <th class="text-left px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Last Charter</th>
+                    <th class="text-center px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="crm-table-body" class="divide-y divide-slate-100"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">Loading CRM...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <!-- PIPELINE VIEW (Kanban) -->
@@ -2303,12 +2380,12 @@
             <div class="flex gap-4 h-full min-w-[900px]">
               
               <!-- Column 1: New Web Requests -->
-              <div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col">
-                <div class="p-4 border-b border-outline-variant bg-surface-container/50 rounded-t-2xl flex items-center justify-between">
-                  <h3 class="font-label text-label-lg font-bold flex items-center gap-2 text-on-surface">
-                    <span class="w-3 h-3 rounded-full bg-blue-500"></span> New Web Requests
+              <div class="flex-1 bg-slate-50/70 border border-slate-200/80 rounded-2xl flex flex-col">
+                <div class="p-4 border-b border-slate-200/70 bg-white rounded-t-2xl flex items-center justify-between">
+                  <h3 class="font-label text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500 ring-4 ring-sky-500/15"></span> New Web Requests
                   </h3>
-                  <span id="count-col-new" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold">0</span>
+                  <span id="count-col-new" class="bg-sky-50 text-sky-700 border border-sky-200/60 px-2.5 py-0.5 rounded-full text-xs font-bold font-mono tabular-nums">0</span>
                 </div>
                 <div id="kanban-col-new" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 min-h-[150px]" data-stage="new">
                   <!-- Cards will be injected here -->
@@ -2316,12 +2393,12 @@
               </div>
 
               <!-- Column 2: Contacted / Drafting Quote -->
-              <div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col">
-                <div class="p-4 border-b border-outline-variant bg-surface-container/50 rounded-t-2xl flex items-center justify-between">
-                  <h3 class="font-label text-label-lg font-bold flex items-center gap-2 text-on-surface">
-                    <span class="w-3 h-3 rounded-full bg-orange-400"></span> Contacted / Draft
+              <div class="flex-1 bg-slate-50/70 border border-slate-200/80 rounded-2xl flex flex-col">
+                <div class="p-4 border-b border-slate-200/70 bg-white rounded-t-2xl flex items-center justify-between">
+                  <h3 class="font-label text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 ring-4 ring-amber-500/15"></span> Contacted / Draft
                   </h3>
-                  <span id="count-col-contacted" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold">0</span>
+                  <span id="count-col-contacted" class="bg-amber-50 text-amber-700 border border-amber-200/60 px-2.5 py-0.5 rounded-full text-xs font-bold font-mono tabular-nums">0</span>
                 </div>
                 <div id="kanban-col-contacted" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 min-h-[150px]" data-stage="contacted">
                   <!-- Cards will be injected here -->
@@ -2329,12 +2406,12 @@
               </div>
 
               <!-- Column 3: Quote Sent -->
-              <div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col">
-                <div class="p-4 border-b border-outline-variant bg-surface-container/50 rounded-t-2xl flex items-center justify-between">
-                  <h3 class="font-label text-label-lg font-bold flex items-center gap-2 text-on-surface">
-                    <span class="w-3 h-3 rounded-full bg-purple-500"></span> Quote Sent
+              <div class="flex-1 bg-slate-50/70 border border-slate-200/80 rounded-2xl flex flex-col">
+                <div class="p-4 border-b border-slate-200/70 bg-white rounded-t-2xl flex items-center justify-between">
+                  <h3 class="font-label text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 ring-4 ring-indigo-500/15"></span> Quote Sent
                   </h3>
-                  <span id="count-col-quote_sent" class="bg-surface-container-high px-2 py-0.5 rounded-full text-xs font-bold">0</span>
+                  <span id="count-col-quote_sent" class="bg-indigo-50 text-indigo-700 border border-indigo-200/60 px-2.5 py-0.5 rounded-full text-xs font-bold font-mono tabular-nums">0</span>
                 </div>
                 <div id="kanban-col-quote_sent" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 min-h-[150px]" data-stage="quote_sent">
                   <!-- Cards will be injected here -->
@@ -2348,30 +2425,33 @@
       </section>
 
       <!-- Promos & Discounts Section -->
-      <section id="section-promos" class="admin-section hidden flex flex-col gap-8">
-        <div class="flex items-center justify-between mb-4">
+      <section id="section-promos" class="admin-section hidden flex flex-col gap-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
           <div>
-            <h1 class="font-headline text-headline-lg text-on-surface font-bold">Promos &amp; Discounts</h1>
-            <p class="font-body text-body-md text-on-surface-variant">Create and manage promotional discount codes</p>
+            <span class="text-[10px] font-label font-extrabold uppercase tracking-[0.16em] text-secondary block mb-1">Pricing &amp; Incentives</span>
+            <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Promos &amp; Discounts</h1>
+            <p class="font-body text-xs sm:text-sm text-slate-500 mt-0.5">Create and manage promotional discount codes</p>
           </div>
-          <button id="add-promo-btn" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2">
-            <span class="material-symbols-outlined text-[18px]">add</span> Create Promo Code
+          <button id="add-promo-btn" class="bg-[#0b1528] hover:bg-[#162744] text-white px-4 py-2.5 rounded-xl font-label text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+            <span class="material-symbols-outlined text-[18px] text-[#38bdf8]">add</span> Create Promo Code
           </button>
         </div>
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
-          <table class="w-full">
-            <thead class="bg-surface-container border-b border-outline-variant">
-              <tr>
-                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Code</th>
-                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Discount</th>
-                <th class="text-left px-4 py-3 font-label text-xs text-on-surface-variant">Expires</th>
-                <th class="text-right px-4 py-3 font-label text-xs text-on-surface-variant">Used / Max</th>
-                <th class="text-center px-4 py-3 font-label text-xs text-on-surface-variant">Status</th>
-                <th class="text-center px-4 py-3 font-label text-xs text-on-surface-variant">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="promos-table-body"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No promo codes yet.</td></tr></tbody>
-          </table>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-slate-50/90 border-b border-slate-200/80">
+                <tr>
+                  <th class="text-left px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Code</th>
+                  <th class="text-left px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Discount</th>
+                  <th class="text-left px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Expires</th>
+                  <th class="text-right px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Used / Max</th>
+                  <th class="text-center px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Status</th>
+                  <th class="text-center px-4 py-3.5 font-label text-[11px] font-bold uppercase tracking-wider text-slate-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="promos-table-body" class="divide-y divide-slate-100"><tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No promo codes yet.</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>
@@ -2393,7 +2473,7 @@
         </div>
         <div>
           <label class="block font-label text-sm font-bold text-on-surface mb-1">New Password <span class="text-xs text-on-surface-variant font-normal">(Leave blank to keep current)</span></label>
-          <input type="password" id="admin-profile-password" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:border-secondary transition-colors" placeholder="ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½">
+          <input type="password" id="admin-profile-password" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:border-secondary transition-colors" placeholder="••••••••">
         </div>
         <div class="flex justify-end pt-2">
           <button type="submit" class="bg-secondary text-on-secondary px-6 py-2.5 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-opacity w-full sm:w-auto">Save Changes</button>
@@ -3883,7 +3963,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <!-- Admin Module Setup -->
-  <script type="module" src="/js/pages/admin-dashboard.js?v=20260925v1300"></script>
+  <script type="module" src="/js/pages/admin-dashboard.js?v=20261018v2200"></script>
   <script>
     // -- Sidebar Drag-and-Drop Reordering -------------------------------------
     // -- Dynamic Sidebar Menu Editor ------------------------------------------

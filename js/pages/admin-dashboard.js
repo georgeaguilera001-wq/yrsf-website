@@ -1292,56 +1292,56 @@ return; // Redirect in progress
       if (batch.length === 0) return;
 
       const html = batch.map(boat => `
-        <tr class="admin-table-row border-b border-outline-variant hover:bg-surface-container-low transition-colors animate-in fade-in duration-200">
-          <td class="px-3 py-3">
-            <div class="flex items-center gap-3 cursor-pointer group" onclick="document.querySelector('.edit-boat-btn[data-id=\\'${boat.id}\\']')?.click()" title="Edit ${escapeHtml(boat.name)}">
-              ${boat.primary_image_url ? `<img src="${boat.primary_image_url}" alt="" loading="lazy" decoding="async" class="w-12 h-12 rounded-lg object-cover group-hover:ring-2 ring-secondary transition-all"/>` : '<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center group-hover:ring-2 ring-secondary transition-all"><span class="material-symbols-outlined text-outline-variant">image</span></div>'}
+        <tr class="admin-table-row border-b border-slate-100 hover:bg-slate-50/80 transition-colors animate-in fade-in duration-200">
+          <td class="px-6 py-3.5">
+            <div class="flex items-center gap-3.5 cursor-pointer group" onclick="document.querySelector('.edit-boat-btn[data-id=\\'${boat.id}\\']')?.click()" title="Edit ${escapeHtml(boat.name)}">
+              ${boat.primary_image_url ? `<img src="${boat.primary_image_url}" alt="" loading="lazy" decoding="async" class="w-12 h-12 rounded-xl object-cover border border-slate-200/80 shadow-2xs group-hover:ring-2 ring-secondary transition-all"/>` : '<div class="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center group-hover:ring-2 ring-secondary transition-all"><span class="material-symbols-outlined text-slate-400">directions_boat</span></div>'}
               <div>
-                <p class="font-label text-label-md text-secondary group-hover:underline flex items-center gap-1.5 whitespace-nowrap">
+                <p class="font-headline font-bold text-xs sm:text-sm text-slate-900 group-hover:text-secondary transition-colors flex items-center gap-1.5 whitespace-nowrap">
                   ${escapeHtml(boat.name)}
                   ${boat.ical_feed_url ? `<span class="material-symbols-outlined text-[15px] text-emerald-600 shrink-0" title="iCal Connected" style="font-variation-settings:'FILL' 1">check_circle</span>` : ''}
                 </p>
-                <p class="font-caption text-caption text-on-surface-variant truncate max-w-[120px]">${escapeHtml(boat.manufacturer || '')}</p>
+                <p class="font-caption text-[11px] text-slate-500 truncate max-w-[140px]">${escapeHtml(boat.manufacturer || '')}</p>
               </div>
             </div>
           </td>
-          <td class="px-3 py-3 font-caption text-caption text-on-surface-variant whitespace-nowrap">${boat.capacity || '-'} guests</td>
-          <td class="px-3 py-3 whitespace-nowrap">
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-caption ${
-              boat.status === 'active' ? 'bg-green-100 text-green-700' :
-              boat.status === 'maintenance' ? 'bg-yellow-100 text-yellow-700' :
-              'bg-gray-100 text-gray-600'
+          <td class="px-6 py-3.5 font-mono tabular-nums text-xs font-semibold text-slate-700 whitespace-nowrap">${boat.capacity || '-'} guests</td>
+          <td class="px-6 py-3.5 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold capitalize border ${
+              boat.status === 'active' ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80' :
+              boat.status === 'maintenance' ? 'bg-amber-50 text-amber-800 border-amber-200/80' :
+              'bg-slate-100 text-slate-600 border-slate-200/80'
             }">
               <span class="w-1.5 h-1.5 rounded-full ${
-                boat.status === 'active' ? 'bg-green-500' :
-                boat.status === 'maintenance' ? 'bg-yellow-500' :
-                'bg-gray-400'
+                boat.status === 'active' ? 'bg-emerald-500' :
+                boat.status === 'maintenance' ? 'bg-amber-500' :
+                'bg-slate-400'
               }"></span>
               ${boat.status}
             </span>
           </td>
-          <td class="px-3 py-3 whitespace-nowrap">
-            ${boat.is_featured ? '<span class="material-symbols-outlined text-secondary" style="font-variation-settings: \'FILL\' 1;">star</span>' : '<span class="material-symbols-outlined text-outline-variant">star</span>'}
+          <td class="px-6 py-3.5 whitespace-nowrap">
+            ${boat.is_featured ? '<span class="material-symbols-outlined text-amber-500" style="font-variation-settings: \'FILL\' 1;">star</span>' : '<span class="material-symbols-outlined text-slate-300">star</span>'}
           </td>
-          <td class="px-3 py-3 whitespace-nowrap">
+          <td class="px-6 py-3.5 whitespace-nowrap">
             ${boat.ical_feed_url
-              ? `<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold" title="iCal feed connected">
+              ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-bold" title="iCal feed connected">
                   <span class="material-symbols-outlined text-[14px] text-emerald-600" style="font-variation-settings:'FILL' 1">check_circle</span>
-                  iCal
+                  iCal Synced
                 </span>`
-              : `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container text-on-surface-variant text-[11px] font-bold" title="No iCal feed">
-                  <span class="material-symbols-outlined text-[14px] text-outline-variant">radio_button_unchecked</span>
+              : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200/60 text-slate-500 text-[11px] font-semibold" title="No iCal feed">
+                  <span class="material-symbols-outlined text-[14px] text-slate-400">radio_button_unchecked</span>
                   None
                 </span>`
             }
           </td>
-          <td class="px-3 py-3 text-right whitespace-nowrap">
-            <div class="flex items-center justify-end gap-1 row-actions">
-              <button class="edit-boat-btn p-1.5 hover:bg-surface-container rounded-lg transition-colors" data-id="${boat.id}" title="Edit">
-                <span class="material-symbols-outlined text-[14px]">edit</span>
+          <td class="px-6 py-3.5 text-right whitespace-nowrap">
+            <div class="flex items-center justify-end gap-1.5 row-actions">
+              <button class="edit-boat-btn p-1.5 text-slate-600 hover:text-secondary hover:bg-slate-100 rounded-lg transition-colors cursor-pointer" data-id="${boat.id}" title="Edit">
+                <span class="material-symbols-outlined text-[16px]">edit</span>
               </button>
-              <button class="delete-boat-btn p-1.5 hover:bg-error-container rounded-lg transition-colors text-error" data-id="${boat.id}" data-name="${escapeHtml(boat.name)}" title="Delete">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
+              <button class="delete-boat-btn p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" data-id="${boat.id}" data-name="${escapeHtml(boat.name)}" title="Delete">
+                <span class="material-symbols-outlined text-[17px]">delete</span>
               </button>
             </div>
           </td>
@@ -4456,26 +4456,27 @@ EXTRACTION RULES:
         const canManage = window.canClockInForStaff(userItem.id);
 
         return `
-          <div class="bg-surface-container-low border border-outline-variant/60 rounded-xl p-3 flex flex-col justify-between gap-2 shadow-2xs hover:border-outline-variant transition-all">
-            <div class="flex items-center justify-between gap-1">
+          <div class="bg-slate-50/70 border border-slate-200/80 rounded-xl p-3.5 flex flex-col justify-between gap-2.5 shadow-2xs hover:bg-white hover:border-slate-300 transition-all">
+            <div class="flex items-center justify-between gap-1.5">
               <div class="min-w-0 flex-1">
-                <h4 class="font-bold text-xs text-on-surface truncate">${escapeHtml(userItem.name)}</h4>
-                <p class="text-[10px] text-on-surface-variant truncate">${escapeHtml(userItem.role || 'Staff')}</p>
+                <h4 class="font-bold text-xs text-slate-900 truncate">${escapeHtml(userItem.name)}</h4>
+                <p class="text-[10px] font-medium text-slate-500 truncate">${escapeHtml(userItem.role || 'Staff')}</p>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0 ${isWorking ? 'bg-green-100 text-green-800 animate-pulse' : 'bg-surface-container text-on-surface-variant'}">
-                ${isWorking ? '🟢 Working' : '⚪ Off Duty'}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold shrink-0 border ${isWorking ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80' : 'bg-slate-100 text-slate-500 border-slate-200/60'}">
+                <span class="w-1.5 h-1.5 rounded-full ${isWorking ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}"></span>
+                ${isWorking ? 'Working' : 'Off Duty'}
               </span>
             </div>
 
-            <div class="pt-1 border-t border-outline-variant/30">
+            <div class="pt-1.5 border-t border-slate-200/60">
               ${!canManage ? `
-                <span class="w-full py-1.5 px-2 bg-surface-container text-on-surface-variant/60 rounded-lg text-[11px] font-bold text-center block opacity-60 cursor-not-allowed" title="Only Super Admin can clock in for co-workers">🔒 Self Only</span>
+                <span class="w-full py-1.5 px-2 bg-slate-100 text-slate-400 rounded-lg text-[11px] font-bold text-center block cursor-not-allowed" title="Only Super Admin can clock in for co-workers">🔒 Self Only</span>
               ` : isWorking ? `
-                <button onclick="window.quickClockOutStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="w-full py-1.5 px-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs">
+                <button onclick="window.quickClockOutStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="w-full py-1.5 px-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/80 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
                   <span class="material-symbols-outlined text-[14px]">logout</span> Clock Out
                 </button>
               ` : `
-                <button onclick="window.quickClockInStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="w-full py-1.5 px-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs">
+                <button onclick="window.quickClockInStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="w-full py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
                   <span class="material-symbols-outlined text-[14px]">schedule</span> Clock In
                 </button>
               `}
@@ -4620,46 +4621,46 @@ EXTRACTION RULES:
           }
         });
         const permBadges = userItem.role === 'admin'
-          ? '<span class="bg-primary text-on-primary px-2 py-0.5 rounded text-xs font-bold">Full Access</span>'
-          : `<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs font-medium">${grantedMods} Modules (${totalSubGranted} Actions)</span>`;
+          ? '<span class="bg-[#0b1528] text-[#38bdf8] border border-slate-800 px-2.5 py-0.5 rounded-full text-[11px] font-bold">Full Access</span>'
+          : `<span class="bg-sky-50 text-sky-800 border border-sky-200/80 px-2.5 py-0.5 rounded-full text-[11px] font-semibold font-mono tabular-nums">${grantedMods} Modules (${totalSubGranted} Actions)</span>`;
 
         return `
-          <tr class="hover:bg-surface-container-low/50 transition-colors">
+          <tr class="hover:bg-slate-50/80 transition-colors">
             <td class="p-4">
-              <p class="font-bold text-on-surface">${escapeHtml(userItem.name)}</p>
-              <p class="text-xs text-on-surface-variant">${escapeHtml(userItem.email || '')}</p>
+              <p class="font-bold text-slate-900">${escapeHtml(userItem.name)}</p>
+              <p class="text-xs text-slate-500">${escapeHtml(userItem.email || '')}</p>
             </td>
             <td class="p-4">
-              <span class="font-medium text-on-surface">${escapeHtml(userItem.role || 'Staff')}</span>
+              <span class="font-semibold text-slate-800 text-xs uppercase tracking-wider">${escapeHtml(userItem.role || 'Staff')}</span>
               ${userItem.pay_type === 'commission'
-                ? `<p class="text-xs font-mono text-amber-700 font-bold">🤝 ${userItem.commission_rate || 0}% Comm.</p>`
+                ? `<p class="text-xs font-mono tabular-nums text-amber-700 font-bold mt-0.5">${userItem.commission_rate || 0}% Comm.</p>`
                 : userItem.pay_type === 'both'
-                ? `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(userItem.hourly_rate || 0).toFixed(2)}/hr + <span class="text-amber-700">${userItem.commission_rate || 0}% Comm.</span></p>`
-                : `<p class="text-xs font-mono text-green-700 font-bold">$${parseFloat(userItem.hourly_rate || 0).toFixed(2)}/hr</p>`}
+                ? `<p class="text-xs font-mono tabular-nums text-emerald-700 font-bold mt-0.5">$${parseFloat(userItem.hourly_rate || 0).toFixed(2)}/hr + <span class="text-amber-700">${userItem.commission_rate || 0}% Comm.</span></p>`
+                : `<p class="text-xs font-mono tabular-nums text-emerald-700 font-bold mt-0.5">$${parseFloat(userItem.hourly_rate || 0).toFixed(2)}/hr</p>`}
             </td>
             <td class="p-4">
               ${isWorking 
-                ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold animate-pulse">🟢 On Clock</span>' 
-                : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-medium">⚪ Off Duty</span>'}
+                ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> On Clock</span>' 
+                : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Off Duty</span>'}
             </td>
             <td class="p-4 flex flex-wrap gap-1 max-w-sm">${permBadges}</td>
             <td class="p-4 text-right whitespace-nowrap">
               ${!canManage ? `
-                <span class="px-2.5 py-1.5 bg-surface-container text-on-surface-variant/60 rounded-lg text-xs font-bold inline-block opacity-60 cursor-not-allowed mr-1.5" title="Only Super Admin can clock in for co-workers">🔒 Self Only</span>
+                <span class="px-2.5 py-1.5 bg-slate-100 text-slate-400 rounded-lg text-xs font-bold inline-block cursor-not-allowed mr-1.5" title="Only Super Admin can clock in for co-workers">🔒 Self Only</span>
               ` : isWorking ? `
-                <button onclick="window.quickClockOutStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5" title="Clock Out ${escapeHtml(userItem.name)}">
-                  <span class="material-symbols-outlined text-[16px]">logout</span> Clock Out
+                <button onclick="window.quickClockOutStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200/80 hover:bg-red-100 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5 cursor-pointer" title="Clock Out ${escapeHtml(userItem.name)}">
+                  <span class="material-symbols-outlined text-[15px]">logout</span> Clock Out
                 </button>
               ` : `
-                <button onclick="window.quickClockInStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5" title="Clock In ${escapeHtml(userItem.name)}">
-                  <span class="material-symbols-outlined text-[16px]">schedule</span> Clock In
+                <button onclick="window.quickClockInStaff('${userItem.id}', '${escapeHtml(userItem.name)}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-2xs mr-1.5 cursor-pointer" title="Clock In ${escapeHtml(userItem.name)}">
+                  <span class="material-symbols-outlined text-[15px]">schedule</span> Clock In
                 </button>
               `}
-              <button onclick="window.editStaffUser('${userItem.id}')" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors" title="Edit Staff & Permissions">
-                <span class="material-symbols-outlined text-[14px]">edit</span>
+              <button onclick="window.editStaffUser('${userItem.id}')" class="p-1.5 text-slate-600 hover:text-secondary hover:bg-slate-100 rounded-lg transition-colors cursor-pointer" title="Edit Staff & Permissions">
+                <span class="material-symbols-outlined text-[16px]">edit</span>
               </button>
-              <button onclick="window.deleteStaffUser('${userItem.id}', '${escapeHtml(userItem.name)}')" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1" title="Delete Employee">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
+              <button onclick="window.deleteStaffUser('${userItem.id}', '${escapeHtml(userItem.name)}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1 cursor-pointer" title="Delete Employee">
+                <span class="material-symbols-outlined text-[17px]">delete</span>
               </button>
             </td>
           </tr>
@@ -4704,16 +4705,16 @@ EXTRACTION RULES:
         const earnings = card.duration_hours ? `$${(parseFloat(card.duration_hours) * parseFloat(staff.hourly_rate || 0)).toFixed(2)}` : 'TBD';
 
         return `
-          <tr class="hover:bg-surface-container-low/50 transition-colors">
-            <td class="p-4 font-bold text-on-surface">${staff.name}</td>
-            <td class="p-4 text-xs font-mono text-on-surface-variant">${inDate}</td>
-            <td class="p-4 text-xs font-mono text-on-surface-variant">${outDate}</td>
-            <td class="p-4 font-bold text-secondary">${hours}</td>
-            <td class="p-4 font-mono font-bold text-green-700">${earnings}</td>
-            <td class="p-4 text-xs text-on-surface-variant max-w-xs truncate">${card.notes || '-'}</td>
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="p-4 font-bold text-slate-900">${staff.name}</td>
+            <td class="p-4 text-xs font-mono tabular-nums text-slate-600">${inDate}</td>
+            <td class="p-4 text-xs font-mono tabular-nums text-slate-600">${outDate}</td>
+            <td class="p-4 font-mono tabular-nums font-bold text-secondary">${hours}</td>
+            <td class="p-4 font-mono tabular-nums font-bold text-emerald-700">${earnings}</td>
+            <td class="p-4 text-xs text-slate-500 max-w-xs truncate">${card.notes || '-'}</td>
             <td class="p-4 text-right">
-              <button onclick="window.deleteTimecard('${card.id}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Shift Record">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
+              <button onclick="window.deleteTimecard('${card.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" title="Delete Shift Record">
+                <span class="material-symbols-outlined text-[17px]">delete</span>
               </button>
             </td>
           </tr>
@@ -4747,36 +4748,36 @@ EXTRACTION RULES:
         const isPaid = (comm.client_notes || '').includes('[PAID]');
         const cleanNotes = (comm.client_notes || '').replace('[PAID]', '').trim() || '-';
         return `
-          <tr class="hover:bg-surface-container-low/50 transition-colors">
-            <td class="px-3 py-2">
-              <p class="font-bold text-on-surface leading-tight">${escapeHtml(staff.name)}</p>
-              <p class="text-[10px] text-on-surface-variant leading-tight">${escapeHtml(staff.role)}</p>
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="px-3.5 py-2.5">
+              <p class="font-bold text-slate-900 leading-tight">${escapeHtml(staff.name)}</p>
+              <p class="text-[10px] text-slate-500 leading-tight">${escapeHtml(staff.role)}</p>
             </td>
-            <td class="px-3 py-2 font-semibold text-secondary whitespace-nowrap">${escapeHtml(comm.boat_name || '')}</td>
-            <td class="px-3 py-2 text-[11px] font-mono text-on-surface-variant whitespace-nowrap">${dateStr}</td>
-            <td class="px-3 py-2 font-mono whitespace-nowrap">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-            <td class="px-3 py-2 font-mono font-bold text-amber-700 text-center whitespace-nowrap">${comm.commission_rate}%</td>
-            <td class="px-3 py-2 font-mono font-extrabold ${isPaid ? 'text-green-700' : 'text-blue-700'} whitespace-nowrap">
+            <td class="px-3.5 py-2.5 font-semibold text-secondary whitespace-nowrap">${escapeHtml(comm.boat_name || '')}</td>
+            <td class="px-3.5 py-2.5 text-[11px] font-mono tabular-nums text-slate-600 whitespace-nowrap">${dateStr}</td>
+            <td class="px-3.5 py-2.5 font-mono tabular-nums font-semibold text-slate-800 whitespace-nowrap">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+            <td class="px-3.5 py-2.5 font-mono tabular-nums font-bold text-amber-700 text-center whitespace-nowrap">${comm.commission_rate}%</td>
+            <td class="px-3.5 py-2.5 font-mono tabular-nums font-extrabold ${isPaid ? 'text-emerald-700' : 'text-sky-700'} whitespace-nowrap">
               <div class="flex items-center gap-1.5">
                 <span>$${parseFloat(comm.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                ${isPaid ? '<span class="text-[8.5px] font-bold bg-green-100 text-green-800 px-1 py-0.5 rounded uppercase">PAID</span>' : ''}
+                ${isPaid ? '<span class="text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase">Paid</span>' : ''}
               </div>
             </td>
-            <td class="px-3 py-2 text-[11px] text-on-surface-variant max-w-[150px] truncate" title="${escapeHtml(cleanNotes)}">${escapeHtml(cleanNotes)}</td>
-            <td class="px-3 py-2 text-right whitespace-nowrap">
-              <div class="flex items-center justify-end gap-0.5">
+            <td class="px-3.5 py-2.5 text-[11px] text-slate-500 max-w-[150px] truncate" title="${escapeHtml(cleanNotes)}">${escapeHtml(cleanNotes)}</td>
+            <td class="px-3.5 py-2.5 text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-1">
                 ${!isPaid ? `
-                <button onclick="window.markCommissionPaid('${comm.id}')" class="p-1 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Mark as Paid">
+                <button onclick="window.markCommissionPaid('${comm.id}')" class="p-1 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer" title="Mark as Paid">
                   <span class="material-symbols-outlined text-[16px]">payments</span>
                 </button>
                 ` : ''}
-                <button onclick="window.editCommission('${comm.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-colors" title="Edit Commission">
+                <button onclick="window.editCommission('${comm.id}')" class="p-1 text-slate-500 hover:text-secondary hover:bg-slate-100 rounded-lg transition-colors cursor-pointer" title="Edit Commission">
                   <span class="material-symbols-outlined text-[16px]">edit</span>
                 </button>
-                <button onclick="window.generateSingleCommissionPayoutPdf('${comm.id}')" class="p-1 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded transition-colors" title="Generate Payout Report (PDF)">
+                <button onclick="window.generateSingleCommissionPayoutPdf('${comm.id}')" class="p-1 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer" title="Generate Payout Report (PDF)">
                   <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
                 </button>
-                <button onclick="window.deleteCommission('${comm.id}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Commission Log">
+                <button onclick="window.deleteCommission('${comm.id}')" class="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" title="Delete Commission Log">
                   <span class="material-symbols-outlined text-[16px]">delete</span>
                 </button>
               </div>
@@ -8762,35 +8763,35 @@ EXTRACTION RULES:
       const isToday = b.booking_date === todayStr;
       const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
       
-      let statusBadge = `<button onclick="event.stopPropagation(); window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 hover:opacity-80 transition-opacity">Confirmed</button>`;
-      if (b.status === 'completed') statusBadge = `<button onclick="event.stopPropagation(); window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container text-on-surface-variant hover:opacity-80 transition-opacity">Completed</button>`;
-      if (b.status === 'inquiry') statusBadge = `<button onclick="event.stopPropagation(); window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 hover:opacity-80 transition-opacity">Quote</button>`;
+      let statusBadge = `<button onclick="event.stopPropagation(); window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/80 hover:opacity-80 transition-opacity cursor-pointer">Confirmed</button>`;
+      if (b.status === 'completed') statusBadge = `<button onclick="event.stopPropagation(); window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/80 hover:opacity-80 transition-opacity cursor-pointer">Completed</button>`;
+      if (b.status === 'inquiry') statusBadge = `<button onclick="event.stopPropagation(); window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-200/80 hover:opacity-80 transition-opacity cursor-pointer">Quote</button>`;
 
       return `
-        <div class="flex items-center justify-between p-3 rounded-xl border border-outline-variant hover:border-secondary/50 transition-colors bg-white group cursor-pointer" onclick="document.querySelector('[data-section=bookings]').click(); setTimeout(() => window.editBooking('${b.id}'), 200)">
+        <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 hover:border-secondary/50 hover:shadow-xs transition-all bg-white group cursor-pointer" onclick="document.querySelector('[data-section=bookings]').click(); setTimeout(() => window.editBooking('${b.id}'), 200)">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-surface-container flex flex-col items-center justify-center shrink-0 border border-outline-variant/60 ${isToday ? 'border-red-400 bg-red-50 text-red-700' : 'text-on-surface'}">
+            <div class="w-10 h-10 rounded-xl flex flex-col items-center justify-center shrink-0 border ${isToday ? 'border-red-300 bg-red-50 text-red-700' : 'bg-slate-50 border-slate-200/80 text-slate-800'}">
               <span class="text-[9px] font-bold uppercase tracking-wider">${new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { month: 'short' })}</span>
-              <span class="text-sm font-black leading-none">${new Date(b.booking_date + 'T00:00:00').getDate()}</span>
+              <span class="text-sm font-black font-mono tabular-nums leading-none">${new Date(b.booking_date + 'T00:00:00').getDate()}</span>
             </div>
             <div>
-              <p class="font-bold text-sm text-on-surface flex items-center gap-1.5">
+              <p class="font-bold text-sm text-slate-900 flex items-center gap-1.5">
                 ${isToday ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block" title="Departing Today"></span>' : ''}
                 ${escapeHtml(b.customer_name)}
               </p>
-              <p class="text-xs text-on-surface-variant font-medium flex items-center gap-2 mt-0.5">
-                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">directions_boat</span> ${escapeHtml(b.boat_name || 'Custom Charter')}</span>
-                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> ${escapeHtml(b.start_time)} (${b.duration_hours}h)</span>
+              <p class="text-xs text-slate-500 font-medium flex items-center gap-2 mt-0.5">
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-secondary">directions_boat</span> ${escapeHtml(b.boat_name || 'Custom Charter')}</span>
+                <span class="flex items-center gap-1 font-mono tabular-nums text-[11px]"><span class="material-symbols-outlined text-[14px]">schedule</span> ${escapeHtml(b.start_time)} (${b.duration_hours}h)</span>
               </p>
             </div>
           </div>
           <div class="flex items-center gap-2">
             <div class="flex flex-col items-end gap-1">
               ${statusBadge}
-              <span class="text-xs font-bold text-on-surface font-mono">$${parseFloat(b.total_price || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              <span class="text-xs font-extrabold text-slate-900 font-mono tabular-nums">$${parseFloat(b.total_price || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
             </div>
-            <button type="button" onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1 shrink-0" title="Delete Charter">
-              <span class="material-symbols-outlined text-[18px]">delete</span>
+            <button type="button" onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1 shrink-0 cursor-pointer" title="Delete Charter">
+              <span class="material-symbols-outlined text-[17px]">delete</span>
             </button>
           </div>
         </div>
@@ -8897,10 +8898,10 @@ EXTRACTION RULES:
       const isToday = b.booking_date === todayStr;
       const isHighlight = (currentManifestFilter === 'all' && isToday);
       
-      let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">🟢 Confirmed</span>`;
-      if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold">✓ Completed</span>`;
-      if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">🔴 Cancelled</span>`;
-      if (b.status === 'inquiry') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">📝 Quote / Draft</span>`;
+      let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-bold inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Confirmed</span>`;
+      if (b.status === 'completed') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80 text-xs font-bold">✓ Completed</span>`;
+      if (b.status === 'cancelled') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-50 text-red-800 border border-red-200/80 text-xs font-bold">Cancelled</span>`;
+      if (b.status === 'inquiry') statusBadge = `<span class="px-2.5 py-1 rounded-full bg-sky-50 text-sky-800 border border-sky-200/80 text-xs font-bold">Quote / Draft</span>`;
 
       const tot = parseFloat(b.total_price || b.amount || 0);
       const dep = parseFloat(b.deposit_amount || 0);
@@ -8910,84 +8911,84 @@ EXTRACTION RULES:
       const ownerPayout = getOwnerPayoutForBooking(b);
 
       return `
-        <tr class="hover:bg-surface-container-low/50 transition-colors ${isHighlight ? 'bg-[#fcf8e3]' : (isToday ? 'bg-amber-50/50' : '')}">
-          <td class="p-2 whitespace-nowrap">
-            <p class="font-bold text-on-surface text-sm flex items-center gap-1.5">
+        <tr class="hover:bg-slate-50/80 transition-colors ${isHighlight ? 'bg-amber-50/40' : (isToday ? 'bg-sky-50/30' : '')}">
+          <td class="p-3 whitespace-nowrap">
+            <p class="font-bold text-slate-900 font-mono tabular-nums text-sm flex items-center gap-1.5">
               ${isToday ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" title="Departing Today"></span>' : ''}
               ${b.start_time}
             </p>
-            <p class="text-[10px] font-mono text-on-surface-variant">${dateFormatted}</p>
+            <p class="text-[11px] font-mono tabular-nums text-slate-500">${dateFormatted}</p>
           </td>
-          <td class="p-2">
+          <td class="p-3">
             <p class="font-bold text-secondary text-sm">${escapeHtml(b.boat_name || '')}</p>
-            <p class="text-[10px] text-on-surface-variant">${b.duration_hours} hr charter</p>
+            <p class="text-[11px] font-mono tabular-nums text-slate-500">${b.duration_hours} hr charter</p>
           </td>
-          <td class="p-2">
-            <p class="font-bold text-on-surface text-sm">${escapeHtml(b.customer_name || '')}</p>
-            <p class="text-[10px] font-mono text-secondary font-medium"><a href="tel:${b.customer_phone}">${escapeHtml(b.customer_phone || '')}</a></p>
-            ${b.customer_email ? `<p class="text-[10px] text-on-surface-variant truncate max-w-[120px]">${escapeHtml(b.customer_email)}</p>` : ''}
+          <td class="p-3">
+            <p class="font-bold text-slate-900 text-sm">${escapeHtml(b.customer_name || '')}</p>
+            <p class="text-[11px] font-mono tabular-nums text-secondary font-semibold"><a href="tel:${b.customer_phone}">${escapeHtml(b.customer_phone || '')}</a></p>
+            ${b.customer_email ? `<p class="text-[10px] text-slate-500 truncate max-w-[130px]">${escapeHtml(b.customer_email)}</p>` : ''}
           </td>
-          <td class="p-2 whitespace-nowrap">
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-blue-100 bg-blue-50 text-blue-800 font-bold text-[10px]">
-              <span class="material-symbols-outlined text-[12px]">group</span> ${b.guest_count} Guests
+          <td class="p-3 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-sky-200/80 bg-sky-50 text-sky-800 font-mono tabular-nums font-bold text-[10.5px]">
+              <span class="material-symbols-outlined text-[13px]">group</span> ${b.guest_count} Guests
             </span>
           </td>
-          <td class="p-2 whitespace-nowrap">
-            <div class="bg-surface-container-lowest p-1.5 rounded-lg border border-outline-variant/80 space-y-0.5 w-44 shadow-sm font-mono text-[10px]">
-              <div class="flex justify-between font-bold text-on-surface">
-                <span class="text-[9px] text-on-surface-variant font-sans">Total:</span>
-                <span class="text-green-700">$${tot.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          <td class="p-3 whitespace-nowrap">
+            <div class="bg-slate-50/90 p-2 rounded-xl border border-slate-200/80 space-y-0.5 w-48 shadow-2xs font-mono tabular-nums text-[10.5px]">
+              <div class="flex justify-between font-bold text-slate-900">
+                <span class="text-[9.5px] text-slate-500 font-sans">Total:</span>
+                <span class="text-emerald-700">$${tot.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
-              <div class="flex justify-between text-blue-700 border-t border-outline-variant/30 pt-0.5">
-                <span class="text-[9px] text-on-surface-variant font-sans">Deposit:</span>
+              <div class="flex justify-between text-sky-700 border-t border-slate-200/60 pt-0.5">
+                <span class="text-[9.5px] text-slate-500 font-sans">Deposit:</span>
                 <span class="font-bold">-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
               ${ref > 0 ? `
-              <div class="flex justify-between text-purple-700 border-t border-outline-variant/30 pt-0.5">
-                <span class="text-[9px] text-on-surface-variant font-sans">Refunded:</span>
+              <div class="flex justify-between text-purple-700 border-t border-slate-200/60 pt-0.5">
+                <span class="text-[9.5px] text-slate-500 font-sans">Refunded:</span>
                 <span class="font-bold">+$${ref.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
               ` : ''}
-              <div class="flex justify-between font-bold border-t border-outline-variant/40 pt-0.5 ${rem > 0.01 ? 'text-red-600 bg-red-50/80 px-1 py-0 rounded' : 'text-green-700 bg-green-50/80 px-1 py-0 rounded'}">
-                <span class="text-[9px] font-sans">${rem > 0.01 ? 'Bal Due:' : 'Status:'}</span>
+              <div class="flex justify-between font-bold border-t border-slate-200/80 pt-0.5 ${rem > 0.01 ? 'text-red-700 bg-red-50 px-1.5 py-0.5 rounded' : 'text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded'}">
+                <span class="text-[9.5px] font-sans">${rem > 0.01 ? 'Bal Due:' : 'Status:'}</span>
                 <span>${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
               </div>
-              ${b.payment_method ? `<div class="text-[9px] text-on-surface-variant font-sans italic truncate pt-0.5">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
+              ${b.payment_method ? `<div class="text-[9.5px] text-slate-500 font-sans italic truncate pt-0.5">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
               <div class="pt-0.5">${statusBadge.replace('px-2.5 py-1 text-xs', 'px-1.5 py-0.5 text-[10px]')}</div>
-              <div class="flex justify-between items-center border-t border-outline-variant/40 pt-0.5 text-[9px] ${ownerPayout.isPaid ? 'text-indigo-900 bg-indigo-50/80 font-bold' : 'text-amber-900 bg-amber-50/70 font-medium'} px-1 rounded cursor-pointer hover:opacity-80" onclick="event.stopPropagation(); window.openMarkOwnerPaidModal('${b.id}')" title="Click to view/settle owner payout">
-                <span class="font-sans flex items-center gap-0.5"><span class="material-symbols-outlined text-[10px]">handshake</span> Owner:</span>
+              <div class="flex justify-between items-center border-t border-slate-200/80 pt-0.5 text-[9.5px] ${ownerPayout.isPaid ? 'text-indigo-900 bg-indigo-50 font-bold' : 'text-amber-900 bg-amber-50/80 font-semibold'} px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80" onclick="event.stopPropagation(); window.openMarkOwnerPaidModal('${b.id}')" title="Click to view/settle owner payout">
+                <span class="font-sans flex items-center gap-0.5"><span class="material-symbols-outlined text-[11px]">handshake</span> Owner:</span>
                 <span>${ownerPayout.isPaid ? `Paid ($${ownerPayout.amount.toFixed(2)}) ✓` : `Unpaid ($${ownerPayout.amount.toFixed(2)})`}</span>
               </div>
             </div>
           </td>
-          <td class="p-2 text-[10px] text-on-surface-variant max-w-[150px]">
-            <p class="line-clamp-2 italic leading-tight">${b.special_requests ? escapeHtml(b.special_requests) : '<span class="text-on-surface-variant/50 not-italic">No special notes</span>'}</p>
+          <td class="p-3 text-[11px] text-slate-500 max-w-[150px]">
+            <p class="line-clamp-2 italic leading-tight">${b.special_requests ? escapeHtml(b.special_requests) : '<span class="text-slate-400 not-italic">No special notes</span>'}</p>
           </td>
-          <td class="p-2 text-right whitespace-nowrap">
+          <td class="p-3 text-right whitespace-nowrap">
             ${rem > 0.01 ? `
-              <button onclick="window.openChargeBalanceModalByBookingId('${b.id}')" class="p-1 text-green-700 bg-green-50 hover:bg-green-100 rounded transition-colors mr-0.5" title="Collect Balance / Payment Link">
-                <span class="material-symbols-outlined text-[14px]">point_of_sale</span>
+              <button onclick="window.openChargeBalanceModalByBookingId('${b.id}')" class="p-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors mr-0.5 cursor-pointer" title="Collect Balance / Payment Link">
+                <span class="material-symbols-outlined text-[15px]">point_of_sale</span>
               </button>
             ` : ''}
             ${(parseFloat(b.deposit_amount || 0) > 0 && parseFloat(b.refunded_amount || 0) < parseFloat(b.deposit_amount || 0)) ? `
-              <button onclick="window.openRefundModalByBookingId('${b.id}')" class="p-1 text-purple-700 hover:bg-purple-50 rounded transition-colors mr-0.5" title="Issue Refund">
-                <span class="material-symbols-outlined text-[14px]">payments</span>
+              <button onclick="window.openRefundModalByBookingId('${b.id}')" class="p-1.5 text-purple-700 hover:bg-purple-50 rounded-lg transition-colors mr-0.5 cursor-pointer" title="Issue Refund">
+                <span class="material-symbols-outlined text-[15px]">payments</span>
               </button>
             ` : ''}
-            <button onclick="window.printBookingInvoice('${b.id}')" class="p-1 text-on-surface-variant hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Generate PDF Invoice">
-              <span class="material-symbols-outlined text-[14px]">receipt_long</span>
+            <button onclick="window.printBookingInvoice('${b.id}')" class="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer" title="Generate PDF Invoice">
+              <span class="material-symbols-outlined text-[15px]">receipt_long</span>
             </button>
-            <button onclick="window.openMessagePreview('${b.id}')" class="p-1 text-on-surface-variant hover:text-green-600 hover:bg-green-50 rounded transition-colors ml-0.5" title="Send WhatsApp Confirmation">
-              <span class="material-symbols-outlined text-[14px]">chat</span>
+            <button onclick="window.openMessagePreview('${b.id}')" class="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors ml-0.5 cursor-pointer" title="Send WhatsApp Confirmation">
+              <span class="material-symbols-outlined text-[15px]">chat</span>
             </button>
-            <button onclick="window.openMarkOwnerPaidModal('${b.id}')" class="p-1 text-on-surface-variant hover:text-indigo-700 hover:bg-indigo-50 rounded transition-colors ml-0.5" title="Owner / Partner Settlement">
-              <span class="material-symbols-outlined text-[14px]">handshake</span>
+            <button onclick="window.openMarkOwnerPaidModal('${b.id}')" class="p-1.5 text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors ml-0.5 cursor-pointer" title="Owner / Partner Settlement">
+              <span class="material-symbols-outlined text-[15px]">handshake</span>
             </button>
-            <button onclick="window.editBooking('${b.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-colors ml-0.5" title="View Details">
-              <span class="material-symbols-outlined text-[14px]">visibility</span>
+            <button onclick="window.editBooking('${b.id}')" class="p-1.5 text-slate-500 hover:text-secondary hover:bg-slate-100 rounded-lg transition-colors ml-0.5 cursor-pointer" title="View Details">
+              <span class="material-symbols-outlined text-[15px]">visibility</span>
             </button>
-            <button onclick="window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors ml-0.5" title="Cancel & Delete">
-              <span class="material-symbols-outlined text-[14px]">delete</span>
+            <button onclick="window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-0.5 cursor-pointer" title="Cancel & Delete">
+              <span class="material-symbols-outlined text-[15px]">delete</span>
             </button>
           </td>
         </tr>
@@ -9000,9 +9001,9 @@ EXTRACTION RULES:
         const dateFormatted = new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         const isToday = b.booking_date === todayStr;
         const isHighlight = (currentManifestFilter === 'all' && isToday);
-        let statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">✓ Confirmed</button>`;
-        if (b.status === 'completed') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">🏁 Completed</button>`;
-        if (b.status === 'cancelled') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold cursor-pointer hover:opacity-80 transition-opacity">🛑 Cancelled</button>`;
+        let statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-[11px] font-bold cursor-pointer hover:opacity-80 transition-opacity inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Confirmed</button>`;
+        if (b.status === 'completed') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80 text-[11px] font-bold cursor-pointer hover:opacity-80 transition-opacity">✓ Completed</button>`;
+        if (b.status === 'cancelled') statusBadge = `<button onclick="window.quickChangeBookingStatus('${b.id}', '${b.status}')" class="px-2.5 py-1 rounded-full bg-red-50 text-red-800 border border-red-200/80 text-[11px] font-bold cursor-pointer hover:opacity-80 transition-opacity">Cancelled</button>`;
 
         const total = parseFloat(b.total_price || b.amount || 0);
         const dep = parseFloat(b.deposit_amount || 0);
@@ -9013,48 +9014,50 @@ EXTRACTION RULES:
         const ownerPayout = getOwnerPayoutForBooking(b);
 
         return `
-          <div class="${isHighlight ? 'bg-[#fcf8e3]' : 'bg-surface-container-lowest'} border ${isToday ? 'border-secondary ring-1 ring-secondary/30' : 'border-outline-variant'} rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden">
-            ${isToday ? '<div class="absolute top-0 right-0 bg-secondary text-on-secondary text-[9px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">DEPARTING TODAY</div>' : ''}
+          <div class="${isHighlight ? 'bg-amber-50/30' : 'bg-surface-container-lowest'} border ${isToday ? 'border-secondary ring-1 ring-secondary/30' : 'border-outline-variant'} rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden">
+            ${isToday ? '<div class="absolute top-0 right-0 bg-[#0b1528] text-[#38bdf8] text-[9px] font-black px-2.5 py-0.5 rounded-bl-xl uppercase tracking-wider">DEPARTING TODAY</div>' : ''}
             <div>
-              <div class="flex items-center justify-between gap-2 mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-secondary text-lg">directions_boat</span>
-                  <h3 class="font-headline font-bold text-sm text-on-surface truncate max-w-[160px]">${escapeHtml(b.boat_name || 'Fleet Yacht')}</h3>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 border border-sky-200/60 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">directions_boat</span>
+                  </div>
+                  <h3 class="font-headline font-bold text-sm text-slate-900 truncate max-w-[165px]">${escapeHtml(b.boat_name || 'Fleet Yacht')}</h3>
                 </div>
                 ${statusBadge}
               </div>
 
-              <div class="space-y-1 mb-3 bg-surface-container-low p-2.5 rounded-xl border border-outline-variant/50 text-xs">
-                <div class="flex justify-between text-on-surface font-semibold">
-                  <span>📅 Date &amp; Time:</span>
-                  <span class="font-mono text-secondary">${dateFormatted} @ ${escapeHtml(b.start_time || 'TBD')}</span>
+              <div class="space-y-1.5 mb-3 bg-slate-50/80 p-3 rounded-xl border border-slate-200/70 text-xs">
+                <div class="flex justify-between text-slate-900 font-semibold">
+                  <span class="text-slate-500">Date &amp; Time:</span>
+                  <span class="font-mono tabular-nums text-secondary font-bold">${dateFormatted} @ ${escapeHtml(b.start_time || 'TBD')}</span>
                 </div>
-                <div class="flex justify-between text-on-surface-variant">
-                  <span>👤 Guest:</span>
-                  <span class="font-bold text-on-surface">${escapeHtml(b.customer_name || 'Guest')}</span>
+                <div class="flex justify-between text-slate-500">
+                  <span>Primary Guest:</span>
+                  <span class="font-bold text-slate-900">${escapeHtml(b.customer_name || 'Guest')}</span>
                 </div>
-                <div class="flex justify-between text-on-surface-variant">
-                  <span>📞 Phone:</span>
-                  <span>${b.customer_phone ? `<a href="tel:${escapeHtml(b.customer_phone)}" onclick="event.stopPropagation()" class="font-mono text-secondary font-bold hover:underline hover:text-primary transition-colors">${escapeHtml(b.customer_phone)}</a>` : '-'}</span>
+                <div class="flex justify-between text-slate-500">
+                  <span>Contact:</span>
+                  <span>${b.customer_phone ? `<a href="tel:${escapeHtml(b.customer_phone)}" onclick="event.stopPropagation()" class="font-mono tabular-nums text-secondary font-bold hover:underline transition-colors">${escapeHtml(b.customer_phone)}</a>` : '-'}</span>
                 </div>
-                <div class="flex justify-between text-on-surface-variant">
-                  <span>👥 Passengers:</span>
-                  <span>${b.guest_count || b.guests || b.passengers || 1} Guests (${b.duration_hours || 4} hrs)</span>
+                <div class="flex justify-between text-slate-500">
+                  <span>Passengers:</span>
+                  <span class="font-mono tabular-nums font-semibold text-slate-800">${b.guest_count || b.guests || b.passengers || 1} Guests (${b.duration_hours || 4} hrs)</span>
                 </div>
               </div>
 
-              <details class="bg-amber-500/10 border border-amber-500/20 rounded-xl mb-3 text-xs font-mono group">
-                <summary class="flex justify-between items-center text-amber-900 font-bold p-2 cursor-pointer outline-none select-none list-none [&::-webkit-details-marker]:hidden">
-                  <div class="flex items-center gap-1 font-sans">
+              <details class="bg-slate-50/90 border border-slate-200/80 rounded-xl mb-3 text-xs font-mono tabular-nums group">
+                <summary class="flex justify-between items-center text-slate-900 font-bold p-2.5 cursor-pointer outline-none select-none list-none [&::-webkit-details-marker]:hidden">
+                  <div class="flex items-center gap-1 font-sans text-slate-600">
                     <span class="material-symbols-outlined text-[16px] transition-transform group-open:rotate-180">expand_more</span>
                     Total Charter Price:
                   </div>
-                  <span>$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span class="text-emerald-700 font-extrabold">$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </summary>
-                <div class="px-2 pb-2 space-y-1">
-                <div class="flex justify-between text-amber-800 text-[11px]">
-                  <span class="font-sans">Deposit Paid:</span>
-                  <span>-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                <div class="px-2.5 pb-2.5 space-y-1 border-t border-slate-200/60 pt-2">
+                <div class="flex justify-between text-sky-700 text-[11px]">
+                  <span class="font-sans text-slate-500">Deposit Paid:</span>
+                  <span class="font-bold">-$${dep.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
                 ${ref > 0 ? `
                 <div class="flex justify-between text-purple-800 text-[11px] font-bold">
@@ -9062,47 +9065,47 @@ EXTRACTION RULES:
                   <span>+$${ref.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
                 ` : ''}
-                <div class="flex justify-between border-t border-amber-200 pt-1 ${rem > 0.01 ? 'text-red-700 font-bold bg-red-100/60 px-1 rounded' : 'text-green-800 font-bold bg-green-100/60 px-1 rounded'}">
-                  <span class="font-sans text-[9px]">${rem > 0.01 ? 'Balance Due:' : 'Status:'}</span>
+                <div class="flex justify-between border-t border-slate-200 pt-1 ${rem > 0.01 ? 'text-red-700 font-bold bg-red-50 px-1.5 py-0.5 rounded' : 'text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded'}">
+                  <span class="font-sans text-[10px]">${rem > 0.01 ? 'Balance Due:' : 'Status:'}</span>
                   <span class="text-[11px]">${rem > 0.01 ? `$${rem.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : `✓ PAID`}</span>
                 </div>
-                ${b.payment_method ? `<div class="text-[9px] font-sans text-on-surface-variant italic pt-0.5 border-t border-amber-200/40">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
-                <div class="flex justify-between items-center border-t border-amber-200/50 pt-1 text-[10px]">
-                  <span class="font-sans text-amber-900 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px] text-indigo-700">handshake</span> Owner Payout:</span>
-                  <span class="font-bold cursor-pointer hover:underline ${ownerPayout.isPaid ? 'text-indigo-900' : 'text-amber-900'}" onclick="event.stopPropagation(); window.openMarkOwnerPaidModal('${b.id}')">
+                ${b.payment_method ? `<div class="text-[9.5px] font-sans text-slate-500 italic pt-0.5 border-t border-slate-200/60">💳 ${escapeHtml(b.payment_method)}</div>` : ''}
+                <div class="flex justify-between items-center border-t border-slate-200/60 pt-1 text-[10.5px]">
+                  <span class="font-sans text-slate-600 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px] text-indigo-700">handshake</span> Owner Payout:</span>
+                  <span class="font-bold cursor-pointer hover:underline ${ownerPayout.isPaid ? 'text-indigo-900' : 'text-amber-800'}" onclick="event.stopPropagation(); window.openMarkOwnerPaidModal('${b.id}')">
                     ${ownerPayout.isPaid ? `Paid ($${ownerPayout.amount.toFixed(2)}) ✓` : `Unpaid ($${ownerPayout.amount.toFixed(2)})`}
                   </span>
                 </div>
                 </div>
               </details>
 
-              ${b.special_requests ? `<p class="text-[10px] leading-tight text-on-surface-variant italic bg-surface-container-low p-1.5 rounded-lg mb-1.5">📝 "${escapeHtml(b.special_requests)}"</p>` : ''}
+              ${b.special_requests ? `<p class="text-[11px] leading-tight text-slate-600 italic bg-slate-50 p-2 rounded-lg mb-2 border border-slate-200/60">"${escapeHtml(b.special_requests)}"</p>` : ''}
             </div>
 
-            <div class="flex items-center justify-end gap-1 pt-1.5 border-t border-outline-variant mt-1">
+            <div class="flex items-center justify-end gap-1 pt-2.5 border-t border-slate-100 mt-1">
               ${rem > 0.01 ? `
-                <button onclick="event.stopPropagation(); window.openChargeBalanceModalByBookingId('${b.id}')" class="p-1 text-green-700 bg-green-50 hover:bg-green-100 rounded transition-colors" title="Collect Balance / Payment Link">
-                  <span class="material-symbols-outlined text-[14px]">point_of_sale</span>
+                <button onclick="event.stopPropagation(); window.openChargeBalanceModalByBookingId('${b.id}')" class="p-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer" title="Collect Balance / Payment Link">
+                  <span class="material-symbols-outlined text-[15px]">point_of_sale</span>
                 </button>
               ` : ''}
               ${canRefund ? `
-                <button onclick="event.stopPropagation(); window.openRefundModalByBookingId('${b.id}')" class="p-1 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded transition-colors" title="Issue Refund">
-                  <span class="material-symbols-outlined text-[14px]">payments</span>
+                <button onclick="event.stopPropagation(); window.openRefundModalByBookingId('${b.id}')" class="p-1.5 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors cursor-pointer" title="Issue Refund">
+                  <span class="material-symbols-outlined text-[15px]">payments</span>
                 </button>
               ` : ''}
-              <button onclick="event.stopPropagation(); window.printBookingInvoice('${b.id}')" class="p-1 bg-surface-container hover:bg-green-50 hover:text-green-700 rounded transition-colors" title="Print Invoice">
-                <span class="material-symbols-outlined text-[14px]">receipt_long</span>
+              <button onclick="event.stopPropagation(); window.printBookingInvoice('${b.id}')" class="p-1.5 bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 rounded-lg transition-colors cursor-pointer" title="Print Invoice">
+                <span class="material-symbols-outlined text-[15px]">receipt_long</span>
               </button>
-              <button onclick="event.stopPropagation(); window.openMessagePreview('${b.id}')" class="p-1 bg-surface-container hover:bg-green-50 hover:text-green-600 rounded transition-colors" title="Send Confirmation Message">
-                <span class="material-symbols-outlined text-[14px]">chat</span>
+              <button onclick="event.stopPropagation(); window.openMessagePreview('${b.id}')" class="p-1.5 bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 rounded-lg transition-colors cursor-pointer" title="Send Confirmation Message">
+                <span class="material-symbols-outlined text-[15px]">chat</span>
               </button>
-              <button onclick="event.stopPropagation(); window.openMarkOwnerPaidModal('${b.id}')" class="p-1 bg-surface-container hover:bg-indigo-50 hover:text-indigo-700 rounded transition-colors" title="Owner Settlement">
-                <span class="material-symbols-outlined text-[14px]">handshake</span>
+              <button onclick="event.stopPropagation(); window.openMarkOwnerPaidModal('${b.id}')" class="p-1.5 bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-lg transition-colors cursor-pointer" title="Owner Settlement">
+                <span class="material-symbols-outlined text-[15px]">handshake</span>
               </button>
-              <button onclick="event.stopPropagation(); window.editBooking('${b.id}')" class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-[10px] font-bold text-on-surface flex items-center gap-0.5 transition-colors">
-                <span class="material-symbols-outlined text-[12px]">visibility</span> View
+              <button onclick="event.stopPropagation(); window.editBooking('${b.id}')" class="px-2.5 py-1.5 bg-[#0b1528] hover:bg-[#162744] rounded-lg text-[10.5px] font-bold text-white flex items-center gap-1 transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-[13px] text-[#38bdf8]">visibility</span> View
               </button>
-              <button onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="px-2 py-1 text-error hover:bg-error-container rounded text-[10px] font-bold transition-colors">
+              <button onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="px-2 py-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg text-[10.5px] font-bold transition-colors cursor-pointer">
                 Cancel
               </button>
             </div>
@@ -12050,49 +12053,49 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       let stageActions = '';
       if (stage === 'new') {
         stageActions = `
-          <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'contacted')" class="px-2 py-0.5 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold flex items-center gap-0.5 transition-colors shrink-0" title="Move to Contacted">
+          <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'contacted')" class="px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 text-[10px] font-bold flex items-center gap-0.5 transition-colors shrink-0 shadow-2xs" title="Move to Contacted">
             Contacted <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
           </button>
         `;
       } else if (stage === 'contacted') {
         stageActions = `
           <div class="flex items-center gap-1 shrink-0">
-            <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'new')" class="px-1.5 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-0.5 transition-colors" title="Back to New">
+            <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'new')" class="px-1.5 py-0.5 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80 text-[10px] font-bold flex items-center gap-0.5 transition-colors" title="Back to New">
               <span class="material-symbols-outlined text-[12px]">arrow_back</span>
             </button>
-            <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'quote_sent')" class="px-2 py-0.5 rounded-md bg-purple-100 hover:bg-purple-200 text-purple-900 text-[10px] font-bold flex items-center gap-0.5 transition-colors" title="Move to Quote Sent">
+            <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'quote_sent')" class="px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200/80 text-[10px] font-bold flex items-center gap-0.5 transition-colors shadow-2xs" title="Move to Quote Sent">
               Quote Sent <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
             </button>
           </div>
         `;
       } else if (stage === 'quote_sent') {
         stageActions = `
-          <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'contacted')" class="px-2 py-0.5 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold flex items-center gap-0.5 transition-colors shrink-0" title="Back to Contacted">
+          <button type="button" onclick="event.stopPropagation(); window.moveLeadStage('${b.id}', 'contacted')" class="px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 text-[10px] font-bold flex items-center gap-0.5 transition-colors shrink-0 shadow-2xs" title="Back to Contacted">
             <span class="material-symbols-outlined text-[12px]">arrow_back</span> Contacted
           </button>
         `;
       }
 
       return `
-        <div class="bg-white p-3 rounded-xl border border-outline-variant shadow-xs hover:shadow hover:border-secondary/50 cursor-pointer transition-all flex flex-col gap-2" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${b.id}')" onclick="window.editBooking('${b.id}')">
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-secondary/40 cursor-pointer transition-all flex flex-col gap-2" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${b.id}')" onclick="window.editBooking('${b.id}')">
           <div class="flex justify-between items-start">
-            <h4 class="font-bold text-sm text-on-surface truncate pr-2">${escapeHtml(b.customer_name || 'Unknown Lead')}</h4>
+            <h4 class="font-bold text-sm text-slate-900 truncate pr-2">${escapeHtml(b.customer_name || 'Unknown Lead')}</h4>
             <div class="flex items-center gap-1 shrink-0">
-              <span class="text-xs font-mono font-bold text-secondary bg-secondary-container/50 px-1.5 py-0.5 rounded">${dateStr}</span>
-              <button type="button" onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Lead">
+              <span class="text-[11px] font-mono tabular-nums font-bold text-secondary bg-sky-50 border border-sky-200/60 px-1.5 py-0.5 rounded-md">${dateStr}</span>
+              <button type="button" onclick="event.stopPropagation(); window.deleteBooking('${b.id}', '${escapeHtml(b.customer_name || '')}')" class="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Delete Lead">
                 <span class="material-symbols-outlined text-[15px]">delete</span>
               </button>
             </div>
           </div>
-          <p class="text-[11px] text-on-surface-variant flex items-center gap-1">
-            <span class="material-symbols-outlined text-[12px]">directions_boat</span> ${escapeHtml(b.boat_name || 'TBD')}
+          <p class="text-[11px] font-medium text-slate-600 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[13px] text-secondary">directions_boat</span> ${escapeHtml(b.boat_name || 'TBD')}
           </p>
-          <div class="flex items-center justify-between mt-1 pt-2 border-t border-outline-variant/50 gap-2">
-            <span class="text-[10px] font-bold text-on-surface-variant flex items-center gap-1">
-               ${b.lead_source === 'web' ? '<span class="material-symbols-outlined text-[12px] text-blue-500">language</span> Web' : '<span class="material-symbols-outlined text-[12px] text-gray-500">edit_document</span> Manual'}
+          <div class="flex items-center justify-between mt-1 pt-2 border-t border-slate-100 gap-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+               ${b.lead_source === 'web' ? '<span class="material-symbols-outlined text-[12px] text-sky-500">language</span> Web' : '<span class="material-symbols-outlined text-[12px] text-slate-400">edit_document</span> Manual'}
             </span>
             <div class="flex items-center gap-2">
-              <span class="text-[11px] font-bold text-green-700">$${parseFloat(b.total_price || 0).toLocaleString()}</span>
+              <span class="text-[11px] font-mono tabular-nums font-bold text-emerald-700">$${parseFloat(b.total_price || 0).toLocaleString()}</span>
               ${stageActions}
             </div>
           </div>
@@ -12100,9 +12103,9 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
       `;
     };
 
-    const newHtml = newLeads.length ? newLeads.map(b => renderCard(b, 'new')).join('') : '<p class="text-xs text-on-surface-variant text-center py-4">No new leads.</p>';
-    const contactedHtml = contactedLeads.length ? contactedLeads.map(b => renderCard(b, 'contacted')).join('') : '<p class="text-xs text-on-surface-variant text-center py-4">No contacted leads.</p>';
-    const quotedHtml = quotedLeads.length ? quotedLeads.map(b => renderCard(b, 'quote_sent')).join('') : '<p class="text-xs text-on-surface-variant text-center py-4">No quotes sent.</p>';
+    const newHtml = newLeads.length ? newLeads.map(b => renderCard(b, 'new')).join('') : '<p class="text-xs text-slate-400 text-center py-6 font-medium">No new leads.</p>';
+    const contactedHtml = contactedLeads.length ? contactedLeads.map(b => renderCard(b, 'contacted')).join('') : '<p class="text-xs text-slate-400 text-center py-6 font-medium">No contacted leads.</p>';
+    const quotedHtml = quotedLeads.length ? quotedLeads.map(b => renderCard(b, 'quote_sent')).join('') : '<p class="text-xs text-slate-400 text-center py-6 font-medium">No quotes sent.</p>';
 
     if (colNew) colNew.innerHTML = newHtml;
     if (colContacted) colContacted.innerHTML = contactedHtml;
@@ -12190,26 +12193,26 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     // ── Render helper ────────────────────────────────────────────────────────
     function renderCRMTable(data) {
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No customers found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 text-sm font-medium">No customers found.</td></tr>`;
         return;
       }
       tbody.innerHTML = data.map((c, idx) => {
         // idx into the full cached list so openCustomerProfile always works
         const fullIdx = window._cachedCustomers.indexOf(c);
         return `
-          <tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer" onclick="openCustomerProfile(${fullIdx})">
-            <td class="px-4 py-3 font-bold text-on-surface text-sm">
+          <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors cursor-pointer" onclick="openCustomerProfile(${fullIdx})">
+            <td class="px-5 py-3.5 font-bold text-slate-900 text-sm">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-secondary-container text-secondary flex items-center justify-center font-bold text-xs">${c.name.charAt(0).toUpperCase()}</div>
+                <div class="w-8 h-8 rounded-full bg-sky-50 border border-sky-200/70 text-secondary flex items-center justify-center font-bold text-xs shadow-2xs">${c.name.charAt(0).toUpperCase()}</div>
                 ${c.name}
               </div>
             </td>
-            <td class="px-4 py-3 text-on-surface-variant text-sm">${c.phone}</td>
-            <td class="px-4 py-3 text-right font-bold text-secondary text-sm">${c.bookings}</td>
-            <td class="px-4 py-3 text-right font-bold text-green-700 text-sm">$${c.totalSpent.toLocaleString()}</td>
-            <td class="px-4 py-3 text-on-surface-variant text-sm">${c.lastDate}</td>
-            <td class="px-4 py-3 text-center">
-              <button onclick="event.stopPropagation(); sendWhatsAppCRM('${c.phone}', '${c.name}')" class="px-2.5 py-1 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700">WhatsApp</button>
+            <td class="px-5 py-3.5 font-mono tabular-nums text-slate-600 text-xs">${c.phone}</td>
+            <td class="px-5 py-3.5 text-right font-mono tabular-nums font-bold text-secondary text-sm">${c.bookings}</td>
+            <td class="px-5 py-3.5 text-right font-mono tabular-nums font-bold text-emerald-700 text-sm">$${c.totalSpent.toLocaleString()}</td>
+            <td class="px-5 py-3.5 font-mono tabular-nums text-slate-500 text-xs">${c.lastDate}</td>
+            <td class="px-5 py-3.5 text-center">
+              <button onclick="event.stopPropagation(); sendWhatsAppCRM('${c.phone}', '${c.name}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[11px] font-bold hover:bg-emerald-700 transition-colors shadow-2xs">WhatsApp</button>
             </td>
           </tr>`;
       }).join('');
@@ -12307,14 +12310,14 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
 
     // Render History
     const historyList = document.getElementById('cp-history-list');
-    historyList.innerHTML = c.history.length === 0 ? `<tr><td colspan="4" class="text-center p-4 text-xs text-on-surface-variant">No confirmed charters yet.</td></tr>` : 
+    historyList.innerHTML = c.history.length === 0 ? `<tr><td colspan="4" class="text-center p-4 text-xs text-slate-400">No confirmed charters yet.</td></tr>` : 
       c.history.map(b => `
-        <tr class="hover:bg-surface-container-low transition-colors group">
-          <td class="p-3 text-sm text-on-surface cursor-pointer" onclick="editBooking('${b.id}')">${b.booking_date || b.charter_date || b.date}</td>
+        <tr class="hover:bg-slate-50/80 transition-colors group">
+          <td class="p-3 text-xs font-mono tabular-nums text-slate-600 cursor-pointer" onclick="editBooking('${b.id}')">${b.booking_date || b.charter_date || b.date}</td>
           <td class="p-3 text-sm font-bold text-secondary cursor-pointer" onclick="editBooking('${b.id}')">${b.boat_name || 'Yacht'}</td>
-          <td class="p-3 text-sm font-bold text-green-700 text-right cursor-pointer" onclick="editBooking('${b.id}')">$${parseFloat(b.total_price || b.amount || 0).toLocaleString()}</td>
+          <td class="p-3 text-sm font-mono tabular-nums font-bold text-emerald-700 text-right cursor-pointer" onclick="editBooking('${b.id}')">$${parseFloat(b.total_price || b.amount || 0).toLocaleString()}</td>
           <td class="p-3 text-right">
-             <button onclick="event.stopPropagation(); deleteBooking('${b.id}', '${escapeHtml(b.customer_name || 'Customer')}', true)" class="opacity-0 group-hover:opacity-100 p-1 text-on-surface-variant hover:text-red-600 transition-all rounded hover:bg-red-50" title="Remove Charter">
+             <button onclick="event.stopPropagation(); deleteBooking('${b.id}', '${escapeHtml(b.customer_name || 'Customer')}', true)" class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-600 transition-all rounded-md hover:bg-red-50" title="Remove Charter">
                <span class="material-symbols-outlined text-[16px]">delete</span>
              </button>
           </td>
@@ -12323,17 +12326,17 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
 
     // Render Quotes
     const quotesList = document.getElementById('cp-quotes-list');
-    quotesList.innerHTML = c.quotes.length === 0 ? `<p class="text-xs text-center text-on-surface-variant p-4">No quotes or inquiries.</p>` :
+    quotesList.innerHTML = c.quotes.length === 0 ? `<p class="text-xs text-center text-slate-400 p-4">No quotes or inquiries.</p>` :
       c.quotes.map(q => `
-        <div class="border border-outline-variant rounded-xl p-3 bg-surface text-sm">
+        <div class="border border-slate-200/80 rounded-xl p-3.5 bg-white shadow-2xs text-sm">
           <div class="flex items-center justify-between mb-1">
-            <span class="font-bold text-on-surface">${q.boat_name || 'Yacht Inquiry'}</span>
-            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full font-bold">${q.lead_status || 'Draft'}</span>
+            <span class="font-bold text-slate-900">${q.boat_name || 'Yacht Inquiry'}</span>
+            <span class="text-[10px] bg-amber-50 text-amber-800 border border-amber-200/80 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">${q.lead_status || 'Draft'}</span>
           </div>
-          <div class="text-xs text-on-surface-variant mb-2">Requested Date: ${q.booking_date || q.charter_date || 'TBD'}</div>
+          <div class="text-xs font-mono tabular-nums text-slate-500 mb-2">Requested Date: ${q.booking_date || q.charter_date || 'TBD'}</div>
           <div class="flex justify-end items-center gap-2">
             <button onclick="editBooking('${q.id}')" class="text-xs font-bold text-secondary hover:underline">Edit/Send Quote</button>
-            <button type="button" onclick="event.stopPropagation(); deleteBooking('${q.id}', '${escapeHtml(c.name || 'Quote')}', false)" class="p-1 text-on-surface-variant hover:text-red-600 rounded hover:bg-red-50 transition-colors" title="Delete Quote">
+            <button type="button" onclick="event.stopPropagation(); deleteBooking('${q.id}', '${escapeHtml(c.name || 'Quote')}', false)" class="p-1 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors" title="Delete Quote">
               <span class="material-symbols-outlined text-[16px]">delete</span>
             </button>
           </div>
@@ -12420,17 +12423,17 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     const list = promos || [];
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-on-surface-variant text-sm">No promo codes active yet.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 text-sm font-medium">No promo codes active yet.</td></tr>`;
     } else {
       tbody.innerHTML = list.map(p => `
-        <tr class="border-b border-outline-variant">
-          <td class="px-4 py-3 font-bold text-secondary text-sm">${p.code}</td>
-          <td class="px-4 py-3 text-on-surface text-sm">${p.type === 'percent' ? p.value + '%' : '$' + p.value} OFF</td>
-          <td class="px-4 py-3 text-on-surface-variant text-sm">${p.expires_at || 'Never'}</td>
-          <td class="px-4 py-3 text-right text-sm">${p.used_count} / ${p.max_uses || 'Unlimited'}</td>
-          <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${p.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.active ? 'Active' : 'Disabled'}</span></td>
-          <td class="px-4 py-3 text-center">
-            <button onclick="togglePromoCode('${p.id}', ${p.active})" class="text-xs font-bold text-secondary hover:underline">${p.active ? 'Disable' : 'Enable'}</button>
+        <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
+          <td class="px-5 py-3.5 font-mono tabular-nums font-bold text-secondary text-sm tracking-wide">${p.code}</td>
+          <td class="px-5 py-3.5 font-mono tabular-nums font-bold text-slate-900 text-sm">${p.type === 'percent' ? p.value + '%' : '$' + p.value} OFF</td>
+          <td class="px-5 py-3.5 font-mono tabular-nums text-slate-500 text-xs">${p.expires_at || 'Never'}</td>
+          <td class="px-5 py-3.5 text-right font-mono tabular-nums text-slate-700 text-xs font-semibold">${p.used_count} / ${p.max_uses || 'Unlimited'}</td>
+          <td class="px-5 py-3.5 text-center"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${p.active ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80' : 'bg-red-50 text-red-700 border-red-200/80'}">${p.active ? 'Active' : 'Disabled'}</span></td>
+          <td class="px-5 py-3.5 text-center">
+            <button onclick="togglePromoCode('${p.id}', ${p.active})" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-secondary transition-colors shadow-2xs">${p.active ? 'Disable' : 'Enable'}</button>
           </td>
         </tr>
       `).join('');
@@ -12463,22 +12466,22 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
     const items = reviews || [];
 
     if (items.length === 0) {
-      listEl.innerHTML = `<p class="text-center text-on-surface-variant py-8 text-sm">No customer reviews waiting for moderation.</p>`;
+      listEl.innerHTML = `<p class="text-center text-slate-400 py-8 text-sm font-medium">No customer reviews waiting for moderation.</p>`;
     } else {
       listEl.innerHTML = items.map(r => `
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 flex items-center justify-between">
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex items-center justify-between gap-4">
           <div>
             <div class="flex items-center gap-2 mb-1">
-              <span class="font-bold text-on-surface">${r.customer_name}</span>
-              <span class="text-amber-500 font-bold">★ ${r.rating} / 5</span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${r.status.toUpperCase()}</span>
+              <span class="font-bold text-slate-900">${r.customer_name}</span>
+              <span class="text-amber-500 font-mono tabular-nums font-bold text-xs">★ ${r.rating} / 5</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${r.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80' : 'bg-amber-50 text-amber-800 border-amber-200/80'}">${r.status.toUpperCase()}</span>
             </div>
-            <p class="text-sm text-on-surface-variant italic">"${r.review_text}"</p>
-            <p class="text-xs text-on-surface-variant mt-1">Yacht: ${r.boat_name || 'Fleet Yacht'}</p>
+            <p class="text-sm text-slate-600 italic">"${r.review_text}"</p>
+            <p class="text-xs font-medium text-slate-400 mt-1">Yacht: ${r.boat_name || 'Fleet Yacht'}</p>
           </div>
-          <div class="flex gap-2">
-            <button onclick="reviewAction('${r.id}', 'approved')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700">Approve</button>
-            <button onclick="reviewAction('${r.id}', 'rejected')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700">Reject</button>
+          <div class="flex gap-2 shrink-0">
+            <button onclick="reviewAction('${r.id}', 'approved')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors shadow-2xs">Approve</button>
+            <button onclick="reviewAction('${r.id}', 'rejected')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-colors shadow-2xs">Reject</button>
           </div>
         </div>
       `).join('');
