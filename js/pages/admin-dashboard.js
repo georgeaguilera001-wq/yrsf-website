@@ -935,15 +935,15 @@ return; // Redirect in progress
         // Update top bell dropdown
         if (notifList) {
           if (list.length === 0) {
-            notifList.innerHTML = '<p class="text-xs text-on-surface-variant text-center py-4">No pending inquiries</p>';
+            notifList.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">No pending inquiries</p>';
           } else {
             notifList.innerHTML = list.slice(0, 5).map(i => `
-              <div class="p-2.5 rounded-xl bg-surface-container-low border border-outline-variant">
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-xs text-secondary">${escapeHtml(i.boat_name)}</span>
-                  <span class="text-[10px] text-on-surface-variant">${i.booking_date || ''}</span>
+              <div class="p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 hover:bg-white transition-colors">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-bold text-xs text-secondary truncate">${escapeHtml(i.boat_name)}</span>
+                  <span class="text-[10px] font-mono tabular-nums text-slate-500 shrink-0">${i.booking_date || ''}</span>
                 </div>
-                <p class="text-xs font-medium text-on-surface mt-1">${escapeHtml(i.customer_name)} • ${escapeHtml(i.customer_phone)}</p>
+                <p class="text-xs font-medium text-slate-700 mt-1">${escapeHtml(i.customer_name)} &bull; <span class="font-mono tabular-nums">${escapeHtml(i.customer_phone)}</span></p>
               </div>
             `).join('');
           }
@@ -953,9 +953,9 @@ return; // Redirect in progress
         if (list.length === 0) {
           listEl.innerHTML = `
             <div class="text-center py-8">
-              <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2 block">task_alt</span>
-              <p class="text-sm font-bold text-on-surface">No Pending Customer Inquiries</p>
-              <p class="text-xs text-on-surface-variant mt-0.5">All incoming inquiries and leads have been processed.</p>
+              <span class="material-symbols-outlined text-4xl text-slate-400 mb-2 block">task_alt</span>
+              <p class="text-sm font-bold text-slate-800">No Pending Customer Inquiries</p>
+              <p class="text-xs text-slate-500 mt-0.5">All incoming inquiries and leads have been processed.</p>
             </div>
           `;
           return;
@@ -964,28 +964,28 @@ return; // Redirect in progress
         listEl.innerHTML = list.map(inquiry => {
           const callNote = inquiry.special_requests || 'Anytime';
           return `
-            <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="p-4 rounded-2xl border border-slate-200/80 bg-white shadow-2xs hover:shadow-sm transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div class="flex-1">
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="px-2.5 py-0.5 rounded-md bg-secondary/10 text-secondary font-bold text-xs">${escapeHtml(inquiry.boat_name)}</span>
-                  <span class="text-xs text-on-surface-variant">Desired Date: <strong class="text-on-surface">${escapeHtml(inquiry.booking_date || 'TBD')}</strong></span>
-                  <span class="text-xs text-on-surface-variant">(${inquiry.duration_hours || 4} hrs, ${inquiry.guest_count || 1} guests)</span>
+                <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                  <span class="px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200/80 font-bold text-[11px]">${escapeHtml(inquiry.boat_name)}</span>
+                  <span class="text-xs text-slate-500">Desired Date: <strong class="text-slate-900 font-mono tabular-nums">${escapeHtml(inquiry.booking_date || 'TBD')}</strong></span>
+                  <span class="text-xs text-slate-500 font-mono tabular-nums">(${inquiry.duration_hours || 4} hrs, ${inquiry.guest_count || 1} guests)</span>
                 </div>
-                <h4 class="font-bold text-base text-on-surface">${escapeHtml(inquiry.customer_name || 'Customer')}</h4>
-                <p class="text-xs text-on-surface-variant mt-0.5">Note: <strong class="text-on-surface">${escapeHtml(callNote)}</strong></p>
+                <h4 class="font-extrabold text-base text-slate-900 tracking-tight">${escapeHtml(inquiry.customer_name || 'Customer')}</h4>
+                <p class="text-xs text-slate-500 mt-0.5">Note: <strong class="text-slate-700">${escapeHtml(callNote)}</strong></p>
               </div>
 
               <div class="flex flex-wrap items-center gap-2">
-                <a href="tel:${escapeHtml(inquiry.customer_phone || '')}" class="px-3 py-1.5 rounded-lg bg-green-50 text-green-700 border border-green-200 text-xs font-bold flex items-center gap-1 hover:bg-green-100 transition-colors">
-                  <span class="material-symbols-outlined text-[16px]">call</span> ${escapeHtml(inquiry.customer_phone || 'Call')}
+                <a href="tel:${escapeHtml(inquiry.customer_phone || '')}" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-xs font-bold font-mono tabular-nums flex items-center gap-1 hover:bg-emerald-100 transition-colors">
+                  <span class="material-symbols-outlined text-[15px]">call</span> ${escapeHtml(inquiry.customer_phone || 'Call')}
                 </a>
-                <a href="https://wa.me/${(inquiry.customer_phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${inquiry.customer_name}! Following up from YRSF regarding your yacht inquiry for the ${inquiry.boat_name} on ${inquiry.booking_date}.`)}" target="_blank" class="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold flex items-center gap-1 hover:bg-green-700 transition-colors">
-                  <span class="material-symbols-outlined text-[16px]">chat</span> WhatsApp
+                <a href="https://wa.me/${(inquiry.customer_phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${inquiry.customer_name}! Following up from YRSF regarding your yacht inquiry for the ${inquiry.boat_name} on ${inquiry.booking_date}.`)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold flex items-center gap-1 hover:bg-emerald-700 transition-colors shadow-2xs">
+                  <span class="material-symbols-outlined text-[15px]">chat</span> WhatsApp
                 </a>
-                <button type="button" class="mark-inquiry-contacted-btn px-3 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold hover:opacity-90 transition-colors" data-inquiry-id="${inquiry.id}">
+                <button type="button" class="mark-inquiry-contacted-btn px-3.5 py-1.5 rounded-xl bg-[#0b1528] hover:bg-[#162744] text-white text-xs font-bold transition-colors shadow-2xs cursor-pointer" data-inquiry-id="${inquiry.id}">
                   Mark Contacted
                 </button>
-                <button type="button" class="dismiss-inquiry-btn p-1.5 rounded-lg border border-outline-variant text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-colors" data-inquiry-id="${inquiry.id}" title="Dismiss Inquiry">
+                <button type="button" class="dismiss-inquiry-btn p-1.5 rounded-xl border border-slate-200/80 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer" data-inquiry-id="${inquiry.id}" title="Dismiss Inquiry">
                   <span class="material-symbols-outlined text-[16px]">delete</span>
                 </button>
               </div>
@@ -3153,23 +3153,25 @@ EXTRACTION RULES:
       }
 
       grid.innerHTML = addons.map(addon => `
-        <div class="admin-card bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-          <div class="flex items-start justify-between mb-3">
-            <div>
-              <h4 class="font-headline text-headline-md text-on-surface">${escapeHtml(addon.name)}</h4>
-              <p class="text-caption text-on-surface-variant">${escapeHtml(addon.price_text || '')}</p>
+        <div class="admin-card bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div>
+                <h4 class="font-headline text-base font-extrabold text-slate-900 tracking-tight">${escapeHtml(addon.name)}</h4>
+                <p class="text-xs font-mono tabular-nums font-bold text-secondary mt-0.5">${escapeHtml(addon.price_text || '')}</p>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${addon.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80' : 'bg-slate-100 text-slate-600 border-slate-200/80'}">
+                ${addon.status}
+              </span>
             </div>
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-caption ${addon.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
-              ${addon.status}
-            </span>
+            ${addon.badge ? `<span class="inline-block bg-sky-50 text-sky-700 border border-sky-200/80 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider mb-3">${escapeHtml(addon.badge)}</span>` : ''}
+            <p class="font-body text-xs text-slate-500 mb-4 line-clamp-2 leading-relaxed">${escapeHtml(addon.description || '')}</p>
           </div>
-          ${addon.badge ? `<span class="inline-block bg-secondary text-on-secondary px-2 py-0.5 rounded text-caption mb-3">${escapeHtml(addon.badge)}</span>` : ''}
-          <p class="font-body text-body-md text-on-surface-variant mb-4 line-clamp-2">${escapeHtml(addon.description || '')}</p>
-          <div class="flex gap-2">
-            <button class="edit-addon-btn flex-1 px-3 py-2 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors font-label text-label-md flex items-center justify-center gap-1" data-id="${addon.id}">
-              <span class="material-symbols-outlined text-[16px]">edit</span> Edit
+          <div class="flex gap-2 pt-3 border-t border-slate-100">
+            <button class="edit-addon-btn flex-1 px-3 py-2 border border-slate-200/80 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors font-label text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer" data-id="${addon.id}">
+              <span class="material-symbols-outlined text-[15px]">edit</span> Edit
             </button>
-            <button class="delete-addon-btn p-2 border border-outline-variant rounded-lg text-error hover:bg-error-container transition-colors" data-id="${addon.id}" data-name="${escapeHtml(addon.name)}">
+            <button class="delete-addon-btn p-2 border border-slate-200/80 rounded-xl text-red-600 hover:bg-red-50 transition-colors cursor-pointer" data-id="${addon.id}" data-name="${escapeHtml(addon.name)}">
               <span class="material-symbols-outlined text-[16px]">delete</span>
             </button>
           </div>
@@ -3321,24 +3323,24 @@ EXTRACTION RULES:
       }
 
       list.innerHTML = blogs.map(b => `
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md flex items-center justify-between gap-md">
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs hover:shadow-sm transition-all flex items-center justify-between gap-4">
           <div class="flex items-center gap-4 flex-1 min-w-0">
-            ${b.image_url ? `<img src="${b.image_url}" loading="lazy" class="w-12 h-12 rounded object-cover shrink-0" alt=""/>` : `<div class="w-12 h-12 rounded bg-surface-container flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-outline-variant text-[20px]">image</span></div>`}
+            ${b.image_url ? `<img src="${b.image_url}" loading="lazy" class="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-200/80" alt=""/>` : `<div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-slate-400 text-[20px]">image</span></div>`}
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
-                <p class="font-label text-label-md text-on-surface truncate">${escapeHtml(b.title)}</p>
-                <span class="inline-flex px-2 py-0.5 rounded text-[10px] uppercase font-bold ${b.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
+                <p class="font-label text-sm font-bold text-slate-900 truncate">${escapeHtml(b.title)}</p>
+                <span class="inline-flex px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider border ${b.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80' : 'bg-slate-100 text-slate-600 border-slate-200/80'}">
                   ${b.status}
                 </span>
               </div>
-              <p class="font-body text-[12px] text-on-surface-variant truncate">/post.html?slug=${escapeHtml(b.slug)}</p>
+              <p class="font-mono text-[11px] text-slate-500 truncate">/post.html?slug=${escapeHtml(b.slug)}</p>
             </div>
           </div>
-          <div class="flex gap-1 shrink-0">
-            <button class="edit-blog-btn p-2 hover:bg-surface-container rounded-lg transition-colors" data-id="${b.id}">
+          <div class="flex gap-1.5 shrink-0">
+            <button class="edit-blog-btn p-2 border border-slate-200/80 hover:bg-slate-50 rounded-xl transition-colors text-slate-600 cursor-pointer" data-id="${b.id}">
               <span class="material-symbols-outlined text-[16px]">edit</span>
             </button>
-            <button class="delete-blog-btn p-2 hover:bg-error-container rounded-lg transition-colors text-error" data-id="${b.id}">
+            <button class="delete-blog-btn p-2 border border-slate-200/80 hover:bg-red-50 rounded-xl transition-colors text-red-600 cursor-pointer" data-id="${b.id}">
               <span class="material-symbols-outlined text-[16px]">delete</span>
             </button>
           </div>
@@ -3577,16 +3579,16 @@ EXTRACTION RULES:
     }
 
     list.innerHTML = faqs.map(faq => `
-      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md flex items-start justify-between gap-md">
+      <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs hover:shadow-sm transition-all flex items-start justify-between gap-4">
         <div class="flex-1">
-          <p class="font-label text-label-md text-on-surface mb-1">${escapeHtml(faq.question)}</p>
-          <p class="font-body text-body-md text-on-surface-variant line-clamp-2">${escapeHtml(faq.answer)}</p>
+          <p class="font-label text-sm font-bold text-slate-900 mb-1">${escapeHtml(faq.question)}</p>
+          <p class="font-body text-xs text-slate-500 line-clamp-2 leading-relaxed">${escapeHtml(faq.answer)}</p>
         </div>
-        <div class="flex gap-1">
-          <button class="edit-faq-btn p-2 hover:bg-surface-container rounded-lg transition-colors" data-id="${faq.id}">
+        <div class="flex gap-1.5 shrink-0">
+          <button class="edit-faq-btn p-2 border border-slate-200/80 hover:bg-slate-50 rounded-xl transition-colors text-slate-600 cursor-pointer" data-id="${faq.id}">
             <span class="material-symbols-outlined text-[16px]">edit</span>
           </button>
-          <button class="delete-faq-btn p-2 hover:bg-error-container rounded-lg transition-colors text-error" data-id="${faq.id}">
+          <button class="delete-faq-btn p-2 border border-slate-200/80 hover:bg-red-50 rounded-xl transition-colors text-red-600 cursor-pointer" data-id="${faq.id}">
             <span class="material-symbols-outlined text-[16px]">delete</span>
           </button>
         </div>
@@ -3669,19 +3671,19 @@ EXTRACTION RULES:
     }
 
     list.innerHTML = testimonials.map(t => `
-      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md flex items-start justify-between gap-md">
+      <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs hover:shadow-sm transition-all flex items-start justify-between gap-4">
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-1">
-            <p class="font-label text-label-md text-on-surface">${escapeHtml(t.name)}</p>
-            <span class="text-caption text-on-surface-variant">${'★'.repeat(t.rating || 5)}</span>
+            <p class="font-label text-sm font-bold text-slate-900">${escapeHtml(t.name)}</p>
+            <span class="text-xs text-amber-500 font-bold tracking-wider">${'★'.repeat(t.rating || 5)}</span>
           </div>
-          <p class="font-body text-body-md text-on-surface-variant line-clamp-2">${escapeHtml(t.text)}</p>
+          <p class="font-body text-xs text-slate-500 line-clamp-2 leading-relaxed">${escapeHtml(t.text)}</p>
         </div>
-        <div class="flex gap-1">
-          <button class="edit-testimonial-btn p-2 hover:bg-surface-container rounded-lg transition-colors" data-id="${t.id}">
+        <div class="flex gap-1.5 shrink-0">
+          <button class="edit-testimonial-btn p-2 border border-slate-200/80 hover:bg-slate-50 rounded-xl transition-colors text-slate-600 cursor-pointer" data-id="${t.id}">
             <span class="material-symbols-outlined text-[16px]">edit</span>
           </button>
-          <button class="delete-testimonial-btn p-2 hover:bg-error-container rounded-lg transition-colors text-error" data-id="${t.id}">
+          <button class="delete-testimonial-btn p-2 border border-slate-200/80 hover:bg-red-50 rounded-xl transition-colors text-red-600 cursor-pointer" data-id="${t.id}">
             <span class="material-symbols-outlined text-[16px]">delete</span>
           </button>
         </div>
@@ -5271,23 +5273,23 @@ EXTRACTION RULES:
       const isChecked = selectedPayoutCommIds.has(comm.id);
 
       return `
-        <tr class="hover:bg-surface-container-low/60 transition-colors ${isChecked ? 'bg-amber-50/40' : ''}">
-          <td class="px-2 py-1.5 text-center">
+        <tr class="hover:bg-slate-50/80 transition-colors ${isChecked ? 'bg-amber-50/40' : ''}">
+          <td class="px-2.5 py-2 text-center">
             <input type="checkbox" class="payout-item-cb rounded text-amber-600 focus:ring-amber-500 cursor-pointer" data-id="${comm.id}" ${isChecked ? 'checked' : ''} />
           </td>
-          <td class="px-2.5 py-1.5">
-            <p class="font-bold text-on-surface leading-tight text-xs">${escapeHtml(staff.name)}</p>
-            <p class="text-[9.5px] text-on-surface-variant leading-tight">${escapeHtml(staff.role)}</p>
+          <td class="px-2.5 py-2">
+            <p class="font-bold text-slate-900 leading-tight text-xs">${escapeHtml(staff.name)}</p>
+            <p class="text-[9.5px] text-slate-500 leading-tight">${escapeHtml(staff.role)}</p>
           </td>
-          <td class="px-2.5 py-1.5 font-bold text-secondary text-xs whitespace-nowrap">${escapeHtml(comm.boat_name || '-')}</td>
-          <td class="px-2.5 py-1.5 font-mono text-[11px] text-on-surface-variant whitespace-nowrap">${dateStr}</td>
-          <td class="px-2.5 py-1.5 font-mono text-xs whitespace-nowrap">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-          <td class="px-2.5 py-1.5 font-mono text-amber-700 font-bold text-center text-xs whitespace-nowrap">${comm.commission_rate}%</td>
-          <td class="px-2.5 py-1.5 font-mono font-extrabold text-xs ${isPaid ? 'text-green-700' : 'text-blue-700'} whitespace-nowrap">
+          <td class="px-2.5 py-2 font-bold text-secondary text-xs whitespace-nowrap">${escapeHtml(comm.boat_name || '-')}</td>
+          <td class="px-2.5 py-2 font-mono tabular-nums text-[11px] text-slate-600 whitespace-nowrap">${dateStr}</td>
+          <td class="px-2.5 py-2 font-mono tabular-nums text-xs text-slate-800 whitespace-nowrap">$${parseFloat(comm.charter_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+          <td class="px-2.5 py-2 font-mono tabular-nums text-amber-700 font-bold text-center text-xs whitespace-nowrap">${comm.commission_rate}%</td>
+          <td class="px-2.5 py-2 font-mono tabular-nums font-extrabold text-xs ${isPaid ? 'text-emerald-700' : 'text-secondary'} whitespace-nowrap">
             $${parseFloat(comm.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </td>
-          <td class="px-2.5 py-1.5 whitespace-nowrap">
-            ${isPaid ? '<span class="text-[8.5px] font-bold bg-green-100 text-green-800 px-1 py-0.5 rounded uppercase">PAID</span>' : '<span class="text-[8.5px] font-bold bg-amber-100 text-amber-800 px-1 py-0.5 rounded uppercase">UNPAID</span>'}
+          <td class="px-2.5 py-2 whitespace-nowrap">
+            ${isPaid ? '<span class="text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2 py-0.5 rounded-full uppercase tracking-wider">PAID</span>' : '<span class="text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80 px-2 py-0.5 rounded-full uppercase tracking-wider">UNPAID</span>'}
           </td>
         </tr>
       `;
@@ -5844,36 +5846,36 @@ EXTRACTION RULES:
     function renderCommissionStatusBadge(status, invoiceRef) {
       switch (status) {
         case 'paid_to_yrsf':
-          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold"><span class="material-symbols-outlined text-[12px]">check_circle</span> Comm Paid</span>`;
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-bold"><span class="material-symbols-outlined text-[12px]">check_circle</span> Comm Paid</span>`;
         case 'invoiced':
-          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 text-[10px] font-bold"><span class="material-symbols-outlined text-[12px]">description</span> Invoiced${invoiceRef ? ` #${escapeHtml(invoiceRef)}` : ''}</span>`;
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200/80 text-[10px] font-bold"><span class="material-symbols-outlined text-[12px]">description</span> Invoiced${invoiceRef ? ` <span class="font-mono tabular-nums">#${escapeHtml(invoiceRef)}</span>` : ''}</span>`;
         case 'collected_by_owner':
-          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold"><span class="material-symbols-outlined text-[12px]">account_balance_wallet</span> Collected at Dock</span>`;
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 text-[10px] font-bold"><span class="material-symbols-outlined text-[12px]">account_balance_wallet</span> Collected at Dock</span>`;
         default:
-          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-medium"><span class="material-symbols-outlined text-[12px]">schedule</span> Awaiting Dock</span>`;
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80 text-[10px] font-medium"><span class="material-symbols-outlined text-[12px]">schedule</span> Awaiting Dock</span>`;
       }
     }
 
     function renderOverallStatusBadge(status) {
       switch (status) {
         case 'settled':
-          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-[11px] font-bold shadow-2xs">
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[11px] font-bold shadow-2xs">
                     <span class="material-symbols-outlined text-[13px]">verified</span> Fully Settled
                   </span>`;
         case 'needs_deposit':
-          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold shadow-2xs">
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 text-[11px] font-bold shadow-2xs">
                     <span class="material-symbols-outlined text-[13px]">forward_to_inbox</span> Needs Owner Deposit
                   </span>`;
         case 'invoiced':
-          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-blue-900 text-[11px] font-bold shadow-2xs">
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200/80 text-[11px] font-bold shadow-2xs">
                     <span class="material-symbols-outlined text-[13px]">receipt_long</span> Comm. Invoiced
                   </span>`;
         case 'needs_comm':
-          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-900 text-[11px] font-bold shadow-2xs">
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/80 text-[11px] font-bold shadow-2xs">
                     <span class="material-symbols-outlined text-[13px]">send_money</span> Needs Marina Comm.
                   </span>`;
         default:
-          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold">
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80 text-[11px] font-semibold">
                     <span class="material-symbols-outlined text-[13px]">sailing</span> Awaiting Dock
                   </span>`;
       }
@@ -5995,7 +5997,7 @@ EXTRACTION RULES:
       filtered.sort((a, b) => (b.booking_date || '').localeCompare(a.booking_date || ''));
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-on-surface-variant font-medium">No rentals found matching this filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-500 font-medium">No rentals found matching this filter.</td></tr>`;
         return;
       }
 
@@ -6009,23 +6011,23 @@ EXTRACTION RULES:
         let step1Html = '';
         if (p.mode === 'paid_in_full') {
           step1Html = `
-            <div class="font-mono font-bold text-xs text-purple-900">$${p.wholesaleAmount.toFixed(2)}</div>
+            <div class="font-mono tabular-nums font-bold text-xs text-purple-900">$${p.wholesaleAmount.toFixed(2)}</div>
             <div class="mt-0.5">
               ${p.wholesaleStatus === 'paid'
-                ? `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-green-100 text-green-800 text-[10px] font-bold">✓ Wholesale Paid</span>`
-                : `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">⏳ Wholesale Pending</span>`}
+                ? `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-bold">✓ Wholesale Paid</span>`
+                : `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 text-[10px] font-bold">⏳ Wholesale Pending</span>`}
             </div>
-            ${p.wholesaleDate ? `<div class="text-[9.5px] text-on-surface-variant font-mono mt-0.5">${escapeHtml(p.wholesaleDate)}</div>` : ''}
+            ${p.wholesaleDate ? `<div class="text-[9.5px] text-slate-500 font-mono tabular-nums mt-0.5">${escapeHtml(p.wholesaleDate)}</div>` : ''}
           `;
         } else {
           step1Html = `
-            <div class="font-mono font-bold text-xs text-blue-900">$${p.ownerDepositAmount.toFixed(2)}</div>
+            <div class="font-mono tabular-nums font-bold text-xs text-secondary">$${p.ownerDepositAmount.toFixed(2)}</div>
             <div class="mt-0.5">
               ${p.ownerDepositStatus === 'sent'
-                ? `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-green-100 text-green-800 text-[10px] font-bold">✓ Sent</span>`
-                : `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">⏳ Needs Advance</span>`}
+                ? `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-bold">✓ Sent</span>`
+                : `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 text-[10px] font-bold">⏳ Needs Advance</span>`}
             </div>
-            ${p.ownerDepositStatus === 'sent' ? `<div class="text-[9.5px] text-on-surface-variant font-mono mt-0.5">${escapeHtml(p.ownerDepositDate || '')} ${p.ownerDepositMethod ? `&bull; ${escapeHtml(p.ownerDepositMethod)}` : ''}</div>` : ''}
+            ${p.ownerDepositStatus === 'sent' ? `<div class="text-[9.5px] text-slate-500 font-mono tabular-nums mt-0.5">${escapeHtml(p.ownerDepositDate || '')} ${p.ownerDepositMethod ? `&bull; ${escapeHtml(p.ownerDepositMethod)}` : ''}</div>` : ''}
           `;
         }
 
@@ -6033,53 +6035,53 @@ EXTRACTION RULES:
         let step2Html = '';
         if (p.mode === 'paid_in_full') {
           step2Html = `
-            <span class="text-on-surface-variant italic text-[11px]">$0.00 at dock (Wholesale)</span>
+            <span class="text-slate-400 italic text-[11px] font-mono tabular-nums">$0.00 at dock (Wholesale)</span>
           `;
         } else {
           step2Html = `
-            <div class="text-[11px] font-medium text-on-surface">Dock: <span class="font-mono font-bold text-amber-900">$${p.dockBalanceAmount.toFixed(2)}</span></div>
-            <div class="text-[10.5px] font-medium text-emerald-800">YRSF Comm: <span class="font-mono font-bold">$${p.commissionDueAmount.toFixed(2)}</span></div>
+            <div class="text-[11px] font-medium text-slate-700">Dock: <span class="font-mono tabular-nums font-bold text-amber-800">$${p.dockBalanceAmount.toFixed(2)}</span></div>
+            <div class="text-[10.5px] font-medium text-emerald-700">YRSF Comm: <span class="font-mono tabular-nums font-bold">$${p.commissionDueAmount.toFixed(2)}</span></div>
             <div class="mt-0.5">${renderCommissionStatusBadge(p.commissionStatus, p.commissionInvoiceRef)}</div>
           `;
         }
 
         return `
-          <tr class="hover:bg-surface-container-low/60 transition-colors ${p.isSettled ? '' : 'bg-amber-50/15'}">
-            <td class="px-3 py-3 whitespace-nowrap">
-              <p class="font-bold text-on-surface text-xs">${dateFormatted}</p>
-              <p class="text-[10px] font-mono text-on-surface-variant">${escapeHtml(b.start_time || '')} &bull; ${b.duration_hours || 4} hrs</p>
+          <tr class="hover:bg-slate-50/80 transition-colors ${p.isSettled ? '' : 'bg-amber-50/15'}">
+            <td class="px-3.5 py-3.5 whitespace-nowrap">
+              <p class="font-bold font-mono tabular-nums text-slate-900 text-xs">${dateFormatted}</p>
+              <p class="text-[10px] font-mono tabular-nums text-slate-500">${escapeHtml(b.start_time || '')} &bull; ${b.duration_hours || 4} hrs</p>
             </td>
-            <td class="px-3 py-3">
+            <td class="px-3.5 py-3.5">
               <p class="font-bold text-secondary text-xs">${escapeHtml(b.boat_name || 'Fleet Yacht')}</p>
               <div class="flex items-center gap-1 mt-0.5">
-                <span class="material-symbols-outlined text-[12px] text-indigo-700">person</span>
-                <span class="text-[10.5px] font-semibold text-indigo-950">${escapeHtml(p.ownerName)}</span>
+                <span class="material-symbols-outlined text-[12px] text-indigo-600">person</span>
+                <span class="text-[10.5px] font-semibold text-slate-700">${escapeHtml(p.ownerName)}</span>
               </div>
             </td>
-            <td class="px-3 py-3">
-              <p class="font-bold text-on-surface text-xs">${escapeHtml(b.customer_name || 'Guest')}</p>
-              <p class="text-[10px] font-mono text-secondary"><a href="tel:${escapeHtml(b.customer_phone || '')}" class="hover:underline">${escapeHtml(b.customer_phone || '')}</a></p>
+            <td class="px-3.5 py-3.5">
+              <p class="font-bold text-slate-900 text-xs">${escapeHtml(b.customer_name || 'Guest')}</p>
+              <p class="text-[10px] font-mono tabular-nums text-secondary"><a href="tel:${escapeHtml(b.customer_phone || '')}" class="hover:underline">${escapeHtml(b.customer_phone || '')}</a></p>
             </td>
-            <td class="px-3 py-3 text-right whitespace-nowrap">
-              <span class="font-mono font-bold text-xs text-on-surface">$${charterTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              <div class="text-[10px] text-green-700 font-semibold font-mono">Dep: $${customerDeposit.toFixed(2)}</div>
+            <td class="px-3.5 py-3.5 text-right whitespace-nowrap">
+              <span class="font-mono tabular-nums font-bold text-xs text-slate-900">$${charterTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <div class="text-[10px] text-emerald-700 font-semibold font-mono tabular-nums">Dep: $${customerDeposit.toFixed(2)}</div>
             </td>
-            <td class="px-3 py-3 whitespace-nowrap">
+            <td class="px-3.5 py-3.5 whitespace-nowrap">
               ${step1Html}
             </td>
-            <td class="px-3 py-3 whitespace-nowrap">
+            <td class="px-3.5 py-3.5 whitespace-nowrap">
               ${step2Html}
             </td>
-            <td class="px-3 py-3 text-center whitespace-nowrap">
+            <td class="px-3.5 py-3.5 text-center whitespace-nowrap">
               ${renderOverallStatusBadge(p.overallStatus)}
             </td>
-            <td class="px-3 py-3 text-right whitespace-nowrap">
+            <td class="px-3.5 py-3.5 text-right whitespace-nowrap">
               <div class="flex items-center justify-end gap-1.5">
-                <button type="button" onclick="window.openMarkOwnerPaidModal('${b.id}')" class="px-2.5 py-1 rounded-lg text-xs font-bold ${p.isSettled ? 'bg-surface-container text-on-surface hover:bg-surface-container-high border border-outline-variant' : 'bg-green-700 text-white hover:bg-green-800 shadow-2xs'} flex items-center gap-1 cursor-pointer transition-all">
-                  <span class="material-symbols-outlined text-[14px]">${p.isSettled ? 'edit' : 'payments'}</span>
+                <button type="button" onclick="window.openMarkOwnerPaidModal('${b.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold ${p.isSettled ? 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80' : 'bg-[#0b1528] text-white hover:bg-[#162744] shadow-2xs'} flex items-center gap-1 cursor-pointer transition-all">
+                  <span class="material-symbols-outlined text-[14px] ${p.isSettled ? '' : 'text-[#38bdf8]'}">${p.isSettled ? 'edit' : 'payments'}</span>
                   ${p.isSettled ? 'Edit Settlement' : 'Settle Deal'}
                 </button>
-                <button type="button" onclick="window.editBooking('${b.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors cursor-pointer" title="View Booking Details">
+                <button type="button" onclick="window.editBooking('${b.id}')" class="p-1.5 text-slate-400 hover:text-secondary hover:bg-slate-100 rounded-xl transition-colors cursor-pointer" title="View Booking Details">
                   <span class="material-symbols-outlined text-[16px]">visibility</span>
                 </button>
               </div>
@@ -6520,31 +6522,31 @@ EXTRACTION RULES:
         const rateVal = typeof rule.payout_value !== 'undefined' ? rule.payout_value : '';
 
         return `
-          <tr class="hover:bg-surface-container-low/50" id="owner-rule-row-${boat.id}">
+          <tr class="hover:bg-slate-50/80 transition-colors" id="owner-rule-row-${boat.id}">
             <td class="px-3 py-2.5 whitespace-nowrap">
               <div class="font-bold text-secondary text-xs">${escapeHtml(boat.name)}</div>
-              <div class="text-[10px] text-on-surface-variant">${boat.length_ft ? `${boat.length_ft}ft` : ''} &bull; ${boat.capacity ? `${boat.capacity} guests` : ''}</div>
+              <div class="text-[10px] text-slate-500 font-mono tabular-nums">${boat.length_ft ? `${boat.length_ft}ft` : ''} &bull; ${boat.capacity ? `${boat.capacity} guests` : ''}</div>
             </td>
             <td class="px-3 py-2.5">
-              <input type="text" id="rule-name-${boat.id}" value="${escapeHtml(rule.owner_name || '')}" placeholder="Owner or Partner" class="w-full px-2 py-1 bg-white border border-outline-variant rounded-lg text-xs font-bold text-on-surface focus:ring-1 focus:ring-secondary"/>
+              <input type="text" id="rule-name-${boat.id}" value="${escapeHtml(rule.owner_name || '')}" placeholder="Owner or Partner" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-secondary"/>
             </td>
             <td class="px-3 py-2.5">
-              <input type="text" id="rule-contact-${boat.id}" value="${escapeHtml(rule.owner_phone || rule.owner_email || '')}" placeholder="Phone or email" class="w-full px-2 py-1 bg-white border border-outline-variant rounded-lg text-xs focus:ring-1 focus:ring-secondary"/>
+              <input type="text" id="rule-contact-${boat.id}" value="${escapeHtml(rule.owner_phone || rule.owner_email || '')}" placeholder="Phone or email" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono tabular-nums focus:ring-1 focus:ring-secondary"/>
             </td>
             <td class="px-3 py-2.5 text-center">
-              <select id="rule-type-${boat.id}" class="px-2 py-1 bg-white border border-outline-variant rounded-lg text-xs font-bold text-on-surface focus:ring-1 focus:ring-secondary">
+              <select id="rule-type-${boat.id}" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-secondary">
                 <option value="percentage" ${!isFixed ? 'selected' : ''}>% Percentage</option>
                 <option value="fixed" ${isFixed ? 'selected' : ''}>$ Fixed Amount</option>
               </select>
             </td>
             <td class="px-3 py-2.5 text-right">
-              <input type="number" step="0.01" id="rule-val-${boat.id}" value="${rateVal}" placeholder="e.g. 60 or 800" class="w-24 px-2 py-1 bg-white border border-outline-variant rounded-lg text-xs font-bold font-mono text-right focus:ring-1 focus:ring-secondary"/>
+              <input type="number" step="0.01" id="rule-val-${boat.id}" value="${rateVal}" placeholder="e.g. 60 or 800" class="w-24 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold font-mono tabular-nums text-right focus:ring-1 focus:ring-secondary"/>
             </td>
             <td class="px-3 py-2.5">
-              <input type="text" id="rule-notes-${boat.id}" value="${escapeHtml(rule.notes || '')}" placeholder="Payment details..." class="w-full px-2 py-1 bg-white border border-outline-variant rounded-lg text-[11px] focus:ring-1 focus:ring-secondary"/>
+              <input type="text" id="rule-notes-${boat.id}" value="${escapeHtml(rule.notes || '')}" placeholder="Payment details..." class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] focus:ring-1 focus:ring-secondary"/>
             </td>
             <td class="px-3 py-2.5 text-right whitespace-nowrap">
-              <button type="button" onclick="window.saveSingleBoatOwnerRule('${boat.id}', '${escapeHtml(boat.name)}')" class="px-2.5 py-1 bg-secondary text-on-secondary rounded-lg text-[11px] font-bold hover:opacity-90 transition-all cursor-pointer shadow-2xs">
+              <button type="button" onclick="window.saveSingleBoatOwnerRule('${boat.id}', '${escapeHtml(boat.name)}')" class="px-3 py-1.5 bg-[#0b1528] hover:bg-[#162744] text-white rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-2xs">
                 Save
               </button>
             </td>
