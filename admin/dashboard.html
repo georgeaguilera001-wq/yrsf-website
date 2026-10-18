@@ -393,33 +393,33 @@
   <!-- Main Content -->
   <main class="admin-main transition-all pb-44 lg:pb-0" id="admin-main-content">
     <!-- Mobile Header -->
-    <div class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest border-b border-outline-variant px-4 py-3 flex items-center justify-between">
+    <div class="lg:hidden sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between shadow-2xs">
       <a href="/" class="flex items-center">
         <img src="/img/logo-wide.png" alt="YRSF Logo" class="h-8 sm:h-9 w-auto object-contain"/>
       </a>
       <div class="flex items-center gap-2">
-        <span class="text-xs font-bold text-secondary bg-secondary/10 px-3 py-1 rounded-full font-label">Admin Portal</span>
-        <span class="text-[10px] font-bold text-white bg-red-600 px-2 py-0.5 rounded-full">v15</span>
+        <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-800 bg-slate-100 border border-slate-200/80 px-3 py-1 rounded-full font-label">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Executive Portal
+        </span>
       </div>
     </div>
 
     <!-- Top Notification & Status Bar -->
-    <div class="sticky top-0 z-30 bg-surface-container-lowest/90 backdrop-blur border-b border-outline-variant px-4 lg:px-8 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2">
-          <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-          <span class="text-xs font-bold text-on-surface-variant">System Live</span>
+    <div style="backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background-color: rgba(255, 255, 255, 0.85);" class="sticky top-0 z-30 border-b border-slate-200/70 px-4 lg:px-8 py-3 flex items-center justify-between shadow-2xs">
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50/90 border border-emerald-200/70">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-[11px] font-bold text-emerald-900 tracking-wide">System Live</span>
         </div>
-        <a href="/" target="_blank" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-xs font-bold text-on-surface-variant">
-          <span class="material-symbols-outlined text-[16px]">language</span> Live Website
+        <a href="/" target="_blank" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/80 hover:bg-slate-200/70 border border-slate-200/60 transition-all text-xs font-bold text-slate-700">
+          <span class="material-symbols-outlined text-[15px] text-secondary">language</span> Live Website
         </a>
-        <span class="hidden sm:inline-flex text-[10px] font-bold text-white bg-red-600 px-2 py-0.5 rounded-full">v15</span>
-        <button id="header-timeclock-btn" onclick="document.getElementById('timeclock-modal').classList.remove('hidden')" class="flex items-center gap-1.5 bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded-xl text-xs font-bold transition-all shadow-xs shrink-0">
-          <span class="material-symbols-outlined text-[16px]">schedule</span>
+        <button id="header-timeclock-btn" onclick="document.getElementById('timeclock-modal').classList.remove('hidden')" class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer">
+          <span class="material-symbols-outlined text-[15px]">schedule</span>
           <span>Timeclock</span>
         </button>
-        <button id="install-pwa-btn" onclick="window.triggerPWAInstall()" class="hidden lg:flex items-center gap-1.5 bg-secondary text-on-secondary px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-opacity-90 transition-all shadow-sm border border-secondary/20">
-          <span class="material-symbols-outlined text-[16px]">install_desktop</span>
+        <button id="install-pwa-btn" onclick="window.triggerPWAInstall()" class="hidden lg:flex items-center gap-1.5 bg-secondary text-on-secondary px-3.5 py-1.5 rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-2xs cursor-pointer">
+          <span class="material-symbols-outlined text-[15px]">install_desktop</span>
           <span>Install App</span>
         </button>
       </div>
@@ -446,20 +446,20 @@
             const { outcome } = await deferredPrompt.userChoice;
             if (outcome === 'accepted') deferredPrompt = null;
           } else {
-            alert("?? To install YRSF Admin on Microsoft Edge or Chrome:\n\n1. Look at the right side of your top URL/Address bar.\n2. Click the small computer/square icon [+] labeled 'App available'\n3. Click 'Install'!\n\n(If hidden: Click the 3 dots (...) menu in the top right of Edge/Chrome ? Apps ? Install YRSF Admin Portal)");
+            alert("To install YRSF Admin on Microsoft Edge or Chrome:\n\n1. Look at the right side of your top URL/Address bar.\n2. Click the small computer/square icon [+] labeled 'App available'\n3. Click 'Install'!\n\n(If hidden: Click the 3 dots (...) menu in the top right of Edge/Chrome -> Apps -> Install YRSF Admin Portal)");
           }
         };
       </script>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
         <!-- Notification Bell -->
         <div class="relative">
-          <button id="notification-bell-btn" class="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors relative flex items-center justify-center" title="Notifications">
-            <span class="material-symbols-outlined text-on-surface">notifications</span>
-            <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+          <button id="notification-bell-btn" class="p-2 rounded-xl bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/60 transition-all relative flex items-center justify-center cursor-pointer" title="Notifications">
+            <span class="material-symbols-outlined text-slate-700 text-[20px]">notifications</span>
+            <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-xs">0</span>
           </button>
-          <div id="notif-dropdown" class="absolute right-0 mt-2 w-80 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl p-4 hidden z-50">
-            <div class="flex items-center justify-between border-b border-outline-variant pb-2 mb-2">
-              <h4 class="font-bold text-xs text-on-surface">Notifications &amp; Alerts</h4>
+          <div id="notif-dropdown" class="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 hidden z-50">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-2.5">
+              <h4 class="font-bold text-xs text-slate-900">Notifications &amp; Alerts</h4>
               <button id="enable-push-btn" class="text-[10px] font-bold text-primary hover:underline mr-2">Enable Background Alerts</button>
               <button id="clear-notifs-btn" class="text-[10px] font-bold text-secondary hover:underline">Clear all</button>
             </div>
@@ -474,14 +474,20 @@
     <div class="px-4 lg:px-8 py-6 lg:py-8">
       <!-- Dashboard Section -->
       <section class="admin-section" id="section-dashboard" style="zoom: 0.90;">
-        <div class="flex items-start justify-between mb-6 gap-4">
-          <div>
-            <h1 class="font-headline text-headline-lg text-on-surface font-bold" id="dashboard-greeting">Welcome</h1>
-            <p id="dashboard-quote" class="font-body text-body-sm text-on-surface-variant mt-1 italic max-w-lg"></p>
+        <!-- Executive Command Hero Banner -->
+        <div class="mb-7 rounded-2xl bg-gradient-to-r from-[#0b1528] via-[#112240] to-[#1e3a5f] p-6 sm:p-7 text-white shadow-lg border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+          <div class="relative z-10">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-400/15 border border-sky-400/30 text-sky-300 text-[10px] font-extrabold uppercase tracking-widest mb-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span> Fleet &amp; Charter Command Center
+            </div>
+            <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-white tracking-tight" id="dashboard-greeting">Welcome</h1>
+            <p id="dashboard-quote" class="font-body text-xs sm:text-sm text-slate-300 mt-1 italic max-w-xl"></p>
           </div>
-          <button class="bg-secondary text-on-secondary px-4 py-2 rounded-xl font-label text-sm font-bold hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm shrink-0 mt-1" onclick="document.querySelector('[data-section=bookings]').click(); setTimeout(() => { if (typeof window.openNewBookingModal === 'function') { window.openNewBookingModal(); } else { const btn = document.getElementById('add-booking-btn'); if(btn) btn.click(); } }, 150)">
-            <span class="material-symbols-outlined text-[18px]">add_circle</span> <span class="hidden sm:inline">New Booking</span><span class="sm:hidden">New</span>
-          </button>
+          <div class="flex items-center gap-2.5 relative z-10 shrink-0">
+            <button class="bg-sky-500 hover:bg-sky-400 text-slate-950 px-5 py-2.5 rounded-xl font-label text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2 shadow-md cursor-pointer" onclick="document.querySelector('[data-section=bookings]').click(); setTimeout(() => { if (typeof window.openNewBookingModal === 'function') { window.openNewBookingModal(); } else { const btn = document.getElementById('add-booking-btn'); if(btn) btn.click(); } }, 150)">
+              <span class="material-symbols-outlined text-[18px]">add_circle</span> <span>New Charter Booking</span>
+            </button>
+          </div>
         </div>
 
         <!-- Live Customer Inquiries & Notification Center -->
@@ -618,34 +624,46 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <div class="flex items-center gap-3 mb-2">
-              <span class="material-symbols-outlined text-secondary">directions_boat</span>
-              <span class="font-label text-label-md text-on-surface-variant">Active Yachts</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Active Yachts</span>
+              <p class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono" id="stat-boats">-</p>
+              <span class="text-[10px] font-semibold text-sky-700 mt-1 inline-block">Live Fleet Inventory</span>
             </div>
-            <p class="font-headline text-headline-lg text-on-surface" id="stat-boats">-</p>
+            <div class="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-2xl">directions_boat</span>
+            </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <div class="flex items-center gap-3 mb-2">
-              <span class="material-symbols-outlined text-secondary">add_circle</span>
-              <span class="font-label text-label-md text-on-surface-variant">Active Add-ons</span>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Active Add-ons</span>
+              <p class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono" id="stat-addons">-</p>
+              <span class="text-[10px] font-semibold text-indigo-700 mt-1 inline-block">Water Toys &amp; Extras</span>
             </div>
-            <p class="font-headline text-headline-lg text-on-surface" id="stat-addons">-</p>
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-2xl">add_circle</span>
+            </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <div class="flex items-center gap-3 mb-2">
-              <span class="material-symbols-outlined text-secondary">star</span>
-              <span class="font-label text-label-md text-on-surface-variant">Testimonials</span>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Testimonials</span>
+              <p class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono" id="stat-testimonials">-</p>
+              <span class="text-[10px] font-semibold text-amber-700 mt-1 inline-block">Verified Guest Quotes</span>
             </div>
-            <p class="font-headline text-headline-lg text-on-surface" id="stat-testimonials">-</p>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-2xl">star</span>
+            </div>
           </div>
-          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-            <div class="flex items-center gap-3 mb-2">
-              <span class="material-symbols-outlined text-secondary">quiz</span>
-              <span class="font-label text-label-md text-on-surface-variant">FAQs</span>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Published FAQs</span>
+              <p class="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono" id="stat-faqs">-</p>
+              <span class="text-[10px] font-semibold text-emerald-700 mt-1 inline-block">Concierge Knowledge</span>
             </div>
-            <p class="font-headline text-headline-lg text-on-surface" id="stat-faqs">-</p>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-2xl">quiz</span>
+            </div>
           </div>
         </div>
         
@@ -658,8 +676,8 @@
               </h2>
               <p class="text-xs text-on-surface-variant">Future charter bookings sorted by date</p>
             </div>
-            <button class="bg-surface-container text-on-surface-variant px-3 py-1.5 rounded-lg font-label text-xs font-bold hover:bg-surface-container-high transition-all flex items-center gap-1.5 shrink-0" onclick="document.querySelector('[data-section=bookings]').click()">
-              View All
+            <button class="bg-surface-container text-on-surface-variant px-3.5 py-1.5 rounded-xl font-label text-xs font-bold hover:bg-surface-container-high transition-all flex items-center gap-1.5 shrink-0 cursor-pointer" onclick="document.querySelector('[data-section=bookings]').click()">
+              View All Charters
             </button>
           </div>
           <div id="dashboard-upcoming-reservations" class="flex flex-col gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
@@ -667,18 +685,23 @@
           </div>
         </div>
 
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-          <h3 class="font-headline text-headline-md text-on-surface mb-6">Quick Actions</h3>
-          <div class="flex flex-wrap gap-3">
-            <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" onclick="document.querySelector('[data-section=fleet]').click()">
-              <span class="material-symbols-outlined text-[18px]">add</span> New Yacht
-            </button>
-            <button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label text-label-md hover:opacity-90 transition-all flex items-center gap-2" onclick="document.querySelector('[data-section=addons]').click()">
-              <span class="material-symbols-outlined text-[18px]">add</span> New Add-on
-            </button>
-            <a href="/" target="_blank" class="border border-outline-variant px-4 py-2 rounded-lg font-label text-label-md text-on-surface-variant hover:bg-surface-container transition-all flex items-center gap-2">
-              <span class="material-symbols-outlined text-[18px]">open_in_new</span> View Website
-            </a>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 mb-8">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="font-headline text-base font-bold text-slate-900">Quick Fleet &amp; Site Actions</h3>
+              <p class="text-xs text-slate-500">Add new vessels, manage charter extras, or preview the public storefront</p>
+            </div>
+            <div class="flex flex-wrap gap-2.5">
+              <button class="bg-secondary text-on-secondary px-4 py-2 rounded-xl font-label text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer" onclick="document.querySelector('[data-section=fleet]').click()">
+                <span class="material-symbols-outlined text-[16px]">add</span> New Yacht
+              </button>
+              <button class="bg-secondary text-on-secondary px-4 py-2 rounded-xl font-label text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer" onclick="document.querySelector('[data-section=fleet]').click()">
+                <span class="material-symbols-outlined text-[16px]">add_circle</span> Manage Add-ons
+              </button>
+              <a href="/" target="_blank" class="border border-slate-200 bg-slate-50 hover:bg-slate-100 px-4 py-2 rounded-xl font-label text-xs font-bold text-slate-700 transition-all flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px]">open_in_new</span> View Website
+              </a>
+            </div>
           </div>
         </div>
 
@@ -1022,7 +1045,7 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                  <span class="text-[10px] font-bold text-purple-800 bg-white/80 border border-purple-200 px-2 py-0.5 rounded-full shadow-2xs group-hover:bg-purple-600 group-hover:text-white transition-colors">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒâ€šÃ‚Â¨ Ask AI</span>
+                  <span class="text-[10px] font-bold text-purple-800 bg-white/80 border border-purple-200 px-2.5 py-0.5 rounded-full shadow-2xs group-hover:bg-purple-600 group-hover:text-white transition-colors">✨ Ask AI</span>
                   <span id="ai-fleet-chevron" class="material-symbols-outlined text-purple-700 text-lg sm:text-xl transition-transform duration-200" style="transform: rotate(-90deg);">expand_more</span>
                 </div>
               </button>

@@ -1,6 +1,158 @@
-/* ============================================
-   YRSF — Admin Portal Styles
-   ============================================ */
+/* ==========================================================================
+   YRSF — Executive Luxury Maritime Admin Portal Design System (v21)
+   Inspired by Stripe, Linear & Superyacht Concierge Interfaces
+   ========================================================================== */
+
+:root {
+  --yrsf-navy-950: #070e1b;
+  --yrsf-navy-900: #0b1528;
+  --yrsf-navy-800: #112240;
+  --yrsf-navy-700: #1e3a5f;
+  --yrsf-accent-sky: #38bdf8;
+  --yrsf-accent-blue: #2563eb;
+  --yrsf-canvas-bg: #f4f7fb;
+  --yrsf-card-border: rgba(15, 23, 42, 0.07);
+  --yrsf-card-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 1px 3px 0 rgba(15, 23, 42, 0.02);
+  --yrsf-card-shadow-hover: 0 10px 28px -4px rgba(15, 23, 42, 0.07), 0 2px 6px 0 rgba(15, 23, 42, 0.03);
+}
+
+/* --- Global Canvas & Typography Polish --- */
+body.bg-surface {
+  background-color: var(--yrsf-canvas-bg) !important;
+  background-image: radial-gradient(at 50% 0%, rgba(56, 189, 248, 0.06) 0px, transparent 60%);
+  background-attachment: fixed;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-mono,
+[id^="stat-"],
+[id^="summary-"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Executive Deep Nautical Navy Sidebar --- */
+#admin-sidebar {
+  background: linear-gradient(180deg, #0a1426 0%, #0f1e36 100%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 4px 0 24px -4px rgba(7, 14, 27, 0.25);
+  color: #e2e8f0;
+}
+
+#admin-sidebar > div:first-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 20px 18px !important;
+}
+
+#admin-sidebar > div:first-child img {
+  filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(56, 189, 248, 0.2));
+}
+
+#admin-sidebar > div:first-child p {
+  color: #7dd3fc !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1.8px !important;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Sidebar Navigation Items */
+#admin-sidebar .admin-nav-btn {
+  color: #94a3b8 !important;
+  border-radius: 10px !important;
+  padding: 9px 12px !important;
+  font-weight: 600 !important;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 1px solid transparent;
+  position: relative;
+}
+
+#admin-sidebar .admin-nav-btn .material-symbols-outlined {
+  color: #64748b !important;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+#admin-sidebar .admin-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #f8fafc !important;
+}
+
+#admin-sidebar .admin-nav-btn:hover .material-symbols-outlined {
+  color: #bae6fd !important;
+}
+
+/* Active Sidebar Item */
+#admin-sidebar .admin-nav-btn.bg-secondary-container {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0.05) 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  box-shadow: 0 4px 14px -3px rgba(14, 165, 233, 0.2);
+}
+
+#admin-sidebar .admin-nav-btn.bg-secondary-container::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
+#admin-sidebar .admin-nav-btn.bg-secondary-container .material-symbols-outlined {
+  color: #38bdf8 !important;
+}
+
+#admin-sidebar .drag-handle {
+  color: #475569 !important;
+}
+
+/* Sidebar Edit & Footer Area */
+#admin-sidebar #toggle-menu-edit-btn,
+#admin-sidebar #reset-menu-btn {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #94a3b8 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+#admin-sidebar #toggle-menu-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+#admin-sidebar > div:last-child {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(7, 14, 27, 0.4);
+}
+
+#admin-sidebar #admin-user-email {
+  color: #f8fafc !important;
+  font-weight: 700 !important;
+}
+
+#admin-sidebar > div:last-child p.font-caption {
+  color: #38bdf8 !important;
+  font-weight: 600;
+}
+
+#admin-sidebar > div:last-child button {
+  color: #94a3b8 !important;
+}
+
+#admin-sidebar > div:last-child button:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #ffffff !important;
+}
+
+#admin-sidebar #logout-btn:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #fca5a5 !important;
+}
 
 /* --- Active Sidebar Press Effect --- */
 .active-tab {
@@ -9,7 +161,7 @@
 
 /* --- Admin Sidebar Responsive --- */
 .admin-sidebar {
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (min-width: 1024px) {
@@ -37,7 +189,9 @@
 .sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 45;
   opacity: 0;
   visibility: hidden;
@@ -47,6 +201,59 @@
 .sidebar-overlay.active {
   opacity: 1;
   visibility: visible;
+}
+
+/* --- Elevated Bento Cards & Containers --- */
+.admin-section .bg-surface-container-lowest {
+  background-color: #ffffff !important;
+  border-color: var(--yrsf-card-border) !important;
+  box-shadow: var(--yrsf-card-shadow);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+/* Subtle elevation for KPI cards */
+#section-dashboard .grid > .bg-surface-container-lowest:hover,
+#view-owner-payouts .grid > .bg-surface-container-lowest:hover {
+  box-shadow: var(--yrsf-card-shadow-hover);
+  border-color: rgba(37, 99, 235, 0.15) !important;
+}
+
+/* --- Executive Primary Buttons (.bg-secondary) --- */
+button.bg-secondary,
+a.bg-secondary {
+  background: linear-gradient(135deg, #1e3a5f 0%, #102542 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px -2px rgba(16, 37, 66, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  transition: all 0.18s ease !important;
+}
+
+button.bg-secondary:hover,
+a.bg-secondary:hover {
+  background: linear-gradient(135deg, #254773 0%, #153056 100%) !important;
+  box-shadow: 0 6px 16px -3px rgba(16, 37, 66, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+  transform: translateY(-0.5px);
+}
+
+/* --- Stripe-Grade Data Tables --- */
+.admin-section table thead {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.admin-section table thead th {
+  color: #475569 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  font-size: 10.5px !important;
+  text-transform: uppercase;
+}
+
+.admin-section table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.admin-section table tbody tr:hover {
+  background-color: #f8fafc !important;
 }
 
 /* --- Admin Table Row Actions --- */
@@ -59,9 +266,61 @@
   opacity: 1;
 }
 
-/* --- Form Field Focus Glow --- */
+/* --- Refined Form Controls & Focus Glow --- */
+.admin-section input[type="text"],
+.admin-section input[type="number"],
+.admin-section input[type="email"],
+.admin-section input[type="tel"],
+.admin-section input[type="date"],
+.admin-section input[type="time"],
+.admin-section input[type="url"],
+.admin-section select,
+.admin-section textarea {
+  border-color: #cbd5e1;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-section input:focus,
+.admin-section select:focus,
+.admin-section textarea:focus,
 .admin-field:focus {
-  box-shadow: 0 0 0 3px rgba(69, 95, 136, 0.1);
+  outline: none !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+/* --- Unified Frosted Glass Modal Backdrops --- */
+#social-fleet-gallery-modal,
+#zapier-setup-modal,
+#customer-profile-modal,
+#admin-profile-modal,
+#staff-modal,
+#timeclock-modal,
+#commission-modal,
+#commission-payout-modal,
+#owner-settlement-modal,
+#manage-boat-owners-modal,
+#booking-modal,
+#day-events-modal,
+#quote-preview-modal,
+#message-preview-modal {
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  background-color: rgba(15, 23, 42, 0.38) !important;
+}
+
+/* Modal Inner Dialog Elevation */
+#customer-profile-modal > div,
+#admin-profile-modal > div,
+#staff-modal > div,
+#timeclock-modal > div,
+#commission-modal > div,
+#commission-payout-modal > div,
+#owner-settlement-modal > div,
+#manage-boat-owners-modal > div,
+#booking-modal > div,
+#day-events-modal > div {
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.08) !important;
 }
 
 /* --- Status Badge Pulse --- */
@@ -87,8 +346,8 @@
 .admin-spinner {
   width: 24px;
   height: 24px;
-  border: 3px solid #e2e2e2;
-  border-top-color: #455f88;
+  border: 3px solid #e2e8f0;
+  border-top-color: #1e3a5f;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   display: inline-block;
@@ -139,11 +398,34 @@
 
 /* --- Admin Card Hover --- */
 .admin-card {
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .admin-card:hover {
-  border-color: #455f88;
+  border-color: #1e3a5f;
+  box-shadow: var(--yrsf-card-shadow-hover);
+}
+
+/* --- Custom Subtle Scrollbars --- */
+.custom-scrollbar::-webkit-scrollbar,
+#admin-nav-container::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+#admin-nav-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+#admin-nav-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
 }
 
 /* --- Calendar Grid Strict 1x1 Squares (Global) --- */
@@ -167,10 +449,7 @@
   overflow: hidden !important;
 }
 
-/* --- Prevent iOS Safari Auto-Zoom on Select / Input Focus ---
-   iOS zooms in whenever a focused form element has font-size < 16px.
-   Forcing 16px on mobile suppresses this without affecting visual layout.
-   touch-action: manipulation disables double-tap zoom on interactive elements. */
+/* --- Prevent iOS Safari Auto-Zoom on Select / Input Focus --- */
 @media (max-width: 1023px) {
   select,
   input,
@@ -190,6 +469,3 @@
   transform-origin: top center;
   margin: 0 auto;
 }
-
-
-
