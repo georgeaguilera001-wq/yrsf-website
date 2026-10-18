@@ -5633,7 +5633,38 @@ EXTRACTION RULES:
     }
 
     function getOwnerPayoutForBooking(b) {
-      if (!b) return { isPaid: false, status: 'unpaid', ownerName: 'Boat Owner', payoutType: 'percentage', payoutRate: 0, amount: 0, paidDate: '', paymentMethod: '', referenceNote: '', ruleDescription: 'None' };
+      if (!b) return {
+        isPaid: false,
+        isSettled: false,
+        overallStatus: 'needs_deposit',
+        mode: 'standard',
+        ownerName: 'Boat Owner',
+        charterTotal: 0,
+        customerDeposit: 0,
+        ownerDepositAmount: 0,
+        ownerDepositStatus: 'pending',
+        ownerDepositDate: '',
+        ownerDepositMethod: 'Zelle',
+        ownerDepositRef: '',
+        dockBalanceAmount: 0,
+        commissionDueAmount: 0,
+        commissionStatus: 'pending_dock',
+        commissionInvoiceRef: '',
+        commissionDate: '',
+        commissionMethod: 'Zelle',
+        wholesaleAmount: 0,
+        wholesaleStatus: 'pending',
+        wholesaleDate: '',
+        wholesaleMethod: 'Wire Transfer',
+        wholesaleRef: '',
+        ownerNet: 0,
+        yrsfNet: 0,
+        amount: 0,
+        notes: '',
+        ruleDescription: 'None',
+        payoutType: 'percentage',
+        payoutRate: 0
+      };
 
       // 1. Resolve Boat Owner Config
       let boatRule = null;
@@ -5653,66 +5684,198 @@ EXTRACTION RULES:
       const payoutRate = (boatRule && typeof boatRule.payout_value !== 'undefined') ? parseFloat(boatRule.payout_value) : 0;
       
       const charterTotal = parseFloat(b.total_price || b.amount || 0);
-      let defaultAmount = 0;
+      const customerDeposit = parseFloat(b.deposit_amount || 0);
+      const remainingDock = Math.max(0, charterTotal - customerDeposit);
+
+      let defaultOwnerDeposit = 0;
+      let defaultCommission = 0;
       let ruleDesc = 'Not configured';
-      if (payoutType === 'percentage') {
-        defaultAmount = payoutRate > 0 ? (charterTotal * payoutRate) / 100 : 0;
-        ruleDesc = payoutRate > 0 ? `${payoutRate}% of Total` : '0% (Unconfigured)';
+
+      if (payoutType === 'percentage' && payoutRate > 0) {
+        ruleDesc = `${payoutRate}% Owner Rule`;
+        defaultOwnerDeposit = customerDeposit > 0 ? Math.round(customerDeposit * (payoutRate / 100)) : 0;
+        const totalOwnerShare = (charterTotal * payoutRate) / 100;
+        const yrsfTotalShare = Math.max(0, charterTotal - totalOwnerShare);
+        const yrsfDepositKept = Math.max(0, customerDeposit - defaultOwnerDeposit);
+        defaultCommission = Math.max(0, yrsfTotalShare - yrsfDepositKept);
+      } else if (payoutType === 'fixed' && payoutRate > 0) {
+        ruleDesc = `$${payoutRate.toFixed(2)} Fixed Rule`;
+        defaultOwnerDeposit = Math.min(customerDeposit, payoutRate);
+        defaultCommission = Math.max(0, remainingDock - Math.max(0, payoutRate - defaultOwnerDeposit));
       } else {
-        defaultAmount = payoutRate;
-        ruleDesc = `$${payoutRate.toFixed(2)} Fixed`;
+        defaultOwnerDeposit = customerDeposit > 0 ? Math.round(customerDeposit * 0.5) : 0;
+        defaultCommission = 0;
       }
 
       // 2. Check settlements cache
       let settlement = ownerSettlementsCache[b.id];
 
-      // 3. Fallback: check booking.special_requests for [OwnerPayout: ...] tag
+      // 3. Fallback: check booking.special_requests for legacy [OwnerPayout: ...] tag
       const reqNotes = b.special_requests || '';
       const match = reqNotes.match(/\[OwnerPayout:\s*PAID\s*\|\s*\$([0-9.]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)(?:\s*\|\s*([^\]]*))?\]/i);
-      if (match) {
-        if (!settlement) {
-          settlement = {
-            booking_id: b.id,
-            status: 'paid',
-            amount: parseFloat(match[1]) || defaultAmount,
-            paid_date: match[2]?.trim() || '',
-            payment_method: match[3]?.trim() || 'Direct Transfer',
-            reference_note: match[4]?.trim() || '',
-            owner_name: ownerName,
-            payout_type: payoutType,
-            payout_rate: payoutRate
-          };
-          ownerSettlementsCache[b.id] = settlement;
+      if (match && !settlement) {
+        settlement = {
+          booking_id: b.id,
+          mode: 'standard',
+          owner_name: ownerName,
+          owner_deposit_amount: parseFloat(match[1]) || defaultOwnerDeposit,
+          owner_deposit_status: 'sent',
+          owner_deposit_date: match[2]?.trim() || '',
+          owner_deposit_method: match[3]?.trim() || 'Zelle',
+          owner_deposit_ref: match[4]?.trim() || '',
+          dock_balance_amount: remainingDock,
+          commission_due_amount: 0,
+          commission_status: 'paid_to_yrsf',
+          notes: ''
+        };
+        ownerSettlementsCache[b.id] = settlement;
+      }
+
+      // Parse settlement fields with backward compatibility
+      const mode = settlement?.mode || (settlement?.status === 'paid' ? 'standard' : 'standard');
+      const ownerDepositAmount = typeof settlement?.owner_deposit_amount !== 'undefined'
+        ? parseFloat(settlement.owner_deposit_amount)
+        : (settlement?.amount ? parseFloat(settlement.amount) : defaultOwnerDeposit);
+      const ownerDepositStatus = settlement?.owner_deposit_status || (settlement?.status === 'paid' ? 'sent' : 'pending');
+      const ownerDepositDate = settlement?.owner_deposit_date || settlement?.paid_date || '';
+      const ownerDepositMethod = settlement?.owner_deposit_method || settlement?.payment_method || 'Zelle';
+      const ownerDepositRef = settlement?.owner_deposit_ref || settlement?.reference_note || '';
+
+      const dockBalanceAmount = typeof settlement?.dock_balance_amount !== 'undefined'
+        ? parseFloat(settlement.dock_balance_amount)
+        : remainingDock;
+      const commissionDueAmount = typeof settlement?.commission_due_amount !== 'undefined'
+        ? parseFloat(settlement.commission_due_amount)
+        : defaultCommission;
+      const commissionStatus = settlement?.commission_status || (settlement?.status === 'paid' ? 'paid_to_yrsf' : 'pending_dock');
+      const commissionInvoiceRef = settlement?.commission_invoice_ref || '';
+      const commissionDate = settlement?.commission_date || '';
+      const commissionMethod = settlement?.commission_method || 'Zelle';
+
+      const defaultWholesale = payoutType === 'fixed' && payoutRate > 0 ? payoutRate : (payoutRate > 0 ? (charterTotal * payoutRate) / 100 : charterTotal * 0.7);
+      const wholesaleAmount = typeof settlement?.wholesale_amount !== 'undefined'
+        ? parseFloat(settlement.wholesale_amount)
+        : defaultWholesale;
+      const wholesaleStatus = settlement?.wholesale_status || 'pending';
+      const wholesaleDate = settlement?.wholesale_date || '';
+      const wholesaleMethod = settlement?.wholesale_method || 'Wire Transfer';
+      const wholesaleRef = settlement?.wholesale_ref || '';
+
+      const notes = settlement?.notes || '';
+
+      // Determine Overall Settlement Status
+      let overallStatus = 'needs_deposit';
+      let isSettled = false;
+
+      if (mode === 'paid_in_full') {
+        if (wholesaleStatus === 'paid') {
+          overallStatus = 'settled';
+          isSettled = true;
+        } else {
+          overallStatus = 'needs_deposit';
+          isSettled = false;
+        }
+      } else {
+        if (ownerDepositStatus !== 'sent') {
+          overallStatus = 'needs_deposit';
+          isSettled = false;
+        } else if (commissionStatus === 'paid_to_yrsf') {
+          overallStatus = 'settled';
+          isSettled = true;
+        } else if (commissionStatus === 'invoiced') {
+          overallStatus = 'invoiced';
+          isSettled = false;
+        } else if (commissionStatus === 'collected_by_owner') {
+          overallStatus = 'needs_comm';
+          isSettled = false;
+        } else {
+          overallStatus = 'pending_dock';
+          isSettled = false;
         }
       }
 
-      if (settlement && settlement.status === 'paid') {
-        return {
-          isPaid: true,
-          status: 'paid',
-          ownerName: settlement.owner_name || ownerName,
-          payoutType: settlement.payout_type || payoutType,
-          payoutRate: typeof settlement.payout_rate !== 'undefined' ? settlement.payout_rate : payoutRate,
-          amount: typeof settlement.amount !== 'undefined' ? parseFloat(settlement.amount) : defaultAmount,
-          paidDate: settlement.paid_date || '',
-          paymentMethod: settlement.payment_method || 'Transfer',
-          referenceNote: settlement.reference_note || '',
-          ruleDescription: ruleDesc
-        };
+      // Calculate Net Earnings
+      let ownerNet = 0;
+      let yrsfNet = 0;
+      if (mode === 'paid_in_full') {
+        ownerNet = wholesaleAmount;
+        yrsfNet = Math.max(0, charterTotal - wholesaleAmount);
+      } else {
+        ownerNet = ownerDepositAmount + Math.max(0, dockBalanceAmount - commissionDueAmount);
+        const yrsfDepositKept = Math.max(0, customerDeposit - ownerDepositAmount);
+        yrsfNet = yrsfDepositKept + commissionDueAmount;
       }
 
       return {
-        isPaid: false,
-        status: 'unpaid',
-        ownerName: ownerName,
-        payoutType: payoutType,
-        payoutRate: payoutRate,
-        amount: defaultAmount,
-        paidDate: '',
-        paymentMethod: '',
-        referenceNote: '',
-        ruleDescription: ruleDesc
+        isPaid: isSettled,
+        isSettled,
+        overallStatus,
+        mode,
+        ownerName: settlement?.owner_name || ownerName,
+        charterTotal,
+        customerDeposit,
+        ownerDepositAmount,
+        ownerDepositStatus,
+        ownerDepositDate,
+        ownerDepositMethod,
+        ownerDepositRef,
+        dockBalanceAmount,
+        commissionDueAmount,
+        commissionStatus,
+        commissionInvoiceRef,
+        commissionDate,
+        commissionMethod,
+        wholesaleAmount,
+        wholesaleStatus,
+        wholesaleDate,
+        wholesaleMethod,
+        wholesaleRef,
+        ownerNet,
+        yrsfNet,
+        amount: mode === 'paid_in_full' ? wholesaleAmount : ownerDepositAmount,
+        notes,
+        ruleDescription: ruleDesc,
+        payoutType,
+        payoutRate
       };
+    }
+
+    function renderCommissionStatusBadge(status, invoiceRef) {
+      switch (status) {
+        case 'paid_to_yrsf':
+          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold"><span class="material-symbols-outlined text-[12px]">check_circle</span> Comm Paid</span>`;
+        case 'invoiced':
+          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 text-[10px] font-bold"><span class="material-symbols-outlined text-[12px]">description</span> Invoiced${invoiceRef ? ` #${escapeHtml(invoiceRef)}` : ''}</span>`;
+        case 'collected_by_owner':
+          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold"><span class="material-symbols-outlined text-[12px]">account_balance_wallet</span> Collected at Dock</span>`;
+        default:
+          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-medium"><span class="material-symbols-outlined text-[12px]">schedule</span> Awaiting Dock</span>`;
+      }
+    }
+
+    function renderOverallStatusBadge(status) {
+      switch (status) {
+        case 'settled':
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-[11px] font-bold shadow-2xs">
+                    <span class="material-symbols-outlined text-[13px]">verified</span> Fully Settled
+                  </span>`;
+        case 'needs_deposit':
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold shadow-2xs">
+                    <span class="material-symbols-outlined text-[13px]">forward_to_inbox</span> Needs Owner Deposit
+                  </span>`;
+        case 'invoiced':
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-blue-900 text-[11px] font-bold shadow-2xs">
+                    <span class="material-symbols-outlined text-[13px]">receipt_long</span> Comm. Invoiced
+                  </span>`;
+        case 'needs_comm':
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-900 text-[11px] font-bold shadow-2xs">
+                    <span class="material-symbols-outlined text-[13px]">send_money</span> Needs Marina Comm.
+                  </span>`;
+        default:
+          return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold">
+                    <span class="material-symbols-outlined text-[13px]">sailing</span> Awaiting Dock
+                  </span>`;
+      }
     }
 
     function renderOwnerPayoutsTable() {
@@ -5724,54 +5887,89 @@ EXTRACTION RULES:
       // All confirmed/completed charters (exclude draft inquiries and cancellations)
       const eligibleBookings = (bookingsCache || []).filter(b => b.status !== 'inquiry' && b.status !== 'cancelled');
 
-      let totalPaidAmount = 0;
-      let settledChartersCount = 0;
-      let totalPendingAmount = 0;
-      let pendingChartersCount = 0;
+      let totalOwnerDepositsSent = 0;
+      let countOwnerDepositsSent = 0;
+      let totalOwnerDepositsPending = 0;
+      let countOwnerDepositsPending = 0;
+      let totalCommissions = 0;
+      let countCommissions = 0;
+      let countSettled = 0;
       let totalCharterVolume = 0;
 
       eligibleBookings.forEach(b => {
         const p = getOwnerPayoutForBooking(b);
         const tot = parseFloat(b.total_price || b.amount || 0);
         totalCharterVolume += tot;
-        if (p.isPaid) {
-          totalPaidAmount += p.amount;
-          settledChartersCount++;
+
+        if (p.mode === 'paid_in_full') {
+          if (p.wholesaleStatus === 'paid') {
+            totalOwnerDepositsSent += p.wholesaleAmount;
+            countOwnerDepositsSent++;
+            countSettled++;
+          } else {
+            totalOwnerDepositsPending += p.wholesaleAmount;
+            countOwnerDepositsPending++;
+          }
         } else {
-          totalPendingAmount += p.amount;
-          pendingChartersCount++;
+          if (p.ownerDepositStatus === 'sent') {
+            totalOwnerDepositsSent += p.ownerDepositAmount;
+            countOwnerDepositsSent++;
+          } else {
+            totalOwnerDepositsPending += p.ownerDepositAmount;
+            countOwnerDepositsPending++;
+          }
+
+          if (p.commissionDueAmount > 0) {
+            totalCommissions += p.commissionDueAmount;
+            if (p.commissionStatus === 'invoiced' || p.commissionStatus === 'paid_to_yrsf') {
+              countCommissions++;
+            }
+          }
+
+          if (p.isSettled) {
+            countSettled++;
+          }
         }
       });
 
       // Update KPI counters
-      const statPaid = document.getElementById('stat-owner-paid');
-      if (statPaid) statPaid.textContent = `$${totalPaidAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      const statPaidCount = document.getElementById('stat-owner-settled-count');
-      if (statPaidCount) statPaidCount.textContent = settledChartersCount;
+      const statDepositsSent = document.getElementById('stat-owner-deposits-sent');
+      if (statDepositsSent) statDepositsSent.textContent = `$${totalOwnerDepositsSent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const statDepositsSentCount = document.getElementById('stat-owner-deposits-sent-count');
+      if (statDepositsSentCount) statDepositsSentCount.textContent = countOwnerDepositsSent;
 
-      const statUnpaid = document.getElementById('stat-owner-unpaid');
-      if (statUnpaid) statUnpaid.textContent = `$${totalPendingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      const statUnpaidCount = document.getElementById('stat-owner-unsettled-count');
-      if (statUnpaidCount) statUnpaidCount.textContent = pendingChartersCount;
+      const statDepositsPending = document.getElementById('stat-owner-deposits-pending');
+      if (statDepositsPending) statDepositsPending.textContent = `$${totalOwnerDepositsPending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const statDepositsPendingCount = document.getElementById('stat-owner-deposits-pending-count');
+      if (statDepositsPendingCount) statDepositsPendingCount.textContent = countOwnerDepositsPending;
 
-      const statVolume = document.getElementById('stat-owner-charter-volume');
-      if (statVolume) statVolume.textContent = `$${totalCharterVolume.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const statCommissions = document.getElementById('stat-owner-commissions');
+      if (statCommissions) statCommissions.textContent = `$${totalCommissions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const statCommissionsCount = document.getElementById('stat-owner-commissions-count');
+      if (statCommissionsCount) statCommissionsCount.textContent = countCommissions;
+
+      const statSettledCount = document.getElementById('stat-owner-settled-count');
+      if (statSettledCount) statSettledCount.textContent = countSettled;
       const statTotalCharters = document.getElementById('stat-owner-total-charters');
       if (statTotalCharters) statTotalCharters.textContent = eligibleBookings.length;
-
-      const statConfigured = document.getElementById('stat-owner-configured-count');
-      if (statConfigured) {
-        const configuredCount = Object.values(boatOwnersCache).filter(x => x && (x.owner_name || x.payout_value > 0)).length;
-        statConfigured.textContent = `${configuredCount} configured`;
-      }
 
       // Filter bookings for display
       const filtered = eligibleBookings.filter(b => {
         const p = getOwnerPayoutForBooking(b);
 
-        // Status filter
-        if (ownerFilterStatus === 'unpaid' && p.isPaid) return false;
-        if (ownerFilterStatus === 'paid' && !p.isPaid) return false;
+        // Filter pills: 'all' | 'needs_deposit' | 'needs_comm' | 'settled'
+        if (ownerFilterStatus === 'needs_deposit') {
+          if (p.mode === 'paid_in_full') {
+            if (p.wholesaleStatus === 'paid') return false;
+          } else {
+            if (p.ownerDepositStatus === 'sent') return false;
+          }
+        } else if (ownerFilterStatus === 'needs_comm') {
+          if (p.mode === 'paid_in_full') return false;
+          if (p.ownerDepositStatus !== 'sent' || p.commissionStatus === 'paid_to_yrsf') return false;
+        } else if (ownerFilterStatus === 'settled') {
+          if (!p.isSettled) return false;
+        }
 
         // Boat filter
         if (ownerFilterBoat !== 'all') {
@@ -5784,8 +5982,9 @@ EXTRACTION RULES:
           const matchCust = (b.customer_name || '').toLowerCase().includes(query);
           const matchPhone = (b.customer_phone || '').toLowerCase().includes(query);
           const matchOwner = (p.ownerName || '').toLowerCase().includes(query);
-          const matchRef = (p.referenceNote || '').toLowerCase().includes(query);
-          if (!matchBoat && !matchCust && !matchPhone && !matchOwner && !matchRef) return false;
+          const matchNotes = (p.notes || '').toLowerCase().includes(query);
+          const matchRef = (p.ownerDepositRef || '').toLowerCase().includes(query) || (p.commissionInvoiceRef || '').toLowerCase().includes(query);
+          if (!matchBoat && !matchCust && !matchPhone && !matchOwner && !matchNotes && !matchRef) return false;
         }
 
         return true;
@@ -5803,22 +6002,48 @@ EXTRACTION RULES:
         const p = getOwnerPayoutForBooking(b);
         const dateFormatted = b.booking_date ? new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '-';
         const charterTotal = parseFloat(b.total_price || b.amount || 0);
+        const customerDeposit = parseFloat(b.deposit_amount || 0);
 
-        const statusBadge = p.isPaid
-          ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-[11px] font-bold">
-               <span class="material-symbols-outlined text-[13px]">check_circle</span> Paid to Owner
-             </span>
-             <div class="text-[10px] text-on-surface-variant font-mono mt-0.5">${p.paidDate ? p.paidDate : ''} ${p.paymentMethod ? `&bull; ${escapeHtml(p.paymentMethod)}` : ''}</div>`
-          : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold">
-               <span class="material-symbols-outlined text-[13px]">pending</span> Unpaid / Pending
-             </span>`;
+        // Step 1 column
+        let step1Html = '';
+        if (p.mode === 'paid_in_full') {
+          step1Html = `
+            <div class="font-mono font-bold text-xs text-purple-900">$${p.wholesaleAmount.toFixed(2)}</div>
+            <div class="mt-0.5">
+              ${p.wholesaleStatus === 'paid'
+                ? `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-green-100 text-green-800 text-[10px] font-bold">✓ Wholesale Paid</span>`
+                : `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">⏳ Wholesale Pending</span>`}
+            </div>
+            ${p.wholesaleDate ? `<div class="text-[9.5px] text-on-surface-variant font-mono mt-0.5">${escapeHtml(p.wholesaleDate)}</div>` : ''}
+          `;
+        } else {
+          step1Html = `
+            <div class="font-mono font-bold text-xs text-blue-900">$${p.ownerDepositAmount.toFixed(2)}</div>
+            <div class="mt-0.5">
+              ${p.ownerDepositStatus === 'sent'
+                ? `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-green-100 text-green-800 text-[10px] font-bold">✓ Sent</span>`
+                : `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">⏳ Needs Advance</span>`}
+            </div>
+            ${p.ownerDepositStatus === 'sent' ? `<div class="text-[9.5px] text-on-surface-variant font-mono mt-0.5">${escapeHtml(p.ownerDepositDate || '')} ${p.ownerDepositMethod ? `&bull; ${escapeHtml(p.ownerDepositMethod)}` : ''}</div>` : ''}
+          `;
+        }
 
-        const splitBadge = p.payoutType === 'percentage'
-          ? `<span class="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10.5px] font-bold">${p.payoutRate}% Total</span>`
-          : `<span class="px-2 py-0.5 rounded bg-purple-50 border border-purple-200 text-purple-800 text-[10.5px] font-bold">$${p.payoutRate.toFixed(2)} Fixed</span>`;
+        // Step 2 column
+        let step2Html = '';
+        if (p.mode === 'paid_in_full') {
+          step2Html = `
+            <span class="text-on-surface-variant italic text-[11px]">$0.00 at dock (Wholesale)</span>
+          `;
+        } else {
+          step2Html = `
+            <div class="text-[11px] font-medium text-on-surface">Dock: <span class="font-mono font-bold text-amber-900">$${p.dockBalanceAmount.toFixed(2)}</span></div>
+            <div class="text-[10.5px] font-medium text-emerald-800">YRSF Comm: <span class="font-mono font-bold">$${p.commissionDueAmount.toFixed(2)}</span></div>
+            <div class="mt-0.5">${renderCommissionStatusBadge(p.commissionStatus, p.commissionInvoiceRef)}</div>
+          `;
+        }
 
         return `
-          <tr class="hover:bg-surface-container-low/60 transition-colors ${p.isPaid ? '' : 'bg-amber-50/20'}">
+          <tr class="hover:bg-surface-container-low/60 transition-colors ${p.isSettled ? '' : 'bg-amber-50/15'}">
             <td class="px-3 py-3 whitespace-nowrap">
               <p class="font-bold text-on-surface text-xs">${dateFormatted}</p>
               <p class="text-[10px] font-mono text-on-surface-variant">${escapeHtml(b.start_time || '')} &bull; ${b.duration_hours || 4} hrs</p>
@@ -5832,26 +6057,26 @@ EXTRACTION RULES:
             </td>
             <td class="px-3 py-3">
               <p class="font-bold text-on-surface text-xs">${escapeHtml(b.customer_name || 'Guest')}</p>
-              <p class="text-[10px] font-mono text-secondary">${escapeHtml(b.customer_phone || '')}</p>
+              <p class="text-[10px] font-mono text-secondary"><a href="tel:${escapeHtml(b.customer_phone || '')}" class="hover:underline">${escapeHtml(b.customer_phone || '')}</a></p>
             </td>
-            <td class="px-3 py-3 text-right font-mono font-bold text-xs text-on-surface">
-              $${charterTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <td class="px-3 py-3 text-right whitespace-nowrap">
+              <span class="font-mono font-bold text-xs text-on-surface">$${charterTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <div class="text-[10px] text-green-700 font-semibold font-mono">Dep: $${customerDeposit.toFixed(2)}</div>
+            </td>
+            <td class="px-3 py-3 whitespace-nowrap">
+              ${step1Html}
+            </td>
+            <td class="px-3 py-3 whitespace-nowrap">
+              ${step2Html}
             </td>
             <td class="px-3 py-3 text-center whitespace-nowrap">
-              ${splitBadge}
-            </td>
-            <td class="px-3 py-3 text-right whitespace-nowrap font-mono font-black text-sm ${p.isPaid ? 'text-green-700' : 'text-amber-700'}">
-              $${p.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              ${p.referenceNote ? `<div class="text-[9.5px] font-sans text-on-surface-variant truncate max-w-[130px] ml-auto" title="${escapeHtml(p.referenceNote)}">${escapeHtml(p.referenceNote)}</div>` : ''}
-            </td>
-            <td class="px-3 py-3 text-center whitespace-nowrap">
-              ${statusBadge}
+              ${renderOverallStatusBadge(p.overallStatus)}
             </td>
             <td class="px-3 py-3 text-right whitespace-nowrap">
               <div class="flex items-center justify-end gap-1.5">
-                <button type="button" onclick="window.openMarkOwnerPaidModal('${b.id}')" class="px-2.5 py-1 rounded-lg text-xs font-bold ${p.isPaid ? 'bg-surface-container text-on-surface hover:bg-surface-container-high border border-outline-variant' : 'bg-green-700 text-white hover:bg-green-800 shadow-2xs'} flex items-center gap-1 cursor-pointer transition-all">
-                  <span class="material-symbols-outlined text-[14px]">${p.isPaid ? 'edit' : 'payments'}</span>
-                  ${p.isPaid ? 'Edit Payout' : 'Mark as Paid'}
+                <button type="button" onclick="window.openMarkOwnerPaidModal('${b.id}')" class="px-2.5 py-1 rounded-lg text-xs font-bold ${p.isSettled ? 'bg-surface-container text-on-surface hover:bg-surface-container-high border border-outline-variant' : 'bg-green-700 text-white hover:bg-green-800 shadow-2xs'} flex items-center gap-1 cursor-pointer transition-all">
+                  <span class="material-symbols-outlined text-[14px]">${p.isSettled ? 'edit' : 'payments'}</span>
+                  ${p.isSettled ? 'Edit Settlement' : 'Settle Deal'}
                 </button>
                 <button type="button" onclick="window.editBooking('${b.id}')" class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-lg transition-colors cursor-pointer" title="View Booking Details">
                   <span class="material-symbols-outlined text-[16px]">visibility</span>
@@ -5888,6 +6113,168 @@ EXTRACTION RULES:
       renderOwnerPayoutsTable();
     }
 
+    function switchSettlementMode(mode) {
+      const standardContainer = document.getElementById('settlement-standard-flow');
+      const wholesaleContainer = document.getElementById('settlement-wholesale-flow');
+      const modeBtnStd = document.getElementById('mode-btn-standard');
+      const modeBtnWhl = document.getElementById('mode-btn-wholesale');
+      const modeInput = document.getElementById('settlement-mode');
+
+      if (modeInput) modeInput.value = mode;
+
+      if (mode === 'paid_in_full') {
+        standardContainer?.classList.add('hidden');
+        wholesaleContainer?.classList.remove('hidden');
+
+        if (modeBtnWhl) {
+          modeBtnWhl.className = 'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-white text-secondary shadow-xs';
+        }
+        if (modeBtnStd) {
+          modeBtnStd.className = 'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-on-surface-variant hover:text-on-surface';
+        }
+      } else {
+        standardContainer?.classList.remove('hidden');
+        wholesaleContainer?.classList.add('hidden');
+
+        if (modeBtnStd) {
+          modeBtnStd.className = 'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-white text-secondary shadow-xs';
+        }
+        if (modeBtnWhl) {
+          modeBtnWhl.className = 'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-on-surface-variant hover:text-on-surface';
+        }
+      }
+
+      recalcSettlementAccounting();
+    }
+    window.switchSettlementMode = switchSettlementMode;
+
+    function recalcSettlementAccounting() {
+      const bookingId = document.getElementById('settlement-booking-id')?.value;
+      const b = (bookingsCache || []).find(x => x.id === bookingId);
+      const charterTotal = b ? parseFloat(b.total_price || b.amount || 0) : 0;
+      const customerDeposit = b ? parseFloat(b.deposit_amount || 0) : 0;
+
+      const mode = document.getElementById('settlement-mode')?.value || 'standard';
+
+      // Visibility toggles for details rows
+      const depStatus = document.getElementById('settle-owner-deposit-status')?.value;
+      const depDetailsRow = document.getElementById('owner-deposit-sent-details');
+      if (depDetailsRow) {
+        if (depStatus === 'sent') depDetailsRow.classList.remove('hidden');
+        else depDetailsRow.classList.add('hidden');
+      }
+
+      const commStatus = document.getElementById('settle-commission-status')?.value;
+      const commDetailsRow = document.getElementById('commission-details-row');
+      if (commDetailsRow) {
+        if (commStatus === 'invoiced' || commStatus === 'paid_to_yrsf') commDetailsRow.classList.remove('hidden');
+        else commDetailsRow.classList.add('hidden');
+      }
+
+      const whlStatus = document.getElementById('settle-wholesale-status')?.value;
+      const whlDetailsRow = document.getElementById('wholesale-paid-details');
+      if (whlDetailsRow) {
+        if (whlStatus === 'paid') whlDetailsRow.classList.remove('hidden');
+        else whlDetailsRow.classList.add('hidden');
+      }
+
+      let ownerNet = 0;
+      let yrsfNet = 0;
+      let badgeHtml = '';
+
+      if (mode === 'paid_in_full') {
+        const wholesaleAmount = parseFloat(document.getElementById('settle-wholesale-amount')?.value) || 0;
+        ownerNet = wholesaleAmount;
+        yrsfNet = Math.max(0, charterTotal - wholesaleAmount);
+
+        const retainedEl = document.getElementById('label-wholesale-retained');
+        if (retainedEl) retainedEl.textContent = `YRSF retains: $${yrsfNet.toFixed(2)} commission`;
+
+        const whlBadge = document.getElementById('badge-wholesale-status');
+        if (whlBadge) {
+          if (whlStatus === 'paid') {
+            whlBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-900 uppercase';
+            whlBadge.textContent = 'Paid';
+          } else {
+            whlBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 uppercase';
+            whlBadge.textContent = 'Pending';
+          }
+        }
+
+        badgeHtml = whlStatus === 'paid'
+          ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-green-500/20 text-green-300 border border-green-500/30">Fully Settled</span>'
+          : '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">Wholesale Pending</span>';
+
+        const ownerBreakdown = document.getElementById('summary-owner-breakdown');
+        if (ownerBreakdown) ownerBreakdown.textContent = 'Agreed Wholesale';
+        const yrsfBreakdown = document.getElementById('summary-yrsf-breakdown');
+        if (yrsfBreakdown) yrsfBreakdown.textContent = 'Charter - Wholesale';
+      } else {
+        const ownerDep = parseFloat(document.getElementById('settle-owner-deposit-amount')?.value) || 0;
+        const dockBal = parseFloat(document.getElementById('settle-dock-balance-amount')?.value) || 0;
+        const commDue = parseFloat(document.getElementById('settle-commission-due-amount')?.value) || 0;
+
+        ownerNet = ownerDep + Math.max(0, dockBal - commDue);
+        const yrsfDepositKept = Math.max(0, customerDeposit - ownerDep);
+        yrsfNet = yrsfDepositKept + commDue;
+
+        const retainedEl = document.getElementById('label-yrsf-deposit-retained');
+        if (retainedEl) retainedEl.textContent = `YRSF retains: $${yrsfDepositKept.toFixed(2)} of upfront deposit`;
+
+        // Update step badges
+        const depBadge = document.getElementById('badge-owner-deposit-status');
+        if (depBadge) {
+          if (depStatus === 'sent') {
+            depBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-900 uppercase';
+            depBadge.textContent = 'Sent';
+          } else {
+            depBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 uppercase';
+            depBadge.textContent = 'Pending';
+          }
+        }
+
+        const commBadge = document.getElementById('badge-commission-status');
+        if (commBadge) {
+          if (commStatus === 'paid_to_yrsf') {
+            commBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 uppercase';
+            commBadge.textContent = 'Paid to YRSF';
+          } else if (commStatus === 'invoiced') {
+            commBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-900 uppercase';
+            commBadge.textContent = 'Invoiced';
+          } else if (commStatus === 'collected_by_owner') {
+            commBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-900 uppercase';
+            commBadge.textContent = 'At Dock';
+          } else {
+            commBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 uppercase';
+            commBadge.textContent = 'Pending Dock';
+          }
+        }
+
+        if (depStatus !== 'sent') {
+          badgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">Needs Deposit</span>';
+        } else if (commStatus === 'paid_to_yrsf') {
+          badgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-green-500/20 text-green-300 border border-green-500/30">Fully Settled</span>';
+        } else if (commStatus === 'invoiced') {
+          badgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/20 text-blue-300 border border-blue-500/30">Comm. Invoiced</span>';
+        } else {
+          badgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Deposit Sent</span>';
+        }
+
+        const ownerBreakdown = document.getElementById('summary-owner-breakdown');
+        if (ownerBreakdown) ownerBreakdown.textContent = 'Dep + Dock - Comm';
+        const yrsfBreakdown = document.getElementById('summary-yrsf-breakdown');
+        if (yrsfBreakdown) yrsfBreakdown.textContent = 'Dep Kept + Comm';
+      }
+
+      const summaryOwnerNet = document.getElementById('summary-owner-net');
+      if (summaryOwnerNet) summaryOwnerNet.textContent = `$${ownerNet.toFixed(2)}`;
+      const summaryYrsfNet = document.getElementById('summary-yrsf-net');
+      if (summaryYrsfNet) summaryYrsfNet.textContent = `$${yrsfNet.toFixed(2)}`;
+      const summaryOverallBadge = document.getElementById('summary-overall-badge');
+      if (summaryOverallBadge) summaryOverallBadge.outerHTML = `<div id="summary-overall-badge">${badgeHtml}</div>`;
+    }
+    window.recalcSettlementAccounting = recalcSettlementAccounting;
+
     function openMarkOwnerPaidModal(bookingId) {
       const b = (bookingsCache || []).find(x => x.id === bookingId);
       if (!b) {
@@ -5897,50 +6284,66 @@ EXTRACTION RULES:
 
       const p = getOwnerPayoutForBooking(b);
       const charterTotal = parseFloat(b.total_price || b.amount || 0);
+      const customerDeposit = parseFloat(b.deposit_amount || 0);
+      const balanceDue = Math.max(0, charterTotal - customerDeposit);
       const dateFormatted = b.booking_date ? new Date(b.booking_date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
 
       document.getElementById('settlement-booking-id').value = b.id;
       document.getElementById('settlement-boat-name').textContent = b.boat_name || 'Fleet Yacht';
+      document.getElementById('settlement-owner-display').textContent = `Owner: ${p.ownerName}`;
+      document.getElementById('settlement-booking-summary').textContent = `${b.customer_name || 'Guest'} (${b.customer_phone || ''})`;
+      document.getElementById('settlement-charter-date').textContent = `${dateFormatted} @ ${b.start_time || 'TBD'}`;
       document.getElementById('settlement-charter-total').textContent = `$${charterTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-      document.getElementById('settlement-booking-summary').textContent = `${b.customer_name || 'Guest'} • ${dateFormatted} @ ${b.start_time || ''}`;
+      document.getElementById('settlement-deposit-collected-label').textContent = `Dep: $${customerDeposit.toLocaleString('en-US', { minimumFractionDigits: 2 })} collected`;
+      document.getElementById('settlement-balance-due-label').textContent = `$${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
       
-      document.getElementById('settlement-owner-name').value = p.ownerName !== 'Boat Owner' ? p.ownerName : '';
-      document.getElementById('settlement-payout-type').value = p.payoutType;
-      document.getElementById('settlement-payout-rate').value = p.payoutRate || '';
-      document.getElementById('settlement-payout-amount').value = p.amount.toFixed(2);
-      
+      const summaryCharterTot = document.getElementById('summary-charter-total');
+      if (summaryCharterTot) summaryCharterTot.textContent = `$${charterTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+
       const todayStr = new Date().toLocaleDateString('sv-SE');
-      document.getElementById('settlement-paid-date').value = p.paidDate || todayStr;
-      document.getElementById('settlement-payment-method').value = p.paymentMethod || 'Zelle Transfer';
-      document.getElementById('settlement-reference-note').value = p.referenceNote || '';
 
-      const btnRevert = document.getElementById('btn-revert-unpaid');
-      const btnSave = document.getElementById('btn-save-settlement');
+      // Populate Step 1
+      document.getElementById('settle-owner-deposit-amount').value = p.ownerDepositAmount.toFixed(2);
+      document.getElementById('settle-owner-deposit-status').value = p.ownerDepositStatus || 'pending';
+      document.getElementById('settle-owner-deposit-date').value = p.ownerDepositDate || todayStr;
+      document.getElementById('settle-owner-deposit-method').value = p.ownerDepositMethod || 'Zelle';
+      document.getElementById('settle-owner-deposit-ref').value = p.ownerDepositRef || '';
 
-      if (p.isPaid) {
-        if (btnRevert) btnRevert.classList.remove('hidden');
-        if (btnSave) btnSave.innerHTML = '<span class="material-symbols-outlined text-[16px]">save</span> Update Settlement';
-      } else {
-        if (btnRevert) btnRevert.classList.add('hidden');
-        if (btnSave) btnSave.innerHTML = '<span class="material-symbols-outlined text-[16px]">check_circle</span> Confirm Paid to Owner';
-      }
+      // Populate Step 2
+      document.getElementById('settle-dock-balance-amount').value = p.dockBalanceAmount.toFixed(2);
+      document.getElementById('settle-commission-due-amount').value = p.commissionDueAmount.toFixed(2);
+      document.getElementById('settle-commission-status').value = p.commissionStatus || 'pending_dock';
+      document.getElementById('settle-commission-ref').value = p.commissionInvoiceRef || '';
+      document.getElementById('settle-commission-date').value = p.commissionDate || todayStr;
+      document.getElementById('settle-commission-method').value = p.commissionMethod || 'Zelle';
 
-      const calcAmount = () => {
-        const type = document.getElementById('settlement-payout-type').value;
-        const rate = parseFloat(document.getElementById('settlement-payout-rate').value) || 0;
-        let amt = 0;
-        if (type === 'percentage') {
-          amt = (charterTotal * rate) / 100;
-        } else {
-          amt = rate;
+      // Populate Wholesale
+      document.getElementById('settle-wholesale-amount').value = p.wholesaleAmount.toFixed(2);
+      document.getElementById('settle-wholesale-status').value = p.wholesaleStatus || 'pending';
+      document.getElementById('settle-wholesale-date').value = p.wholesaleDate || todayStr;
+      document.getElementById('settle-wholesale-method').value = p.wholesaleMethod || 'Wire Transfer';
+      document.getElementById('settle-wholesale-ref').value = p.wholesaleRef || '';
+
+      // Notes
+      document.getElementById('settlement-internal-notes').value = p.notes || '';
+
+      // Toggle mode
+      switchSettlementMode(p.mode);
+
+      // Attach live listeners if not already bound
+      const inputIds = [
+        'settle-owner-deposit-amount', 'settle-owner-deposit-status',
+        'settle-dock-balance-amount', 'settle-commission-due-amount', 'settle-commission-status',
+        'settle-wholesale-amount', 'settle-wholesale-status'
+      ];
+      inputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el._calcBound) {
+          el.addEventListener('input', recalcSettlementAccounting);
+          el.addEventListener('change', recalcSettlementAccounting);
+          el._calcBound = true;
         }
-        document.getElementById('settlement-payout-amount').value = amt.toFixed(2);
-      };
-
-      const typeEl = document.getElementById('settlement-payout-type');
-      const rateEl = document.getElementById('settlement-payout-rate');
-      typeEl.onchange = calcAmount;
-      rateEl.oninput = calcAmount;
+      });
 
       document.getElementById('owner-settlement-modal')?.classList.remove('hidden');
     }
@@ -5955,50 +6358,71 @@ EXTRACTION RULES:
       const b = (bookingsCache || []).find(x => x.id === bookingId);
       if (!b) return;
 
-      const ownerName = document.getElementById('settlement-owner-name').value.trim() || 'Boat Owner';
-      const payoutType = document.getElementById('settlement-payout-type').value;
-      const payoutRate = parseFloat(document.getElementById('settlement-payout-rate').value) || 0;
-      const payoutAmount = parseFloat(document.getElementById('settlement-payout-amount').value) || 0;
-      const paidDate = document.getElementById('settlement-paid-date').value;
-      const paymentMethod = document.getElementById('settlement-payment-method').value;
-      const referenceNote = document.getElementById('settlement-reference-note').value.trim();
+      const mode = document.getElementById('settlement-mode').value || 'standard';
+      const p = getOwnerPayoutForBooking(b);
 
-      // Save to settlements cache
-      ownerSettlementsCache[bookingId] = {
+      const ownerDepositAmount = parseFloat(document.getElementById('settle-owner-deposit-amount').value) || 0;
+      const ownerDepositStatus = document.getElementById('settle-owner-deposit-status').value;
+      const ownerDepositDate = document.getElementById('settle-owner-deposit-date').value;
+      const ownerDepositMethod = document.getElementById('settle-owner-deposit-method').value;
+      const ownerDepositRef = document.getElementById('settle-owner-deposit-ref').value.trim();
+
+      const dockBalanceAmount = parseFloat(document.getElementById('settle-dock-balance-amount').value) || 0;
+      const commissionDueAmount = parseFloat(document.getElementById('settle-commission-due-amount').value) || 0;
+      const commissionStatus = document.getElementById('settle-commission-status').value;
+      const commissionInvoiceRef = document.getElementById('settle-commission-ref').value.trim();
+      const commissionDate = document.getElementById('settle-commission-date').value;
+      const commissionMethod = document.getElementById('settle-commission-method').value;
+
+      const wholesaleAmount = parseFloat(document.getElementById('settle-wholesale-amount').value) || 0;
+      const wholesaleStatus = document.getElementById('settle-wholesale-status').value;
+      const wholesaleDate = document.getElementById('settle-wholesale-date').value;
+      const wholesaleMethod = document.getElementById('settle-wholesale-method').value;
+      const wholesaleRef = document.getElementById('settle-wholesale-ref').value.trim();
+
+      const notes = document.getElementById('settlement-internal-notes').value.trim();
+
+      const isSettled = mode === 'paid_in_full' ? (wholesaleStatus === 'paid') : (ownerDepositStatus === 'sent' && commissionStatus === 'paid_to_yrsf');
+
+      const settlementObj = {
         booking_id: bookingId,
-        status: 'paid',
-        amount: payoutAmount,
-        paid_date: paidDate,
-        payment_method: paymentMethod,
-        reference_note: referenceNote,
-        owner_name: ownerName,
-        payout_type: payoutType,
-        payout_rate: payoutRate,
+        mode,
+        status: isSettled ? 'paid' : 'pending',
+        owner_name: p.ownerName,
+        owner_deposit_amount: ownerDepositAmount,
+        owner_deposit_status: ownerDepositStatus,
+        owner_deposit_date: ownerDepositDate,
+        owner_deposit_method: ownerDepositMethod,
+        owner_deposit_ref: ownerDepositRef,
+        dock_balance_amount: dockBalanceAmount,
+        commission_due_amount: commissionDueAmount,
+        commission_status: commissionStatus,
+        commission_invoice_ref: commissionInvoiceRef,
+        commission_date: commissionDate,
+        commission_method: commissionMethod,
+        wholesale_amount: wholesaleAmount,
+        wholesale_status: wholesaleStatus,
+        wholesale_date: wholesaleDate,
+        wholesale_method: wholesaleMethod,
+        wholesale_ref: wholesaleRef,
+        notes,
         boat_name: b.boat_name,
         customer_name: b.customer_name,
         charter_total: parseFloat(b.total_price || b.amount || 0),
-        settled_at: new Date().toISOString()
+        updated_at: new Date().toISOString()
       };
+
+      ownerSettlementsCache[bookingId] = settlementObj;
       await saveOwnerPayoutSettlements(ownerSettlementsCache);
 
-      // If boat rule has not been saved yet or user updated owner name/rate, also persist rule for this boat
-      if (b.boat_id) {
-        boatOwnersCache[b.boat_id] = {
-          ...(boatOwnersCache[b.boat_id] || {}),
-          boat_id: b.boat_id,
-          boat_name: b.boat_name,
-          owner_name: ownerName,
-          payout_type: payoutType,
-          payout_value: payoutRate
-        };
-        await saveBoatOwnerPartners(boatOwnersCache);
-      }
-
-      // Update booking.special_requests with [OwnerPayout: ...] tag
-      let notes = b.special_requests || '';
-      const lines = notes.split('\n').filter(l => !l.trim().startsWith('[OwnerPayout:'));
-      const payoutTag = `[OwnerPayout: PAID | $${payoutAmount.toFixed(2)} | ${paidDate} | ${paymentMethod}${referenceNote ? ` | ${referenceNote}` : ''}]`;
-      lines.push(payoutTag);
+      // Update booking.special_requests with concise audit tag
+      let reqNotes = b.special_requests || '';
+      const lines = reqNotes.split('\n').filter(l => !l.trim().startsWith('[OwnerPayout:'));
+      const statusLabel = isSettled ? 'SETTLED' : (ownerDepositStatus === 'sent' ? 'DEP_SENT' : 'PENDING');
+      const tagContent = mode === 'paid_in_full'
+        ? `WHOLESALE | $${wholesaleAmount.toFixed(2)} | ${wholesaleStatus}`
+        : `STD | Dep $${ownerDepositAmount.toFixed(2)} (${ownerDepositStatus}) | Comm $${commissionDueAmount.toFixed(2)} (${commissionStatus})`;
+      lines.push(`[OwnerPayout: ${statusLabel} | ${tagContent}]`);
       const updatedNotes = lines.join('\n').trim();
       b.special_requests = updatedNotes;
 
@@ -6009,7 +6433,7 @@ EXTRACTION RULES:
       }
 
       closeOwnerSettlementModal();
-      showToast(`✓ Marked rental for ${b.boat_name || 'yacht'} as Paid to Owner ($${payoutAmount.toFixed(2)})!`, 'success');
+      showToast(`✓ Settlement saved for ${b.boat_name || 'yacht'}!`, 'success');
 
       renderOwnerPayoutsTable();
       if (typeof renderManifestTable === 'function') renderManifestTable();
@@ -6038,7 +6462,7 @@ EXTRACTION RULES:
       }
 
       closeOwnerSettlementModal();
-      showToast(`Rental marked as Unpaid / Pending.`, 'info');
+      showToast(`Rental settlement reset to unsettled.`, 'info');
 
       renderOwnerPayoutsTable();
       if (typeof renderManifestTable === 'function') renderManifestTable();
@@ -6175,33 +6599,31 @@ EXTRACTION RULES:
 
       const calcEl = document.getElementById('booking-owner-calc-display');
       if (calcEl) {
-        if (p.isPaid) {
-          calcEl.innerHTML = `<span class="text-green-700 font-bold">$${p.amount.toFixed(2)} Paid</span> via ${escapeHtml(p.paymentMethod || 'Transfer')} on ${p.paidDate || 'Date'} ${p.referenceNote ? `(${escapeHtml(p.referenceNote)})` : ''}`;
+        if (p.mode === 'paid_in_full') {
+          calcEl.innerHTML = `Wholesale: <span class="font-bold font-mono">$${p.wholesaleAmount.toFixed(2)}</span> &bull; Status: <span class="font-bold">${p.wholesaleStatus === 'paid' ? 'Paid in Full' : 'Pending'}</span>`;
         } else {
-          calcEl.innerHTML = `Rule: <span class="font-bold text-on-surface">${p.ruleDescription}</span> &bull; Due: <span class="font-bold text-amber-700 font-mono">$${p.amount.toFixed(2)}</span>`;
+          calcEl.innerHTML = `Step 1 (Dep): <span class="font-bold font-mono text-blue-900">$${p.ownerDepositAmount.toFixed(2)}</span> (${p.ownerDepositStatus === 'sent' ? 'Sent' : 'Pending'}) &bull; Step 2 (Comm): <span class="font-bold font-mono text-emerald-800">$${p.commissionDueAmount.toFixed(2)}</span> (${p.commissionStatus === 'paid_to_yrsf' ? 'Paid' : 'Pending'})`;
         }
       }
 
       const badgeEl = document.getElementById('booking-owner-status-badge');
       if (badgeEl) {
-        if (p.isPaid) {
+        if (p.isSettled) {
           badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-green-100 text-green-800 uppercase tracking-wide';
-          badgeEl.textContent = 'Paid to Owner';
+          badgeEl.textContent = 'Fully Settled';
+        } else if (p.ownerDepositStatus === 'sent') {
+          badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-blue-100 text-blue-900 uppercase tracking-wide';
+          badgeEl.textContent = 'Deposit Sent';
         } else {
-          badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-800 uppercase tracking-wide';
-          badgeEl.textContent = 'Unpaid';
+          badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-900 uppercase tracking-wide';
+          badgeEl.textContent = 'Needs Deposit';
         }
       }
 
       const settleBtn = document.getElementById('booking-owner-settle-btn');
       if (settleBtn) {
-        if (p.isPaid) {
-          settleBtn.className = 'px-3 py-1 bg-surface-container text-on-surface hover:bg-surface-container-high rounded-lg text-xs font-bold transition-all border border-outline-variant flex items-center gap-1 cursor-pointer';
-          settleBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">edit</span> Edit Payout';
-        } else {
-          settleBtn.className = 'px-3 py-1 bg-green-700 hover:bg-green-800 text-white rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center gap-1 cursor-pointer';
-          settleBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">payments</span> Settle Payout';
-        }
+        settleBtn.className = 'px-3 py-1 bg-secondary text-on-secondary rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center gap-1 cursor-pointer hover:opacity-90';
+        settleBtn.innerHTML = `<span class="material-symbols-outlined text-[14px]">${p.isSettled ? 'edit' : 'payments'}</span> ${p.isSettled ? 'Edit Settlement' : 'Settle Deal'}`;
       }
     }
 
@@ -6264,15 +6686,17 @@ EXTRACTION RULES:
 
     // Hook filter pills and search inputs for Settlements tab
     const filterOwnerPillAll = document.getElementById('filter-owner-payout-all');
-    const filterOwnerPillUnpaid = document.getElementById('filter-owner-payout-unpaid');
-    const filterOwnerPillPaid = document.getElementById('filter-owner-payout-paid');
+    const filterOwnerPillNeedsDeposit = document.getElementById('filter-owner-payout-needs-deposit');
+    const filterOwnerPillNeedsComm = document.getElementById('filter-owner-payout-needs-comm');
+    const filterOwnerPillSettled = document.getElementById('filter-owner-payout-settled');
 
     function setOwnerFilterPill(status) {
       ownerFilterStatus = status;
       [
         { el: filterOwnerPillAll, key: 'all' },
-        { el: filterOwnerPillUnpaid, key: 'unpaid' },
-        { el: filterOwnerPillPaid, key: 'paid' }
+        { el: filterOwnerPillNeedsDeposit, key: 'needs_deposit' },
+        { el: filterOwnerPillNeedsComm, key: 'needs_comm' },
+        { el: filterOwnerPillSettled, key: 'settled' }
       ].forEach(({ el, key }) => {
         if (!el) return;
         if (key === status) {
@@ -6285,8 +6709,9 @@ EXTRACTION RULES:
     }
 
     filterOwnerPillAll?.addEventListener('click', () => setOwnerFilterPill('all'));
-    filterOwnerPillUnpaid?.addEventListener('click', () => setOwnerFilterPill('unpaid'));
-    filterOwnerPillPaid?.addEventListener('click', () => setOwnerFilterPill('paid'));
+    filterOwnerPillNeedsDeposit?.addEventListener('click', () => setOwnerFilterPill('needs_deposit'));
+    filterOwnerPillNeedsComm?.addEventListener('click', () => setOwnerFilterPill('needs_comm'));
+    filterOwnerPillSettled?.addEventListener('click', () => setOwnerFilterPill('settled'));
 
     document.getElementById('filter-owner-boat-select')?.addEventListener('change', (e) => {
       ownerFilterBoat = e.target.value;

@@ -1157,53 +1157,59 @@
           
           <!-- KPI Summary Cards -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+            <!-- 1. Owner Deposits Sent -->
             <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-2xs">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Paid to Owners</span>
-                <span class="material-symbols-outlined text-green-700 text-lg">verified</span>
+                <span class="text-[11px] font-bold text-blue-900 uppercase tracking-wider">Owner Deposits Sent</span>
+                <span class="material-symbols-outlined text-blue-600 text-lg">forward_to_inbox</span>
               </div>
-              <p id="stat-owner-paid" class="text-xl sm:text-2xl font-black text-green-700 font-mono mt-1">$0.00</p>
-              <p class="text-[10px] text-on-surface-variant mt-0.5"><span id="stat-owner-settled-count" class="font-bold text-on-surface">0</span> charter(s) settled</p>
+              <p id="stat-owner-deposits-sent" class="text-xl sm:text-2xl font-black text-blue-900 font-mono mt-1">$0.00</p>
+              <p class="text-[10px] text-on-surface-variant mt-0.5"><span id="stat-owner-deposits-sent-count" class="font-bold text-blue-950">0</span> sent to owner</p>
             </div>
 
+            <!-- 2. Pending Owner Deposits -->
             <div class="bg-surface-container-lowest border border-amber-200 bg-amber-50/30 rounded-2xl p-4 shadow-2xs">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-amber-900 uppercase tracking-wider">Pending / Unpaid</span>
+                <span class="text-[11px] font-bold text-amber-900 uppercase tracking-wider">Pending Owner Deposits</span>
                 <span class="material-symbols-outlined text-amber-700 text-lg">pending</span>
               </div>
-              <p id="stat-owner-unpaid" class="text-xl sm:text-2xl font-black text-amber-700 font-mono mt-1">$0.00</p>
-              <p class="text-[10px] text-amber-800 mt-0.5"><span id="stat-owner-unsettled-count" class="font-bold text-amber-950">0</span> charter(s) awaiting payout</p>
+              <p id="stat-owner-deposits-pending" class="text-xl sm:text-2xl font-black text-amber-700 font-mono mt-1">$0.00</p>
+              <p class="text-[10px] text-amber-800 mt-0.5"><span id="stat-owner-deposits-pending-count" class="font-bold text-amber-950">0</span> awaiting deposit</p>
             </div>
 
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-2xs">
+            <!-- 3. YRSF Marina Commissions -->
+            <div class="bg-surface-container-lowest border border-emerald-200 bg-emerald-50/20 rounded-2xl p-4 shadow-2xs">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Total Charter Volume</span>
-                <span class="material-symbols-outlined text-secondary text-lg">sailing</span>
+                <span class="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">YRSF Marina Comm.</span>
+                <span class="material-symbols-outlined text-emerald-700 text-lg">payments</span>
               </div>
-              <p id="stat-owner-charter-volume" class="text-xl sm:text-2xl font-black text-on-surface font-mono mt-1">$0.00</p>
-              <p class="text-[10px] text-on-surface-variant mt-0.5">Across <span id="stat-owner-total-charters" class="font-bold text-on-surface">0</span> charters</p>
+              <p id="stat-owner-commissions" class="text-xl sm:text-2xl font-black text-emerald-700 font-mono mt-1">$0.00</p>
+              <p class="text-[10px] text-emerald-800 mt-0.5"><span id="stat-owner-commissions-count" class="font-bold text-emerald-950">0</span> invoiced / collected</p>
             </div>
 
+            <!-- 4. Fully Settled Charters -->
             <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 shadow-2xs flex flex-col justify-between">
               <div>
                 <div class="flex items-center justify-between">
-                  <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Boat Partner Rules</span>
-                  <span class="material-symbols-outlined text-indigo-700 text-lg">handshake</span>
+                  <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Fully Settled</span>
+                  <span class="material-symbols-outlined text-green-700 text-lg">verified</span>
                 </div>
-                <p id="stat-owner-configured-count" class="text-xl sm:text-2xl font-black text-indigo-900 font-mono mt-1">49 Yachts</p>
+                <p id="stat-owner-settled-count" class="text-xl sm:text-2xl font-black text-green-700 font-mono mt-1">0</p>
+                <p class="text-[10px] text-on-surface-variant mt-0.5">Across <span id="stat-owner-total-charters" class="font-bold text-on-surface">0</span> total charters</p>
               </div>
-              <button type="button" onclick="window.openManageBoatOwnersModal()" class="mt-1 text-xs font-bold text-indigo-700 hover:text-indigo-900 hover:underline flex items-center gap-1 cursor-pointer">
-                <span class="material-symbols-outlined text-sm">tune</span> Configure Boat Rules
+              <button type="button" onclick="window.openManageBoatOwnersModal()" class="mt-2 text-xs font-bold text-indigo-700 hover:text-indigo-900 hover:underline flex items-center gap-1 cursor-pointer">
+                <span class="material-symbols-outlined text-sm">tune</span> Boat Partner Rules
               </button>
             </div>
           </div>
 
           <!-- Filter & Controls Bar -->
           <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-3.5 mb-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
-            <div class="flex flex-wrap items-center gap-1.5">
-              <button type="button" id="filter-owner-payout-all" class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer">All Rentals</button>
-              <button type="button" id="filter-owner-payout-unpaid" class="px-3 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold transition-all shadow-xs cursor-pointer">Unpaid (Pending)</button>
-              <button type="button" id="filter-owner-payout-paid" class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer">Paid to Owner</button>
+            <div class="flex flex-wrap items-center gap-1.5" id="owner-payout-filter-group">
+              <button type="button" id="filter-owner-payout-all" class="px-3 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-bold transition-all shadow-xs cursor-pointer">All Rentals</button>
+              <button type="button" id="filter-owner-payout-needs-deposit" class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer">Needs Owner Deposit</button>
+              <button type="button" id="filter-owner-payout-needs-comm" class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer">Needs Marina Comm.</button>
+              <button type="button" id="filter-owner-payout-settled" class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high text-xs font-bold transition-all cursor-pointer">Fully Settled</button>
             </div>
 
             <div class="flex items-center gap-2.5 flex-wrap">
@@ -1240,9 +1246,9 @@
                     <th class="px-3 py-3 font-bold">Yacht Booked &amp; Owner</th>
                     <th class="px-3 py-3 font-bold">Customer Info</th>
                     <th class="px-3 py-3 font-bold text-right">Charter Total</th>
-                    <th class="px-3 py-3 font-bold text-center">Owner Split</th>
-                    <th class="px-3 py-3 font-bold text-right">Payout Due</th>
-                    <th class="px-3 py-3 font-bold text-center">Settlement Status</th>
+                    <th class="px-3 py-3 font-bold">Step 1: Owner Deposit</th>
+                    <th class="px-3 py-3 font-bold">Step 2: Marina Balance &amp; Comm.</th>
+                    <th class="px-3 py-3 font-bold text-center">Deal Status</th>
                     <th class="px-3 py-3 font-bold text-right">Actions</th>
                   </tr>
                 </thead>
@@ -2934,111 +2940,293 @@
     </div>
   </div>
 
-  <!-- Boat Owner Settlement Dialog Modal -->
-  <div id="owner-settlement-modal" style="z-index: 9999; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
-    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-outline-variant text-left">
-      <div class="flex items-center justify-between pb-3 border-b border-outline-variant mb-4">
-        <div class="flex items-center gap-2">
-          <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-            <span class="material-symbols-outlined text-xl">handshake</span>
+  <!-- Boat Owner Settlement Dialog Modal (Multi-Transaction Real-World Workflow) -->
+  <div id="owner-settlement-modal" style="z-index: 9999; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background-color: rgba(15, 23, 42, 0.45);" class="fixed inset-0 flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-outline-variant overflow-hidden text-left">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-outline-variant flex items-center justify-between shrink-0 bg-surface-container-lowest">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-2xl">handshake</span>
           </div>
           <div>
-            <h3 class="font-headline text-base font-bold text-on-surface" id="owner-settlement-modal-title">Settle Owner Payout</h3>
-            <p class="text-[11px] text-on-surface-variant">Record settlement payout to boat owner or partner</p>
+            <h3 class="font-headline text-base sm:text-lg font-bold text-on-surface" id="owner-settlement-modal-title">Settle Owner Transactions &amp; Commission</h3>
+            <p class="text-xs text-on-surface-variant">Track owner deposit advance, marina dock balance, and our commission invoice</p>
           </div>
         </div>
-        <button type="button" onclick="window.closeOwnerSettlementModal()" class="text-on-surface-variant hover:text-on-surface font-bold text-2xl leading-none">&times;</button>
+        <button type="button" onclick="window.closeOwnerSettlementModal()" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer text-xl leading-none">&times;</button>
       </div>
 
-      <form id="owner-settlement-form" onsubmit="event.preventDefault(); window.submitOwnerSettlement();" class="space-y-3.5">
+      <!-- Modal Body (Scrollable) -->
+      <form id="owner-settlement-form" onsubmit="event.preventDefault(); window.submitOwnerSettlement();" class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
         <input type="hidden" id="settlement-booking-id" value=""/>
 
-        <!-- Charter Summary Banner -->
-        <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant text-xs space-y-1">
-          <div class="flex justify-between">
-            <span class="text-on-surface-variant font-medium">Vessel:</span>
-            <span class="font-bold text-secondary" id="settlement-boat-name">--</span>
+        <!-- Charter Summary Card -->
+        <div class="p-3.5 bg-surface-container-low rounded-2xl border border-outline-variant text-xs grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div>
+            <span class="text-on-surface-variant block font-medium">Vessel &amp; Owner</span>
+            <span class="font-bold text-secondary text-sm block truncate" id="settlement-boat-name">--</span>
+            <span class="text-[11px] font-semibold text-indigo-900 block" id="settlement-owner-display">--</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-on-surface-variant font-medium">Customer:</span>
-            <span class="font-bold text-on-surface" id="settlement-booking-summary">--</span>
+          <div>
+            <span class="text-on-surface-variant block font-medium">Customer</span>
+            <span class="font-bold text-on-surface text-sm block truncate" id="settlement-booking-summary">--</span>
+            <span class="text-[11px] font-mono text-on-surface-variant block" id="settlement-charter-date">--</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-on-surface-variant font-medium">Charter Date:</span>
-            <span class="font-mono text-on-surface font-bold" id="settlement-charter-date">--</span>
+          <div>
+            <span class="text-on-surface-variant block font-medium">Charter Total</span>
+            <span class="font-mono font-black text-on-surface text-sm block" id="settlement-charter-total">$0.00</span>
+            <span class="text-[10px] text-green-700 font-bold block" id="settlement-deposit-collected-label">Dep: $0.00 collected</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-on-surface-variant font-medium">Charter Total:</span>
-            <span class="font-mono font-bold text-on-surface" id="settlement-charter-total">$0.00</span>
-          </div>
-          <div class="flex justify-between pt-1 border-t border-outline-variant/50">
-            <span class="text-on-surface-variant font-medium">Owner / Partner:</span>
-            <span class="font-bold text-indigo-900" id="settlement-owner-display">--</span>
+          <div>
+            <span class="text-on-surface-variant block font-medium">Balance Due</span>
+            <span class="font-mono font-black text-amber-800 text-sm block" id="settlement-balance-due-label">$0.00</span>
+            <span class="text-[10px] text-on-surface-variant block">At marina dock</span>
           </div>
         </div>
 
-        <!-- Owner Name & Split Rule -->
-        <div class="grid grid-cols-2 gap-2.5">
-          <div>
-            <label class="block text-[11px] font-bold text-on-surface mb-1">Owner Name *</label>
-            <input type="text" id="settlement-owner-name" required placeholder="Owner or Partner" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold text-on-surface focus:ring-2 focus:ring-secondary"/>
+        <!-- Settlement Mode Toggle -->
+        <div>
+          <label class="block text-xs font-bold text-on-surface mb-1.5">Booking Settlement Flow</label>
+          <div class="grid grid-cols-2 gap-2 bg-surface-container-low p-1 rounded-xl border border-outline-variant">
+            <button type="button" id="mode-btn-standard" onclick="window.switchSettlementMode('standard')" class="py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-white text-secondary shadow-xs">
+              <span class="material-symbols-outlined text-[16px]">account_balance_wallet</span> Standard (Deposit + Marina Balance)
+            </button>
+            <button type="button" id="mode-btn-wholesale" onclick="window.switchSettlementMode('paid_in_full')" class="py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-on-surface-variant hover:text-on-surface">
+              <span class="material-symbols-outlined text-[16px]">verified</span> Paid in Full (Wholesale Payout)
+            </button>
           </div>
-          <div>
-            <label class="block text-[11px] font-bold text-on-surface mb-1">Payout Rule</label>
-            <div class="flex items-center gap-1.5">
-              <select id="settlement-payout-type" class="w-1/2 px-2 py-2 bg-white border border-outline-variant rounded-xl text-xs font-semibold focus:ring-2 focus:ring-secondary">
-                <option value="percentage">% Pct</option>
-                <option value="fixed">$ Fixed</option>
-              </select>
-              <input type="number" step="0.01" id="settlement-payout-rate" class="w-1/2 px-2 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold text-right focus:ring-2 focus:ring-secondary"/>
+          <input type="hidden" id="settlement-mode" value="standard"/>
+        </div>
+
+        <!-- STANDARD FLOW CONTAINERS -->
+        <div id="settlement-standard-flow" class="space-y-4">
+          <!-- Step 1: Owner Booking Deposit -->
+          <div class="bg-blue-50/40 border border-blue-100 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between border-b border-blue-100 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center">1</span>
+                <div>
+                  <h4 class="font-headline font-bold text-xs sm:text-sm text-blue-950">Owner Booking Deposit (Advance)</h4>
+                  <p class="text-[10.5px] text-blue-800">From customer deposit, send owner agreed portion so owner can send contract &amp; welcome info</p>
+                </div>
+              </div>
+              <span id="badge-owner-deposit-status" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 uppercase">Pending</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-on-surface mb-1">Deposit Sent to Owner ($) *</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold text-xs">$</span>
+                  <input type="number" step="0.01" min="0" id="settle-owner-deposit-amount" placeholder="0.00" class="w-full pl-7 pr-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-extrabold text-blue-900 font-mono focus:ring-2 focus:ring-secondary"/>
+                </div>
+                <p class="text-[10px] text-on-surface-variant mt-0.5" id="label-yrsf-deposit-retained">YRSF retains: $0.00 of upfront deposit</p>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-on-surface mb-1">Owner Deposit Status</label>
+                <select id="settle-owner-deposit-status" class="w-full px-2.5 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold text-on-surface focus:ring-2 focus:ring-secondary">
+                  <option value="pending">⏳ Pending (Deposit Not Sent Yet)</option>
+                  <option value="sent">✓ Sent to Owner (Owner Handling Contract)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Owner Deposit Details (Revealed when sent) -->
+            <div id="owner-deposit-sent-details" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-blue-100/60 hidden">
+              <div>
+                <label class="block text-[10.5px] font-bold text-on-surface mb-1">Date Sent</label>
+                <input type="date" id="settle-owner-deposit-date" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-xl text-xs font-mono focus:ring-2 focus:ring-secondary"/>
+              </div>
+              <div>
+                <label class="block text-[10.5px] font-bold text-on-surface mb-1">Payment Method</label>
+                <select id="settle-owner-deposit-method" class="w-full px-2 py-1.5 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+                  <option value="Zelle">Zelle</option>
+                  <option value="Wire Transfer">Wire Transfer</option>
+                  <option value="Direct Deposit (ACH)">ACH</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Company Check">Company Check</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10.5px] font-bold text-on-surface mb-1">Confirmation / Ref #</label>
+                <input type="text" id="settle-owner-deposit-ref" placeholder="Zelle conf #..." class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Marina Balance & Our Commission Invoice -->
+          <div class="bg-emerald-50/40 border border-emerald-100 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between border-b border-emerald-100 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center">2</span>
+                <div>
+                  <h4 class="font-headline font-bold text-xs sm:text-sm text-emerald-950">Marina Balance &amp; YRSF Commission Invoice</h4>
+                  <p class="text-[10.5px] text-emerald-800">Customer pays remaining balance to owner at dock. Owner then owes YRSF our commission invoice.</p>
+                </div>
+              </div>
+              <span id="badge-commission-status" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 uppercase">Pending Dock</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-on-surface mb-1">Balance Paid at Dock ($)</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold text-xs">$</span>
+                  <input type="number" step="0.01" min="0" id="settle-dock-balance-amount" placeholder="0.00" class="w-full pl-7 pr-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-extrabold text-on-surface font-mono focus:ring-2 focus:ring-secondary"/>
+                </div>
+                <p class="text-[10px] text-on-surface-variant mt-0.5">Customer pays directly to owner</p>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-on-surface mb-1">YRSF Commission Due ($) *</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-700 font-bold text-xs">$</span>
+                  <input type="number" step="0.01" min="0" id="settle-commission-due-amount" placeholder="0.00" class="w-full pl-7 pr-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-extrabold text-emerald-800 font-mono focus:ring-2 focus:ring-secondary"/>
+                </div>
+                <p class="text-[10px] text-emerald-800 mt-0.5">Portion of dock balance owed to YRSF</p>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-on-surface mb-1">Commission Status</label>
+                <select id="settle-commission-status" class="w-full px-2.5 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold text-on-surface focus:ring-2 focus:ring-secondary">
+                  <option value="pending_dock">⏳ Awaiting Charter / Dock Collection</option>
+                  <option value="collected_by_owner">🛥️ Balance Collected by Owner</option>
+                  <option value="invoiced">📄 Commission Invoiced to Owner</option>
+                  <option value="paid_to_yrsf">✓ Commission Paid to YRSF (Settled)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Commission Invoice & Settlement Details -->
+            <div id="commission-details-row" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-emerald-100/60 hidden">
+              <div>
+                <label class="block text-[10.5px] font-bold text-on-surface mb-1">Invoice / Ref #</label>
+                <input type="text" id="settle-commission-ref" placeholder="INV-2026-..." class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
+              </div>
+              <div>
+                <label class="block text-[10.5px] font-bold text-on-surface mb-1">Invoice / Settled Date</label>
+                <input type="date" id="settle-commission-date" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-xl text-xs font-mono focus:ring-2 focus:ring-secondary"/>
+              </div>
+              <div>
+                <label class="block text-[10.5px] font-bold text-on-surface mb-1">Payment Method</label>
+                <select id="settle-commission-method" class="w-full px-2 py-1.5 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+                  <option value="Zelle">Zelle</option>
+                  <option value="Wire Transfer">Wire Transfer</option>
+                  <option value="ACH">ACH</option>
+                  <option value="Check">Check</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Offset">Offset / Other</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Payout Amount Due -->
+        <!-- WHOLESALE FLOW CONTAINER (Paid in Full Upfront) -->
+        <div id="settlement-wholesale-flow" class="space-y-4 hidden">
+          <div class="bg-purple-50/40 border border-purple-100 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between border-b border-purple-100 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-black flex items-center justify-center">★</span>
+                <div>
+                  <h4 class="font-headline font-bold text-xs sm:text-sm text-purple-950">Full Wholesale Payout (Customer Paid 100% Upfront)</h4>
+                  <p class="text-[10.5px] text-purple-800">We collected total price from customer. Send agreed wholesale amount to owner. Customer arrives with $0 due at dock.</p>
+                </div>
+              </div>
+              <span id="badge-wholesale-status" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 uppercase">Pending</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-on-surface mb-1">Agreed Wholesale Payout to Owner ($) *</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-purple-700 font-bold text-xs">$</span>
+                  <input type="number" step="0.01" min="0" id="settle-wholesale-amount" placeholder="0.00" class="w-full pl-7 pr-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-extrabold text-purple-900 font-mono focus:ring-2 focus:ring-secondary"/>
+                </div>
+                <p class="text-[10px] text-purple-800 mt-0.5" id="label-wholesale-retained">YRSF retains: $0.00 commission</p>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-on-surface mb-1">Wholesale Payout Status</label>
+                <select id="settle-wholesale-status" class="w-full px-2.5 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold text-on-surface focus:ring-2 focus:ring-secondary">
+                  <option value="pending">⏳ Pending (Payout Not Sent)</option>
+                  <option value="paid">✓ Paid in Full to Owner (Settled)</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="wholesale-paid-details" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-purple-100/60 hidden">
+              <div>
+                <label class="block text-[10.5px] font-bold text-on-surface mb-1">Date Paid</label>
+                <input type="date" id="settle-wholesale-date" class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-xl text-xs font-mono focus:ring-2 focus:ring-secondary"/>
+              </div>
+              <div>
+                <label class="block text-[10.5px] font-bold text-on-surface mb-1">Payment Method</label>
+                <select id="settle-wholesale-method" class="w-full px-2 py-1.5 bg-white border border-outline-variant rounded-xl text-xs font-bold focus:ring-2 focus:ring-secondary">
+                  <option value="Wire Transfer">Wire Transfer</option>
+                  <option value="Zelle">Zelle</option>
+                  <option value="ACH">ACH</option>
+                  <option value="Company Check">Company Check</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10.5px] font-bold text-on-surface mb-1">Confirmation / Ref #</label>
+                <input type="text" id="settle-wholesale-ref" placeholder="Wire/Conf #..." class="w-full px-2.5 py-1.5 bg-white border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIVE DEAL ACCOUNTING SUMMARY CARD -->
+        <div class="bg-slate-900 text-white rounded-2xl p-4 shadow-md">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-xs">
+            <span class="font-bold text-slate-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[15px] text-cyan-400">calculate</span> Net Deal Balance Sheet
+            </span>
+            <span id="summary-overall-badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/20 text-blue-300 border border-blue-500/30">Needs Deposit</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 pt-3 text-center">
+            <div class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/50">
+              <span class="text-[10px] text-slate-400 block font-medium">Charter Total</span>
+              <span class="text-sm sm:text-base font-black text-white font-mono block mt-0.5" id="summary-charter-total">$0.00</span>
+              <span class="text-[9px] text-slate-400 block">Gross Value</span>
+            </div>
+
+            <div class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/50">
+              <span class="text-[10px] text-indigo-300 block font-medium">Owner Total Net</span>
+              <span class="text-sm sm:text-base font-black text-indigo-400 font-mono block mt-0.5" id="summary-owner-net">$0.00</span>
+              <span class="text-[9px] text-slate-400 block" id="summary-owner-breakdown">Dep + Dock - Comm</span>
+            </div>
+
+            <div class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/50">
+              <span class="text-[10px] text-emerald-300 block font-medium">YRSF Total Net</span>
+              <span class="text-sm sm:text-base font-black text-emerald-400 font-mono block mt-0.5" id="summary-yrsf-net">$0.00</span>
+              <span class="text-[9px] text-slate-400 block" id="summary-yrsf-breakdown">Dep Kept + Comm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes / Log -->
         <div>
-          <label class="block text-[11px] font-bold text-on-surface mb-1">Final Payout Amount ($) *</label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold text-sm">$</span>
-            <input type="number" step="0.01" min="0" id="settlement-payout-amount" required placeholder="0.00" class="w-full pl-7 pr-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-extrabold text-green-700 font-mono focus:ring-2 focus:ring-secondary"/>
-          </div>
-          <p class="text-[10px] text-on-surface-variant mt-0.5">Calculated automatically, or adjust manually if needed.</p>
+          <label class="block text-[11px] font-bold text-on-surface mb-1">Operational &amp; Owner Notes</label>
+          <input type="text" id="settlement-internal-notes" placeholder="e.g. Owner confirmed contract sent to customer; Captain Mike assigned." class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
         </div>
 
-        <!-- Date & Payment Method -->
-        <div class="grid grid-cols-2 gap-2.5">
-          <div>
-            <label class="block text-[11px] font-bold text-on-surface mb-1">Settlement Date *</label>
-            <input type="date" id="settlement-paid-date" required class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs font-mono focus:ring-2 focus:ring-secondary"/>
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-on-surface mb-1">Payment Method *</label>
-            <select id="settlement-payment-method" required class="w-full px-2.5 py-2 bg-white border border-outline-variant rounded-xl text-xs font-bold text-on-surface focus:ring-2 focus:ring-secondary">
-              <option value="Zelle Transfer">Zelle Transfer</option>
-              <option value="Wire Transfer">Wire Transfer</option>
-              <option value="Direct Deposit (ACH)">Direct Deposit (ACH)</option>
-              <option value="Company Check">Company Check</option>
-              <option value="Cash Disbursement">Cash Disbursement</option>
-              <option value="Other">Other / Offset</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Reference / Transaction Notes -->
-        <div>
-          <label class="block text-[11px] font-bold text-on-surface mb-1">Payment Reference / Notes</label>
-          <input type="text" id="settlement-reference-note" placeholder="e.g. Zelle conf #49281, Check #104, settled after charter" class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-xs focus:ring-2 focus:ring-secondary"/>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex items-center justify-between pt-2 border-t border-outline-variant">
-          <button type="button" id="btn-revert-unpaid" onclick="window.revertOwnerSettlementToUnpaid()" class="hidden text-xs text-amber-700 hover:text-amber-900 font-bold hover:underline cursor-pointer">
-            Mark as Unpaid
+        <!-- Action Buttons Footer -->
+        <div class="flex items-center justify-between pt-3 border-t border-outline-variant">
+          <button type="button" id="btn-revert-unpaid" onclick="window.revertOwnerSettlementToUnpaid()" class="text-xs text-amber-700 hover:text-amber-900 font-bold hover:underline cursor-pointer">
+            Reset to Unsettled
           </button>
           <div class="flex items-center gap-2 ml-auto">
-            <button type="button" onclick="window.closeOwnerSettlementModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer">Cancel</button>
-            <button type="submit" id="btn-save-settlement" class="px-4 py-2 rounded-xl text-xs font-bold bg-green-700 hover:bg-green-800 text-white transition-all shadow-xs flex items-center gap-1 cursor-pointer">
-              <span class="material-symbols-outlined text-[16px]">check_circle</span> Confirm Paid to Owner
+            <button type="button" onclick="window.closeOwnerSettlementModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer">Cancel</button>
+            <button type="submit" id="btn-save-settlement" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-green-700 hover:bg-green-800 text-white transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">save</span> Save &amp; Update Settlement
             </button>
           </div>
         </div>
