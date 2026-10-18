@@ -1,15 +1,26 @@
-﻿/**
+/**
  * YRSF — Admin Login Page Logic
  */
 
 import { login, getSession } from '../services/auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // If already logged in, redirect to dashboard
+  // If already logged in, redirect to dashboard seamlessly without flashing login card
   const session = await getSession();
   if (session) {
+    window._isRedirecting = true;
     window.location.href = '/admin/dashboard.html';
     return;
+  }
+
+  // Not logged in: wait for fonts so login card is 100% styled before revealing
+  if (document.fonts && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch (e) {}
+  }
+  if (typeof window.hideAdminLoader === 'function') {
+    window.hideAdminLoader();
   }
 
   const form = document.getElementById('login-form');

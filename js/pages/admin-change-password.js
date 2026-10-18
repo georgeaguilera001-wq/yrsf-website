@@ -1,4 +1,4 @@
-﻿/**
+/**
  * YRSF — Change Password Page Logic
  */
 
@@ -8,14 +8,26 @@ import { getSession } from '../services/auth.js';
 document.addEventListener('DOMContentLoaded', async () => {
   const session = await getSession();
   if (!session) {
+    window._isRedirecting = true;
     window.location.href = '/admin/index.html';
     return;
   }
 
   // Double check they actually need a password change
   if (!session.user.user_metadata?.needs_password_change) {
+    window._isRedirecting = true;
     window.location.href = '/admin/dashboard.html';
     return;
+  }
+
+  // Form is ready to be displayed: wait for fonts then dismiss preloader
+  if (document.fonts && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch (e) {}
+  }
+  if (typeof window.hideAdminLoader === 'function') {
+    window.hideAdminLoader();
   }
 
   const form = document.getElementById('login-form'); // ID reused from index.html

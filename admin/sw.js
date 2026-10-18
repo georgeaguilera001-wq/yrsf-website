@@ -4,12 +4,16 @@
  * while falling back cleanly to cached versions when offline.
  */
 
-const CACHE_NAME = 'yrsf-admin-v15';
+const CACHE_NAME = 'yrsf-admin-v16';
 const ASSETS_TO_CACHE = [
   '/admin/dashboard.html',
   '/admin/index.html',
+  '/admin/change-password.html',
+  '/css/tailwind.css',
   '/css/shared.css',
   '/css/admin.css',
+  '/img/logo-wide.png',
+  '/admin/logo.png',
   '/js/pages/admin-dashboard.js',
   '/js/config/supabase.js'
 ];
@@ -43,11 +47,39 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Network-First strategy: Always fetch live code first so changes show instantly without re-downloading!
+// Stale-While-Revalidate for static assets (CSS, images, fonts) so styling loads in 0ms!
+// Network-First for HTML/APIs to guarantee live dashboard updates with offline cache fallback.
 self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('supabase.co') || event.request.method !== 'GET') {
     return;
   }
+
+  const url = new URL(event.request.url);
+  const isStaticAsset = url.pathname.startsWith('/css/') ||
+                        url.pathname.startsWith('/img/') ||
+                        url.pathname.endsWith('.png') ||
+                        url.pathname.endsWith('.jpg') ||
+                        url.pathname.endsWith('.jpeg') ||
+                        url.pathname.endsWith('.svg') ||
+                        url.pathname.endsWith('.woff2');
+
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return networkResponse;
+        }).catch(() => cachedResponse);
+
+        return cachedResponse || fetchPromise;
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(event.request, { cache: 'no-cache' })
       .then((networkResponse) => {
@@ -59,7 +91,12 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       })
-      .catch(() => {
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        if (event.request.mode === 'navigate') {
+          return caches.match('/admin/dashboard.html');
+        }
       })
   );
 });

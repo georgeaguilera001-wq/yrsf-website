@@ -12246,6 +12246,17 @@ Write a friendly 1-2 sentence recommendation directly addressing the user.`;
   loadCommissions();
   updateZapierStatusPill();
   loadQuoSettings();
+
+  // Seamless Anti-FOUC Reveal: dismiss loading screen smoothly once styles and fonts have rendered
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      requestAnimationFrame(() => {
+        if (typeof window.hideAdminLoader === 'function') window.hideAdminLoader();
+      });
+    });
+  } else {
+    if (typeof window.hideAdminLoader === 'function') window.hideAdminLoader();
+  }
 });
 
 window.openChargeBalanceModalByBookingId = async (id) => {

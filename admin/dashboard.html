@@ -31,11 +31,176 @@
       });
     }
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="preload" href="/css/tailwind.css" as="style"/>
   <link rel="stylesheet" href="/css/tailwind.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/shared.css"/>
   <link rel="stylesheet" href="/css/admin.css"/>
+
+  <!-- Critical Anti-FOUC & Premium Splash Screen Styles (Inlined for instant paint before external CSS) -->
+  <style id="yrsf-preloader-styles">
+    #admin-preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at 50% 38%, #162a45 0%, #0b1422 100%);
+      z-index: 9999999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #ffffff;
+      pointer-events: all;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 24px;
+    }
+    #admin-preloader.preloader-hidden {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+    .yrsf-preloader-brand {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .yrsf-preloader-glow {
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, rgba(56, 189, 248, 0) 70%);
+      animation: yrsf-glow-pulse 2.4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .yrsf-preloader-logo {
+      height: 52px;
+      max-width: 280px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.6));
+      position: relative;
+      z-index: 2;
+    }
+    .yrsf-preloader-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 14px;
+      padding: 4px 14px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #93c5fd;
+      position: relative;
+      z-index: 2;
+    }
+    .yrsf-preloader-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+      animation: yrsf-dot-pulse 1.5s ease-in-out infinite;
+    }
+    .yrsf-preloader-spinner-wrapper {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .yrsf-preloader-spinner-track {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.08);
+    }
+    .yrsf-preloader-spinner {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      border-top-color: #38bdf8;
+      border-right-color: #60a5fa;
+      animation: yrsf-spin 0.8s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+    }
+    .yrsf-preloader-caption {
+      margin-top: 18px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+      color: #94a3b8;
+      animation: yrsf-caption-fade 1.8s ease-in-out infinite;
+    }
+    @keyframes yrsf-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes yrsf-glow-pulse {
+      0%, 100% { transform: scale(0.88); opacity: 0.35; }
+      50% { transform: scale(1.2); opacity: 0.85; }
+    }
+    @keyframes yrsf-dot-pulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+    @keyframes yrsf-caption-fade {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+  </style>
+  <script>
+    window.hideAdminLoader = function() {
+      const p = document.getElementById('admin-preloader');
+      if (p && !p.classList.contains('preloader-hidden')) {
+        p.classList.add('preloader-hidden');
+        setTimeout(() => {
+          try { p.remove(); } catch(e) {}
+        }, 500);
+      }
+    };
+    // Maximum fallback safety timeout (never stay blocked indefinitely)
+    setTimeout(() => {
+      if (typeof window.hideAdminLoader === 'function') window.hideAdminLoader();
+    }, 3500);
+    window.addEventListener('load', () => {
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+          setTimeout(() => {
+            if (typeof window.hideAdminLoader === 'function') window.hideAdminLoader();
+          }, 150);
+        });
+      } else {
+        setTimeout(() => {
+          if (typeof window.hideAdminLoader === 'function') window.hideAdminLoader();
+        }, 300);
+      }
+    });
+  </script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script>
     window.addEventListener('error', function(e) {
@@ -54,6 +219,23 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body class="bg-surface text-on-surface">
+  <!-- YRSF Luxury Admin Loading Screen (Instant Anti-FOUC Cover) -->
+  <div id="admin-preloader" aria-label="Loading Admin Portal">
+    <div class="yrsf-preloader-brand">
+      <div class="yrsf-preloader-glow"></div>
+      <img src="/img/logo-wide.png" alt="Yacht Rentals of South Florida" class="yrsf-preloader-logo" onerror="this.style.display='none'; document.getElementById('yrsf-preloader-fallback-text').style.display='block';"/>
+      <div id="yrsf-preloader-fallback-text" style="display:none; font-size: 22px; font-weight: 800; letter-spacing: 1.5px; color: #ffffff;">YRSF</div>
+      <div class="yrsf-preloader-badge">
+        <span class="yrsf-preloader-badge-dot"></span>
+        <span>Admin Portal</span>
+      </div>
+    </div>
+    <div class="yrsf-preloader-spinner-wrapper">
+      <div class="yrsf-preloader-spinner-track"></div>
+      <div class="yrsf-preloader-spinner"></div>
+    </div>
+    <div class="yrsf-preloader-caption">Loading portal experience...</div>
+  </div>
   <!-- Sidebar Overlay (mobile) -->
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
