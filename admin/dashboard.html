@@ -3967,8 +3967,8 @@
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 
-  <!-- Quick Create Action Modal (Centered in middle of screen) -->
-  <div id="quick-create-modal" class="fixed inset-0  flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-md hidden transition-all">
+  <!-- Quick Create Action Modal (Centered in middle of screen with frosted glass blur backdrop) -->
+  <div id="quick-create-modal" onclick="if(event.target === this) this.classList.add('hidden')" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden transition-all" style="backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background-color: rgba(15, 23, 42, 0.15);">
     <div class="bg-surface-container-lowest w-full max-w-md rounded-3xl p-6 shadow-2xl border border-outline-variant/80 animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-4">
         <h3 class="font-headline text-headline-md font-bold text-secondary flex items-center gap-2">
@@ -4102,8 +4102,8 @@
     </div>
   </div>
 
-  <!-- Mobile Full Menu Pop-up Modal (Compact & Scaled Down) -->
-  <div id="mobile-menu-modal" class="fixed inset-0  bg-black bg-opacity-60 backdrop-blur-sm items-center justify-center p-3.5 animate-fade-in" style="display:none">
+  <!-- Mobile Full Menu Pop-up Modal (Compact & Scaled Down with frosted glass blur backdrop) -->
+  <div id="mobile-menu-modal" onclick="if(event.target === this) this.style.display='none';" class="fixed inset-0 z-50 items-center justify-center p-3.5 animate-fade-in" style="display:none; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background-color: rgba(15, 23, 42, 0.15);">
     <div class="bg-surface-container-lowest text-on-surface rounded-2xl max-h-[80vh] w-full max-w-md flex flex-col shadow-2xl border border-outline-variant overflow-hidden animate-slide-up">
       <!-- Modal Header -->
       <div class="px-3.5 py-3 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest sticky top-0 z-10">
