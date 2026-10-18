@@ -391,7 +391,7 @@
   </aside>
 
   <!-- Main Content -->
-  <main class="admin-main transition-all pb-44 lg:pb-0" id="admin-main-content">
+  <main class="admin-main transition-all pb-52 lg:pb-0" id="admin-main-content">
     <!-- Mobile Header -->
     <div class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest border-b border-outline-variant px-4 py-3 flex items-center justify-between">
       <a href="/" class="flex items-center">
@@ -3999,8 +3999,8 @@
     </div>
   </div>
 
-  <!-- Mobile Bottom Navigation Bar (20% Shorter: 104px height) -->
-  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-md border-t border-outline-variant/60 px-2 flex items-center justify-around min-h-[104px] h-auto shadow-[0_-4px_16px_rgba(0,0,0,0.06)]" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
+  <!-- Mobile Bottom Navigation Bar (50% Taller: 156px height) -->
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-md border-t border-outline-variant/60 px-2 flex items-center justify-around shadow-[0_-4px_16px_rgba(0,0,0,0.06)]" style="min-height: 156px; height: 156px; padding-bottom: max(1.25rem, env(safe-area-inset-bottom));">
     <!-- HOME -->
     <button onclick="if(window.showAdminSection) window.showAdminSection('dashboard')" data-bottom-section="dashboard" class="mobile-bottom-nav-item flex flex-col items-center justify-center gap-1 w-[58px] text-secondary font-bold transition-colors group">
       <div class="relative px-2.5 py-1 rounded-full group-hover:bg-secondary/10 transition-colors">
@@ -4018,7 +4018,7 @@
     </button>
 
     <!-- CENTER FLOATING + NEW BUTTON (Brand Blue #455f88 instead of orange, 10% Smaller: 76px circle) -->
-    <div class="relative flex flex-col items-center -mt-10">
+    <div class="relative flex flex-col items-center -mt-14">
       <button onclick="document.getElementById('quick-create-modal').classList.remove('hidden')" class="w-[76px] h-[76px] rounded-full bg-secondary text-white flex items-center justify-center shadow-xl hover:brightness-110 active:scale-95 transition-all border-[4.5px] border-surface-container-lowest focus:outline-none" title="Quick Actions">
         <span class="material-symbols-outlined text-[40px] leading-none">add</span>
       </button>
